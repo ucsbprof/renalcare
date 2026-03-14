@@ -2333,7 +2333,10 @@ async function analyzeImage(file) {
 
     const data = await res.json();
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    console.log('Gemini raw response:', text); // デバッグ用
     const clean = text.replace(/```json|```/g, '').trim();
+    console.log('Cleaned response:', clean); // デバッグ用
+    if (!clean) throw new Error('Empty response from Gemini');
     const result = JSON.parse(clean);
 
     if (loadingOverlay) loadingOverlay.classList.remove('open');
