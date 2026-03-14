@@ -1,0 +1,3856 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0d1420">
+<title>RenalCare — 腎臓病食事管理</title>
+<link rel="manifest" href="manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Kaisei+Opti:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0d1420;
+  --bg2: #111c2e;
+  --surface: #16243a;
+  --surface2: #1c2f4a;
+  --border: #1e3354;
+  --border2: #264266;
+  --accent: #4fc3f7;
+  --accent2: #0288d1;
+  --accent-glow: rgba(79,195,247,0.12);
+  --green: #4ade80;
+  --green-dim: rgba(74,222,128,0.12);
+  --amber: #fcd34d;
+  --amber-dim: rgba(252,211,77,0.12);
+  --red: #f87171;
+  --red-dim: rgba(248,113,113,0.12);
+  --purple: #c084fc;
+  --purple-dim: rgba(192,132,252,0.12);
+  --text: #e2eaf6;
+  --text2: #8ba5c8;
+  --text3: #3d5a7a;
+  --r: 16px;
+  --rs: 10px;
+  --shadow: 0 4px 24px rgba(0,0,0,0.4);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 15px;
+}
+
+/* ===== SCREENS ===== */
+.screen { position:fixed; inset:0; display:none; flex-direction:column; background:var(--bg); }
+.screen.active { display:flex; }
+
+/* ===== ONBOARDING ===== */
+#s-onboarding {
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: radial-gradient(ellipse at 30% 20%, rgba(79,195,247,0.08) 0%, transparent 60%),
+              radial-gradient(ellipse at 80% 80%, rgba(192,132,252,0.06) 0%, transparent 60%),
+              var(--bg);
+}
+
+.ob-logo {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.ob-icon {
+  font-size: 56px;
+  display: block;
+  margin-bottom: 12px;
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.ob-title {
+  font-family: 'Kaisei Opti', serif;
+  font-size: 34px;
+  color: var(--accent);
+  letter-spacing: 2px;
+}
+
+.ob-sub {
+  font-size: 13px;
+  color: var(--text2);
+  margin-top: 6px;
+  line-height: 1.7;
+}
+
+.ob-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 32px 24px;
+  width: 100%;
+  max-width: 420px;
+}
+
+.ob-step {
+  font-size: 11px;
+  color: var(--text3);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.ob-question {
+  font-size: 16px;
+  font-weight: 500;
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+.ob-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.ob-choice {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--r);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.ob-choice:hover { border-color: var(--border2); background: var(--surface2); }
+.ob-choice.selected { border-color: var(--accent); background: var(--accent-glow); }
+
+.ob-choice-icon { font-size: 28px; flex-shrink: 0; }
+.ob-choice-text .name { font-size: 14px; font-weight: 500; }
+.ob-choice-text .desc { font-size: 12px; color: var(--text2); margin-top: 2px; }
+
+.ob-name-input {
+  width: 100%;
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--rs);
+  padding: 14px 16px;
+  color: var(--text);
+  font-size: 16px;
+  font-family: 'Noto Sans JP', sans-serif;
+  outline: none;
+  margin-bottom: 24px;
+  transition: border-color 0.2s;
+}
+
+.ob-name-input:focus { border-color: var(--accent); }
+.ob-name-input::placeholder { color: var(--text3); }
+
+.ob-dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 20px;
+}
+
+.ob-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--border2);
+  transition: all 0.3s;
+}
+
+.ob-dot.active { background: var(--accent); width: 18px; border-radius: 3px; }
+
+/* ===== BUTTONS ===== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 13px 24px;
+  border-radius: var(--rs);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+  font-family: 'Noto Sans JP', sans-serif;
+  letter-spacing: 0.3px;
+}
+
+.btn-full { width: 100%; }
+
+.btn-primary {
+  background: var(--accent);
+  color: #0d1420;
+  font-weight: 700;
+}
+.btn-primary:hover { background: #7dd3fc; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(79,195,247,0.3); }
+.btn-primary:active { transform: translateY(0); }
+.btn-primary:disabled { opacity: 0.4; pointer-events: none; }
+
+.btn-outline {
+  background: transparent;
+  border: 1.5px solid var(--border2);
+  color: var(--text2);
+}
+.btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+
+.btn-ghost {
+  background: var(--surface2);
+  color: var(--text2);
+}
+.btn-ghost:hover { background: var(--border); color: var(--text); }
+
+.btn-green { background: var(--green); color: #0d1420; font-weight: 700; }
+.btn-red { background: var(--red); color: #0d1420; font-weight: 700; }
+.btn-sm { padding: 8px 14px; font-size: 12px; border-radius: 8px; }
+
+/* ===== MAIN APP LAYOUT ===== */
+#s-app {
+  flex-direction: column;
+}
+
+.app-header {
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 10;
+}
+
+.header-logo {
+  font-family: 'Kaisei Opti', serif;
+  font-size: 18px;
+  color: var(--accent);
+  letter-spacing: 1px;
+}
+
+.header-user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.header-avatar {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  background: var(--accent-glow);
+  border: 1.5px solid var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.header-name { font-size: 13px; color: var(--text2); }
+
+.app-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 80px;
+}
+
+/* ===== BOTTOM NAV ===== */
+.bottom-nav {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: var(--bg2);
+  border-top: 1px solid var(--border);
+  display: flex;
+  padding: 8px 0 max(8px, env(safe-area-inset-bottom));
+  z-index: 100;
+}
+
+.nav-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 6px 0;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: var(--text3);
+  position: relative;
+}
+
+.nav-btn.active { color: var(--accent); }
+
+.nav-btn .nav-icon { font-size: 22px; line-height: 1; }
+.nav-btn .nav-label { font-size: 10px; font-weight: 500; }
+
+.nav-btn.active::before {
+  content: '';
+  position: absolute;
+  top: -8px; left: 50%;
+  transform: translateX(-50%);
+  width: 32px; height: 3px;
+  background: var(--accent);
+  border-radius: 0 0 3px 3px;
+}
+
+.nav-badge {
+  position: absolute;
+  top: 2px; right: 20%;
+  background: var(--red);
+  color: white;
+  font-size: 9px;
+  font-weight: 700;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* ===== PAGE SECTIONS ===== */
+.page { display: none; padding: 16px; }
+.page.active { display: block; }
+
+.page-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.page-title {
+  font-family: 'Kaisei Opti', serif;
+  font-size: 22px;
+  color: var(--text);
+  letter-spacing: 0.5px;
+}
+
+.page-sub { font-size: 12px; color: var(--text2); margin-top: 3px; }
+
+/* ===== CARDS ===== */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 16px;
+  margin-bottom: 12px;
+  position: relative;
+  overflow: hidden;
+}
+
+.card-title {
+  font-size: 11px;
+  color: var(--text3);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+/* ===== METRIC CARDS ===== */
+.metrics-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.metric-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 14px;
+  position: relative;
+  overflow: hidden;
+}
+
+.metric-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.metric-unit { font-size: 12px; color: var(--text2); margin-left: 3px; }
+.metric-name { font-size: 11px; color: var(--text3); margin-top: 4px; }
+.metric-limit { font-size: 10px; color: var(--text3); }
+
+.m-green { border-color: rgba(74,222,128,0.3); }
+.m-green .metric-val { color: var(--green); }
+.m-blue { border-color: rgba(79,195,247,0.3); }
+.m-blue .metric-val { color: var(--accent); }
+.m-amber { border-color: rgba(252,211,77,0.3); }
+.m-amber .metric-val { color: var(--amber); }
+.m-red { border-color: rgba(248,113,113,0.3); }
+.m-red .metric-val { color: var(--red); }
+
+.metric-glow {
+  position: absolute;
+  top: -20px; right: -20px;
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  filter: blur(30px);
+  opacity: 0.5;
+}
+
+/* ===== PROGRESS ===== */
+.prog-wrap {
+  height: 5px;
+  background: var(--surface2);
+  border-radius: 3px;
+  margin-top: 8px;
+  overflow: hidden;
+}
+
+.prog-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
+}
+
+.pg-green { background: var(--green); }
+.pg-amber { background: var(--amber); }
+.pg-red { background: var(--red); }
+.pg-blue { background: var(--accent); }
+
+/* ===== NUTRITION LIST ===== */
+.nutr-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.nutr-row:last-child { border-bottom: none; }
+.nutr-name { font-size: 13px; color: var(--text2); width: 72px; flex-shrink: 0; }
+.nutr-bar { flex: 1; }
+.nutr-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 600;
+  width: 62px;
+  text-align: right;
+  flex-shrink: 0;
+}
+.nutr-max { font-size: 10px; color: var(--text3); width: 52px; text-align: right; flex-shrink: 0; }
+
+/* ===== MEAL LIST ===== */
+.meal-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: var(--surface2);
+  border-radius: var(--rs);
+  margin-bottom: 8px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.meal-item:hover { border-color: var(--border2); }
+.meal-item:active { transform: scale(0.98); }
+
+.meal-emoji {
+  width: 48px; height: 48px;
+  border-radius: 10px;
+  background: var(--surface);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 26px;
+  flex-shrink: 0;
+}
+
+.meal-info { flex: 1; min-width: 0; }
+.meal-name { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.meal-time { font-size: 11px; color: var(--text3); margin-top: 2px; }
+.meal-tags { display: flex; gap: 4px; margin-top: 4px; flex-wrap: wrap; }
+
+.tag {
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 20px;
+  border: 1px solid;
+  white-space: nowrap;
+}
+.tag-green { color: var(--green); border-color: var(--green); background: var(--green-dim); }
+.tag-amber { color: var(--amber); border-color: var(--amber); background: var(--amber-dim); }
+.tag-red { color: var(--red); border-color: var(--red); background: var(--red-dim); }
+.tag-blue { color: var(--accent); border-color: var(--accent); background: var(--accent-glow); }
+
+.meal-kcal {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  color: var(--accent);
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.meal-kcal-unit { font-size: 10px; color: var(--text3); }
+
+/* ===== GLUCOSE CHART ===== */
+.glucose-big {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 6px 0 10px;
+}
+
+.glucose-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 44px;
+  font-weight: 600;
+  color: var(--amber);
+  line-height: 1;
+}
+
+.glucose-badge {
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-weight: 600;
+}
+
+.gb-ok { background: var(--green-dim); color: var(--green); border: 1px solid var(--green); }
+.gb-warn { background: var(--amber-dim); color: var(--amber); border: 1px solid var(--amber); }
+.gb-high { background: var(--red-dim); color: var(--red); border: 1px solid var(--red); }
+
+/* ===== CAMERA PAGE ===== */
+.camera-zone {
+  border: 2px dashed var(--border2);
+  border-radius: var(--r);
+  padding: 40px 24px;
+  text-align: center;
+  background: var(--surface2);
+  cursor: pointer;
+  transition: all 0.3s;
+  margin-bottom: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.camera-zone:hover, .camera-zone.active-drop {
+  border-color: var(--accent);
+  background: var(--accent-glow);
+}
+
+.camera-icon { font-size: 52px; display: block; margin-bottom: 12px; }
+.camera-text { font-size: 15px; color: var(--text2); }
+.camera-sub { font-size: 12px; color: var(--text3); margin-top: 6px; }
+
+.cam-btns { display: flex; gap: 10px; margin-bottom: 16px; }
+.cam-btn { flex: 1; }
+
+/* ===== AI RESULT ===== */
+.ai-result {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 16px;
+  margin-bottom: 12px;
+  animation: slideUp 0.4s ease;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.ai-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.ai-badge {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, var(--accent), var(--purple));
+  color: #0d1420;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.ai-food { font-size: 16px; font-weight: 600; }
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.chip {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 5px 10px;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.chip-l { color: var(--text3); }
+.chip-v { font-family: 'JetBrains Mono', monospace; font-weight: 600; }
+
+.alert-box {
+  border-radius: var(--rs);
+  padding: 12px 14px;
+  margin-bottom: 10px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.alert-box .alert-title { font-weight: 600; margin-bottom: 4px; font-size: 12px; }
+
+.alert-warn { background: var(--amber-dim); border: 1px solid rgba(252,211,77,0.3); color: var(--text2); }
+.alert-warn .alert-title { color: var(--amber); }
+.alert-ok { background: var(--green-dim); border: 1px solid rgba(74,222,128,0.3); color: var(--text2); }
+.alert-ok .alert-title { color: var(--green); }
+.alert-info { background: var(--accent-glow); border: 1px solid rgba(79,195,247,0.3); color: var(--text2); }
+.alert-info .alert-title { color: var(--accent); }
+
+/* ===== EDIT FORM ===== */
+.edit-form { display: none; }
+.edit-form.open { display: block; }
+
+.form-row {
+  margin-bottom: 12px;
+}
+
+.form-label {
+  font-size: 12px;
+  color: var(--text2);
+  margin-bottom: 6px;
+  display: block;
+}
+
+.form-input {
+  width: 100%;
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--rs);
+  padding: 11px 14px;
+  color: var(--text);
+  font-size: 14px;
+  font-family: 'Noto Sans JP', sans-serif;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.form-input:focus { border-color: var(--accent); }
+
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+/* ===== MENU PAGE ===== */
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--rs);
+  padding: 11px 14px;
+  margin-bottom: 14px;
+  transition: border-color 0.2s;
+}
+
+.search-bar:focus-within { border-color: var(--accent); }
+
+.search-bar input {
+  flex: 1;
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: 14px;
+  font-family: 'Noto Sans JP', sans-serif;
+  outline: none;
+}
+
+.search-bar input::placeholder { color: var(--text3); }
+
+.filter-pills {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  margin-bottom: 14px;
+  scrollbar-width: none;
+}
+
+.filter-pills::-webkit-scrollbar { display: none; }
+
+.pill {
+  flex-shrink: 0;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  border: 1.5px solid var(--border2);
+  color: var(--text2);
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.pill.active { border-color: var(--accent); color: var(--accent); background: var(--accent-glow); }
+
+.menu-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.menu-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.25s;
+}
+
+.menu-card:hover { border-color: var(--border2); transform: translateY(-2px); box-shadow: var(--shadow); }
+.menu-card:active { transform: scale(0.97); }
+
+.menu-thumb {
+  height: 80px;
+  background: var(--surface2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 40px;
+}
+
+.menu-body { padding: 10px; }
+.menu-name { font-size: 13px; font-weight: 500; line-height: 1.4; margin-bottom: 6px; }
+.menu-stats { font-size: 10px; color: var(--text3); font-family: 'JetBrains Mono', monospace; }
+
+/* ===== HISTORY PAGE ===== */
+.period-selector {
+  display: flex;
+  background: var(--surface2);
+  border-radius: var(--rs);
+  padding: 3px;
+  margin-bottom: 16px;
+}
+
+.period-btn {
+  flex: 1;
+  padding: 8px;
+  border-radius: 8px;
+  font-size: 12px;
+  text-align: center;
+  cursor: pointer;
+  color: var(--text2);
+  transition: all 0.2s;
+}
+
+.period-btn.active {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.history-day {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 14px;
+  margin-bottom: 10px;
+}
+
+.history-day-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.history-date { font-size: 13px; font-weight: 500; }
+.history-score {
+  font-size: 12px;
+  padding: 3px 10px;
+  border-radius: 20px;
+}
+
+.score-good { background: var(--green-dim); color: var(--green); }
+.score-warn { background: var(--amber-dim); color: var(--amber); }
+.score-bad { background: var(--red-dim); color: var(--red); }
+
+.history-meals {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.history-meal-chip {
+  font-size: 11px;
+  padding: 4px 10px;
+  background: var(--surface2);
+  border-radius: 20px;
+  color: var(--text2);
+}
+
+/* ===== DOCTOR PAGE ===== */
+.patient-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.patient-card:hover { border-color: var(--border2); }
+.patient-card:active { transform: scale(0.98); }
+
+.patient-status {
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.ps-ok { background: var(--green); box-shadow: 0 0 8px var(--green); }
+.ps-warn { background: var(--amber); box-shadow: 0 0 8px var(--amber); }
+.ps-alert { background: var(--red); box-shadow: 0 0 8px var(--red); animation: blink 1.5s infinite; }
+
+@keyframes blink {
+  0%,100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.patient-avatar {
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  background: var(--surface2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.patient-name { font-size: 14px; font-weight: 500; }
+.patient-info { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+.patient-data { margin-left: auto; text-align: right; flex-shrink: 0; }
+.patient-data-val { font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+.patient-data-label { font-size: 10px; color: var(--text3); }
+
+/* ===== SETTINGS PAGE ===== */
+.settings-section { margin-bottom: 20px; }
+.settings-title {
+  font-size: 11px;
+  color: var(--text3);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  padding: 0 4px;
+}
+
+.setting-row {
+  display: flex;
+  align-items: center;
+  padding: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--rs);
+  margin-bottom: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.setting-row:hover { border-color: var(--border2); }
+
+.setting-icon { font-size: 20px; margin-right: 12px; flex-shrink: 0; }
+.setting-text { flex: 1; }
+.setting-name { font-size: 14px; }
+.setting-desc { font-size: 12px; color: var(--text3); margin-top: 2px; }
+.setting-arrow { color: var(--text3); font-size: 14px; }
+
+.toggle {
+  width: 44px; height: 24px;
+  border-radius: 12px;
+  background: var(--border2);
+  position: relative;
+  cursor: pointer;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.toggle.on { background: var(--accent); }
+
+.toggle::after {
+  content: '';
+  position: absolute;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: white;
+  top: 2px; left: 2px;
+  transition: transform 0.2s;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.toggle.on::after { transform: translateX(20px); }
+
+/* ===== PREMIUM BANNER ===== */
+.premium-banner {
+  background: linear-gradient(135deg, rgba(192,132,252,0.15), rgba(79,195,247,0.15));
+  border: 1px solid rgba(192,132,252,0.3);
+  border-radius: var(--r);
+  padding: 16px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.premium-icon { font-size: 28px; flex-shrink: 0; }
+.premium-text .ptitle { font-size: 14px; font-weight: 600; color: var(--purple); }
+.premium-text .psub { font-size: 12px; color: var(--text2); margin-top: 2px; }
+
+/* ===== AD BANNER ===== */
+.ad-banner {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--rs);
+  padding: 10px 14px;
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ad-label { font-size: 9px; color: var(--text3); }
+.ad-text { font-size: 12px; color: var(--text2); }
+.ad-x { font-size: 12px; color: var(--text3); cursor: pointer; padding: 4px; }
+
+/* ===== MODAL ===== */
+.modal-bg {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.7);
+  display: none; align-items: flex-end; justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.modal-bg.open { display: flex; }
+
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 24px 24px 0 0;
+  padding: 24px;
+  width: 100%;
+  max-width: 480px;
+  animation: slideUp 0.3s ease;
+  padding-bottom: max(24px, env(safe-area-inset-bottom));
+}
+
+.modal-handle {
+  width: 36px; height: 4px;
+  background: var(--border2);
+  border-radius: 2px;
+  margin: 0 auto 20px;
+}
+
+.modal-title {
+  font-family: 'Kaisei Opti', serif;
+  font-size: 20px;
+  margin-bottom: 6px;
+}
+
+.modal-sub { font-size: 13px; color: var(--text2); margin-bottom: 20px; }
+
+.plan-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--rs);
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.plan-row.selected { border-color: var(--accent); background: var(--accent-glow); }
+.plan-icon { font-size: 24px; flex-shrink: 0; }
+.plan-info { flex: 1; }
+.plan-name { font-size: 14px; font-weight: 500; }
+.plan-desc { font-size: 12px; color: var(--text2); margin-top: 2px; }
+.plan-price { font-family: 'JetBrains Mono', monospace; font-size: 16px; color: var(--accent); flex-shrink: 0; }
+
+/* ===== LOADING ===== */
+.loading-overlay {
+  position: fixed; inset: 0;
+  background: rgba(13,20,32,0.85);
+  display: none; align-items: center; justify-content: center;
+  z-index: 999;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.loading-overlay.open { display: flex; }
+
+.loader {
+  width: 48px; height: 48px;
+  border: 3px solid var(--border2);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.loading-text { font-size: 14px; color: var(--text2); }
+
+/* ===== TOAST ===== */
+.toast {
+  position: fixed;
+  bottom: 90px; left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 24px;
+  padding: 12px 20px;
+  font-size: 13px;
+  z-index: 2000;
+  transition: transform 0.3s ease;
+  box-shadow: var(--shadow);
+  white-space: nowrap;
+}
+
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* ===== RESPONSIVE DESKTOP ===== */
+@media (min-width: 600px) {
+  .metrics-row { grid-template-columns: repeat(4, 1fr); }
+  .menu-grid { grid-template-columns: repeat(3, 1fr); }
+  .cam-btns { max-width: 480px; }
+  .modal { border-radius: 24px; margin-bottom: 24px; }
+  .modal-bg { align-items: center; }
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in { animation: fadeIn 0.35s ease; }
+
+.stagger > * {
+  animation: fadeIn 0.35s ease both;
+}
+.stagger > *:nth-child(1) { animation-delay: 0.05s; }
+.stagger > *:nth-child(2) { animation-delay: 0.10s; }
+.stagger > *:nth-child(3) { animation-delay: 0.15s; }
+.stagger > *:nth-child(4) { animation-delay: 0.20s; }
+.stagger > *:nth-child(5) { animation-delay: 0.25s; }
+.stagger > *:nth-child(6) { animation-delay: 0.30s; }
+
+/* ===== DOCTOR LOGIN ===== */
+#s-doctor-login {
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: radial-gradient(ellipse at 70% 30%, rgba(74,222,128,0.06) 0%, transparent 60%), var(--bg);
+}
+
+.doc-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 36px 28px;
+  width: 100%;
+  max-width: 400px;
+}
+
+.doc-title {
+  font-family: 'Kaisei Opti', serif;
+  font-size: 24px;
+  margin-bottom: 6px;
+  text-align: center;
+}
+
+.doc-sub { font-size: 13px; color: var(--text2); text-align: center; margin-bottom: 28px; }
+
+/* ===== DETAIL MODAL ===== */
+.detail-section { margin-bottom: 16px; }
+.detail-label { font-size: 11px; color: var(--text3); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
+
+</style>
+</head>
+<body>
+
+<!-- ============================
+     ONBOARDING
+============================= -->
+<div class="screen active" id="s-onboarding">
+  <div class="ob-logo">
+    <span class="ob-icon">🫁</span>
+    <div class="ob-title">RenalCare</div>
+    <div class="ob-sub">腎臓病の食事管理を<br>もっとかんたんに</div>
+  </div>
+
+  <!-- STEP 1: タイプ選択 -->
+  <div class="ob-card fade-in" id="ob-step1">
+    <div class="ob-step">ステップ 1 / 3</div>
+    <div class="ob-question">あなたの状態を教えてください</div>
+    <div class="ob-choices">
+      <div class="ob-choice" id="oc-normal" onclick="selectObChoice('normal')">
+        <div class="ob-choice-icon">🩺</div>
+        <div class="ob-choice-text">
+          <div class="name">慢性腎不全のみ</div>
+          <div class="desc">糖尿病なし — 糖質×1</div>
+        </div>
+      </div>
+      <div class="ob-choice" id="oc-t2d" onclick="selectObChoice('t2d')">
+        <div class="ob-choice-icon">💊</div>
+        <div class="ob-choice-text">
+          <div class="name">慢性腎不全＋2型糖尿病</div>
+          <div class="desc">2型糖尿病あり — 糖質×3</div>
+        </div>
+      </div>
+      <div class="ob-choice" id="oc-t1d" onclick="selectObChoice('t1d')">
+        <div class="ob-choice-icon">💉</div>
+        <div class="ob-choice-text">
+          <div class="name">慢性腎不全＋1型糖尿病</div>
+          <div class="desc">1型糖尿病あり — 糖質×5</div>
+        </div>
+      </div>
+    </div>
+    <button class="btn btn-primary btn-full" id="ob-btn1" disabled onclick="goObStep(2)">次へ →</button>
+    <div class="ob-dots">
+      <div class="ob-dot active"></div>
+      <div class="ob-dot"></div>
+      <div class="ob-dot"></div>
+    </div>
+    <div style="text-align:center;margin-top:16px;">
+      <span style="font-size:12px;color:var(--text3);cursor:pointer;" onclick="showScreen('s-doctor-login')">
+        🏥 医療機関の方はこちら
+      </span>
+    </div>
+  </div>
+
+  <!-- STEP 2: 名前 -->
+  <div class="ob-card fade-in" id="ob-step2" style="display:none;">
+    <div class="ob-step">ステップ 2 / 3</div>
+    <div class="ob-question">お名前を教えてください</div>
+    <input class="ob-name-input" id="ob-name" type="text" placeholder="例：田中 花子" oninput="checkObName()" />
+    <button class="btn btn-primary btn-full" id="ob-btn2" disabled onclick="goObStep(3)">次へ →</button>
+    <div style="margin-top:12px;">
+      <button class="btn btn-ghost btn-full" onclick="goObStep(1)">← 戻る</button>
+    </div>
+    <div class="ob-dots">
+      <div class="ob-dot"></div>
+      <div class="ob-dot active"></div>
+      <div class="ob-dot"></div>
+    </div>
+  </div>
+
+  <!-- STEP 3: 目標値設定 -->
+  <div class="ob-card fade-in" id="ob-step3" style="display:none;">
+    <div class="ob-step">ステップ 3 / 3</div>
+    <div class="ob-question">担当医から指示された<br>1日の目標値を入力してください</div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:16px;">
+      ※ わからない場合は初期値のまま後で変更できます
+    </div>
+    <div class="form-grid" style="margin-bottom:10px;">
+      <div class="form-row">
+        <label class="form-label">タンパク質 (g)</label>
+        <input class="form-input" id="ob-protein" type="number" value="40" />
+      </div>
+      <div class="form-row">
+        <label class="form-label">カリウム (mg)</label>
+        <input class="form-input" id="ob-potassium" type="number" value="2000" />
+      </div>
+      <div class="form-row">
+        <label class="form-label">リン (mg)</label>
+        <input class="form-input" id="ob-phosphorus" type="number" value="700" />
+      </div>
+      <div class="form-row">
+        <label class="form-label">水分 (mL)</label>
+        <input class="form-input" id="ob-water" type="number" value="1500" />
+      </div>
+    </div>
+    <button class="btn btn-primary btn-full" onclick="finishOnboarding()">✓ アプリを始める</button>
+    <div style="margin-top:10px;">
+      <button class="btn btn-ghost btn-full" onclick="goObStep(2)">← 戻る</button>
+    </div>
+    <div class="ob-dots">
+      <div class="ob-dot"></div>
+      <div class="ob-dot"></div>
+      <div class="ob-dot active"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================
+     DOCTOR LOGIN
+============================= -->
+<div class="screen" id="s-doctor-login">
+  <div class="doc-card fade-in">
+    <div style="font-size:40px;text-align:center;margin-bottom:14px;">🏥</div>
+    <div class="doc-title">医療機関ログイン</div>
+    <div class="doc-sub">患者データのリアルタイム管理</div>
+    <div class="form-row">
+      <label class="form-label">施設コード</label>
+      <input class="form-input" type="text" placeholder="例：CLINIC-0001" value="CLINIC-0001" />
+    </div>
+    <div class="form-row">
+      <label class="form-label">パスワード</label>
+      <input class="form-input" type="password" placeholder="パスワード" value="••••••••" />
+    </div>
+    <button class="btn btn-green btn-full" style="margin-top:8px;" onclick="showScreen('s-doctor')">
+      ログイン →
+    </button>
+    <div style="margin-top:12px;">
+      <button class="btn btn-ghost btn-full" onclick="showScreen('s-onboarding')">← 戻る</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================
+     MAIN APP
+============================= -->
+<div class="screen" id="s-app">
+  <div class="app-header">
+    <div class="header-logo">🫁 RenalCare</div>
+    <div class="header-user" onclick="navTo('settings')">
+      <div class="header-avatar">👩</div>
+      <div>
+        <div class="header-name" id="header-name">田中 花子</div>
+        <div style="font-size:10px;color:var(--accent);" id="header-type">糖尿病モード</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="app-content">
+
+    <!-- HOME -->
+    <div class="page active" id="page-home">
+      <div class="page-title-row">
+        <div>
+          <div class="page-title">今日の記録</div>
+          <div class="page-sub" id="home-date">読み込み中...</div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="navTo('record')">📸 記録する</button>
+      </div>
+
+      <!-- 4 metrics -->
+      <div class="metrics-row stagger" id="home-metrics">
+        <div class="metric-card m-green">
+          <div class="metric-glow" style="background:var(--green-dim)"></div>
+          <div class="card-title">カロリー</div>
+          <div class="metric-val" id="m-kcal">1,240<span class="metric-unit">kcal</span></div>
+          <div class="metric-name">目標 1,800kcal</div>
+          <div class="prog-wrap"><div class="prog-fill pg-green" style="width:69%"></div></div>
+        </div>
+        <div class="metric-card m-blue">
+          <div class="metric-glow" style="background:var(--accent-glow)"></div>
+          <div class="card-title">タンパク質</div>
+          <div class="metric-val" id="m-protein">38<span class="metric-unit">g</span></div>
+          <div class="metric-name">目標 <span id="limit-protein">40</span>g以下</div>
+          <div class="prog-wrap"><div class="prog-fill pg-blue" id="prog-protein" style="width:95%"></div></div>
+        </div>
+        <div class="metric-card m-amber">
+          <div class="metric-glow" style="background:var(--amber-dim)"></div>
+          <div class="card-title">カリウム</div>
+          <div class="metric-val" id="m-potassium">1,820<span class="metric-unit">mg</span></div>
+          <div class="metric-name">目標 <span id="limit-potassium">2,000</span>mg以下</div>
+          <div class="prog-wrap"><div class="prog-fill pg-amber" id="prog-potassium" style="width:91%"></div></div>
+        </div>
+        <div class="metric-card m-red">
+          <div class="metric-glow" style="background:var(--red-dim)"></div>
+          <div class="card-title">リン</div>
+          <div class="metric-val" id="m-phosphorus">620<span class="metric-unit">mg</span></div>
+          <div class="metric-name">目標 <span id="limit-phosphorus">700</span>mg以下</div>
+          <div class="prog-wrap"><div class="prog-fill pg-red" id="prog-phosphorus" style="width:89%"></div></div>
+        </div>
+      </div>
+
+      <!-- Blood glucose -->
+      <div class="card">
+        <div class="card-title">推定血糖値（食後）</div>
+        <div class="glucose-big">
+          <div class="glucose-num" id="home-glucose">142</div>
+          <div style="font-size:12px;color:var(--text2);">mg/dL</div>
+          <div class="glucose-badge gb-warn" id="home-glucose-badge">やや高め</div>
+        </div>
+        <svg viewBox="0 0 340 70" style="width:100%;height:70px;">
+          <defs>
+            <linearGradient id="gGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="rgba(252,211,77,0.25)"/>
+              <stop offset="100%" stop-color="rgba(252,211,77,0)"/>
+            </linearGradient>
+          </defs>
+          <rect x="0" y="18" width="340" height="30" fill="rgba(74,222,128,0.05)"/>
+          <path d="M0,60 C30,60 40,45 65,42 C90,38 100,52 130,50 C160,48 175,28 210,30 C245,32 255,40 280,37 L340,34" fill="none" stroke="#fcd34d" stroke-width="2" stroke-linecap="round"/>
+          <path d="M0,60 C30,60 40,45 65,42 C90,38 100,52 130,50 C160,48 175,28 210,30 C245,32 255,40 280,37 L340,34 L340,70 L0,70Z" fill="url(#gGrad)"/>
+          <circle cx="340" cy="34" r="4" fill="#fcd34d"/>
+          <text x="2" y="16" fill="rgba(74,222,128,0.5)" font-size="8" font-family="monospace">140 mg/dL</text>
+          <text x="2" y="52" fill="rgba(74,222,128,0.5)" font-size="8" font-family="monospace">70 mg/dL</text>
+        </svg>
+        <div style="font-size:11px;color:var(--text3);margin-top:6px;" id="home-glucose-mode">💉 糖尿病モードで計算中（GI値考慮）</div>
+      </div>
+
+      <!-- Today's meals -->
+      <div class="card">
+        <div class="card-title">今日の食事</div>
+        <div id="home-meals">
+          <div class="meal-item">
+            <div class="meal-emoji">🍚</div>
+            <div class="meal-info">
+              <div class="meal-name">朝食 — お粥・卵焼き・味噌汁</div>
+              <div class="meal-time">07:32</div>
+              <div class="meal-tags"><div class="tag tag-green">低タンパク</div></div>
+            </div>
+            <div class="meal-kcal">380<div class="meal-kcal-unit">kcal</div></div>
+          </div>
+          <div class="meal-item">
+            <div class="meal-emoji">🐟</div>
+            <div class="meal-info">
+              <div class="meal-name">昼食 — 鮭の塩焼き定食</div>
+              <div class="meal-time">12:15</div>
+              <div class="meal-tags"><div class="tag tag-amber">タンパク注意</div></div>
+            </div>
+            <div class="meal-kcal">560<div class="meal-kcal-unit">kcal</div></div>
+          </div>
+          <div class="meal-item" style="opacity:0.5;border:1px dashed var(--border);" onclick="navTo('record')">
+            <div class="meal-emoji" style="font-size:20px;">＋</div>
+            <div class="meal-info">
+              <div class="meal-name" style="color:var(--text3)">夕食を記録する</div>
+              <div class="meal-time">タップして記録</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Nutrition detail -->
+      <div class="card">
+        <div class="card-title">栄養管理 詳細</div>
+        <div class="nutr-row">
+          <div class="nutr-name">カリウム</div>
+          <div class="nutr-bar"><div class="prog-wrap" style="margin:0"><div class="prog-fill pg-amber" style="width:91%"></div></div></div>
+          <div class="nutr-val" style="color:var(--amber)">1,820mg</div>
+          <div class="nutr-max">/ 2,000</div>
+        </div>
+        <div class="nutr-row">
+          <div class="nutr-name">リン</div>
+          <div class="nutr-bar"><div class="prog-wrap" style="margin:0"><div class="prog-fill pg-red" style="width:89%"></div></div></div>
+          <div class="nutr-val" style="color:var(--red)">620mg</div>
+          <div class="nutr-max">/ 700</div>
+        </div>
+        <div class="nutr-row">
+          <div class="nutr-name">タンパク質</div>
+          <div class="nutr-bar"><div class="prog-wrap" style="margin:0"><div class="prog-fill pg-blue" style="width:95%"></div></div></div>
+          <div class="nutr-val" style="color:var(--accent)">38g</div>
+          <div class="nutr-max">/ 40g</div>
+        </div>
+        <div class="nutr-row">
+          <div class="nutr-name">ナトリウム</div>
+          <div class="nutr-bar"><div class="prog-wrap" style="margin:0"><div class="prog-fill pg-green" style="width:62%"></div></div></div>
+          <div class="nutr-val" style="color:var(--green)">1,240mg</div>
+          <div class="nutr-max">/ 2,000</div>
+        </div>
+        <div class="nutr-row">
+          <div class="nutr-name">水分</div>
+          <div class="nutr-bar"><div class="prog-wrap" style="margin:0"><div class="prog-fill pg-blue" style="width:55%"></div></div></div>
+          <div class="nutr-val" style="color:var(--accent)">825mL</div>
+          <div class="nutr-max">/ 1,500</div>
+        </div>
+      </div>
+
+      <!-- Ad banner -->
+      <div class="ad-banner" id="ad-home">
+        <div>
+          <div class="ad-label">広告</div>
+          <div class="ad-text">🏥 腎臓専門クリニック — 無料相談受付中</div>
+        </div>
+        <div class="ad-x" onclick="document.getElementById('ad-home').style.display='none'">✕</div>
+      </div>
+    </div>
+
+    <!-- RECORD -->
+    <div class="page" id="page-record">
+      <div class="page-title-row">
+        <div>
+          <div class="page-title">食事を記録</div>
+          <div class="page-sub">写真で自動解析</div>
+        </div>
+      </div>
+
+      <!-- Camera zone -->
+      <div class="camera-zone" id="cameraZone" onclick="startAnalysis()">
+        <span class="camera-icon">📸</span>
+        <div class="camera-text">タップして写真を撮影</div>
+        <div class="camera-sub">または食事画像をここにドロップ</div>
+      </div>
+
+      <div class="cam-btns">
+        <button class="btn btn-primary cam-btn" onclick="startAnalysis()">📷 カメラで撮影</button>
+        <button class="btn btn-outline cam-btn" onclick="showEatOutModal()">🏪 外食から選ぶ</button>
+      </div>
+
+      <!-- AI Result (hidden by default) -->
+      <div id="aiResult" style="display:none;">
+        <div class="ai-result">
+          <div class="ai-header">
+            <div class="ai-badge">AI 解析済み</div>
+            <div class="ai-food" id="ai-food-name">鮭の塩焼き定食</div>
+          </div>
+          <div style="font-size:12px;color:var(--text3);margin-bottom:12px;" id="ai-detected">
+            ✓ 鮭の塩焼き、白米150g、わかめ味噌汁、漬物 を検出
+          </div>
+          <div class="chips" id="ai-chips">
+            <div class="chip"><span class="chip-l">カロリー</span><span class="chip-v" style="color:var(--green)">520kcal</span></div>
+            <div class="chip"><span class="chip-l">炭水化物</span><span class="chip-v" style="color:var(--accent)">68g</span></div>
+            <div class="chip"><span class="chip-l">食物繊維</span><span class="chip-v" style="color:var(--green)">3g</span></div>
+            <div class="chip"><span class="chip-l">タンパク質</span><span class="chip-v" style="color:var(--amber)">28g</span></div>
+            <div class="chip"><span class="chip-l">脂質</span><span class="chip-v">12g</span></div>
+            <div class="chip"><span class="chip-l">カリウム</span><span class="chip-v" style="color:var(--amber)">680mg</span></div>
+            <div class="chip"><span class="chip-l">リン</span><span class="chip-v" style="color:var(--red)">280mg</span></div>
+            <div class="chip"><span class="chip-l">ナトリウム</span><span class="chip-v">820mg</span></div>
+            <div class="chip"><span class="chip-l">水分</span><span class="chip-v">250mL</span></div>
+          </div>
+
+          <div class="alert-box alert-warn" id="ai-protein-alert">
+            <div class="alert-title">⚠ タンパク質について</div>
+            タンパク質が28gと高めです。今日の残り摂取可能量は12gです。夕食は豆腐・野菜中心にすることをおすすめします。
+          </div>
+
+          <div class="alert-box alert-ok" id="ai-glucose-result">
+            <div class="alert-title">🩸 推定血糖値上昇</div>
+            炭水化物68g－食物繊維3g＝糖質65g → <strong>推定 +325 mg/dL</strong>（糖尿病モード：1g×5mg/dL）<br>
+            <span style="font-size:11px;color:var(--text3)">食後1〜2時間で最大値に達する見込み</span>
+          </div>
+        </div>
+
+        <!-- Manual edit -->
+        <button class="btn btn-ghost btn-full" onclick="toggleEdit()" style="margin-bottom:10px;">✏️ 手動で修正する</button>
+
+        <div class="edit-form" id="editForm">
+          <div class="card">
+            <div class="card-title">手動修正</div>
+            <div class="form-grid">
+              <div class="form-row">
+                <label class="form-label">カロリー (kcal)</label>
+                <input class="form-input" type="number" value="520" />
+              </div>
+              <div class="form-row">
+                <label class="form-label">炭水化物 (g)</label>
+                <input class="form-input" type="number" id="edit-carb" value="68" oninput="recalcGlucose()" />
+              </div>
+              <div class="form-row">
+                <label class="form-label">食物繊維 (g)</label>
+                <input class="form-input" type="number" id="edit-fiber" value="3" oninput="recalcGlucose()" />
+              </div>
+              <div class="form-row">
+                <label class="form-label">タンパク質 (g)</label>
+                <input class="form-input" type="number" value="28" />
+              </div>
+              <div class="form-row">
+                <label class="form-label">カリウム (mg)</label>
+                <input class="form-input" type="number" value="680" />
+              </div>
+              <div class="form-row">
+                <label class="form-label">リン (mg)</label>
+                <input class="form-input" type="number" value="280" />
+              </div>
+              <div class="form-row">
+                <label class="form-label">水分 (mL)</label>
+                <input class="form-input" type="number" value="250" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:10px;">
+          <button class="btn btn-primary" style="flex:1;" onclick="saveMeal()">✓ この内容で保存</button>
+          <button class="btn btn-outline" onclick="resetRecord()">やり直す</button>
+        </div>
+      </div>
+
+      <!-- Remaining today -->
+      <div class="card" style="margin-top:12px;">
+        <div class="card-title">今日の残り摂取可能量</div>
+        <div class="nutr-row">
+          <div class="nutr-name">タンパク質</div>
+          <div class="nutr-bar"><div class="prog-wrap" style="margin:0"><div class="prog-fill pg-blue" style="width:25%"></div></div></div>
+          <div class="nutr-val" style="color:var(--green)">残 12g</div>
+        </div>
+        <div class="nutr-row">
+          <div class="nutr-name">カリウム</div>
+          <div class="nutr-bar"><div class="prog-wrap" style="margin:0"><div class="prog-fill pg-amber" style="width:48%"></div></div></div>
+          <div class="nutr-val" style="color:var(--green)">残 180mg</div>
+        </div>
+        <div class="nutr-row">
+          <div class="nutr-name">リン</div>
+          <div class="nutr-bar"><div class="prog-wrap" style="margin:0"><div class="prog-fill pg-red" style="width:34%"></div></div></div>
+          <div class="nutr-val" style="color:var(--green)">残 80mg</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MENU -->
+    <div class="page" id="page-menu">
+      <div class="page-title-row">
+        <div>
+          <div class="page-title">献立を探す</div>
+          <div class="page-sub">腎不全向けレシピ</div>
+        </div>
+      </div>
+
+      <div class="search-bar">
+        <span>🔍</span>
+        <input type="text" placeholder="食材・メニュー名で検索..." oninput="searchMenu(this.value)" />
+      </div>
+
+      <div class="filter-pills">
+        <div class="pill active" onclick="setPill(this,'all')">すべて</div>
+        <div class="pill" onclick="setPill(this,'breakfast')">🌅 朝食</div>
+        <div class="pill" onclick="setPill(this,'lunch')">☀️ 昼食</div>
+        <div class="pill" onclick="setPill(this,'dinner')">🌙 夕食</div>
+        <div class="pill" onclick="setPill(this,'snack')">🍬 おやつ</div>
+        <div class="pill" onclick="setPill(this,'lowprotein')">🔵 低タンパク</div>
+        <div class="pill" onclick="setPill(this,'lowk')">🟡 低カリウム</div>
+        <div class="pill" onclick="setPill(this,'japanese')">🇯🇵 和食</div>
+        <div class="pill" onclick="setPill(this,'western')">🇫🇷 洋食</div>
+        <div class="pill" onclick="setPill(this,'chinese')">🇨🇳 中華</div>
+        <div class="pill" onclick="setPill(this,'korean')">🇰🇷 韓国</div>
+        <div class="pill" onclick="setPill(this,'italian')">🇮🇹 イタリアン</div>
+        <div class="pill" onclick="setPill(this,'thai')">🇹🇭 タイ</div>
+        <div class="pill" onclick="setPill(this,'indian')">🇮🇳 インド</div>
+        <div class="pill" onclick="setPill(this,'mediterranean')">🫒 地中海</div>
+        <div class="pill" onclick="setPill(this,'vietnamese')">🇻🇳 ベトナム</div>
+        <div class="pill" onclick="setPill(this,'mexican')">🇲🇽 メキシコ</div>
+      </div>
+
+      <div class="menu-grid" id="menuGrid">
+        <!-- injected by JS -->
+      </div>
+    </div>
+
+    <!-- HISTORY -->
+    <div class="page" id="page-history">
+      <div class="page-title-row">
+        <div>
+          <div class="page-title">記録履歴</div>
+          <div class="page-sub">過去の食事と栄養推移</div>
+        </div>
+      </div>
+
+      <div class="period-selector">
+        <div class="period-btn active" onclick="setPeriod(this,'week')">週間</div>
+        <div class="period-btn" onclick="setPeriod(this,'month')">月間</div>
+        <div class="period-btn" onclick="setPeriod(this,'3month')">3ヶ月</div>
+      </div>
+
+      <!-- Chart -->
+      <div class="card">
+        <div class="card-title">栄養推移グラフ</div>
+        <svg viewBox="0 0 340 140" style="width:100%;height:140px;">
+          <line x1="30" y1="10" x2="340" y2="10" stroke="var(--border)" stroke-width="1" stroke-dasharray="3,3"/>
+          <line x1="30" y1="50" x2="340" y2="50" stroke="var(--border)" stroke-width="1" stroke-dasharray="3,3"/>
+          <line x1="30" y1="90" x2="340" y2="90" stroke="var(--border)" stroke-width="1" stroke-dasharray="3,3"/>
+          <line x1="30" y1="130" x2="340" y2="130" stroke="var(--border)" stroke-width="1"/>
+          <text x="0" y="13" fill="var(--text3)" font-size="8">100%</text>
+          <text x="0" y="53" fill="var(--text3)" font-size="8">70%</text>
+          <text x="0" y="93" fill="var(--text3)" font-size="8">40%</text>
+          <!-- Protein bars -->
+          <rect x="40" y="40" width="14" height="90" rx="3" fill="rgba(79,195,247,0.7)"/>
+          <rect x="90" y="30" width="14" height="100" rx="3" fill="rgba(79,195,247,0.7)"/>
+          <rect x="140" y="45" width="14" height="85" rx="3" fill="rgba(79,195,247,0.7)"/>
+          <rect x="190" y="35" width="14" height="95" rx="3" fill="rgba(79,195,247,0.7)"/>
+          <rect x="240" y="50" width="14" height="80" rx="3" fill="rgba(79,195,247,0.7)"/>
+          <rect x="295" y="38" width="14" height="92" rx="3" fill="rgba(79,195,247,1)" filter="drop-shadow(0 0 4px rgba(79,195,247,0.5))"/>
+          <!-- K bars -->
+          <rect x="56" y="55" width="14" height="75" rx="3" fill="rgba(252,211,77,0.7)"/>
+          <rect x="106" y="70" width="14" height="60" rx="3" fill="rgba(252,211,77,0.7)"/>
+          <rect x="156" y="60" width="14" height="70" rx="3" fill="rgba(252,211,77,0.7)"/>
+          <rect x="206" y="65" width="14" height="65" rx="3" fill="rgba(252,211,77,0.7)"/>
+          <rect x="256" y="58" width="14" height="72" rx="3" fill="rgba(252,211,77,0.7)"/>
+          <rect x="311" y="63" width="14" height="67" rx="3" fill="rgba(252,211,77,1)" filter="drop-shadow(0 0 4px rgba(252,211,77,0.5))"/>
+          <!-- Labels -->
+          <text x="45" y="138" fill="var(--text3)" font-size="8" text-anchor="middle">月</text>
+          <text x="95" y="138" fill="var(--text3)" font-size="8" text-anchor="middle">火</text>
+          <text x="145" y="138" fill="var(--text3)" font-size="8" text-anchor="middle">水</text>
+          <text x="195" y="138" fill="var(--text3)" font-size="8" text-anchor="middle">木</text>
+          <text x="245" y="138" fill="var(--text3)" font-size="8" text-anchor="middle">金</text>
+          <text x="300" y="138" fill="var(--accent)" font-size="8" text-anchor="middle" font-weight="bold">今日</text>
+          <!-- Legend -->
+          <rect x="30" y="128" width="8" height="5" rx="1" fill="rgba(79,195,247,0.8)"/>
+          <text x="42" y="133" fill="var(--text3)" font-size="7">タンパク質</text>
+          <rect x="110" y="128" width="8" height="5" rx="1" fill="rgba(252,211,77,0.8)"/>
+          <text x="122" y="133" fill="var(--text3)" font-size="7">カリウム</text>
+        </svg>
+      </div>
+
+      <!-- Weekly stats -->
+      <div class="metrics-row">
+        <div class="metric-card m-green">
+          <div class="card-title">週平均タンパク質</div>
+          <div class="metric-val">36<span class="metric-unit">g</span></div>
+          <div style="font-size:11px;color:var(--green);margin-top:4px;">✓ 目標内</div>
+        </div>
+        <div class="metric-card m-amber">
+          <div class="card-title">記録達成率</div>
+          <div class="metric-val">86<span class="metric-unit">%</span></div>
+          <div style="font-size:11px;color:var(--amber);margin-top:4px;">継続中 🔥</div>
+        </div>
+      </div>
+
+      <!-- Day-by-day list -->
+      <div id="historyList" class="stagger">
+        <!-- injected by JS -->
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="page" id="page-settings">
+      <div class="page-title-row">
+        <div>
+          <div class="page-title">設定</div>
+          <div class="page-sub">プロフィール・目標値</div>
+        </div>
+      </div>
+
+      <!-- Premium -->
+      <div class="premium-banner" onclick="showPremiumModal()">
+        <div class="premium-icon">✨</div>
+        <div class="premium-text">
+          <div class="ptitle">プレミアムにアップグレード</div>
+          <div class="psub">広告非表示・全機能解放 — ¥580/月〜</div>
+        </div>
+        <div style="color:var(--purple);font-size:18px;">›</div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-title">プロフィール</div>
+        <div class="setting-row">
+          <div class="setting-icon">👤</div>
+          <div class="setting-text">
+            <div class="setting-name" id="s-name-display">田中 花子</div>
+            <div class="setting-desc">名前</div>
+          </div>
+          <div class="setting-arrow">›</div>
+        </div>
+        <div class="setting-row">
+          <div class="setting-icon">🩺</div>
+          <div class="setting-text">
+            <div class="setting-name" id="s-type-display">慢性腎不全＋糖尿病</div>
+            <div class="setting-desc">疾患タイプ</div>
+          </div>
+          <div class="setting-arrow">›</div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-title">1日の目標値（担当医の指示）</div>
+        <div class="setting-row" onclick="showTargetModal()">
+          <div class="setting-icon">🎯</div>
+          <div class="setting-text">
+            <div class="setting-name">目標値を変更する</div>
+            <div class="setting-desc" id="s-targets">タンパク質 40g / カリウム 2,000mg / リン 700mg</div>
+          </div>
+          <div class="setting-arrow">›</div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-title">血糖値計算</div>
+        <div class="setting-row" onclick="cycleUserType()">
+          <div class="setting-icon">🩸</div>
+          <div class="setting-text">
+            <div class="setting-name">血糖値計算モード</div>
+            <div class="setting-desc" id="s-glucose-mode-desc">2型糖尿病モード（糖質×3）</div>
+          </div>
+          <div style="font-size:18px;color:var(--text3);">›</div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-title">通知</div>
+        <div class="setting-row">
+          <div class="setting-icon">🔔</div>
+          <div class="setting-text">
+            <div class="setting-name">食事記録リマインダー</div>
+            <div class="setting-desc">毎食後に通知</div>
+          </div>
+          <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+        </div>
+        <div class="setting-row">
+          <div class="setting-icon">⚠️</div>
+          <div class="setting-text">
+            <div class="setting-name">上限アラート</div>
+            <div class="setting-desc">目標値の90%に達したら通知</div>
+          </div>
+          <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-title">連携</div>
+        <div class="setting-row">
+          <div class="setting-icon">🏥</div>
+          <div class="setting-text">
+            <div class="setting-name">医療機関と連携する</div>
+            <div class="setting-desc">主治医がデータを確認できます</div>
+          </div>
+          <div class="setting-arrow">›</div>
+        </div>
+        <div class="setting-row">
+          <div class="setting-icon">📤</div>
+          <div class="setting-text">
+            <div class="setting-name">データをエクスポート</div>
+            <div class="setting-desc">PDF形式で出力</div>
+          </div>
+          <div class="setting-arrow">›</div>
+        </div>
+      </div>
+
+      <div style="height:20px;"></div>
+    </div>
+
+  </div><!-- end app-content -->
+
+  <!-- Bottom Nav -->
+  <div class="bottom-nav">
+    <div class="nav-btn active" id="nav-home" onclick="navTo('home')">
+      <div class="nav-icon">🏠</div>
+      <div class="nav-label">ホーム</div>
+    </div>
+    <div class="nav-btn" id="nav-record" onclick="navTo('record')">
+      <div class="nav-icon">📸</div>
+      <div class="nav-label">記録</div>
+    </div>
+    <div class="nav-btn" id="nav-menu" onclick="navTo('menu')">
+      <div class="nav-icon">🍽️</div>
+      <div class="nav-label">献立</div>
+    </div>
+    <div class="nav-btn" id="nav-history" onclick="navTo('history')">
+      <div class="nav-icon">📊</div>
+      <div class="nav-label">履歴</div>
+    </div>
+    <div class="nav-btn" id="nav-settings" onclick="navTo('settings')">
+      <div class="nav-icon">⚙️</div>
+      <div class="nav-label">設定</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================
+     DOCTOR DASHBOARD
+============================= -->
+<div class="screen" id="s-doctor">
+  <div class="app-header">
+    <div class="header-logo">🏥 医療機関ダッシュボード</div>
+    <button class="btn btn-outline btn-sm" onclick="showScreen('s-onboarding')">← 戻る</button>
+  </div>
+
+  <div class="app-content" style="padding-bottom:20px;">
+    <div style="padding:16px;">
+
+      <div class="metrics-row stagger">
+        <div class="metric-card m-blue">
+          <div class="card-title">管理患者数</div>
+          <div class="metric-val" style="color:var(--accent)">24<span class="metric-unit">名</span></div>
+        </div>
+        <div class="metric-card m-amber">
+          <div class="card-title">要注意</div>
+          <div class="metric-val" style="color:var(--red)">3<span class="metric-unit">名</span></div>
+        </div>
+        <div class="metric-card m-green">
+          <div class="card-title">本日の記録率</div>
+          <div class="metric-val" style="color:var(--green)">83<span class="metric-unit">%</span></div>
+        </div>
+        <div class="metric-card">
+          <div class="card-title">更新状態</div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:8px;">
+            <div style="width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);"></div>
+            <span style="font-size:13px;color:var(--green);">LIVE</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">患者一覧（リアルタイム）</div>
+
+        <div class="patient-card" onclick="showPatientDetail('tanaka')">
+          <div class="patient-status ps-ok"></div>
+          <div class="patient-avatar">👩</div>
+          <div style="flex:1;min-width:0;">
+            <div class="patient-name">田中 花子（58歳）</div>
+            <div class="patient-info">CKD Ste.3 ／ 糖尿病あり — 2分前</div>
+            <div class="meal-tags" style="margin-top:4px;"><div class="tag tag-green">記録済み</div></div>
+          </div>
+          <div class="patient-data">
+            <div class="patient-data-val" style="color:var(--green)">K: 1,820mg</div>
+            <div class="patient-data-label">カリウム</div>
+          </div>
+        </div>
+
+        <div class="patient-card" onclick="showPatientDetail('sato')">
+          <div class="patient-status ps-warn"></div>
+          <div class="patient-avatar">👨</div>
+          <div style="flex:1;min-width:0;">
+            <div class="patient-name">佐藤 一郎（65歳）</div>
+            <div class="patient-info">CKD Ste.4 ／ 透析前 — 45分前</div>
+            <div class="meal-tags" style="margin-top:4px;"><div class="tag tag-amber">上限注意</div></div>
+          </div>
+          <div class="patient-data">
+            <div class="patient-data-val" style="color:var(--amber)">K: 1,940mg</div>
+            <div class="patient-data-label">カリウム</div>
+          </div>
+        </div>
+
+        <div class="patient-card" onclick="showPatientDetail('suzuki')">
+          <div class="patient-status ps-alert"></div>
+          <div class="patient-avatar">👴</div>
+          <div style="flex:1;min-width:0;">
+            <div class="patient-name">鈴木 健二（72歳）</div>
+            <div class="patient-info">CKD Ste.5 ／ 透析中 — 3時間前</div>
+            <div class="meal-tags" style="margin-top:4px;"><div class="tag tag-red">リン超過！</div></div>
+          </div>
+          <div class="patient-data">
+            <div class="patient-data-val" style="color:var(--red)">P: 780mg</div>
+            <div class="patient-data-label">リン ⚠超過</div>
+          </div>
+        </div>
+
+        <div class="patient-card" onclick="showPatientDetail('yamamoto')">
+          <div class="patient-status ps-ok"></div>
+          <div class="patient-avatar">👩</div>
+          <div style="flex:1;min-width:0;">
+            <div class="patient-name">山本 美咲（45歳）</div>
+            <div class="patient-info">CKD Ste.2 ／ 糖尿病なし — 1時間前</div>
+            <div class="meal-tags" style="margin-top:4px;"><div class="tag tag-green">全項目正常</div></div>
+          </div>
+          <div class="patient-data">
+            <div class="patient-data-val" style="color:var(--green)">良好</div>
+            <div class="patient-data-label">全指標</div>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn btn-green btn-full">📤 週間レポートを出力（PDF）</button>
+
+    </div>
+  </div>
+</div>
+
+<!-- ============================
+     MODALS
+============================= -->
+
+<!-- Premium Modal -->
+<div class="modal-bg" id="premiumModal" onclick="closeModal('premiumModal')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div style="font-size:36px;text-align:center;margin-bottom:12px;">✨</div>
+    <div class="modal-title" style="text-align:center;">プレミアムプラン</div>
+    <div class="modal-sub" style="text-align:center;">広告なし・全機能アンロック</div>
+    <div class="plan-row selected">
+      <div class="plan-icon">👤</div>
+      <div class="plan-info">
+        <div class="plan-name">患者向けプラン</div>
+        <div class="plan-desc">広告非表示・データエクスポート</div>
+      </div>
+      <div class="plan-price">¥580<span style="font-size:11px;color:var(--text3)">/月</span></div>
+    </div>
+    <div class="plan-row">
+      <div class="plan-icon">🏥</div>
+      <div class="plan-info">
+        <div class="plan-name">医療機関向けプラン</div>
+        <div class="plan-desc">患者リアルタイム管理（最大50名）</div>
+      </div>
+      <div class="plan-price">¥9,800<span style="font-size:11px;color:var(--text3)">/月</span></div>
+    </div>
+    <button class="btn btn-primary btn-full" style="margin-top:16px;" onclick="closeModal('premiumModal')">
+      プランを選んで登録 →
+    </button>
+    <button class="btn btn-ghost btn-full" style="margin-top:8px;" onclick="closeModal('premiumModal')">
+      あとで
+    </button>
+  </div>
+</div>
+
+<!-- Eat-out Modal -->
+<div class="modal-bg" id="eatoutModal" onclick="closeModal('eatoutModal')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div class="modal-title">外食から記録</div>
+    <div class="modal-sub">お店やメニュー名を入力してください</div>
+    <div class="search-bar" style="margin-bottom:14px;">
+      <span>🔍</span>
+      <input type="text" placeholder="例：マクドナルド ビッグマック..." />
+    </div>
+    <div style="margin-bottom:12px;">
+      <div class="card-title">よく使われるお店</div>
+      <div class="chips">
+        <div class="chip" style="cursor:pointer;" onclick="selectEatout('すき家', this)">🐮 すき家</div>
+        <div class="chip" style="cursor:pointer;" onclick="selectEatout('マクドナルド', this)">🍔 マクドナルド</div>
+        <div class="chip" style="cursor:pointer;" onclick="selectEatout('コンビニ弁当', this)">🏪 コンビニ</div>
+        <div class="chip" style="cursor:pointer;" onclick="selectEatout('ファミレス', this)">🍝 ファミレス</div>
+        <div class="chip" style="cursor:pointer;" onclick="selectEatout('回転寿司', this)">🍣 回転寿司</div>
+        <div class="chip" style="cursor:pointer;" onclick="selectEatout('ラーメン', this)">🍜 ラーメン</div>
+      </div>
+    </div>
+    <button class="btn btn-primary btn-full" onclick="closeModal('eatoutModal');navTo('record');setTimeout(startAnalysis,100);">この内容で解析 →</button>
+  </div>
+</div>
+
+<!-- Patient Detail Modal -->
+<div class="modal-bg" id="patientModal" onclick="closeModal('patientModal')">
+  <div class="modal" onclick="event.stopPropagation()" style="max-height:85vh;overflow-y:auto;">
+    <div class="modal-handle"></div>
+    <div id="patientDetailContent"></div>
+    <button class="btn btn-primary btn-full" onclick="closeModal('patientModal')">閉じる</button>
+  </div>
+</div>
+
+<!-- Target Modal -->
+<div class="modal-bg" id="targetModal" onclick="closeModal('targetModal')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div class="modal-title">目標値を設定</div>
+    <div style="margin-top:16px;">
+      <div class="form-row"><label class="form-label">タンパク質上限 (g/日)</label>
+        <input class="form-input" type="number" id="t-protein" value="40" /></div>
+      <div class="form-row"><label class="form-label">カリウム上限 (mg/日)</label>
+        <input class="form-input" type="number" id="t-potassium" value="2000" /></div>
+      <div class="form-row"><label class="form-label">リン上限 (mg/日)</label>
+        <input class="form-input" type="number" id="t-phosphorus" value="700" /></div>
+      <div class="form-row"><label class="form-label">水分上限 (ml/日)</label>
+        <input class="form-input" type="number" id="t-water" value="1500" /></div>
+    </div>
+    <button class="btn btn-primary btn-full" style="margin-top:16px;" onclick="saveTargets()">保存</button>
+    <button class="btn btn-ghost btn-full" onclick="closeModal('targetModal')">キャンセル</button>
+  </div>
+</div>
+
+<!-- Loading -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loader"></div>
+  <div class="loading-text" id="loadingText">AI が食事内容を解析中...</div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== STATE =====
+const state = {
+  userType: 't2d',
+  userName: '田中 花子',
+  targets: { protein: 40, potassium: 2000, phosphorus: 700, water: 1500 },
+  diabetesMode: true,
+  obStep: 1,
+  obType: null
+};
+
+// ===== INIT =====
+document.addEventListener('DOMContentLoaded', () => {
+  updateHomeDate();
+  renderMenuGrid();
+  renderHistory();
+});
+
+function renderHistory() {
+  // 履歴画面はサンプルデータで表示（将来的にSupabaseと連携）
+}
+
+function closeModal(id) {
+  if (id) {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('open');
+  } else {
+    document.querySelectorAll('.modal-overlay, .modal').forEach(m => m.classList.remove('open'));
+  }
+}
+
+function cycleUserType() {
+  const order = ['normal', 't2d', 't1d'];
+  const idx = order.indexOf(state.userType);
+  state.userType = order[(idx + 1) % order.length];
+  state.diabetesMode = state.userType !== 'normal';
+  const mDesc = { normal:'標準モード（糖質×1）', t2d:'2型糖尿病モード（糖質×3）', t1d:'1型糖尿病モード（糖質×5）' };
+  const el = document.getElementById('s-glucose-mode-desc');
+  if (el) el.textContent = mDesc[state.userType];
+  const tLabels = { normal:'標準モード（×1）', t2d:'2型糖尿病モード（×3）', t1d:'1型糖尿病モード（×5）' };
+  const tGluc = { normal:'🩺 標準モードで計算中（糖質×1）', t2d:'💊 2型糖尿病モードで計算中（糖質×3）', t1d:'💉 1型糖尿病モードで計算中（糖質×5）' };
+  const hType = document.getElementById('header-type');
+  if (hType) hType.textContent = tLabels[state.userType];
+  const hGluc = document.getElementById('home-glucose-mode');
+  if (hGluc) hGluc.textContent = tGluc[state.userType];
+  showToast((tLabels[state.userType] || '標準モード') + 'に変更しました');
+}
+
+function resetRecord() {
+  const zone = document.getElementById('cameraZone');
+  if (zone) {
+    zone.innerHTML = '<span class="camera-icon">📷</span><div class="camera-text">タップして写真を撮影</div><div class="camera-sub">または画像をドラッグ＆ドロップ</div>';
+    zone.style.borderColor = '';
+    zone.style.background = '';
+  }
+  const aiResult = document.getElementById('aiResult');
+  if (aiResult) aiResult.style.display = 'none';
+  analyzing = false;
+}
+
+function saveMeal() {
+  showToast('✓ 食事を記録しました');
+  resetRecord();
+  navTo('home');
+}
+
+function selectEatout(name, el) {
+  const input = document.querySelector('#eatoutModal input[type="text"]');
+  if (input) input.value = name;
+  document.querySelectorAll('#eatoutModal .chip').forEach(c => c.classList.remove('active'));
+  if (el) el.classList.add('active');
+}
+
+function setPeriod(el, period) {
+  document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function showEatOutModal() {
+  const m = document.getElementById('eatoutModal');
+  if (m) m.classList.add('open');
+}
+
+function showPatientDetail(name) {
+  const el = document.getElementById('patientDetailContent');
+  if (el) el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text2);">' + name + 'の詳細</div>';
+  const m = document.getElementById('patientModal');
+  if (m) m.classList.add('open');
+}
+
+function showPremiumModal() {
+  showToast('プレミアムプランの詳細は近日公開予定です');
+}
+
+function showTargetModal() {
+  document.getElementById('t-protein').value   = state.targets.protein;
+  document.getElementById('t-potassium').value = state.targets.potassium;
+  document.getElementById('t-phosphorus').value= state.targets.phosphorus;
+  document.getElementById('t-water').value     = state.targets.water;
+  const m = document.getElementById('targetModal');
+  if (m) m.classList.add('open');
+}
+
+function saveTargets() {
+  state.targets.protein    = parseInt(document.getElementById('t-protein').value)    || 40;
+  state.targets.potassium  = parseInt(document.getElementById('t-potassium').value)  || 2000;
+  state.targets.phosphorus = parseInt(document.getElementById('t-phosphorus').value) || 700;
+  state.targets.water      = parseInt(document.getElementById('t-water').value)      || 1500;
+  const el = document.getElementById('s-targets');
+  if (el) el.textContent = `タンパク質 ${state.targets.protein}g / カリウム ${state.targets.potassium}mg / リン ${state.targets.phosphorus}mg`;
+  closeModal('targetModal');
+  showToast('✅ 目標値を保存しました');
+}
+
+function updateHomeDate() {
+  const d = new Date();
+  const days = ['日','月','火','水','木','金','土'];
+  document.getElementById('home-date').textContent =
+    `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${days[d.getDay()]}）`;
+}
+
+// ===== SCREENS =====
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ===== ONBOARDING =====
+function selectObChoice(type) {
+  state.obType = type;
+  document.querySelectorAll('.ob-choice').forEach(c => c.classList.remove('selected'));
+  document.getElementById('oc-' + type).classList.add('selected');
+  document.getElementById('ob-btn1').disabled = false;
+}
+
+function checkObName() {
+  const v = document.getElementById('ob-name').value.trim();
+  document.getElementById('ob-btn2').disabled = v.length < 2;
+}
+
+function goObStep(n) {
+  ['ob-step1','ob-step2','ob-step3'].forEach(id => document.getElementById(id).style.display = 'none');
+  document.getElementById('ob-step' + n).style.display = 'block';
+  state.obStep = n;
+}
+
+function finishOnboarding() {
+  state.userType = state.obType || 'diabetic';
+  state.userName = document.getElementById('ob-name').value.trim() || '田中 花子';
+  state.targets.protein = parseInt(document.getElementById('ob-protein').value) || 40;
+  state.targets.potassium = parseInt(document.getElementById('ob-potassium').value) || 2000;
+  state.targets.phosphorus = parseInt(document.getElementById('ob-phosphorus').value) || 700;
+  state.targets.water = parseInt(document.getElementById('ob-water').value) || 1500;
+  state.diabetesMode = state.userType !== 'normal';
+
+  applyUserState();
+  showScreen('s-app');
+  navTo('home');
+}
+
+function applyUserState() {
+  document.getElementById('header-name').textContent = state.userName;
+  document.getElementById('header-type').textContent = state.diabetesMode ? '糖尿病モード' : '標準モード';
+  document.getElementById('s-name-display').textContent = state.userName;
+  document.getElementById('s-type-display').textContent = state.userType === 'diabetic' ? '慢性腎不全＋糖尿病' : '慢性腎不全のみ';
+  document.getElementById('home-glucose-mode').textContent = state.diabetesMode ? '💉 糖尿病モードで計算中（GI値考慮）' : '🩺 標準モードで計算中';
+  document.getElementById('limit-protein').textContent = state.targets.protein;
+  document.getElementById('limit-potassium').textContent = state.targets.potassium;
+  document.getElementById('limit-phosphorus').textContent = state.targets.phosphorus;
+  document.getElementById('s-targets').textContent =
+    `タンパク質 ${state.targets.protein}g / カリウム ${state.targets.potassium}mg / リン ${state.targets.phosphorus}mg`;
+  // diabetesMode display handled by cycleUserType
+}
+
+// ===== NAV =====
+// ===== MENU DATA =====
+const menuData = [
+  // 和食・朝食
+  { emoji:'🍚', name:'低タンパク粥・梅干し添え',       cat:['breakfast','japanese','lowprotein','lowk'], kcal:260, protein:4,  k:180, p:80  },
+  { emoji:'🍙', name:'低塩おにぎり（鮭）',             cat:['breakfast','japanese','lowprotein'],         kcal:190, protein:8,  k:150, p:90  },
+  { emoji:'🥣', name:'低タンパク白粥・佃煮',           cat:['breakfast','japanese','lowprotein','lowk'], kcal:200, protein:3,  k:120, p:70  },
+  { emoji:'🍱', name:'だし巻き卵・白飯セット',         cat:['breakfast','japanese'],                     kcal:320, protein:14, k:160, p:140 },
+  { emoji:'🍵', name:'茶粥・漬物',                     cat:['breakfast','japanese','lowprotein','lowk'], kcal:180, protein:3,  k:130, p:65  },
+  { emoji:'🍞', name:'低タンパクトースト・ジャム',     cat:['breakfast','japanese','lowprotein'],         kcal:240, protein:3,  k:90,  p:60  },
+  // 和食・昼食
+  { emoji:'🐟', name:'鮭の低塩焼き定食',               cat:['lunch','japanese','lowk'],                  kcal:480, protein:22, k:520, p:210 },
+  { emoji:'🍜', name:'低タンパクうどん・だし汁',       cat:['lunch','japanese','lowprotein'],             kcal:340, protein:6,  k:210, p:90  },
+  { emoji:'🍱', name:'鯛の塩焼き定食',                 cat:['lunch','japanese','lowk'],                  kcal:460, protein:20, k:480, p:200 },
+  { emoji:'🥢', name:'そうめん・低塩つゆ',             cat:['lunch','japanese','lowprotein','lowk'],     kcal:300, protein:7,  k:160, p:85  },
+  { emoji:'🍣', name:'低カリウム巻き寿司',             cat:['lunch','japanese','lowk'],                  kcal:380, protein:12, k:220, p:130 },
+  { emoji:'🍲', name:'湯豆腐・低塩ポン酢',             cat:['lunch','japanese','lowprotein','lowk'],     kcal:200, protein:10, k:200, p:110 },
+  { emoji:'🥘', name:'親子丼（低塩仕立て）',           cat:['lunch','japanese'],                         kcal:450, protein:18, k:340, p:190 },
+  // 和食・夕食
+  { emoji:'🍲', name:'根菜の低カリウム煮物',           cat:['dinner','japanese','lowk'],                 kcal:220, protein:8,  k:180, p:100 },
+  { emoji:'🥩', name:'豆腐ハンバーグ',                 cat:['dinner','japanese','lowprotein'],           kcal:280, protein:14, k:320, p:130 },
+  { emoji:'🫕', name:'豆腐と野菜の蒸し料理',           cat:['dinner','japanese','lowprotein','lowk'],    kcal:160, protein:10, k:200, p:110 },
+  { emoji:'🐠', name:'鰆の西京焼き・低塩',             cat:['dinner','japanese'],                        kcal:400, protein:21, k:440, p:195 },
+  { emoji:'🍢', name:'低カリウムおでん',               cat:['dinner','japanese','lowk'],                 kcal:280, protein:12, k:260, p:140 },
+  { emoji:'🍛', name:'低塩肉じゃが（小量）',           cat:['dinner','japanese'],                        kcal:320, protein:14, k:380, p:150 },
+  { emoji:'🐡', name:'ぶりの照り焼き・低塩',           cat:['dinner','japanese','lowk'],                 kcal:420, protein:22, k:500, p:210 },
+  // 洋食・朝食
+  { emoji:'🥞', name:'低タンパクパンケーキ',           cat:['breakfast','western','lowprotein'],         kcal:280, protein:4,  k:100, p:75  },
+  { emoji:'🍳', name:'スクランブルエッグ・低塩',       cat:['breakfast','western'],                      kcal:250, protein:13, k:130, p:160 },
+  { emoji:'🥣', name:'低タンパクオートミール',         cat:['breakfast','western','lowprotein','lowk'],  kcal:230, protein:4,  k:110, p:80  },
+  // 洋食・昼食
+  { emoji:'🍝', name:'低タンパクパスタ・トマト',       cat:['lunch','western','lowprotein'],             kcal:380, protein:6,  k:280, p:90  },
+  { emoji:'🍲', name:'低塩ミネストローネ',             cat:['lunch','western','lowk'],                   kcal:200, protein:7,  k:240, p:95  },
+  { emoji:'🍔', name:'豆腐バーガー・低塩',             cat:['lunch','western','lowprotein'],             kcal:340, protein:12, k:250, p:130 },
+  // 洋食・夕食
+  { emoji:'🥩', name:'低塩チキングリル・蒸し野菜',     cat:['dinner','western','lowk'],                  kcal:380, protein:24, k:420, p:195 },
+  { emoji:'🍝', name:'低タンパクカルボナーラ',         cat:['dinner','western','lowprotein'],            kcal:420, protein:8,  k:180, p:110 },
+  { emoji:'🥘', name:'低塩ラタトゥイユ',               cat:['dinner','western','lowk','lowprotein'],     kcal:180, protein:5,  k:260, p:80  },
+  { emoji:'🐟', name:'低塩鮭のムニエル',               cat:['dinner','western','lowk'],                  kcal:360, protein:22, k:480, p:200 },
+  { emoji:'🍲', name:'低塩ポトフ',                     cat:['dinner','western','lowk'],                  kcal:260, protein:14, k:320, p:140 },
+  // 中華
+  { emoji:'🥟', name:'低塩蒸し餃子（野菜のみ）',       cat:['lunch','dinner','chinese','lowprotein'],    kcal:220, protein:7,  k:200, p:95  },
+  { emoji:'🍜', name:'低塩あんかけ焼きそば',           cat:['lunch','chinese'],                          kcal:380, protein:10, k:280, p:120 },
+  { emoji:'🥘', name:'低塩マーボー豆腐',               cat:['dinner','chinese','lowprotein'],            kcal:280, protein:14, k:300, p:150 },
+  { emoji:'🍚', name:'低塩チャーハン（卵・葱）',       cat:['lunch','chinese'],                          kcal:420, protein:12, k:220, p:140 },
+  { emoji:'🥢', name:'低塩春巻き（豆腐入り）',         cat:['lunch','dinner','chinese','lowprotein'],    kcal:260, protein:8,  k:180, p:100 },
+  { emoji:'🍲', name:'低塩中華風スープ',               cat:['lunch','dinner','chinese','lowk'],          kcal:160, protein:8,  k:200, p:90  },
+  { emoji:'🥗', name:'低塩バンバンジー',               cat:['lunch','dinner','chinese'],                 kcal:200, protein:12, k:240, p:120 },
+  { emoji:'🍱', name:'低塩八宝菜',                     cat:['dinner','chinese','lowk'],                  kcal:240, protein:10, k:260, p:110 },
+  // 韓国
+  { emoji:'🥘', name:'低塩純豆腐チゲ',                 cat:['dinner','korean','lowprotein'],             kcal:200, protein:12, k:280, p:120 },
+  { emoji:'🍚', name:'低塩ビビンバ（野菜多め）',       cat:['lunch','dinner','korean','lowk'],           kcal:380, protein:10, k:320, p:130 },
+  { emoji:'🥗', name:'低塩ナムル盛り合わせ',           cat:['lunch','dinner','korean','lowk','lowprotein'],kcal:140,protein:4, k:180, p:70  },
+  { emoji:'🥢', name:'低塩チャプチェ（春雨炒め）',     cat:['dinner','korean','lowprotein'],             kcal:260, protein:6,  k:200, p:85  },
+  { emoji:'🍳', name:'低塩チヂミ（ネギ・野菜）',       cat:['lunch','snack','korean','lowprotein'],      kcal:240, protein:6,  k:160, p:90  },
+  // タイ
+  { emoji:'🍜', name:'低塩フォー（野菜スープ）',       cat:['lunch','dinner','thai','lowprotein','lowk'],kcal:280, protein:8,  k:200, p:85  },
+  { emoji:'🥘', name:'低塩ガパオ（豆腐）',             cat:['lunch','dinner','thai','lowprotein'],       kcal:300, protein:12, k:260, p:110 },
+  { emoji:'🍚', name:'低塩カオマンガイ（低塩）',       cat:['lunch','thai'],                             kcal:420, protein:20, k:320, p:160 },
+  { emoji:'🍲', name:'低塩トムヤム風スープ',           cat:['dinner','thai','lowk'],                     kcal:160, protein:8,  k:210, p:90  },
+  // インド
+  { emoji:'🍛', name:'低塩豆腐カレー（低辛）',         cat:['lunch','dinner','indian','lowprotein'],     kcal:340, protein:12, k:300, p:130 },
+  { emoji:'🥘', name:'低塩ダル（豆スープ）',           cat:['lunch','dinner','indian','lowprotein'],     kcal:200, protein:9,  k:240, p:100 },
+  { emoji:'🍚', name:'低塩ターメリックライス',         cat:['lunch','dinner','indian','lowk'],           kcal:280, protein:5,  k:120, p:70  },
+  // 地中海
+  { emoji:'🥗', name:'低塩ギリシャ風サラダ',           cat:['lunch','dinner','mediterranean','lowk','lowprotein'],kcal:160,protein:5,k:170,p:80},
+  { emoji:'🫙', name:'低塩フムス・野菜スティック',     cat:['snack','lunch','mediterranean','lowprotein'],kcal:180,protein:6, k:180, p:90  },
+  { emoji:'🍲', name:'低塩モロッコ風野菜煮込み',       cat:['dinner','mediterranean','lowk'],            kcal:220, protein:7,  k:250, p:95  },
+  // ベトナム
+  { emoji:'🍜', name:'低塩フォー・チキン',             cat:['lunch','vietnamese','lowk'],                kcal:320, protein:16, k:260, p:140 },
+  { emoji:'🥗', name:'低塩生春巻き（野菜）',           cat:['lunch','snack','vietnamese','lowprotein','lowk'],kcal:160,protein:4,k:140,p:65 },
+  // メキシコ
+  { emoji:'🌮', name:'低塩豆腐タコス',                 cat:['lunch','dinner','mexican','lowprotein'],    kcal:280, protein:10, k:220, p:100 },
+  { emoji:'🫔', name:'低塩野菜ブリトー',               cat:['lunch','mexican','lowprotein','lowk'],      kcal:320, protein:9,  k:200, p:105 },
+  // おやつ
+  { emoji:'🍮', name:'低タンパクプリン',               cat:['snack','lowprotein','lowk'],                kcal:180, protein:2,  k:60,  p:50  },
+  { emoji:'🍡', name:'わらびもち（低リン）',           cat:['snack','japanese','lowprotein','lowk'],     kcal:150, protein:1,  k:40,  p:20  },
+  { emoji:'🍰', name:'低タンパクシフォンケーキ',       cat:['snack','western','lowprotein'],             kcal:200, protein:3,  k:70,  p:55  },
+  { emoji:'🍦', name:'低リンシャーベット',             cat:['snack','lowprotein','lowk'],                kcal:130, protein:1,  k:50,  p:30  },
+  { emoji:'🍬', name:'低リンゼリー菓子',               cat:['snack','lowprotein','lowk'],                kcal:100, protein:1,  k:30,  p:15  },
+];
+
+// ===== MENU RENDER =====
+let currentFilter = 'all';
+let searchQuery = '';
+
+function renderMenuGrid() {
+  const grid = document.getElementById('menuGrid');
+  if (!grid) return;
+  const q = searchQuery.toLowerCase();
+  const filtered = menuData.filter(m => {
+    const matchCat = currentFilter === 'all' || m.cat.includes(currentFilter);
+    const matchQ   = !q || m.name.toLowerCase().includes(q);
+    return matchCat && matchQ;
+  });
+  if (filtered.length === 0) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text3);">該当する献立がありません</div>';
+    return;
+  }
+  grid.innerHTML = filtered.map(m => `
+    <div class="menu-card" onclick="showMenuDetail('${m.name.replace(/'/g,"\\'")}')">
+      <div class="menu-emoji">${m.emoji}</div>
+      <div class="menu-name">${m.name}</div>
+      <div class="menu-meta">${m.kcal}kcal · P${m.protein}g</div>
+    </div>
+  `).join('');
+}
+
+function setPill(el, cat) {
+  document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  currentFilter = cat;
+  renderMenuGrid();
+}
+
+function searchMenu(val) {
+  searchQuery = val;
+  renderMenuGrid();
+}
+
+function navTo(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  const pg = document.getElementById('page-' + page);
+  if (pg) { pg.classList.add('active'); pg.classList.add('fade-in'); }
+  const nb = document.getElementById('nav-' + page);
+  if (nb) nb.classList.add('active');
+}
+
+// ===== RECORD =====
+let analyzing = false;
+
+function startAnalysis() {
+  if (analyzing) return;
+  const zone = document.getElementById('cameraZone');
+  if (!zone) return;
+  analyzing = true;
+
+  zone.innerHTML = `<span class="camera-icon">🍱</span><div class="camera-text" style="color:var(--accent)">解析完了！</div>`;
+  zone.style.borderColor = 'var(--accent)';
+  zone.style.background = 'var(--accent-glow)';
+
+  const loadingText = document.getElementById('loadingText');
+  const loadingOverlay = document.getElementById('loadingOverlay');
+  if (loadingText) loadingText.textContent = 'AI が食事内容を解析中...';
+  if (loadingOverlay) loadingOverlay.classList.add('open');
+
+  setTimeout(() => {
+    if (loadingOverlay) loadingOverlay.classList.remove('open');
+    const aiResult = document.getElementById('aiResult');
+    if (aiResult) { aiResult.style.display = 'block'; aiResult.classList.add('fade-in'); }
+
+    const fMap = { normal:1, t2d:3, t1d:5 };
+    const lMap = { normal:'標準モード：糖質×1', t2d:'2型糖尿病モード：糖質×3', t1d:'1型糖尿病モード：糖質×5' };
+    const initFactor = fMap[state.userType] || 1;
+    const initRise   = 65 * initFactor;
+    const initLabel  = lMap[state.userType] || lMap.normal;
+    const glucoseEl = document.getElementById('ai-glucose-result');
+    if (glucoseEl) {
+      const div = glucoseEl.querySelector('div:not(.alert-title)');
+      if (div) div.innerHTML = `炭水化物68g－食物繊維3g＝糖質65g → <strong>推定 +${initRise} mg/dL</strong>（${initLabel}）<br><span style="font-size:11px;color:var(--text3)">食後1〜2時間で最大値に達する見込み</span>`;
+    }
+  }, 2000);
+}
+
+function toggleEdit() {
+  const form = document.getElementById('editForm');
+  form.classList.toggle('open');
+}
+
+function recalcGlucose() {
+  const carb  = parseFloat(document.getElementById('edit-carb').value)  || 0;
+  const fiber = parseFloat(document.getElementById('edit-fiber').value) || 0;
+  // 砂糖の量 = 炭水化物 - 食物繊維
+  const sugar = Math.max(0, carb - fiber);
+  // 健常者: 糖質×1、2型糖尿病: 糖質×3、1型糖尿病: 糖質×5
+  const factorMap = { normal:1, t2d:3, t1d:5 };
+  const factor = factorMap[state.userType] || 1;
+  const rise  = Math.round(sugar * factor);
+  const labelMap = { normal:'標準モード：糖質×1', t2d:'2型糖尿病モード：糖質×3', t1d:'1型糖尿病モード：糖質×5' };
+  const label = labelMap[state.userType] || labelMap.normal;
+  document.getElementById('ai-glucose-result').querySelector('div:not(.alert-title)').innerHTML =
+    `炭水化物${carb}g－食物繊維${fiber}g＝糖質${sugar}g → <strong>推定 +${rise} mg/dL</strong>（${label}）<br><span style="font-size:11px;color:var(--text3)">食後1〜2時間で最大値に達する見込み</span>`;
+}
+
+// ===== Gemini APIキー（ここに入力） =====
+
+const recipeDatabase = {
+
+  // ========== 和食・朝食 ==========
+  '低タンパク粥・梅干し添え': {
+    ingredients:[
+      {name:'低タンパクご飯（市販品）',amount:'150g'},
+      {name:'水',amount:'450ml'},
+      {name:'減塩梅干し',amount:'1個（10g）'},
+      {name:'刻み海苔',amount:'少々'},
+      {name:'白ごま',amount:'小さじ1/2'},
+    ],
+    steps:[
+      '低タンパクご飯と水450mlを鍋に入れ中火にかける。',
+      '沸騰したら蓋をずらして弱火で20〜25分、とろとろになるまで煮る。底が焦げないよう時々混ぜる。',
+      '器に盛り、種を取った梅干し・海苔・ごまをのせる。',
+      'お好みで低塩だし少々をかけると風味が増す。',
+    ],
+    tip:'低タンパクご飯を使うことでタンパク質を抑えながらボリュームが確保できます。梅の酸味が薄味でも満足感を与え、ごまの香ばしさがアクセントになります。',
+    kidney:'低タンパクご飯は通常品の約1/20のタンパク質。梅干しは必ず減塩タイプを（普通の梅干しは塩分約2g）。カリウムが低い一品なので朝食に最適。',
+  },
+
+  '低塩おにぎり（鮭）': {
+    ingredients:[
+      {name:'低タンパクご飯',amount:'200g'},
+      {name:'生鮭（焼いてほぐしたもの）',amount:'30g'},
+      {name:'白ごま',amount:'小さじ1'},
+      {name:'低塩醤油',amount:'2〜3滴'},
+      {name:'焼き海苔',amount:'1/2枚'},
+    ],
+    steps:[
+      '生鮭は塩を振らずフライパンで焼き、身をほぐして低塩醤油2〜3滴で軽く味付け。',
+      '低タンパクご飯を手に取り、中央にほぐし鮭とごまを入れて包む。',
+      'しっかり握って小判形に成形し、海苔を巻く。',
+      '食べる直前に海苔を巻くとパリッとした食感が楽しめる。',
+    ],
+    tip:'鮭の量は少なめですが、ごまの香ばしさと海苔の風味が合わさって満足感のあるおにぎりになります。握りたては特に美味しいので朝に作りましょう。',
+    kidney:'低タンパクご飯で主食のタンパク質を最小化。鮭は30gに抑えることでタンパク質・リンを管理。塩は一切使わず素材の旨みだけで仕上げます。',
+  },
+
+  '低タンパク白粥・佃煮': {
+    ingredients:[
+      {name:'低タンパクご飯',amount:'150g'},
+      {name:'水',amount:'500ml'},
+      {name:'昆布だし',amount:'100ml'},
+      {name:'市販の減塩佃煮（のりや昆布）',amount:'小さじ1（5g）'},
+      {name:'卵黄',amount:'1個分'},
+    ],
+    steps:[
+      'だし100mlと水400mlを合わせ、低タンパクご飯を加えて中火で煮る。',
+      '沸騰後弱火にし蓋をずらして25〜30分、なめらかになるまで煮る。',
+      '器に盛り、中央に卵黄をのせ、横に佃煮を少量添える。',
+      '卵黄を崩しながら食べるとコクが出てとても美味しい。',
+    ],
+    tip:'卵黄をのせることで見た目が豪華になり、崩すと自然なコクとまろやかさが生まれます。佃煮は少量でも塩味のアクセントになるので満足感が高い朝食です。',
+    kidney:'卵黄は白身よりリンが高めなので1個まで。佃煮は塩分・カリウムが高いので小さじ1以内に。昆布だしはカリウムを含むので取り出してから使用。',
+  },
+
+  'だし巻き卵・白飯セット': {
+    ingredients:[
+      {name:'卵',amount:'2個'},
+      {name:'だし（かつお）',amount:'大さじ3（45ml）'},
+      {name:'みりん',amount:'小さじ1'},
+      {name:'低タンパクご飯',amount:'150g'},
+      {name:'サラダ油',amount:'小さじ1'},
+      {name:'大根おろし（ゆでこぼし）',amount:'30g'},
+      {name:'低塩醤油',amount:'数滴'},
+    ],
+    steps:[
+      '卵2個をよく溶きほぐし、だし・みりんを加えて混ぜる（塩は入れない）。',
+      '卵焼き器に油を薄く引き中火で熱し、卵液の1/3を流し込む。',
+      '半熟になったら手前に巻き、奥に移動させて残りの卵液を2回に分けて同様に巻く。',
+      '巻き簾で形を整えて2分置いてから切り分ける。',
+      '大根おろしは熱湯30秒ゆでてカリウムを除去し、低塩醤油数滴と合わせて添える。',
+    ],
+    tip:'だしをたっぷり入れることで塩なしでもふんわりと風味豊かなだし巻き卵になります。卵液を少しずつ流し入れて巻くことでふっくらとした層ができます。',
+    kidney:'卵2個でタンパク質約12g。だしはかつおベースでカリウムは低め。大根おろしは必ずゆでこぼしてカリウムを除去すること。',
+  },
+
+  '茶粥・漬物': {
+    ingredients:[
+      {name:'低タンパクご飯',amount:'150g'},
+      {name:'ほうじ茶（濃いめに淹れたもの）',amount:'500ml'},
+      {name:'減塩漬物（きゅうり・大根）',amount:'20g'},
+      {name:'白ごま',amount:'小さじ1/2'},
+    ],
+    steps:[
+      'ほうじ茶を濃いめに淹れて500ml用意する。',
+      '鍋に低タンパクご飯とほうじ茶を入れ中火にかける。',
+      '沸騰したら弱火で20分、好みの固さになるまで煮る。',
+      '器に盛り、ごまを振る。減塩漬物を少量添える。',
+    ],
+    tip:'ほうじ茶の香ばしい香りと旨みが粥に溶け込み、塩なしでも風味豊かに仕上がります。奈良や大阪で昔から食べられてきた体に優しい朝食です。',
+    kidney:'漬物は市販品の塩分が高いので必ず減塩タイプを選び20g以内に。ほうじ茶のカリウムは低く腎臓病患者にも適した飲み物です。',
+  },
+
+  '低タンパクトースト・ジャム': {
+    ingredients:[
+      {name:'低タンパク食パン（市販品）',amount:'2枚（80g）'},
+      {name:'無塩バター',amount:'5g'},
+      {name:'低糖質ジャム（いちごまたはブルーベリー）',amount:'大さじ1'},
+      {name:'はちみつ',amount:'小さじ1'},
+    ],
+    steps:[
+      '低タンパク食パンをトースターで2〜3分こんがり焼く。',
+      '焼き上がりにすぐ無塩バターを薄く塗る（余熱で溶けて均一に広がる）。',
+      'ジャムを片面に塗り、お好みではちみつを少量かける。',
+      'もう1枚はそのままか、ジャムのみで食べる。',
+    ],
+    tip:'低タンパク食パンは市販の専用品を使うことで通常品の1/10程度のタンパク質になります。バターは無塩タイプを。ジャムの甘さとバターの風味で洋食らしい朝食が楽しめます。',
+    kidney:'低タンパク専用パンは必須。通常の食パンはタンパク質・リンが高いので使用不可。バターは少量（5g）に留める。ジャムはカリウムが比較的低いいちごやブルーベリーを選ぶ。',
+  },
+
+  // ========== 和食・昼食 ==========
+  '鮭の低塩焼き定食': {
+    ingredients:[
+      {name:'生鮭（甘塩でない）',amount:'1切れ（100g）'},
+      {name:'低タンパクご飯',amount:'150g'},
+      {name:'キャベツ',amount:'80g'},
+      {name:'卵',amount:'1個'},
+      {name:'低塩醤油',amount:'小さじ1（3ml）'},
+      {name:'みりん',amount:'小さじ1'},
+      {name:'サラダ油',amount:'小さじ1'},
+    ],
+    steps:[
+      '鮭は塩を振らずキッチンペーパーで水気をよくふく。',
+      'キャベツを1cm幅に切り熱湯で3分ゆでこぼしカリウムを除去。水気を絞る。',
+      '油を熱したフライパンで鮭を皮目から中火3〜4分、裏返して3分焼く。',
+      '卵を別のフライパンで目玉焼きまたは炒り卵に（塩なし）。',
+      '低塩醤油とみりんを合わせたタレを食べる直前に鮭に少量かける。',
+      '全て盛り付けて完成。',
+    ],
+    tip:'鮭は塩を振らず素材の旨みだけで焼くのがポイント。タレは食べる直前にかけると少量でも塩味を強く感じられます。皮をカリッと焼くと香ばしさが増します。',
+    kidney:'1切れ100gを厳守。キャベツのゆでこぼしでカリウム50〜60%カット。低塩醤油で塩分を通常の半分に抑えられます。',
+  },
+
+  '低タンパクうどん・だし汁': {
+    ingredients:[
+      {name:'低タンパクうどん（乾麺）',amount:'100g'},
+      {name:'かつおだし',amount:'400ml'},
+      {name:'低塩醤油',amount:'大さじ1/2（7ml）'},
+      {name:'みりん',amount:'大さじ1/2'},
+      {name:'長ねぎ',amount:'20g'},
+      {name:'かまぼこ',amount:'2枚（20g）'},
+      {name:'七味唐辛子',amount:'少々'},
+    ],
+    steps:[
+      '低タンパクうどんを表示通りに茹でる。茹で上がったら流水でぬめりをよく取る。',
+      'かつおだし400mlを鍋で温め、低塩醤油とみりんを加える。',
+      'ねぎは斜め薄切りにし熱湯で1分ゆでこぼしカリウムを除去。',
+      '丼にうどんを盛り熱いだし汁を注ぐ。',
+      'ゆでこぼしたねぎとかまぼこをのせ七味を振る。',
+    ],
+    tip:'かつお節と昆布から取っただしは塩を使わなくても深い旨みが出ます。七味や柚子の皮など香りの強い薬味を使うことで少ない塩分でも十分満足できます。',
+    kidney:'低タンパクうどんは通常品の約1/5のタンパク質。だしの昆布はカリウムが多いのでだし取り後は必ず取り出す。かまぼこはリンが高めなので2枚まで。',
+  },
+
+  '鯛の塩焼き定食': {
+    ingredients:[
+      {name:'鯛の切り身',amount:'100g'},
+      {name:'低タンパクご飯',amount:'150g'},
+      {name:'レモン（薄切り）',amount:'1枚'},
+      {name:'大根おろし',amount:'40g'},
+      {name:'低塩醤油',amount:'数滴'},
+      {name:'三つ葉',amount:'少々'},
+      {name:'サラダ油',amount:'小さじ1'},
+    ],
+    steps:[
+      '鯛の切り身は塩を振らずキッチンペーパーで水気をふく。',
+      'グリルまたはフライパンに油を引き中火で皮目から3分焼く。裏返して3分。',
+      '大根おろしは熱湯30秒ゆでてカリウムを除去し水気を絞る。',
+      '器に鯛を盛り、大根おろしとレモンを添える。三つ葉を飾る。',
+      '食べる際に低塩醤油を少量かけ、レモンを絞る。',
+    ],
+    tip:'鯛は淡泊な味わいなのでレモンを絞ることでさっぱりと美味しくなります。皮をパリッと焼くのが美味しさの秘訣。三つ葉の香りが料亭のような雰囲気を演出します。',
+    kidney:'鯛100gでタンパク質約20g。塩は一切使わずレモンと低塩醤油で。大根おろしのゆでこぼしを忘れずに。',
+  },
+
+  'そうめん・低塩つゆ': {
+    ingredients:[
+      {name:'低タンパクそうめん',amount:'100g（乾麺）'},
+      {name:'かつおだし',amount:'300ml'},
+      {name:'低塩醤油',amount:'大さじ1'},
+      {name:'みりん',amount:'大さじ1'},
+      {name:'しょうが（すりおろし）',amount:'小さじ1/2'},
+      {name:'みょうが（薄切り）',amount:'1個'},
+      {name:'青ねぎ',amount:'少々'},
+      {name:'氷',amount:'適量'},
+    ],
+    steps:[
+      '低タンパクそうめんをたっぷりの湯で表示通りに茹でる。',
+      '茹で上がったら流水でよく洗い、氷水でしめる（コシが出る）。',
+      'だしに低塩醤油とみりんを合わせ一度煮立てたら冷ます。',
+      'みょうがは薄切りにし水にさらす。ねぎは小口切り。',
+      '器にそうめんを盛り、薬味とつゆを添える。',
+    ],
+    tip:'氷水でしっかりしめることでコシのあるそうめんになります。しょうが・みょうがなど香りの強い薬味をたっぷり使うことで少ない塩分でも爽快感があります。夏の昼食に最適。',
+    kidney:'低タンパク専用そうめんを使用。薬味のみょうがはカリウムが比較的低め。氷で冷やして食べることで少量の塩分でも風味を強く感じられます。',
+  },
+
+  '低カリウム巻き寿司': {
+    ingredients:[
+      {name:'低タンパクご飯（酢飯にする）',amount:'200g'},
+      {name:'米酢',amount:'大さじ1'},
+      {name:'砂糖',amount:'小さじ1'},
+      {name:'焼き海苔',amount:'1枚'},
+      {name:'きゅうり（ゆでこぼし）',amount:'1/3本（30g）'},
+      {name:'卵焼き（薄焼き）',amount:'30g'},
+      {name:'でんぶ（少量）',amount:'小さじ1'},
+      {name:'低塩醤油',amount:'少量'},
+    ],
+    steps:[
+      '低タンパクご飯に米酢と砂糖を合わせた合わせ酢を混ぜて酢飯を作る。',
+      'きゅうりは細長く切り熱湯で2分ゆでこぼす（カリウム除去）。',
+      '薄焼き卵を細長く切る（塩なし）。',
+      '巻き簾の上に海苔を置き、酢飯を薄く広げる。手前2cmを空ける。',
+      '中央に具材を並べ手前から巻く。しっかり締めてから切る。',
+      '低塩醤油を少量つけて食べる。',
+    ],
+    tip:'酢飯の酸味があると塩分が少なくても満足感があります。具材の彩りを意識すると食欲をそそる美しい巻き寿司になります。巻き簾でしっかり締めるのが切りやすさの秘訣。',
+    kidney:'低タンパクご飯で主食のタンパク質を管理。きゅうりのゆでこぼしでカリウムをカット。でんぶは少量（塩分・砂糖が多いため）。',
+  },
+
+  '湯豆腐・低塩ポン酢': {
+    ingredients:[
+      {name:'絹ごし豆腐',amount:'200g'},
+      {name:'昆布',amount:'5cm（だし用）'},
+      {name:'水',amount:'500ml'},
+      {name:'低塩ポン酢',amount:'大さじ1'},
+      {name:'もみじおろし（大根＋唐辛子）',amount:'少々'},
+      {name:'青ねぎ（小口切り）',amount:'少々'},
+      {name:'低タンパクご飯',amount:'150g'},
+    ],
+    steps:[
+      '鍋に水と昆布を入れ30分置く（だしを取る）。',
+      '弱火で昆布を温め、沸騰直前に昆布を取り出す（重要）。',
+      '豆腐を4等分に切り、だし汁に静かに入れて弱火で5〜7分温める。',
+      'ポン酢・もみじおろし・ねぎを小皿に用意。',
+      '豆腐をくずさないようにすくって薬味ポン酢で食べる。',
+    ],
+    tip:'豆腐はくずさないよう静かに温めるのがポイント。ポン酢の酸味ともみじおろしの辛みが少ない塩分でも満足感のある味わいを作ります。シンプルだからこそ素材の旨みが際立ちます。',
+    kidney:'昆布は必ず取り出す（カリウムが溶出する）。絹ごし豆腐200gで満足感あり。ポン酢は低塩タイプを使い大さじ1以内に。',
+  },
+
+  '親子丼（低塩仕立て）': {
+    ingredients:[
+      {name:'鶏もも肉（皮なし）',amount:'60g'},
+      {name:'卵',amount:'2個'},
+      {name:'玉ねぎ',amount:'40g'},
+      {name:'かつおだし',amount:'100ml'},
+      {name:'低塩醤油',amount:'小さじ2'},
+      {name:'みりん',amount:'大さじ1'},
+      {name:'低タンパクご飯',amount:'180g'},
+      {name:'三つ葉',amount:'少々'},
+    ],
+    steps:[
+      '鶏肉は小さめのひと口大に切る。玉ねぎは薄切りにする。',
+      '小鍋にだし・低塩醤油・みりんを入れ沸かし、玉ねぎを加えて2分煮る。',
+      '鶏肉を加えて火が通るまで3分煮る。',
+      '溶き卵を回し入れ、蓋をして半熟になるまで弱火で1分（半熟がポイント）。',
+      '低タンパクご飯を盛った丼に素早くのせ、三つ葉を飾る。',
+    ],
+    tip:'卵は半熟で仕上げることがジューシーな親子丼の鍵。だしの旨みをしっかり効かせることで醤油少なめでも深い味わいになります。鶏肉は少なめですが卵でボリュームを補います。',
+    kidney:'鶏もも肉を60gに抑えタンパク質管理。皮なしでリンをカット。半熟卵はトロトロでご飯との絡みが良く食べごたえがあります。',
+  },
+
+  // ========== 和食・夕食 ==========
+  '根菜の低カリウム煮物': {
+    ingredients:[
+      {name:'大根',amount:'100g'},
+      {name:'にんじん',amount:'50g'},
+      {name:'ごぼう',amount:'30g'},
+      {name:'こんにゃく',amount:'50g'},
+      {name:'かつおだし',amount:'300ml'},
+      {name:'低塩醤油',amount:'小さじ2'},
+      {name:'みりん',amount:'大さじ1'},
+      {name:'砂糖',amount:'小さじ1'},
+    ],
+    steps:[
+      '大根・にんじん・ごぼうはひと口大に切り、それぞれ別々に熱湯で5分ゆでこぼす（カリウム除去）。',
+      'こんにゃくはちぎって熱湯で2分ゆでてアクを取る。',
+      '鍋にだし・醤油・みりん・砂糖を合わせ沸かし、全材料を加える。',
+      '落し蓋をして弱火で20〜25分、汁が少なくなるまで煮る。',
+      '一度冷ますと味が染みてさらに美味しくなる。',
+    ],
+    tip:'根菜は必ず別々にゆでこぼすことがカリウム管理の重要ポイント。落し蓋で全体に均一に味が染みます。翌日に食べると味がぐっと良くなるので多めに作っておくと便利です。',
+    kidney:'野菜は全てゆでこぼしでカリウムを約50%カット。こんにゃくはカリウム・タンパク質・リンが低く腎臓病食に最適な食材。ごぼうは食物繊維豊富。',
+  },
+
+  '豆腐ハンバーグ': {
+    ingredients:[
+      {name:'木綿豆腐（水切り済み）',amount:'150g'},
+      {name:'鶏ひき肉',amount:'50g'},
+      {name:'玉ねぎ（みじん切り炒め済み）',amount:'40g'},
+      {name:'低タンパクパン粉',amount:'大さじ2'},
+      {name:'卵',amount:'1/3個（20g）'},
+      {name:'黒こしょう',amount:'少々'},
+      {name:'サラダ油',amount:'小さじ1'},
+      {name:'大根おろし',amount:'50g'},
+      {name:'低塩ポン酢',amount:'大さじ1'},
+    ],
+    steps:[
+      '豆腐はペーパータオルで包み重石をのせ30分しっかり水切り（重要）。',
+      '玉ねぎをみじん切りにし油なしで飴色になるまで炒めて冷ます。',
+      'ボウルに豆腐・ひき肉・玉ねぎ・パン粉・卵・こしょうを入れよく混ぜる。',
+      '2等分して小判形に成形。空気を抜くようにしっかり握る。',
+      '油をひいたフライパンで中火3分→蓋をして弱火5分→裏返して3分蒸し焼き。',
+      '大根おろしを熱湯30秒でゆでカリウムを除去。低塩ポン酢と合わせてかける。',
+    ],
+    tip:'豆腐の水切りを徹底することで崩れずジューシーに仕上がります。蒸し焼きにするとふわっとした食感に。大根おろしのポン酢がさっぱりとした後味を作ります。',
+    kidney:'鶏ひき肉を50gに抑え豆腐で増量することでタンパク質をコントロール。大根おろしは必ずゆでこぼしてカリウムを減らすこと。',
+  },
+
+  '豆腐と野菜の蒸し料理': {
+    ingredients:[
+      {name:'絹ごし豆腐',amount:'180g'},
+      {name:'ズッキーニ',amount:'60g'},
+      {name:'にんじん（薄切り）',amount:'40g'},
+      {name:'しめじ',amount:'30g'},
+      {name:'ごま油',amount:'小さじ1'},
+      {name:'低塩醤油',amount:'小さじ1'},
+      {name:'しょうが（すりおろし）',amount:'小さじ1/2'},
+      {name:'低タンパクご飯',amount:'150g'},
+    ],
+    steps:[
+      'にんじんとズッキーニは薄切りにし熱湯で3分ゆでこぼす。',
+      '耐熱皿に豆腐を盛り、ゆでこぼした野菜とほぐしたしめじを周りに並べる。',
+      'ごま油・低塩醤油・しょうがを合わせたたれを全体にかける。',
+      'ラップをして電子レンジ600Wで3〜4分加熱。',
+      'または蒸し器で8〜10分蒸す（蒸し器の方が風味が増す）。',
+      '熱いうちにいただく。',
+    ],
+    tip:'電子レンジでも蒸し器でも作れる手軽さが魅力。しょうがの風味と醤油の香ばしさで豆腐がメインになる満足感のある一品。ヘルシーでありながらボリューム感があります。',
+    kidney:'豆腐は絹ごしを使うとなめらかで食べやすい。野菜のゆでこぼしでカリウムを管理。しめじは他の野菜に比べてカリウムが比較的低い。',
+  },
+
+  '鰆の西京焼き・低塩': {
+    ingredients:[
+      {name:'鰆の切り身',amount:'100g'},
+      {name:'白みそ（低塩）',amount:'大さじ1'},
+      {name:'みりん',amount:'小さじ2'},
+      {name:'酒',amount:'小さじ1'},
+      {name:'低タンパクご飯',amount:'150g'},
+      {name:'ゆでこぼしほうれん草',amount:'50g'},
+      {name:'白ごま',amount:'少々'},
+    ],
+    steps:[
+      '白みそ・みりん・酒を合わせてみそだれを作る。',
+      '鰆の切り身にみそだれを薄く塗りラップをして冷蔵庫で1時間以上漬ける。',
+      '焼く前に表面のみそをキッチンペーパーで軽くぬぐう（焦げ防止）。',
+      'グリルまたはフライパンで中火3分→裏返して3分じっくり焼く。',
+      'ほうれん草は熱湯で3分ゆでこぼし水気を絞りごまで和える。',
+      'ご飯と盛り合わせて完成。',
+    ],
+    tip:'みそに漬けることで鰆の臭みが取れ、風味豊かに仕上がります。焼く前にみそをぬぐうのが焦げないための重要なポイント。京料理の上品な味わいが楽しめます。',
+    kidney:'鰆100gを厳守。低塩みそを使用し塩分を管理。ほうれん草はカリウムが高いので必ず5分以上ゆでこぼすこと。',
+  },
+
+  '低カリウムおでん': {
+    ingredients:[
+      {name:'大根',amount:'100g'},
+      {name:'こんにゃく',amount:'80g'},
+      {name:'はんぺん（低塩）',amount:'50g'},
+      {name:'ちくわ（小）',amount:'1本（30g）'},
+      {name:'かつおだし',amount:'600ml'},
+      {name:'低塩醤油',amount:'大さじ1'},
+      {name:'みりん',amount:'大さじ1'},
+      {name:'和がらし（少量）',amount:'少々'},
+    ],
+    steps:[
+      '大根は2cm厚の輪切りにし熱湯で10分ゆでこぼす（カリウム除去と下茹で）。',
+      'こんにゃくはひと口大にちぎり熱湯で3分ゆでる。',
+      'だし・低塩醤油・みりんを鍋で合わせ沸かす。',
+      '大根・こんにゃくを加えて弱火で20分煮る。',
+      'はんぺん・ちくわを加えてさらに10分煮る（煮すぎない）。',
+      '器に盛り、からしを少量添える。',
+    ],
+    tip:'大根をしっかりゆでこぼすことでカリウムを大幅カットしながら、だしがよく染みるようになります。おでんはじっくり時間をかけて煮ることで素材の旨みがだしに溶け出し、少ない調味料でも深い味わいになります。',
+    kidney:'こんにゃくはカリウム・タンパク質・リンが低く腎臓病食の優秀食材。練り物（ちくわ・はんぺん）はリン・塩分が高めなので各1個以内に。',
+  },
+
+  '低塩肉じゃが（小量）': {
+    ingredients:[
+      {name:'牛薄切り肉',amount:'50g'},
+      {name:'じゃがいも',amount:'100g'},
+      {name:'玉ねぎ',amount:'50g'},
+      {name:'にんじん',amount:'40g'},
+      {name:'かつおだし',amount:'200ml'},
+      {name:'低塩醤油',amount:'小さじ2'},
+      {name:'みりん',amount:'大さじ1'},
+      {name:'砂糖',amount:'小さじ1'},
+      {name:'サラダ油',amount:'小さじ1'},
+    ],
+    steps:[
+      'じゃがいも・にんじんはひと口大に切り熱湯で5分ゆでこぼす（カリウム除去）。',
+      '玉ねぎは大きめのくし切りに。',
+      '鍋に油を熱し牛肉を炒める。色が変わったら玉ねぎを加えて炒める。',
+      'じゃがいも・にんじんを加え、だし・醤油・みりん・砂糖を加える。',
+      '落し蓋をして弱火で15〜20分、野菜が柔らかくなるまで煮る。',
+      '煮汁が少し残る程度で火を止め、余熱で味を染み込ませる。',
+    ],
+    tip:'牛肉は少量ですが先にしっかり炒めることで香ばしい肉の旨みがだし全体に広がります。じゃがいもをゆでこぼしてからもう一度だしで煮ることで、カリウムを減らしながら味も染みやすくなる一石二鳥の方法です。',
+    kidney:'じゃがいもはカリウムが特に高いので必ずゆでこぼし必須。牛肉は50gに抑えてタンパク質管理。にんじんもゆでこぼしを忘れずに。',
+  },
+
+  'ぶりの照り焼き・低塩': {
+    ingredients:[
+      {name:'ぶりの切り身',amount:'100g'},
+      {name:'低塩醤油',amount:'小さじ2'},
+      {name:'みりん',amount:'大さじ1'},
+      {name:'酒',amount:'大さじ1'},
+      {name:'砂糖',amount:'小さじ1/2'},
+      {name:'サラダ油',amount:'小さじ1'},
+      {name:'低タンパクご飯',amount:'150g'},
+      {name:'ゆでこぼしブロッコリー',amount:'60g'},
+    ],
+    steps:[
+      'ぶりを低塩醤油・みりん・酒に15分漬ける（下味をつけておく）。',
+      '漬け汁は取り置く。フライパンに油を熱しぶりを中火で両面2分ずつ焼く。',
+      '取り置いた漬け汁と砂糖を合わせてフライパンに加え、ぶりに絡めながら煮詰める。',
+      'とろっとしたタレになったら完成。',
+      'ブロッコリーは小房に分け熱湯で4分ゆでこぼす。',
+      'ご飯とブロッコリーと盛り合わせ、タレをかける。',
+    ],
+    tip:'タレを煮詰めてとろりとさせることで、少ない醤油でもしっかりとした照り焼きらしい濃厚な味わいになります。ぶりの脂と甘辛タレの相性は抜群。ご飯がすすむ一品です。',
+    kidney:'ぶりは良質な脂（オメガ3）を含む。100gに抑えてタンパク質管理。ブロッコリーはゆでこぼしでカリウムを大幅カット。タレは少量でもよく絡まるので使いすぎ注意。',
+  },
+
+  // ========== 洋食 ==========
+  '低タンパクパンケーキ': {
+    ingredients:[
+      {name:'低タンパクホットケーキミックス（市販）',amount:'100g'},
+      {name:'卵',amount:'1個'},
+      {name:'豆乳（無調整）',amount:'100ml'},
+      {name:'無塩バター',amount:'5g'},
+      {name:'メープルシロップ',amount:'大さじ1'},
+      {name:'バニラエッセンス',amount:'2〜3滴'},
+    ],
+    steps:[
+      'ミックス粉・卵・豆乳・バニラエッセンスを混ぜる（多少ダマが残ってもOK）。',
+      'フライパンを弱めの中火で熱し無塩バターで薄く油を引く。',
+      '生地の1/2量を流し込み、表面に気泡が出てきたら裏返す（約2分）。',
+      'さらに1〜2分焼いて中まで火を通す。残りも同様に焼く。',
+      '皿に重ねてメープルシロップをかけて完成。',
+    ],
+    tip:'低タンパク専用のホットケーキミックスを使うことで、見た目も食感も普通のパンケーキとほぼ変わりません。バニラエッセンスを加えると甘い香りが立ち、少ない砂糖でも満足感が出ます。',
+    kidney:'低タンパク専用粉は通常品の1/10程度のタンパク質。卵1個のタンパク質約6g。メープルシロップはカリウムが比較的低く腎臓病食に使いやすい甘味料。',
+  },
+
+  'スクランブルエッグ・低塩': {
+    ingredients:[
+      {name:'卵',amount:'2個'},
+      {name:'豆乳（無調整）',amount:'大さじ2'},
+      {name:'無塩バター',amount:'8g'},
+      {name:'黒こしょう',amount:'少々'},
+      {name:'低タンパクトースト',amount:'1枚（40g）'},
+      {name:'ミニトマト（ゆでこぼし）',amount:'3個'},
+      {name:'乾燥バジル',amount:'少々'},
+    ],
+    steps:[
+      '卵と豆乳を合わせてよく溶く（塩なし）。',
+      'フライパンを弱火にしてバターを溶かす。',
+      '卵液を流し込みゴムベラで大きくゆっくり混ぜる。半熟のうちに火を止める。',
+      '余熱でとろとろに仕上げる（火を入れすぎないのがポイント）。',
+      'ミニトマトは熱湯で30秒ゆでこぼし半分に切る。',
+      'トーストと一緒に盛り付け、黒こしょうとバジルを振る。',
+    ],
+    tip:'弱火でゆっくり、大きく混ぜることがとろとろスクランブルエッグの秘訣。半熟の状態で火を止めて余熱で仕上げると滑らかな食感になります。豆乳を加えることでコクが出ます。',
+    kidney:'卵2個でタンパク質約12g。塩を使わず黒こしょうとバジルで風味付け。ミニトマトはカリウムがやや高めなのでゆでこぼしを。',
+  },
+
+  '低タンパクオートミール': {
+    ingredients:[
+      {name:'オートミール',amount:'40g'},
+      {name:'豆乳（無調整）',amount:'200ml'},
+      {name:'バナナ（1/4本）',amount:'25g'},
+      {name:'ブルーベリー',amount:'20g'},
+      {name:'はちみつ',amount:'小さじ1'},
+      {name:'シナモン',amount:'少々'},
+    ],
+    steps:[
+      'オートミールと豆乳を鍋に入れ中火で温める。',
+      'かき混ぜながら2〜3分、とろみが出るまで加熱する。',
+      '器に盛り、スライスしたバナナとブルーベリーをのせる。',
+      'はちみつを回しかけ、シナモンを少々振る。',
+    ],
+    tip:'シナモンの香りが甘みを引き立て砂糖の使用量を減らせます。バナナとブルーベリーの自然な甘みとフルーティーな風味で洋風の満足感ある朝食になります。',
+    kidney:'オートミールはタンパク質・リンが比較的高め（40gで管理）。バナナはカリウムが高めなので1/4本（25g）まで。ブルーベリーは果物の中でカリウムが低め。',
+  },
+
+  '低塩チキングリル・蒸し野菜': {
+    ingredients:[
+      {name:'鶏もも肉（皮なし）',amount:'120g'},
+      {name:'にんにく',amount:'1/2片'},
+      {name:'オリーブオイル',amount:'小さじ2'},
+      {name:'レモン汁',amount:'小さじ2'},
+      {name:'乾燥バジル・オレガノ',amount:'各小さじ1/4'},
+      {name:'黒こしょう',amount:'少々'},
+      {name:'ズッキーニ',amount:'60g'},
+      {name:'パプリカ',amount:'40g'},
+      {name:'低タンパクご飯',amount:'150g'},
+    ],
+    steps:[
+      '鶏肉の皮を取り除きフォークで数か所刺す。',
+      'にんにく・オリーブオイル・レモン汁・ハーブ・こしょうを合わせ鶏肉に揉み込み15分マリネ。',
+      '野菜をひと口大に切り熱湯で3分ゆでこぼしカリウムを除去。',
+      'フライパンを強火で熱し鶏肉を2分焼いて焼き色をつける。蓋をして弱火8分蒸し焼き。',
+      '蒸し野菜と盛り付け残ったマリネ液を少量かける。',
+    ],
+    tip:'マリネにレモンとハーブを使うことで塩なしでも豊かな風味に。鶏肉はしっかり焼き色をつけてから蒸し焼きにすると外はカリッと中はジューシーに仕上がります。',
+    kidney:'皮なし鶏肉でリンを削減。塩は一切使わずハーブとレモンで代替。野菜のゆでこぼしでカリウムを約50%カット。',
+  },
+
+  '低タンパクカルボナーラ': {
+    ingredients:[
+      {name:'低タンパクパスタ（乾麺）',amount:'80g'},
+      {name:'卵',amount:'1個'},
+      {name:'豆乳（無調整）',amount:'大さじ2'},
+      {name:'ベーコン（薄切り）',amount:'15g（1枚）'},
+      {name:'にんにく',amount:'1/2片'},
+      {name:'オリーブオイル',amount:'小さじ1'},
+      {name:'黒こしょう（粗挽き）',amount:'たっぷり'},
+      {name:'イタリアンパセリ',amount:'少々'},
+    ],
+    steps:[
+      '卵と豆乳をよく混ぜ合わせソースを作る。黒こしょうを多めに混ぜておく。',
+      '低タンパクパスタを表示より1分短めに茹でる（茹で汁大さじ2を取り置く）。',
+      'フライパンにオリーブオイルとにんにく（薄切り）を弱火で熱し香りを出す。',
+      '細切りベーコンを加えてカリッと炒める。',
+      '火を止めパスタを加えて混ぜ、卵豆乳ソースを投入。素早く混ぜる（余熱で仕上げる）。',
+      '茹で汁で濃度を調整し器に盛り黒こしょうとパセリを散らす。',
+    ],
+    tip:'卵ソースは必ず火を止めてから加えることがクリーミーに仕上げる鍵。黒こしょうをたっぷり使うことで塩分少なめでも風味豊か。豆乳でチーズなしでもコクが出ます。',
+    kidney:'低タンパクパスタで通常品の約1/5のタンパク質に。チーズ不使用でリンを大幅カット。ベーコンは15gに留め塩分とリンを管理。',
+  },
+
+  '低塩ラタトゥイユ': {
+    ingredients:[
+      {name:'ズッキーニ',amount:'80g'},
+      {name:'なす',amount:'60g'},
+      {name:'パプリカ（赤・黄）',amount:'各30g'},
+      {name:'玉ねぎ',amount:'40g'},
+      {name:'無塩トマト缶',amount:'100g'},
+      {name:'にんにく',amount:'1片'},
+      {name:'オリーブオイル',amount:'大さじ1'},
+      {name:'バジル・タイム',amount:'各少々'},
+      {name:'黒こしょう',amount:'少々'},
+    ],
+    steps:[
+      '野菜はすべて2cm角に切る。なすとズッキーニは熱湯3分ゆでこぼす。',
+      '玉ねぎとにんにくをオリーブオイルで弱火10分炒め甘みを引き出す。',
+      'パプリカを加えてさらに5分炒める。',
+      'ゆでこぼした野菜とトマト缶を加え蓋をして弱火で20分煮込む。',
+      'バジル・タイム・黒こしょうで味を整える。',
+      '一度冷ますと味がなじんでさらに美味しい（翌日が食べ頃）。',
+    ],
+    tip:'玉ねぎをじっくり炒めて甘みを出すことで塩なしでも深いコクが生まれます。翌日に食べると野菜の旨みが溶け合って格段に美味しくなるので作り置きに最適。',
+    kidney:'全て野菜のみでタンパク質が非常に低い。野菜のゆでこぼしでカリウム大幅カット。無塩トマト缶を必ず使用。オリーブオイルはカロリー源として優秀。',
+  },
+
+  '低塩鮭のムニエル': {
+    ingredients:[
+      {name:'生鮭の切り身',amount:'100g'},
+      {name:'低タンパク薄力粉',amount:'大さじ1'},
+      {name:'無塩バター',amount:'10g'},
+      {name:'レモン汁',amount:'大さじ1'},
+      {name:'ケッパー（少量）',amount:'小さじ1/2'},
+      {name:'パセリ（みじん切り）',amount:'少々'},
+      {name:'低タンパクご飯',amount:'150g'},
+      {name:'ゆでこぼしいんげん',amount:'50g'},
+    ],
+    steps:[
+      '鮭の水気をふき取り低タンパク薄力粉を薄くまぶす（余分な粉は払う）。',
+      'フライパンにバターを溶かし中火で鮭を皮目から3分焼く。',
+      '裏返してさらに2〜3分焼く。焦がさないよう火加減を調整。',
+      '鮭を取り出し同じフライパンにレモン汁を加えてソースを作る。',
+      'ケッパーとパセリを加えてさっと混ぜ鮭にかける。',
+      'いんげんは熱湯4分ゆでこぼし付け合わせにする。',
+    ],
+    tip:'バターの香りとレモンの酸味が合わさったシンプルなムニエルは、少ない塩分でも非常に美味しく仕上がります。粉をまぶすことでバターが全体にからみ香ばしさが増します。',
+    kidney:'鮭100gでタンパク質約20g。バターは無塩タイプを。低タンパク薄力粉で衣のタンパク質も管理。いんげんのゆでこぼしでカリウムをカット。',
+  },
+
+  '低塩ポトフ': {
+    ingredients:[
+      {name:'鶏もも肉（皮なし）',amount:'60g'},
+      {name:'キャベツ',amount:'80g'},
+      {name:'にんじん',amount:'40g'},
+      {name:'大根',amount:'80g'},
+      {name:'セロリ',amount:'30g'},
+      {name:'水',amount:'500ml'},
+      {name:'コンソメ（無塩）',amount:'1個'},
+      {name:'ローリエ',amount:'1枚'},
+      {name:'黒こしょう',amount:'少々'},
+      {name:'低タンパクパン',amount:'1枚'},
+    ],
+    steps:[
+      '野菜を大きめに切り（食べごたえ重視）、それぞれ3分ゆでこぼす。',
+      '鍋に水・無塩コンソメ・ローリエを入れて沸かす。',
+      '鶏肉と全野菜を加え弱火で25〜30分ゆっくり煮る。',
+      '灰汁が出たらすくい取る。',
+      '黒こしょうで味を整え完成。',
+      '低タンパクパンを添えてスープを浸して食べる。',
+    ],
+    tip:'大きめに切った野菜を弱火でじっくり煮ることで、野菜の甘みが溶け出し塩分なしでも深みのあるスープになります。食べごたえのある大きさに切るのがポイントです。',
+    kidney:'野菜は全てゆでこぼしでカリウムを管理してから再度スープで煮る。無塩コンソメを使用。鶏肉60gでタンパク質を管理。セロリはカリウムが低め。',
+  },
+
+  // ========== 中華 ==========
+  '低塩蒸し餃子（野菜のみ）': {
+    ingredients:[
+      {name:'餃子の皮（市販）',amount:'8枚'},
+      {name:'キャベツ（みじん切り）',amount:'80g'},
+      {name:'ニラ',amount:'20g'},
+      {name:'しょうが（すりおろし）',amount:'1片'},
+      {name:'ごま油',amount:'小さじ1'},
+      {name:'低塩醤油',amount:'小さじ1/2'},
+      {name:'酢',amount:'小さじ1'},
+      {name:'ラー油',amount:'少々'},
+    ],
+    steps:[
+      'キャベツはみじん切りにしてよく揉み水分を絞る（ゆでこぼしも可）。ニラはみじん切り。',
+      'キャベツ・ニラ・しょうが・ごま油・醤油少量を混ぜ合わせ具を作る。',
+      '餃子の皮の中央に具をのせ、縁に水をつけてひだを作りながら包む。',
+      '蒸し器にクッキングシートを敷いて餃子を並べ、強火で8〜10分蒸す。',
+      '酢・低塩醤油・ラー油を合わせたタレで食べる。',
+    ],
+    tip:'蒸し餃子は焼き餃子より油が少なくヘルシー。野菜のみの具はさっぱりとして食べやすく、しょうがの風味とラー油の辛みがアクセントになります。ひだをしっかり作ると見栄えが良くなります。',
+    kidney:'野菜のみの具でタンパク質を最小化。キャベツのゆでこぼしまたは絞りでカリウムを除去。タレは少量（大さじ1以内）に。ニラは少量にとどめる。',
+  },
+
+  '低塩あんかけ焼きそば': {
+    ingredients:[
+      {name:'低タンパク中華麺（または焼きそば麺）',amount:'100g'},
+      {name:'キャベツ',amount:'60g'},
+      {name:'もやし',amount:'50g'},
+      {name:'にんじん',amount:'30g'},
+      {name:'豚薄切り肉',amount:'30g'},
+      {name:'ごま油',amount:'小さじ1'},
+      {name:'無塩鶏がらスープ',amount:'150ml'},
+      {name:'低塩醤油',amount:'小さじ1'},
+      {name:'片栗粉（水溶き）',amount:'小さじ1'},
+    ],
+    steps:[
+      '野菜は全てゆでこぼし（各3分）カリウムを除去してから使う。',
+      'フライパンにごま油を熱し麺を広げてこんがり焼き色をつける（片面2分ずつ）。',
+      '麺を皿に移し、同じフライパンで豚肉・野菜を炒める。',
+      'スープと醤油を加えて煮立て、水溶き片栗粉でとろみをつける。',
+      '焼いた麺にあんをたっぷりかける。',
+    ],
+    tip:'麺をカリッと焼いてからあんをかけることで食感のコントラストが生まれ、食べごたえが増します。とろみのついたあんは冷めにくく最後まで美味しく食べられます。',
+    kidney:'野菜は全てゆでこぼし必須。豚肉は30gに抑えてタンパク質管理。片栗粉はカリウム・リン・タンパク質が低く腎臓病食に使いやすいとろみ材料。',
+  },
+
+  '低塩マーボー豆腐': {
+    ingredients:[
+      {name:'絹ごし豆腐',amount:'200g'},
+      {name:'鶏ひき肉',amount:'40g'},
+      {name:'長ねぎ（みじん切り）',amount:'20g'},
+      {name:'にんにく（すりおろし）',amount:'1/2片'},
+      {name:'しょうが（すりおろし）',amount:'1/2片'},
+      {name:'ごま油',amount:'小さじ1'},
+      {name:'豆板醤',amount:'小さじ1/4'},
+      {name:'低塩醤油',amount:'小さじ1'},
+      {name:'無塩鶏がらスープ',amount:'100ml'},
+      {name:'片栗粉（水溶き）',amount:'小さじ1'},
+      {name:'花椒（ホアジャオ）',amount:'少々'},
+    ],
+    steps:[
+      '豆腐を2cm角に切り熱湯で2分茹でて水切り（崩れ防止と余分な塩分除去）。',
+      'ごま油でにんにく・しょうが・豆板醤を弱火で炒めて香りを出す。',
+      'ひき肉を加えて色が変わるまで炒める。',
+      'スープを加えて沸かし低塩醤油で味付け。豆腐を静かに加える。',
+      '水溶き片栗粉でとろみをつけ長ねぎを散らす。',
+      '花椒をたっぷりかけて完成。',
+    ],
+    tip:'花椒をたっぷり使うのが本格麻婆豆腐の秘訣。しびれる辛みが少ない塩分でも大きな満足感を生みます。とろみをしっかりつけるとご飯がすすみます。',
+    kidney:'絹ごし豆腐200gでボリューム確保。ひき肉を40gに抑えてタンパク質管理。花椒・しょうが・にんにくの香りで減塩をカバー。',
+  },
+
+  '低塩チャーハン（卵・葱）': {
+    ingredients:[
+      {name:'低タンパクご飯（冷やご飯）',amount:'200g'},
+      {name:'卵',amount:'1個'},
+      {name:'長ねぎ（小口切り）',amount:'30g'},
+      {name:'ごま油',amount:'小さじ2'},
+      {name:'低塩醤油',amount:'小さじ1'},
+      {name:'黒こしょう',amount:'少々'},
+      {name:'無塩鶏がらスープの素',amount:'少々'},
+    ],
+    steps:[
+      'ご飯は冷やご飯を使う（パラパラに仕上げる秘訣）。',
+      '強火でフライパンを十分に熱しごま油を加える。',
+      '溶き卵を入れ半熟のうちにご飯を加えて素早くほぐしながら炒める。',
+      '全体が混ざったら鍋肌から低塩醤油を回しかけて香ばしさを出す。',
+      'ねぎを加えてさっと炒め黒こしょうとスープの素少々で味を整える。',
+      '強火のまま3〜4分で仕上げる。',
+    ],
+    tip:'強火と冷やご飯がパラパラチャーハンの絶対条件。卵を先に半熟状態でご飯と混ぜる方法が家庭でもパラパラに仕上げるコツ。醤油は鍋肌にかけると香ばしい焦げの風味が生まれます。',
+    kidney:'低タンパクご飯で主食のタンパク質を最小化。卵1個は約6g。醤油は低塩タイプ必須。ねぎのカリウムが気になる場合は一度ゆでこぼしを。',
+  },
+
+  '低塩春巻き（豆腐入り）': {
+    ingredients:[
+      {name:'春巻きの皮',amount:'4枚'},
+      {name:'木綿豆腐（水切り済み）',amount:'80g'},
+      {name:'もやし（ゆでこぼし）',amount:'50g'},
+      {name:'にら（少量）',amount:'15g'},
+      {name:'しょうが（すりおろし）',amount:'少々'},
+      {name:'ごま油',amount:'小さじ1'},
+      {name:'低塩醤油',amount:'小さじ1/2'},
+      {name:'揚げ油',amount:'適量'},
+      {name:'酢・低塩醤油（タレ）',amount:'各小さじ1'},
+    ],
+    steps:[
+      '豆腐・もやし・にら・しょうがをごま油と醤油少量で炒め具を作る。粗熱を取る。',
+      '春巻きの皮に具を包む（端に水溶き片栗粉を塗り封をする）。',
+      '170℃の油でこんがりきつね色になるまで4〜5分揚げる。',
+      '油をしっかり切って盛り付ける。',
+      '酢と低塩醤油を合わせたタレで食べる。',
+    ],
+    tip:'揚げたてのパリパリの食感が春巻きの醍醐味。具に水分が多いと皮が破れるので、しっかり水切りと炒めで水分を飛ばすことが重要です。タレの酢の酸味が脂っこさをさっぱりさせます。',
+    kidney:'豆腐で具のボリュームを確保しながらタンパク質を管理。もやしはゆでこぼしでカリウムカット。揚げ物ですがカロリー補給に重要（腎臓病はカロリー不足になりやすい）。',
+  },
+
+  '低塩中華風スープ': {
+    ingredients:[
+      {name:'卵',amount:'1個'},
+      {name:'長ねぎ',amount:'20g'},
+      {name:'しょうが（薄切り）',amount:'3枚'},
+      {name:'無塩鶏がらスープ',amount:'400ml'},
+      {name:'低塩醤油',amount:'小さじ1'},
+      {name:'ごま油',amount:'数滴'},
+      {name:'片栗粉（水溶き）',amount:'大さじ1（とろみ用）'},
+      {name:'白こしょう',amount:'少々'},
+    ],
+    steps:[
+      'スープにしょうがを入れて沸かし、低塩醤油で味付け。',
+      '水溶き片栗粉を回し入れてとろみをつける。',
+      '溶き卵を細く流し入れながらゆっくり混ぜ（かき玉状に）。',
+      'ねぎを加えてごま油を数滴垂らす。',
+      '白こしょうを振って完成。',
+    ],
+    tip:'かき玉はスープが沸騰している状態でゆっくり回し入れるとふわふわに仕上がります。ごま油はほんの数滴で十分な香りが出るので使いすぎ注意。とろみがついているので冷めにくいです。',
+    kidney:'卵1個でタンパク質約6g。無塩スープを使用して塩分管理。片栗粉のとろみはカロリーを補いながらタンパク質・カリウム・リンが低い優秀な食材。',
+  },
+
+  '低塩バンバンジー': {
+    ingredients:[
+      {name:'鶏むね肉（皮なし）',amount:'60g'},
+      {name:'きゅうり',amount:'60g'},
+      {name:'ごまだれ（低塩）',amount:'大さじ1'},
+      {name:'しょうが（すりおろし）',amount:'少々'},
+      {name:'ごま油',amount:'数滴'},
+      {name:'白ごま',amount:'小さじ1'},
+      {name:'ラー油',amount:'少々'},
+    ],
+    steps:[
+      '鶏むね肉はたっぷりの水から弱火でゆっくり茹でる（10〜15分）。火を止めそのまま冷ます。',
+      'きゅうりは細切りにし熱湯で2分ゆでこぼしてカリウムを除去。',
+      '鶏肉を手で細かくさく。',
+      '市販の低塩ごまだれにしょうが・ごま油・ラー油を合わせてタレを作る。',
+      '皿にきゅうりと鶏肉を盛り付けタレをかける。ごまを振って完成。',
+    ],
+    tip:'鶏肉はゆで汁の中でゆっくり冷ますことでしっとりと仕上がります。ごまの香ばしさとラー油の辛みが食欲をそそります。冷やして食べると夏でも食べやすい一品です。',
+    kidney:'鶏むね肉を60gに抑えてタンパク質管理。きゅうりのゆでこぼしでカリウムカット。低塩ごまだれを使用し塩分管理。',
+  },
+
+  '低塩八宝菜': {
+    ingredients:[
+      {name:'白菜',amount:'80g'},
+      {name:'にんじん',amount:'30g'},
+      {name:'もやし',amount:'50g'},
+      {name:'うずら卵（水煮）',amount:'3個'},
+      {name:'豚薄切り肉',amount:'30g'},
+      {name:'しょうが',amount:'少々'},
+      {name:'ごま油',amount:'小さじ1'},
+      {name:'無塩鶏がらスープ',amount:'100ml'},
+      {name:'低塩醤油',amount:'小さじ1'},
+      {name:'片栗粉（水溶き）',amount:'小さじ1'},
+    ],
+    steps:[
+      '野菜は全てひと口大に切り熱湯で3分ゆでこぼす。',
+      'フライパンにごま油としょうがを熱し豚肉を炒める。',
+      'ゆでこぼした野菜を加えて炒め、スープと醤油を加える。',
+      'うずら卵を加えて2分煮る。',
+      '水溶き片栗粉でとろみをつけて完成。',
+    ],
+    tip:'八宝菜のとろみあんがご飯によく絡み、少ない塩分でも満足感のある食べ応えになります。うずら卵はうまみが強く見た目も豪華に。野菜をたっぷり入れることでボリューム感が出ます。',
+    kidney:'野菜のゆでこぼしでカリウムを大幅カット。豚肉を30gに抑えてタンパク質管理。うずら卵3個（タンパク質約5g）でアクセント。',
+  },
+
+  // ========== 韓国料理 ==========
+  '低塩純豆腐チゲ': {
+    ingredients:[
+      {name:'絹ごし豆腐',amount:'180g'},
+      {name:'白菜キムチ（少量）',amount:'20g'},
+      {name:'長ねぎ',amount:'20g'},
+      {name:'しめじ',amount:'30g'},
+      {name:'卵',amount:'1個'},
+      {name:'無塩鶏がらスープ',amount:'250ml'},
+      {name:'コチュジャン（少量）',amount:'小さじ1/2'},
+      {name:'ごま油',amount:'数滴'},
+    ],
+    steps:[
+      'スープにコチュジャンを溶き入れ沸かす。',
+      'キムチ（塩分が高いので少量）・しめじ・ねぎを加えて2分煮る。',
+      '豆腐をスプーンですくいながら加え3分煮る。',
+      '卵を割り入れ半熟になるまで煮る（1〜2分）。',
+      'ごま油を数滴たらして完成。土鍋で作ると保温性が高くより美味しい。',
+    ],
+    tip:'土鍋でグツグツと煮立てながら食べると最後まで熱々で美味しいです。半熟の卵をくずして食べるとまろやかさが増します。キムチの辛みと豆腐のやさしい味が絶妙にマッチします。',
+    kidney:'キムチは市販品は塩分が非常に高いので20gまで厳守。豆腐でボリュームを確保。しめじはカリウムが比較的低い。コチュジャンは少量でも十分な辛みが出る。',
+  },
+
+  '低塩ビビンバ（野菜多め）': {
+    ingredients:[
+      {name:'低タンパクご飯',amount:'180g'},
+      {name:'ほうれん草',amount:'60g'},
+      {name:'もやし',amount:'60g'},
+      {name:'にんじん（千切り）',amount:'40g'},
+      {name:'卵（目玉焼き）',amount:'1個'},
+      {name:'ごま油',amount:'小さじ1'},
+      {name:'低塩コチュジャン',amount:'小さじ1'},
+      {name:'白ごま',amount:'小さじ1'},
+    ],
+    steps:[
+      '各野菜を熱湯で3〜5分ゆでこぼしカリウムを除去。',
+      'ほうれん草は水気を絞り3cm幅に切りごま油・ごまで和える。',
+      'もやしは水気を切りごま油とごまで和える。にんじんはごま油で炒める。',
+      '卵は黄身がとろりと残る半熟目玉焼きにする。',
+      '丼にご飯を盛り野菜3種を彩りよく並べ中央に目玉焼きをのせる。',
+      '低塩コチュジャンをのせごまを振り全体をよく混ぜて食べる。',
+    ],
+    tip:'コチュジャンの辛みと甘みが少ない塩分でも食欲をそそります。3色の野菜を意識して盛り付けると見た目が豪華になり食欲アップ。黄身をとろりとさせてご飯と混ぜると濃厚な旨みが広がります。',
+    kidney:'全野菜を必ずゆでこぼしてカリウムを大幅カット。低タンパクご飯で主食のタンパク質を管理。コチュジャンは少量でも十分な風味が出るので使いすぎ注意。',
+  },
+
+  '低塩ナムル盛り合わせ': {
+    ingredients:[
+      {name:'ほうれん草',amount:'60g'},
+      {name:'もやし',amount:'60g'},
+      {name:'にんじん（細切り）',amount:'40g'},
+      {name:'ごま油',amount:'小さじ1'},
+      {name:'白ごま',amount:'大さじ1'},
+      {name:'にんにく（少量）',amount:'少々'},
+      {name:'低塩醤油',amount:'小さじ1/2'},
+    ],
+    steps:[
+      'それぞれの野菜を別々に熱湯で4〜5分ゆでこぼしカリウムを除去。',
+      'ほうれん草は水気をしっかり絞り4cm幅に切る。',
+      'もやしは水気を切る。にんじんは細切りのまま。',
+      '3種それぞれにごま油・白ごま・にんにく少々・低塩醤油少量を和える。',
+      '3色を彩りよく盛り合わせてごまを振る。',
+    ],
+    tip:'ごま油の香りが食欲をそそる韓国の定番副菜。3色を並べると彩りが美しく食欲が増します。にんにくは少量でも風味が出るので使いすぎ注意。ビビンバの具にもなる万能な作り置きおかずです。',
+    kidney:'全野菜のゆでこぼし必須。ごまはリンがやや高めなので大さじ1以内に。ごま油はタンパク質・カリウム・リンがほぼゼロでエネルギー補給に優秀。',
+  },
+
+  '低塩チャプチェ（春雨炒め）': {
+    ingredients:[
+      {name:'韓国春雨（サツマイモ春雨）',amount:'50g（乾燥）'},
+      {name:'ほうれん草',amount:'40g'},
+      {name:'にんじん（千切り）',amount:'30g'},
+      {name:'玉ねぎ',amount:'40g'},
+      {name:'牛薄切り肉',amount:'30g'},
+      {name:'ごま油',amount:'小さじ2'},
+      {name:'低塩醤油',amount:'小さじ1'},
+      {name:'砂糖',amount:'小さじ1/2'},
+      {name:'白ごま',amount:'小さじ1'},
+    ],
+    steps:[
+      '春雨を熱湯で表示通りに戻し水気を切る。長ければ食べやすく切る。',
+      '野菜はそれぞれ熱湯で3分ゆでこぼす。',
+      'フライパンにごま油を熱し牛肉・野菜を炒める。',
+      '春雨を加えて低塩醤油・砂糖で味付け。全体をよく混ぜ炒める。',
+      'ごまを振って完成。',
+    ],
+    tip:'春雨は甘辛い醤油だれをしっかり吸わせることが美味しさの秘訣。牛肉は少量でも炒めることで香ばしい風味が全体に広がります。冷めても美味しいので作り置きにも向いています。',
+    kidney:'サツマイモ春雨はカリウム・タンパク質・リンが低く腎臓病食に最適。野菜のゆでこぼし必須。牛肉は30gに抑えてタンパク質管理。',
+  },
+
+  '低塩チヂミ（ネギ・野菜）': {
+    ingredients:[
+      {name:'低タンパク薄力粉',amount:'50g'},
+      {name:'水',amount:'80ml'},
+      {name:'卵',amount:'1個'},
+      {name:'長ねぎ（斜め切り）',amount:'40g'},
+      {name:'にんじん（千切り・ゆでこぼし）',amount:'30g'},
+      {name:'ごま油',amount:'小さじ2'},
+      {name:'酢・低塩醤油（タレ）',amount:'各小さじ1'},
+    ],
+    steps:[
+      '低タンパク薄力粉・水・卵を混ぜて生地を作る（ダマがなくなるまで）。',
+      'にんじんはゆでこぼしてカリウムを除去。',
+      '生地に長ねぎとにんじんを加えて混ぜる。',
+      'フライパンにごま油を多めに引いて中火で熱する。',
+      '生地を流し込み丸く広げ、両面を3分ずつカリッと焼く。',
+      '酢と低塩醤油を合わせたタレで食べる。',
+    ],
+    tip:'ごま油を多めに使いカリッとした食感に仕上げることがチヂミの醍醐味。外はカリッと中はもちもちの食感のコントラストが美味しさの秘訣。タレの酢の酸味がさっぱりさせます。',
+    kidney:'低タンパク薄力粉で生地のタンパク質を管理。にんじんのゆでこぼしでカリウムカット。ごま油でカロリーを補給（腎臓病はカロリー不足になりやすい）。',
+  },
+
+  // ========== タイ料理 ==========
+  '低塩フォー（野菜スープ）': {
+    ingredients:[
+      {name:'フォー（米麺）',amount:'80g（乾燥）'},
+      {name:'無塩鶏がらスープ',amount:'500ml'},
+      {name:'鶏むね肉（薄切り）',amount:'50g'},
+      {name:'もやし（ゆでこぼし）',amount:'50g'},
+      {name:'長ねぎ（斜め薄切り）',amount:'20g'},
+      {name:'レモン（くし切り）',amount:'1切れ'},
+      {name:'パクチー',amount:'少々'},
+      {name:'ナンプラー（少量）',amount:'小さじ1/2'},
+    ],
+    steps:[
+      'フォーをたっぷりの熱湯で表示通りに茹で、流水で洗う。',
+      'スープを沸かし鶏肉を薄切りのまま加えて火を通す（3〜4分）。',
+      'もやしはゆでこぼしてカリウムを除去。',
+      '丼にフォーを盛り熱いスープを注ぐ。',
+      '鶏肉・もやし・ねぎをのせパクチーを添える。',
+      'レモンを絞りナンプラー少量を加えて食べる。',
+    ],
+    tip:'レモンをたっぷり絞ることでさっぱりとした本格フォーの味わいに。パクチーの独特の香りが食欲をそそります。スープを澄んだ状態に保つために沸騰させすぎないのがポイントです。',
+    kidney:'フォー（米麺）はタンパク質が低く腎臓病食に適した主食。ナンプラーは塩分が高いので小さじ1/2以内に。もやしのゆでこぼしでカリウムカット。',
+  },
+
+  '低塩ガパオ（豆腐）': {
+    ingredients:[
+      {name:'木綿豆腐（水切り）',amount:'120g'},
+      {name:'パプリカ（赤・黄）',amount:'各30g'},
+      {name:'玉ねぎ',amount:'40g'},
+      {name:'にんにく',amount:'1片'},
+      {name:'バジル（フレッシュまたは乾燥）',amount:'8枚'},
+      {name:'ごま油',amount:'小さじ1'},
+      {name:'低塩醤油',amount:'小さじ1'},
+      {name:'砂糖',amount:'小さじ1/2'},
+      {name:'低タンパクご飯',amount:'180g'},
+      {name:'卵（目玉焼き）',amount:'1個'},
+    ],
+    steps:[
+      '野菜はひと口大に切りパプリカは熱湯で2分ゆでこぼす。',
+      '豆腐は水切りして手でざっくりほぐす。',
+      'フライパンにごま油とにんにく（みじん切り）を弱火で炒め香りを出す。',
+      '玉ねぎを加えて炒め、豆腐・パプリカを加えて強火で炒める。',
+      '醤油と砂糖で味付けし最後にバジルをちぎりながら加えてさっと炒める。',
+      'ご飯に盛り付け目玉焼きをのせる。',
+    ],
+    tip:'バジルを最後に加えることで香りが飛びません。ガパオは本来鶏ひき肉ですが豆腐でも十分な食べごたえがあります。目玉焼きの黄身をくずしてご飯と混ぜると濃厚な味わいになります。',
+    kidney:'豆腐で鶏肉を代替しタンパク質をコントロール。パプリカのゆでこぼしでカリウムカット。バジルはカリウムがやや高めなので少量に。',
+  },
+
+  '低塩カオマンガイ（低塩）': {
+    ingredients:[
+      {name:'鶏もも肉（皮なし）',amount:'100g'},
+      {name:'低タンパクご飯',amount:'180g'},
+      {name:'しょうが',amount:'2枚'},
+      {name:'長ねぎの青い部分',amount:'1本'},
+      {name:'きゅうり（薄切り・ゆでこぼし）',amount:'30g'},
+      {name:'低塩醤油',amount:'小さじ1'},
+      {name:'ごま油',amount:'数滴'},
+      {name:'しょうが（すりおろし）',amount:'少々（タレ用）'},
+    ],
+    steps:[
+      '鍋に水を沸かしてしょうが・長ねぎの青い部分を入れる。',
+      '鶏もも肉を入れて弱火でじっくり15分茹でる。火を止めてそのまま10分置く。',
+      'ゆで汁でご飯を炊く（または低タンパクご飯を温める）。',
+      '鶏肉を薄く切り盛り付ける。',
+      '低塩醤油・ごま油・しょうがを合わせたタレを添える。',
+      'きゅうりを添えて完成。',
+    ],
+    tip:'鶏肉はゆで汁の中でゆっくり冷ますことでしっとりとした食感になります。タイ料理の定番ですがシンプルな味付けなのに深い旨みがあります。ゆで汁には鶏の旨みが溶け出しているので捨てずにご飯に活用。',
+    kidney:'皮なし鶏もも肉でリンを削減。きゅうりのゆでこぼしでカリウムカット。塩分はタレのみで調整。低タンパクご飯で主食を管理。',
+  },
+
+  '低塩トムヤム風スープ': {
+    ingredients:[
+      {name:'えのき',amount:'40g'},
+      {name:'しめじ',amount:'40g'},
+      {name:'長ねぎ',amount:'20g'},
+      {name:'しょうが（薄切り）',amount:'3枚'},
+      {name:'レモン汁',amount:'大さじ1'},
+      {name:'無塩鶏がらスープ',amount:'400ml'},
+      {name:'コチュジャン（少量）',amount:'小さじ1/4'},
+      {name:'低塩醤油',amount:'小さじ1/2'},
+      {name:'パクチー',amount:'少々'},
+    ],
+    steps:[
+      'スープにしょうがを入れて沸かす。',
+      'きのこ類とねぎを加えて3分煮る。',
+      'レモン汁・コチュジャン・醤油で味付け（酸味と辛みがポイント）。',
+      '器に盛りパクチーを添える。',
+    ],
+    tip:'レモンの酸味とコチュジャンの辛みが本格トムヤムらしい味わいを作ります。きのこから旨みが出るので少ない調味料でも深い味になります。辛さはコチュジャンの量で調整してください。',
+    kidney:'きのこ類はカリウム・タンパク質・リンが低く腎臓病食に最適。レモン汁でナンプラーの代わりに酸味を出して塩分を抑える。コチュジャンは少量でも十分な風味。',
+  },
+
+  // ========== インド料理 ==========
+  '低塩豆腐カレー（低辛）': {
+    ingredients:[
+      {name:'絹ごし豆腐',amount:'150g'},
+      {name:'玉ねぎ',amount:'60g'},
+      {name:'トマト（ゆでこぼし）',amount:'60g'},
+      {name:'にんにく（すりおろし）',amount:'1片'},
+      {name:'しょうが（すりおろし）',amount:'1片'},
+      {name:'カレー粉',amount:'大さじ1/2'},
+      {name:'ターメリック',amount:'小さじ1/4'},
+      {name:'オリーブオイル',amount:'小さじ1'},
+      {name:'無塩チキンスープ',amount:'100ml'},
+      {name:'低タンパクご飯',amount:'180g'},
+    ],
+    steps:[
+      '玉ねぎをみじん切りにしオリーブオイルで飴色になるまで弱火で15分炒める（ここが重要）。',
+      'にんにく・しょうがを加えて2分炒め、カレー粉・ターメリックを加えてさらに1分炒める。',
+      'トマト（ゆでこぼし）を加えてつぶしながら5分炒める。',
+      'スープを加えて5分煮る。',
+      '豆腐をひと口大に切り加えてさらに5分煮る。',
+      'ご飯に添えて完成。',
+    ],
+    tip:'玉ねぎを飴色になるまでじっくり炒めることがインドカレーの旨みの源。この下準備を丁寧に行うことで塩なしでも深い味わいのカレーになります。スパイスの香りが食欲を刺激します。',
+    kidney:'豆腐でタンパク質を管理しながらボリューム確保。トマトはカリウムが高めなのでゆでこぼしを。カレー粉自体は塩分がほぼゼロなので風味付けに惜しみなく使えます。',
+  },
+
+  '低塩ダル（豆スープ）': {
+    ingredients:[
+      {name:'赤レンズ豆',amount:'50g'},
+      {name:'玉ねぎ',amount:'40g'},
+      {name:'トマト（ゆでこぼし）',amount:'40g'},
+      {name:'にんにく',amount:'1片'},
+      {name:'しょうが',amount:'1片'},
+      {name:'ターメリック',amount:'小さじ1/4'},
+      {name:'クミン',amount:'小さじ1/2'},
+      {name:'オリーブオイル',amount:'小さじ1'},
+      {name:'水',amount:'400ml'},
+      {name:'レモン汁',amount:'小さじ1'},
+    ],
+    steps:[
+      '赤レンズ豆を水でよく洗う（ゆでこぼしは不要・柔らかくなりやすい）。',
+      'フライパンにオリーブオイルを熱しクミンを炒めて香りを出す。',
+      '玉ねぎ・にんにく・しょうがを加えて炒める。',
+      '豆・水・ターメリックを加えて20〜25分弱火で煮る（豆がトロトロになるまで）。',
+      'ゆでこぼしたトマトを加えてさらに5分煮る。',
+      'レモン汁を加えて味を整える。',
+    ],
+    tip:'レンズ豆はつぶすと自然なとろみが出てスープがなめらかになります。クミンを最初に炒めて香りを出すことが本格インド料理の基本。レモンを最後に加えると爽やかな後味になります。',
+    kidney:'赤レンズ豆はタンパク質が高めなので50gに留める。トマトのゆでこぼしでカリウムカット。スパイスは塩分がほぼゼロで風味付けに最適。',
+  },
+
+  '低塩ターメリックライス': {
+    ingredients:[
+      {name:'低タンパクご飯',amount:'180g'},
+      {name:'ターメリック',amount:'小さじ1/4'},
+      {name:'バター（無塩）',amount:'5g'},
+      {name:'カルダモン（パウダー）',amount:'少々'},
+      {name:'シナモン',amount:'少々'},
+      {name:'レーズン（少量）',amount:'10g'},
+    ],
+    steps:[
+      '低タンパクご飯を温める。',
+      '小鍋に無塩バターを溶かしターメリック・カルダモン・シナモンを加えて30秒炒める。',
+      '温かいご飯にスパイスバターを加えてよく混ぜる。',
+      'レーズンを混ぜ込む。',
+      '鮮やかな黄色のライスが完成。カレーと相性抜群。',
+    ],
+    tip:'ターメリックの黄色が食欲をそそる色鮮やかなライスです。スパイスの組み合わせでエキゾチックな風味が生まれ、白いご飯とは全く違う食体験が楽しめます。',
+    kidney:'低タンパクご飯で主食のタンパク質を管理。スパイスはカリウム・リン・タンパク質がほぼゼロ。レーズンはカリウムがやや高めなので10gまで。',
+  },
+
+  // ========== 地中海料理 ==========
+  '低塩ギリシャ風サラダ': {
+    ingredients:[
+      {name:'きゅうり（ゆでこぼし）',amount:'60g'},
+      {name:'パプリカ（赤・ゆでこぼし）',amount:'40g'},
+      {name:'玉ねぎ（薄切り・水さらし）',amount:'20g'},
+      {name:'オリーブ（塩なし）',amount:'4〜5粒'},
+      {name:'絹ごし豆腐（フェタチーズ代替）',amount:'40g'},
+      {name:'オリーブオイル',amount:'小さじ2'},
+      {name:'レモン汁',amount:'小さじ2'},
+      {name:'乾燥オレガノ',amount:'少々'},
+      {name:'黒こしょう',amount:'少々'},
+    ],
+    steps:[
+      'きゅうりとパプリカは熱湯で2〜3分ゆでこぼしカリウムを除去。冷水で冷やす。',
+      '玉ねぎは薄切りにして15分水にさらす。',
+      '豆腐は1cm角に切る（フェタチーズの代わり）。',
+      '野菜・豆腐・オリーブを盛り合わせる。',
+      'オリーブオイル・レモン汁・オレガノ・黒こしょうを合わせたドレッシングをかける。',
+    ],
+    tip:'オリーブオイルとレモンのシンプルなドレッシングが地中海料理の真髄。塩なしでもレモンの酸味とオレガノの香りで十分な美味しさになります。豆腐はフェタチーズの見た目と食感に近い代替品として優秀です。',
+    kidney:'野菜のゆでこぼしでカリウムを管理。豆腐はチーズ（リンが高い）の代替として優秀。オリーブオイルはエネルギー補給に最適な油。オリーブの実は塩分に注意し無塩タイプを。',
+  },
+
+  '低塩フムス・野菜スティック': {
+    ingredients:[
+      {name:'ひよこ豆缶（水洗い）',amount:'50g'},
+      {name:'ごまペースト（タヒニ）',amount:'小さじ1'},
+      {name:'レモン汁',amount:'大さじ1'},
+      {name:'にんにく',amount:'1/4片'},
+      {name:'オリーブオイル',amount:'小さじ1'},
+      {name:'クミン（パウダー）',amount:'少々'},
+      {name:'きゅうり（スティック）',amount:'60g'},
+      {name:'にんじん（スティック・ゆでこぼし）',amount:'40g'},
+    ],
+    steps:[
+      'ひよこ豆を水洗いしてカリウムを流す（缶の漬け汁は捨てる）。',
+      'フードプロセッサー（またはミキサー）にひよこ豆・タヒニ・レモン汁・にんにく・オリーブオイルを入れてなめらかになるまで撹拌。',
+      '水を少量加えながらなめらかなペースト状に調整する。',
+      'クミンを混ぜ込む。',
+      'きゅうりとにんじん（ゆでこぼし）をスティック状に切って添える。',
+    ],
+    tip:'レモンを多めに入れることで爽やかでクリーミーなフムスになります。野菜スティックに付けて食べることで満足感のある間食になります。フードプロセッサーがない場合はフォークで丁寧につぶしても作れます。',
+    kidney:'ひよこ豆はタンパク質・カリウム・リンが高めなので50gに抑える。水洗いでカリウムをある程度除去。にんじんのゆでこぼしでカリウムカット。レモン汁で減塩をカバー。',
+  },
+
+  '低塩モロッコ風野菜煮込み': {
+    ingredients:[
+      {name:'ズッキーニ',amount:'70g'},
+      {name:'なす',amount:'60g'},
+      {name:'玉ねぎ',amount:'40g'},
+      {name:'にんじん',amount:'40g'},
+      {name:'無塩トマト缶',amount:'80g'},
+      {name:'クミン・コリアンダー',amount:'各小さじ1/4'},
+      {name:'シナモン',amount:'少々'},
+      {name:'オリーブオイル',amount:'大さじ1'},
+      {name:'低タンパククスクス代替ご飯',amount:'150g'},
+    ],
+    steps:[
+      '野菜をひと口大に切り、なすとズッキーニは熱湯3分ゆでこぼす。',
+      'オリーブオイルで玉ねぎを炒め、スパイス（クミン・コリアンダー・シナモン）を加えて香りを出す。',
+      'にんじん・ゆでこぼした野菜・トマト缶を加える。',
+      '蓋をして弱火で20分煮込む。',
+      '低タンパクご飯に添えて食べる。',
+    ],
+    tip:'シナモンを野菜料理に使うのがモロッコ料理の特徴。独特の甘い香りが食欲をそそります。スパイスをしっかり炒めて香りを引き出すことが美味しさの秘訣です。',
+    kidney:'野菜のゆでこぼしでカリウムカット。無塩トマト缶を使用。スパイスで塩分をカバー。オリーブオイルでカロリーを補給。',
+  },
+
+  // ========== ベトナム料理 ==========
+  '低塩生春巻き（野菜）': {
+    ingredients:[
+      {name:'ライスペーパー',amount:'4枚'},
+      {name:'ビーフン（茹でたもの）',amount:'40g'},
+      {name:'きゅうり（細切り・ゆでこぼし）',amount:'40g'},
+      {name:'にんじん（細切り・ゆでこぼし）',amount:'30g'},
+      {name:'レタス（ゆでこぼし）',amount:'2枚'},
+      {name:'バジルまたはミント',amount:'少々'},
+      {name:'低塩スイートチリソース',amount:'大さじ1'},
+    ],
+    steps:[
+      '野菜はゆでこぼしてカリウムを除去し細切りにする。',
+      'ライスペーパーをぬるま湯に10〜15秒浸してやわらかくする。',
+      '濡れたライスペーパーの上にレタス・ビーフン・野菜・ハーブを並べる。',
+      '手前から1回巻いて両端を折り込み、さらに巻いて完成。',
+      'スイートチリソースで食べる。',
+    ],
+    tip:'ライスペーパーは浸しすぎると破れるので10〜15秒が目安。具材は多めに入れると食べごたえがあります。ハーブを入れることで爽やかな風味が増し、ソースとよく合います。',
+    kidney:'ライスペーパーはタンパク質・リンが低い。野菜のゆでこぼしでカリウム管理。スイートチリソースは少量（大さじ1以内）にして塩分を管理。',
+  },
+
+  '低塩フォー・チキン': {
+    ingredients:[
+      {name:'フォー（米麺）',amount:'80g（乾燥）'},
+      {name:'鶏むね肉（皮なし）',amount:'60g'},
+      {name:'無塩鶏がらスープ',amount:'500ml'},
+      {name:'しょうが（薄切り）',amount:'3枚'},
+      {name:'スターアニス（八角）',amount:'1個'},
+      {name:'もやし（ゆでこぼし）',amount:'50g'},
+      {name:'ねぎ（斜め薄切り）',amount:'15g'},
+      {name:'レモン',amount:'1切れ'},
+      {name:'ナンプラー',amount:'小さじ1/4'},
+    ],
+    steps:[
+      'スープにしょうが・スターアニスを加えて10分煮て香りを出す。スターアニスを取り出す。',
+      '鶏むね肉をスープに入れて弱火で10分ゆでる。取り出してそぎ切りに。',
+      'フォーを熱湯で茹でて流水で洗う。',
+      '丼にフォーを盛り熱いスープを注ぐ。',
+      '鶏肉・もやし・ねぎをのせ、レモンを添える。',
+      'レモンを絞りナンプラー少量を加えて食べる。',
+    ],
+    tip:'スターアニス（八角）を使うことで本格的なフォーの香りが再現できます。スープをじっくり煮出すほど深い味わいになります。レモンを絞ることで塩分が少なくても爽快な味わいになります。',
+    kidney:'フォーはタンパク質が低い腎臓病に向いた麺。鶏むね肉を60gに抑えてタンパク質管理。ナンプラーは高塩分なので小さじ1/4以内に。もやしのゆでこぼしでカリウムカット。',
+  },
+
+  // ========== メキシコ料理 ==========
+  '低塩豆腐タコス': {
+    ingredients:[
+      {name:'コーントルティーヤ（小）',amount:'2枚'},
+      {name:'木綿豆腐（水切り）',amount:'100g'},
+      {name:'パプリカ（ゆでこぼし）',amount:'40g'},
+      {name:'玉ねぎ（みじん切り）',amount:'20g'},
+      {name:'チリパウダー',amount:'小さじ1/4'},
+      {name:'クミン',amount:'少々'},
+      {name:'ライム汁',amount:'小さじ1'},
+      {name:'サルサ（市販・低塩）',amount:'大さじ1'},
+      {name:'コリアンダー（パクチー）',amount:'少々'},
+    ],
+    steps:[
+      '豆腐は水切りしてひと口大にちぎる。チリパウダー・クミンをまぶす。',
+      'フライパンで豆腐をこんがり焼く（油少量）。',
+      'パプリカはゆでこぼして細切りに。',
+      'トルティーヤをフライパンまたはトースターで温める。',
+      'トルティーヤに豆腐・パプリカ・玉ねぎをのせる。',
+      'サルサ・ライム汁・コリアンダーをかける。',
+    ],
+    tip:'豆腐にスパイスをまぶしてしっかり焼くことで食べごたえのある食感になります。ライムの爽やかな酸味が全体を引き締めます。コリアンダーを添えることでメキシカンらしい本格的な風味になります。',
+    kidney:'コーントルティーヤはタンパク質・リンが低め。豆腐でタンパク質を管理しながらボリューム確保。パプリカのゆでこぼしでカリウムカット。サルサは低塩タイプを選ぶか量を制限。',
+  },
+
+  '低塩野菜ブリトー': {
+    ingredients:[
+      {name:'低タンパク小麦トルティーヤ（市販）',amount:'1枚（大）'},
+      {name:'レタス（ゆでこぼし）',amount:'30g'},
+      {name:'にんじん（ゆでこぼし）',amount:'30g'},
+      {name:'アボカド（少量）',amount:'20g'},
+      {name:'絹ごし豆腐',amount:'60g'},
+      {name:'低塩サルサ',amount:'大さじ1'},
+      {name:'ライム汁',amount:'少々'},
+      {name:'クミン',amount:'少々'},
+    ],
+    steps:[
+      '野菜はゆでこぼしてカリウムを除去。',
+      'トルティーヤを電子レンジで20秒温める（柔らかくなる）。',
+      '中央にレタス・にんじん・アボカド・豆腐を並べる。',
+      'サルサ・ライム汁・クミンをかける。',
+      '手前から巻き、両端を折り込みしっかり巻く。',
+      '斜め半分に切ると食べやすい。',
+    ],
+    tip:'アボカドは少量でもクリーミーな食感とコクを加えてくれます。トルティーヤをしっかり温めることで巻きやすくなり、破れにくくなります。見た目が豪華でカフェのような雰囲気が出ます。',
+    kidney:'アボカドはカリウムが高いので20gに留める（少量でも十分なコクが出る）。野菜のゆでこぼしでカリウム管理。豆腐でタンパク質をコントロール。',
+  },
+
+  // ========== おやつ ==========
+  '低タンパクプリン': {
+    ingredients:[
+      {name:'豆乳（無調整）',amount:'200ml'},
+      {name:'砂糖',amount:'大さじ2'},
+      {name:'粉ゼラチン',amount:'5g'},
+      {name:'水（ゼラチン用）',amount:'大さじ2'},
+      {name:'バニラエッセンス',amount:'2〜3滴'},
+      {name:'キャラメルソース（砂糖・水）',amount:'砂糖大さじ2・水大さじ1'},
+    ],
+    steps:[
+      'キャラメルソースを作る：砂糖と水大さじ1を小鍋で中火にかけ、茶色くなったら熱湯大さじ1を加えて完成。プリン型の底に注ぐ。',
+      'ゼラチンを水に振り入れてふやかす（5分）。',
+      '豆乳と砂糖を小鍋で60℃まで温める（沸騰させない）。',
+      'ふやかしたゼラチンを加えて溶かし、バニラエッセンスを加える。',
+      '型に注いで冷蔵庫で2時間以上冷やし固める。',
+      '型をひっくり返して盛り付ける。',
+    ],
+    tip:'豆乳を使うことで牛乳（リンが高い）の代替となります。キャラメルの苦みと甘みが組み合わさり、砂糖が少なくても満足感のあるデザートになります。冷やしてしっかり固めることが重要です。',
+    kidney:'牛乳の代わりに豆乳を使用（リンを削減）。ゼラチンはタンパク質がやや高めなので5g（1袋）まで。砂糖はカリウム・リン・タンパク質がほぼゼロで腎臓病食の甘味として使いやすい。',
+  },
+
+  'わらびもち（低リン）': {
+    ingredients:[
+      {name:'わらびもち粉',amount:'40g'},
+      {name:'水',amount:'200ml'},
+      {name:'砂糖',amount:'大さじ2'},
+      {name:'きな粉（少量）',amount:'小さじ1'},
+      {name:'黒みつ',amount:'小さじ1'},
+    ],
+    steps:[
+      'わらびもち粉・水・砂糖を鍋に入れてよく混ぜる（ダマがないように）。',
+      '中火にかけ木べらで絶えず混ぜながら加熱する。',
+      'とろみが出て透明になってきたら弱火にしてさらに2分混ぜる。',
+      'バットに取り出し平らに広げて冷水に入れて冷やす（10分）。',
+      'ひと口大に切りきな粉と黒みつをかけて完成。',
+    ],
+    tip:'わらびもち粉を絶えず混ぜ続けることがダマなくなめらかに仕上げる秘訣。透明になってくると完成のサイン。冷水で冷やすことでもちもちとした食感になります。',
+    kidney:'わらびもち粉はタンパク質・リン・カリウムが非常に低く腎臓病食の理想的なおやつ。きな粉はリンがやや高めなので小さじ1以内に。黒みつはカリウムがやや高めなので少量に。',
+  },
+
+  '低タンパクシフォンケーキ': {
+    ingredients:[
+      {name:'低タンパク薄力粉',amount:'50g'},
+      {name:'卵（卵黄と卵白に分ける）',amount:'2個'},
+      {name:'砂糖',amount:'40g'},
+      {name:'サラダ油',amount:'大さじ2'},
+      {name:'水',amount:'大さじ2'},
+      {name:'バニラエッセンス',amount:'数滴'},
+    ],
+    steps:[
+      'オーブンを170℃に予熱。卵黄・砂糖半量・油・水・バニラを混ぜ、低タンパク粉を加えて混ぜる。',
+      '卵白に残りの砂糖を加えてツノが立つまでしっかりメレンゲを作る（ここが重要）。',
+      'メレンゲを3回に分けて卵黄生地に加え、さっくりと混ぜ合わせる（混ぜすぎない）。',
+      'シフォン型に流し込み170℃で30〜35分焼く。',
+      '焼き上がりはすぐ逆さまにして冷ます（しぼみ防止）。',
+    ],
+    tip:'メレンゲをしっかり作ることがふわふわシフォンケーキの命。型を逆さまにして冷ますことで高さをキープします。低タンパク粉でも普通のシフォンケーキとほぼ変わらない仕上がりになります。',
+    kidney:'低タンパク薄力粉で通常品の1/10程度のタンパク質。卵2個（タンパク質約12g）。砂糖・油はタンパク質・リン・カリウムがほぼゼロ。バター不使用でリンを削減。',
+  },
+
+  '低リンシャーベット': {
+    ingredients:[
+      {name:'いちご',amount:'100g'},
+      {name:'砂糖',amount:'大さじ2'},
+      {name:'レモン汁',amount:'小さじ1'},
+      {name:'水',amount:'大さじ2'},
+    ],
+    steps:[
+      'いちごのへたを取り砂糖・レモン汁・水と合わせてミキサーで撹拌する。',
+      '冷凍可能な容器に入れて冷凍庫で1時間冷やす。',
+      '半冷凍状態になったらフォークでかき混ぜて空気を含ませる。',
+      'さらに1時間冷凍し、同様の作業を2〜3回繰り返す。',
+      '食べる10分前に冷凍庫から出して少し柔らかくして食べる。',
+    ],
+    tip:'かき混ぜ作業を繰り返すことでなめらかなシャーベットになります。いちごの鮮やかな赤色と甘酸っぱい味わいが腎臓病食の中でも贅沢な気分にしてくれます。',
+    kidney:'いちごは果物の中でカリウムが低め（100gで約180mg）。牛乳不使用でリンがゼロ。砂糖はカリウム・リン・タンパク質がほぼゼロ。爽やかで食欲のない時にも食べやすいおやつです。',
+  },
+
+  '低塩煎餅（小量）': {
+    ingredients:[
+      {name:'低タンパク米粉',amount:'50g'},
+      {name:'水',amount:'大さじ2〜3'},
+      {name:'低塩醤油',amount:'小さじ1/2'},
+      {name:'みりん',amount:'小さじ1/2'},
+      {name:'白ごま',amount:'小さじ1'},
+    ],
+    steps:[
+      '米粉と水を混ぜて耳たぶくらいの固さの生地を作る。',
+      '薄く丸く伸ばして（厚さ3mm程度）クッキングシートに並べる。',
+      '180℃に予熱したオーブンで10〜12分焼く。',
+      '焼き上がりに低塩醤油とみりんを混ぜたたれを薄く塗り、さらに2〜3分焼く。',
+      '冷めるとパリッとした食感になる。',
+    ],
+    tip:'薄く均一に伸ばすことがパリッと仕上げる秘訣。焼き上がりに醤油を塗るのが香ばしさの源。ごまをたっぷり振ることでシンプルながら風味豊かな煎餅になります。',
+    kidney:'低タンパク米粉でタンパク質を大幅削減。低塩醤油で塩分管理。ごまはリンがやや高めなので小さじ1以内に。ヘルシーなスナックとして最適。',
+  },
+
+  '低タンパクマフィン': {
+    ingredients:[
+      {name:'低タンパクホットケーキミックス',amount:'100g'},
+      {name:'卵',amount:'1個'},
+      {name:'豆乳（無調整）',amount:'80ml'},
+      {name:'サラダ油',amount:'大さじ2'},
+      {name:'砂糖',amount:'大さじ1'},
+      {name:'ブルーベリー（冷凍可）',amount:'30g'},
+      {name:'バニラエッセンス',amount:'数滴'},
+    ],
+    steps:[
+      'オーブンを180℃に予熱。マフィン型（6個分）にカップを敷く。',
+      '卵・豆乳・油・砂糖・バニラを混ぜ合わせる。',
+      '低タンパクミックス粉を加えてさっくり混ぜる（混ぜすぎない）。',
+      'ブルーベリーを加えてさっと混ぜる。',
+      '型の7分目まで生地を流し込む。',
+      '180℃で18〜20分焼く。竹串を刺して生地が付いてこれば完成。',
+    ],
+    tip:'生地を混ぜすぎないことがふっくらしたマフィンの秘訣。ブルーベリーの紫色が見た目を彩り、甘酸っぱさがアクセントになります。焼きたてはふわふわ、翌日はしっとりした食感に変わります。',
+    kidney:'低タンパクホットケーキミックスで通常品の1/10のタンパク質。豆乳で牛乳（リンが高い）を代替。ブルーベリーはカリウムが低めの果物。卵1個（タンパク質約6g）。',
+  },
+
+  '低タンパクパスタ・トマト': {
+    ingredients:[
+      {name:'低タンパクパスタ（乾麺）',amount:'80g'},
+      {name:'トマト缶（無塩ホール）',amount:'150g'},
+      {name:'玉ねぎ',amount:'40g'},
+      {name:'にんにく',amount:'1片'},
+      {name:'オリーブオイル',amount:'大さじ1'},
+      {name:'バジル（乾燥）',amount:'小さじ1/2'},
+      {name:'オレガノ（乾燥）',amount:'小さじ1/4'},
+      {name:'黒こしょう',amount:'少々'},
+      {name:'砂糖',amount:'ひとつまみ（酸味調整用）'},
+    ],
+    steps:[
+      '玉ねぎを薄切りに、にんにくを薄切りにする。',
+      'オリーブオイルでにんにくを弱火で1〜2分炒め香りを出す。玉ねぎを加え透明になるまで5分炒める。',
+      'トマト缶を加えて手でつぶしながら混ぜ、バジル・オレガノ・砂糖・こしょうを加える。弱火で10〜15分煮詰めてとろりとさせる。',
+      '低タンパクパスタを表示より30秒短めに茹でる（茹で汁大さじ2取り置く）。',
+      'パスタをソースに加えて混ぜ、茹で汁で濃度を調整して完成。',
+    ],
+    tip:'トマトは無塩缶を使い砂糖ひとつまみで酸味を和らげると、塩なしでも旨みが引き出せます。にんにくをじっくり炒めることで香り高い本格的な風味に。パスタの茹で汁をソースに加えるとなめらかに仕上がります。',
+    kidney:'低タンパクパスタで通常の約1/5のタンパク質に抑えられます。チーズは使わずリンをカット。無塩トマト缶を必ず使用し塩分を管理。野菜少なめの構成でカリウムも控えめです。',
+  },
+
+  '低塩ミネストローネ': {
+    ingredients:[
+      {name:'キャベツ',amount:'60g'},
+      {name:'にんじん',amount:'30g'},
+      {name:'玉ねぎ',amount:'40g'},
+      {name:'セロリ',amount:'20g'},
+      {name:'トマト缶（無塩）',amount:'100g'},
+      {name:'低タンパクパスタ（小粒・マカロニ等）',amount:'30g'},
+      {name:'オリーブオイル',amount:'小さじ2'},
+      {name:'にんにく',amount:'1/2片'},
+      {name:'無塩コンソメ（市販の低塩品）',amount:'1/2個'},
+      {name:'水',amount:'350ml'},
+      {name:'バジル・タイム',amount:'各少々'},
+      {name:'黒こしょう',amount:'少々'},
+    ],
+    steps:[
+      '野菜は全て1cm角に切る。キャベツとにんじんは熱湯で3分ゆでこぼしてカリウムを除去。',
+      'オリーブオイルでにんにく・玉ねぎ・セロリを弱火で5分じっくり炒める。',
+      'にんじんを加えて2分炒め、トマト缶・水・コンソメを加えて沸かす。',
+      'キャベツと低タンパクパスタを加え、弱火で10〜12分、パスタが柔らかくなるまで煮る。',
+      'ハーブ類と黒こしょうで味を整えて完成。',
+    ],
+    tip:'野菜をしっかり炒めてから煮ることで自然な甘みと深いコクが出ます。翌日に食べると野菜の旨みがスープに溶け込んでさらに美味しくなります。パンを添えると満足感のある一品に。',
+    kidney:'野菜のゆでこぼしでカリウムを大幅削減。無塩トマト缶と低塩コンソメで塩分管理。低タンパクパスタ少量でボリュームを補充。セロリはカリウムが低めで使いやすい野菜です。',
+  },
+
+  '豆腐バーガー・低塩': {
+    ingredients:[
+      {name:'低タンパクバンズ（市販品）',amount:'1個（80g）'},
+      {name:'木綿豆腐（水切り済み）',amount:'100g'},
+      {name:'鶏ひき肉',amount:'40g'},
+      {name:'玉ねぎ（みじん切り）',amount:'30g'},
+      {name:'低タンパクパン粉',amount:'大さじ1'},
+      {name:'黒こしょう',amount:'少々'},
+      {name:'レタス（ゆでこぼし不要・1枚）',amount:'20g'},
+      {name:'トマト（薄切り）',amount:'1枚（20g）'},
+      {name:'低塩ケチャップ',amount:'小さじ1'},
+      {name:'マスタード',amount:'少々'},
+      {name:'サラダ油',amount:'小さじ1'},
+    ],
+    steps:[
+      '豆腐をペーパータオルで包み重石をのせ30分しっかり水切りする。',
+      '玉ねぎをみじん切りにして油なしで飴色になるまで炒めて冷ます。',
+      'ボウルに豆腐・鶏ひき肉・玉ねぎ・パン粉・こしょうを混ぜ、パティ形に成形。',
+      '油を熱したフライパンで中火2分→蓋をして弱火4分→裏返して3分蒸し焼き。',
+      'バンズを軽くトースト。低塩ケチャップとマスタードを塗り、パティ・レタス・トマトを挟んで完成。',
+    ],
+    tip:'豆腐の水切りを徹底するほどパティが崩れず肉厚に仕上がります。蓋をして蒸し焼きにすることで中まで火が通りジューシーに。低塩ケチャップとマスタードを合わせることでしっかりした風味が出ます。',
+    kidney:'低タンパクバンズ使用で主食のタンパク質を最小化。パティを豆腐メインにしてタンパク質をコントロール。トマトは薄切り1枚に留めカリウムを抑制。チーズは使わずリンをカット。',
+  },
+
+  '低リンゼリー菓子': {
+    ingredients:[
+      {name:'りんごジュース（果汁100%・無塩）',amount:'200ml'},
+      {name:'粉ゼラチン',amount:'5g'},
+      {name:'水（ゼラチン用）',amount:'大さじ2'},
+      {name:'砂糖',amount:'大さじ1'},
+      {name:'レモン汁',amount:'小さじ1'},
+    ],
+    steps:[
+      'ゼラチンを水に振り入れてふやかす（5分）。',
+      'りんごジュースと砂糖を小鍋で60℃まで温める。',
+      'ふやかしたゼラチンを加えてよく溶かす。',
+      'レモン汁を加えて容器に注ぐ。',
+      '冷蔵庫で2時間以上冷やし固める。',
+      '食べやすい大きさに切って盛り付ける。',
+    ],
+    tip:'りんごジュースの自然な甘みと爽やかな風味で砂糖が少なくても美味しいゼリーになります。レモン汁を加えることでりんごの甘みが引き立ちます。色が透明に近くて見た目も涼しげです。',
+    kidney:'牛乳不使用でリンがほぼゼロ。りんごジュースはカリウムが比較的低め。ゼラチンはタンパク質がやや高めなので5g（1袋）まで。暑い季節も食欲がある時も食べやすいおやつ。',
+  },
+};
+const GEMINI_API_KEY = 'YOUR_GEMINI_API_KEY';
+
+function buildRecipeHTML(m, recipe) {
+  const fallbackHTML = `
+    <div class="alert-box alert-info" style="margin-top:8px;">
+      <div class="alert-title">📋 基本の調理ポイント</div>
+      <div style="font-size:13px;line-height:1.8;margin-top:4px;">
+        ・<strong>野菜</strong>は必ず熱湯で3〜5分ゆでこぼしてカリウムを約50%カット<br>
+        ・<strong>塩</strong>の代わりにだし・レモン・ハーブ・花椒・ごまで風味付け<br>
+        ・<strong>主食</strong>は低タンパク専用食品（ご飯・パスタ・パン）を使用<br>
+        ・<strong>味付け</strong>は食べる直前に少量かけると薄味でも満足感アップ
+      </div>
+    </div>`;
+
+  const recipeHTML = recipe ? `
+    <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:8px;">🛒 材料（1人前）</div>
+    <div style="background:var(--surface2);border-radius:var(--rs);padding:4px 12px;margin-bottom:16px;">
+      ${recipe.ingredients.map(i => `
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;">
+          <span style="color:var(--text2);">${i.name}</span>
+          <span style="font-weight:600;color:var(--text);">${i.amount}</span>
+        </div>`).join('')}
+    </div>
+    <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:8px;">👨‍🍳 作り方</div>
+    ${recipe.steps.map((s, i) => `
+      <div style="display:flex;gap:10px;margin-bottom:12px;font-size:13px;line-height:1.7;">
+        <div style="min-width:24px;height:24px;border-radius:50%;background:var(--accent);color:var(--bg);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;">${i+1}</div>
+        <div style="color:var(--text2);">${s}</div>
+      </div>`).join('')}
+    <div class="alert-box alert-ok" style="margin-top:4px;">
+      <div class="alert-title">✨ 美味しく作るコツ</div>${recipe.tip}
+    </div>
+    <div class="alert-box alert-info" style="margin-top:8px;margin-bottom:8px;">
+      <div class="alert-title">🫁 腎臓病患者へのポイント</div>${recipe.kidney}
+    </div>` : fallbackHTML;
+
+  return `
+    <div style="text-align:center;font-size:52px;margin-bottom:10px;">${m.emoji}</div>
+    <div class="modal-title" style="text-align:center;">${m.name}</div>
+    <div style="text-align:center;font-size:12px;color:var(--text2);margin-bottom:14px;">1人前・腎不全対応レシピ</div>
+    <div class="chips" style="justify-content:center;margin-bottom:16px;">
+      <div class="chip"><span class="chip-l">カロリー</span><span class="chip-v" style="color:var(--green)">${m.kcal}kcal</span></div>
+      <div class="chip"><span class="chip-l">タンパク質</span><span class="chip-v" style="color:var(--accent)">${m.protein}g</span></div>
+      <div class="chip"><span class="chip-l">カリウム</span><span class="chip-v" style="color:var(--amber)">${m.k}mg</span></div>
+      <div class="chip"><span class="chip-l">リン</span><span class="chip-v" style="color:var(--red)">${m.p}mg</span></div>
+    </div>
+    ${recipeHTML}`;
+}
+
+function showMenuDetail(name) {
+  const m = menuData.find(x => x.name === name);
+  if (!m) return;
+
+  const container = document.getElementById('patientDetailContent');
+  const modal = document.getElementById('patientModal');
+
+  // まずDBから即座に表示
+  const recipe = recipeDatabase[name] || null;
+  container.innerHTML = buildRecipeHTML(m, recipe);
+  modal.classList.add('open');
+}
+
+// ===== FULL RECIPE DATABASE (全品) =====
+
+// ===== TOAST =====
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ===== DRAG & DROP =====
+const zone = document.getElementById('cameraZone');
+if (zone) {
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('active-drop'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('active-drop'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('active-drop');
+    startAnalysis();
+  });
+}
+</script>
+</body>
+</html>
