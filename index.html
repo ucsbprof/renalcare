@@ -2268,37 +2268,130 @@ function navTo(page) {
 // ===== RECORD =====
 let analyzing = false;
 
+// 撮影した画像のbase64データを保持
+let capturedImageBase64 = null;
+
 function startAnalysis() {
-  if (analyzing) return;
+  // カメラ/ファイル選択を起動
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.capture = 'environment'; // 背面カメラ
+  input.onchange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    analyzeImage(file);
+  };
+  input.click();
+}
+
+async function analyzeImage(file) {
   const zone = document.getElementById('cameraZone');
   if (!zone) return;
   analyzing = true;
 
-  zone.innerHTML = `<span class="camera-icon">🍱</span><div class="camera-text" style="color:var(--accent)">解析完了！</div>`;
-  zone.style.borderColor = 'var(--accent)';
-  zone.style.background = 'var(--accent-glow)';
+  // 画像プレビュー表示
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    capturedImageBase64 = e.target.result.split(',')[1];
+    const mimeType = file.type || 'image/jpeg';
 
-  const loadingText = document.getElementById('loadingText');
-  const loadingOverlay = document.getElementById('loadingOverlay');
-  if (loadingText) loadingText.textContent = 'AI が食事内容を解析中...';
-  if (loadingOverlay) loadingOverlay.classList.add('open');
+    zone.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;border-radius:var(--r);">`;
+    zone.style.padding = '0';
 
-  setTimeout(() => {
-    if (loadingOverlay) loadingOverlay.classList.remove('open');
-    const aiResult = document.getElementById('aiResult');
-    if (aiResult) { aiResult.style.display = 'block'; aiResult.classList.add('fade-in'); }
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const loadingText = document.getElementById('loadingText');
+    if (loadingText) loadingText.textContent = 'AIが食事内容を解析中...';
+    if (loadingOverlay) loadingOverlay.classList.add('open');
 
-    const fMap = { normal:1, t2d:3, t1d:5 };
-    const lMap = { normal:'標準モード：糖質×1', t2d:'2型糖尿病モード：糖質×3', t1d:'1型糖尿病モード：糖質×5' };
-    const initFactor = fMap[state.userType] || 1;
-    const initRise   = 65 * initFactor;
-    const initLabel  = lMap[state.userType] || lMap.normal;
-    const glucoseEl = document.getElementById('ai-glucose-result');
-    if (glucoseEl) {
-      const div = glucoseEl.querySelector('div:not(.alert-title)');
-      if (div) div.innerHTML = `炭水化物68g－食物繊維3g＝糖質65g → <strong>推定 +${initRise} mg/dL</strong>（${initLabel}）<br><span style="font-size:11px;color:var(--text3)">食後1〜2時間で最大値に達する見込み</span>`;
+    try {
+      const prompt = `この食事画像を分析して、腎臓病患者向けの栄養情報を以下のJSON形式のみで返答してください（説明文不要）：
+{"dishName":"料理名","calories":数値,"protein":数値,"carb":数値,"fiber":数値,"potassium":数値,"phosphorus":数値,"description":"料理の説明（1文）"}
+すべて1人前の推定値。タンパク質・カリウム・リン・炭水化物・食物繊維はグラムまたはmg単位の数値のみ。`;
+
+      const res = await fetch('/api/gemini', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{
+            parts: [
+              { text: prompt },
+              { inline_data: { mime_type: mimeType, data: capturedImageBase64 } }
+            ]
+          }],
+          generationConfig: { temperature: 0.3, maxOutputTokens: 500 }
+        })
+      });
+
+      const data = await res.json();
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      const clean = text.replace(/```json|```/g, '').trim();
+      const result = JSON.parse(clean);
+
+      if (loadingOverlay) loadingOverlay.classList.remove('open');
+      showAnalysisResult(result);
+
+    } catch(e) {
+      if (loadingOverlay) loadingOverlay.classList.remove('open');
+      // エラー時はサンプルデータで表示
+      showAnalysisResult({
+        dishName: '解析結果', calories: 450, protein: 18,
+        carb: 68, fiber: 3, potassium: 420, phosphorus: 180,
+        description: '画像の解析に失敗しました。手動で入力してください。'
+      });
     }
-  }, 2000);
+  };
+  reader.readAsDataURL(file);
+}
+
+function showAnalysisResult(result) {
+  const aiResult = document.getElementById('aiResult');
+  if (aiResult) {
+    aiResult.style.display = 'block';
+    aiResult.classList.add('fade-in');
+  }
+
+  // 料理名更新
+  const nameEl = document.getElementById('ai-food-name');
+  if (nameEl) nameEl.textContent = result.dishName || '解析完了';
+
+  // 検出内容更新
+  const detectedEl = document.getElementById('ai-detected');
+  if (detectedEl) detectedEl.textContent = '✓ ' + (result.description || result.dishName || '解析完了');
+
+  // 栄養チップ更新
+  const chipsEl = document.getElementById('ai-chips');
+  if (chipsEl) {
+    chipsEl.innerHTML = `
+      <div class="chip"><span class="chip-l">カロリー</span><span class="chip-v" style="color:var(--green)">${result.calories || 0}kcal</span></div>
+      <div class="chip"><span class="chip-l">炭水化物</span><span class="chip-v" style="color:var(--accent)">${result.carb || 0}g</span></div>
+      <div class="chip"><span class="chip-l">食物繊維</span><span class="chip-v" style="color:var(--green)">${result.fiber || 0}g</span></div>
+      <div class="chip"><span class="chip-l">タンパク質</span><span class="chip-v" style="color:var(--amber)">${result.protein || 0}g</span></div>
+      <div class="chip"><span class="chip-l">カリウム</span><span class="chip-v" style="color:var(--amber)">${result.potassium || 0}mg</span></div>
+      <div class="chip"><span class="chip-l">リン</span><span class="chip-v" style="color:var(--red)">${result.phosphorus || 0}mg</span></div>`;
+  }
+
+  // 手動編集フォームの初期値設定
+  const carbInput = document.getElementById('edit-carb');
+  const fiberInput = document.getElementById('edit-fiber');
+  if (carbInput) carbInput.value = result.carb || 0;
+  if (fiberInput) fiberInput.value = result.fiber || 0;
+
+  // 血糖値計算
+  const carb = result.carb || 0;
+  const fiber = result.fiber || 0;
+  const sugar = Math.max(0, carb - fiber);
+  const fMap = { normal:1, t2d:3, t1d:5 };
+  const lMap = { normal:'標準モード：糖質×1', t2d:'2型糖尿病モード：糖質×3', t1d:'1型糖尿病モード：糖質×5' };
+  const factor = fMap[state.userType] || 1;
+  const rise = Math.round(sugar * factor);
+  const label = lMap[state.userType] || lMap.normal;
+
+  const glucoseEl = document.getElementById('ai-glucose-result');
+  if (glucoseEl) {
+    const div = glucoseEl.querySelector('div:not(.alert-title)');
+    if (div) div.innerHTML = `炭水化物${carb}g－食物繊維${fiber}g＝糖質${sugar}g → <strong>推定 +${rise} mg/dL</strong>（${label}）<br><span style="font-size:11px;color:var(--text3)">食後1〜2時間で最大値に達する見込み</span>`;
+  }
 }
 
 function toggleEdit() {
