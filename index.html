@@ -2287,61 +2287,68 @@ function startAnalysis() {
 
 async function analyzeImage(file) {
   const zone = document.getElementById('cameraZone');
+  const loadingOverlay = document.getElementById('loadingOverlay');
+  const loadingText = document.getElementById('loadingText');
   if (!zone) return;
   analyzing = true;
 
+  // FileReaderをPromiseでラップ
+  const base64 = await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => resolve(e.target.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+
   // 画像プレビュー表示
-  const reader = new FileReader();
-  reader.onload = async (e) => {
-    capturedImageBase64 = e.target.result.split(',')[1];
+  zone.innerHTML = `<img src="${base64}" style="width:100%;height:100%;object-fit:cover;border-radius:var(--r);">`;
+  zone.style.padding = '0';
+
+  if (loadingText) loadingText.textContent = 'AIが食事内容を解析中...';
+  if (loadingOverlay) loadingOverlay.classList.add('open');
+
+  try {
     const mimeType = file.type || 'image/jpeg';
+    const imageData = base64.split(',')[1];
 
-    zone.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;border-radius:var(--r);">`;
-    zone.style.padding = '0';
+    const prompt = `この食事画像を分析して、腎臓病患者向けの栄養情報を以下のJSON形式のみで返答してください（説明文・コードブロック不要）：
+{"dishName":"料理名","calories":数値,"protein":数値,"carb":数値,"fiber":数値,"potassium":数値,"phosphorus":数値,"description":"料理の説明"}
+すべて1人前の推定値。数値のみ（単位なし）。`;
 
-    const loadingOverlay = document.getElementById('loadingOverlay');
-    const loadingText = document.getElementById('loadingText');
-    if (loadingText) loadingText.textContent = 'AIが食事内容を解析中...';
-    if (loadingOverlay) loadingOverlay.classList.add('open');
+    const res = await fetch('/api/gemini', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{
+          parts: [
+            { text: prompt },
+            { inline_data: { mime_type: mimeType, data: imageData } }
+          ]
+        }],
+        generationConfig: { temperature: 0.3, maxOutputTokens: 500 }
+      })
+    });
 
-    try {
-      const prompt = `この食事画像を分析して、腎臓病患者向けの栄養情報を以下のJSON形式のみで返答してください（説明文不要）：
-{"dishName":"料理名","calories":数値,"protein":数値,"carb":数値,"fiber":数値,"potassium":数値,"phosphorus":数値,"description":"料理の説明（1文）"}
-すべて1人前の推定値。タンパク質・カリウム・リン・炭水化物・食物繊維はグラムまたはmg単位の数値のみ。`;
+    if (!res.ok) throw new Error('API error: ' + res.status);
 
-      const res = await fetch('/api/gemini', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{
-            parts: [
-              { text: prompt },
-              { inline_data: { mime_type: mimeType, data: capturedImageBase64 } }
-            ]
-          }],
-          generationConfig: { temperature: 0.3, maxOutputTokens: 500 }
-        })
-      });
+    const data = await res.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const clean = text.replace(/```json|```/g, '').trim();
+    const result = JSON.parse(clean);
 
-      const data = await res.json();
-      const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-      const clean = text.replace(/```json|```/g, '').trim();
-      const result = JSON.parse(clean);
+    if (loadingOverlay) loadingOverlay.classList.remove('open');
+    showAnalysisResult(result);
 
-      if (loadingOverlay) loadingOverlay.classList.remove('open');
-      showAnalysisResult(result);
-
-    } catch(e) {
-      if (loadingOverlay) loadingOverlay.classList.remove('open');
-      // エラー時はサンプルデータで表示
-      showAnalysisResult({
-        dishName: '解析結果', calories: 450, protein: 18,
-        carb: 68, fiber: 3, potassium: 420, phosphorus: 180,
-        description: '画像の解析に失敗しました。手動で入力してください。'
-      });
-    }
-  };
-  reader.readAsDataURL(file);
+  } catch(err) {
+    console.error('解析エラー:', err);
+    if (loadingOverlay) loadingOverlay.classList.remove('open');
+    showToast('解析に失敗しました。手動で入力してください。');
+    showAnalysisResult({
+      dishName: '手動入力してください', calories: 0, protein: 0,
+      carb: 0, fiber: 0, potassium: 0, phosphorus: 0,
+      description: '栄養成分を手動で入力してください'
+    });
+  }
 }
 
 function showAnalysisResult(result) {
