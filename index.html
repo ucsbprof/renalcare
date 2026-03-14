@@ -3768,7 +3768,7 @@ const recipeDatabase = {
     kidney:'牛乳不使用でリンがほぼゼロ。りんごジュースはカリウムが比較的低め。ゼラチンはタンパク質がやや高めなので5g（1袋）まで。暑い季節も食欲がある時も食べやすいおやつ。',
   },
 };
-const GEMINI_API_KEY = 'AIzaSyAg7LDG9AAx0YBd49-8OXPq4TsMz71Krz4';
+const GEMINI_API_KEY = 'YOUR_GEMINI_API_KEY'; // 不要（サーバーレス関数使用）
 
 function buildRecipeHTML(m, recipe) {
   const fallbackHTML = `
@@ -3817,7 +3817,7 @@ function buildRecipeHTML(m, recipe) {
     ${recipeHTML}`;
 }
 
-function showMenuDetail(name) {
+async function showMenuDetail(name) {
   const m = menuData.find(x => x.name === name);
   if (!m) return;
 
@@ -3825,9 +3825,41 @@ function showMenuDetail(name) {
   const modal = document.getElementById('patientModal');
 
   // まずDBから即座に表示
-  const recipe = recipeDatabase[name] || null;
-  container.innerHTML = buildRecipeHTML(m, recipe);
+  const savedRecipe = recipeDatabase[name] || null;
+  if (savedRecipe) {
+    container.innerHTML = buildRecipeHTML(m, savedRecipe);
+    modal.classList.add('open');
+    return;
+  }
+
+  // DBにない場合はサーバーレス関数経由でAI生成
+  container.innerHTML = buildRecipeHTML(m, null);
   modal.classList.add('open');
+
+  // ローディング表示を追加
+  container.innerHTML += `<div id="aiRecipeLoading" style="text-align:center;padding:16px;">
+    <div class="loader" style="margin:0 auto 8px;"></div>
+    <div style="font-size:13px;color:var(--text2);">AIがレシピを生成中...</div>
+  </div>`;
+
+  try {
+    const prompt = `あなたは腎臓病患者向けの管理栄養士です。料理名：${m.name}（カロリー${m.kcal}kcal、タンパク質${m.protein}g、カリウム${m.k}mg、リン${m.p}mg）の本格レシピをJSON形式のみで返答してください。{"ingredients":[{"name":"食材名","amount":"分量"}],"steps":["手順1","手順2"],"tip":"コツ","kidney":"腎臓病患者へのポイント"}`;
+
+    const res = await fetch('/api/gemini', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0.7, maxOutputTokens: 1200 } })
+    });
+    const data = await res.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const clean = text.replace(/```json|```/g, '').trim();
+    const recipe = JSON.parse(clean);
+    container.innerHTML = buildRecipeHTML(m, recipe);
+  } catch(e) {
+    // AI失敗時は基本ポイント表示のまま
+    const loading = document.getElementById('aiRecipeLoading');
+    if (loading) loading.remove();
+  }
 }
 
 // ===== FULL RECIPE DATABASE (全品) =====
