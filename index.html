@@ -2300,6 +2300,24 @@ async function analyzeImage(file) {
     reader.readAsDataURL(file);
   });
 
+  // 画像をCanvasで圧縮（最大800px、品質0.7）
+  const compressedBase64 = await new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const maxSize = 800;
+      let w = img.width, h = img.height;
+      if (w > maxSize || h > maxSize) {
+        if (w > h) { h = Math.round(h * maxSize / w); w = maxSize; }
+        else { w = Math.round(w * maxSize / h); h = maxSize; }
+      }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL('image/jpeg', 0.7).split(',')[1]);
+    };
+    img.src = base64;
+  });
+
   // 画像プレビュー表示
   zone.innerHTML = `<img src="${base64}" style="width:100%;height:100%;object-fit:cover;border-radius:var(--r);">`;
   zone.style.padding = '0';
@@ -2308,8 +2326,8 @@ async function analyzeImage(file) {
   if (loadingOverlay) loadingOverlay.classList.add('open');
 
   try {
-    const mimeType = file.type || 'image/jpeg';
-    const imageData = base64.split(',')[1];
+    const mimeType = 'image/jpeg';
+    const imageData = compressedBase64;
 
     const prompt = `この食事画像を分析して、腎臓病患者向けの栄養情報を以下のJSON形式のみで返答してください（説明文・コードブロック不要）：
 {"dishName":"料理名","calories":数値,"protein":数値,"carb":数値,"fiber":数値,"potassium":数値,"phosphorus":数値,"description":"料理の説明"}
@@ -2329,13 +2347,13 @@ async function analyzeImage(file) {
       })
     });
 
-    if (!res.ok) throw new Error('API error: ' + res.status);
-
+    console.log('API response status:', res.status);
     const data = await res.json();
+    console.log('API response data:', JSON.stringify(data).substring(0, 200));
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    console.log('Gemini raw response:', text); // デバッグ用
+    console.log('Gemini raw response:', text);
     const clean = text.replace(/```json|```/g, '').trim();
-    console.log('Cleaned response:', clean); // デバッグ用
+    console.log('Cleaned response:', clean);
     if (!clean) throw new Error('Empty response from Gemini');
     const result = JSON.parse(clean);
 
