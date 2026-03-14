@@ -2349,7 +2349,7 @@ async function analyzeImage(file) {
 
     console.log('API response status:', res.status);
     const data = await res.json();
-    console.log('API response data:', JSON.stringify(data).substring(0, 200));
+    console.log('Full API data:', JSON.stringify(data));
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
     console.log('Gemini raw response:', text);
     const clean = text.replace(/```json|```/g, '').trim();
