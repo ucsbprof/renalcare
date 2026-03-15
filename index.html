@@ -1415,6 +1415,8 @@ html, body {
         <button class="btn btn-primary cam-btn" onclick="startAnalysis()">📷 カメラで撮影</button>
         <button class="btn btn-outline cam-btn" onclick="showEatOutModal()">🏪 外食から選ぶ</button>
       </div>
+      <button class="btn btn-ghost btn-full" onclick="showManualEntry()" style="margin-bottom:4px;">✏️ 写真なしで手動入力</button>
+      </div>
 
       <!-- AI Result (hidden by default) -->
       <div id="aiResult" style="display:none;">
@@ -2350,6 +2352,14 @@ async function analyzeImage(file) {
     console.log('API response status:', res.status);
     const data = await res.json();
     console.log('Full API data:', JSON.stringify(data));
+
+    // quotaエラーチェック
+    if (data.error) {
+      const msg = data.error.status === 'RESOURCE_EXHAUSTED'
+        ? 'AI解析の無料枠が上限に達しました。手動で入力してください。'
+        : 'AI解析でエラーが発生しました。手動で入力してください。';
+      throw new Error(msg);
+    }
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
     console.log('Gemini raw response:', text);
     const clean = text.replace(/```json|```/g, '').trim();
@@ -2363,31 +2373,49 @@ async function analyzeImage(file) {
   } catch(err) {
     console.error('解析エラー:', err);
     if (loadingOverlay) loadingOverlay.classList.remove('open');
-    showToast('解析に失敗しました。手動で入力してください。');
-    showAnalysisResult({
-      dishName: '手動入力してください', calories: 0, protein: 0,
-      carb: 0, fiber: 0, potassium: 0, phosphorus: 0,
-      description: '栄養成分を手動で入力してください'
-    });
+    const msg = err.message || '解析に失敗しました';
+    showToast(msg);
+    // 手動入力フォームを表示
+    showManualEntry();
   }
+}
+
+function showManualEntry() {
+  const aiResult = document.getElementById('aiResult');
+  const editForm = document.getElementById('editForm');
+  const foodName = document.getElementById('ai-food-name');
+  const detected = document.getElementById('ai-detected');
+  const chips    = document.getElementById('ai-chips');
+
+  if (foodName) foodName.textContent = '手動入力';
+  if (detected) detected.textContent = '栄養成分を直接入力してください';
+  if (chips) chips.innerHTML = '';
+
+  const glucoseEl = document.getElementById('ai-glucose-result');
+  if (glucoseEl) {
+    const div = glucoseEl.querySelector('div:not(.alert-title)');
+    if (div) div.textContent = '炭水化物と食物繊維を入力すると自動計算されます';
+  }
+
+  if (aiResult) { aiResult.style.display = 'block'; aiResult.classList.add('fade-in'); }
+  if (editForm) editForm.classList.add('open');
+
+  ['edit-carb','edit-fiber'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = 0;
+  });
 }
 
 function showAnalysisResult(result) {
   const aiResult = document.getElementById('aiResult');
-  if (aiResult) {
-    aiResult.style.display = 'block';
-    aiResult.classList.add('fade-in');
-  }
+  if (aiResult) { aiResult.style.display = 'block'; aiResult.classList.add('fade-in'); }
 
-  // 料理名更新
   const nameEl = document.getElementById('ai-food-name');
   if (nameEl) nameEl.textContent = result.dishName || '解析完了';
 
-  // 検出内容更新
   const detectedEl = document.getElementById('ai-detected');
   if (detectedEl) detectedEl.textContent = '✓ ' + (result.description || result.dishName || '解析完了');
 
-  // 栄養チップ更新
   const chipsEl = document.getElementById('ai-chips');
   if (chipsEl) {
     chipsEl.innerHTML = `
@@ -2399,13 +2427,11 @@ function showAnalysisResult(result) {
       <div class="chip"><span class="chip-l">リン</span><span class="chip-v" style="color:var(--red)">${result.phosphorus || 0}mg</span></div>`;
   }
 
-  // 手動編集フォームの初期値設定
   const carbInput = document.getElementById('edit-carb');
   const fiberInput = document.getElementById('edit-fiber');
   if (carbInput) carbInput.value = result.carb || 0;
   if (fiberInput) fiberInput.value = result.fiber || 0;
 
-  // 血糖値計算
   const carb = result.carb || 0;
   const fiber = result.fiber || 0;
   const sugar = Math.max(0, carb - fiber);
