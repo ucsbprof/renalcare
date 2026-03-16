@@ -1404,19 +1404,15 @@ html, body {
         </div>
       </div>
 
-      <!-- Camera zone - iOS Safari対応 -->
-      <input type="file" id="fileInput" accept="image/*" 
-        style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;" 
-        onchange="handleFileSelect(event)">
-
-      <label for="fileInput" class="camera-zone" id="cameraZone">
+      <!-- Camera zone -->
+      <div class="camera-zone" id="cameraZone" onclick="startAnalysis()">
         <span class="camera-icon">📸</span>
         <div class="camera-text">タップして写真を選択</div>
         <div class="camera-sub">カメラまたはアルバムから選べます</div>
-      </label>
+      </div>
 
       <div class="cam-btns">
-        <label for="fileInput" class="btn btn-primary cam-btn" style="display:flex;align-items:center;justify-content:center;cursor:pointer;">📷 写真を選択</label>
+        <button class="btn btn-primary cam-btn" onclick="startAnalysis()">📷 写真を選択</button>
         <button class="btn btn-outline cam-btn" onclick="showEatOutModal()">🏪 外食から選ぶ</button>
       </div>
       <button class="btn btn-ghost btn-full" onclick="showManualEntry()" style="margin-bottom:4px;">✏️ 写真なしで手動入力</button>
@@ -2397,7 +2393,20 @@ function handleFileSelect(e) {
 
 // 後方互換のため残す
 function startAnalysis() {
-  document.getElementById('fileInput')?.click();
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.style.cssText = 'position:fixed;top:-100px;left:-100px;width:1px;height:1px;';
+  document.body.appendChild(input);
+  input.addEventListener('change', function() {
+    const file = this.files[0];
+    document.body.removeChild(input);
+    if (file) analyzeImage(file);
+  });
+  input.addEventListener('cancel', function() {
+    document.body.removeChild(input);
+  });
+  input.click();
 }
 
 async function analyzeImage(file) {
