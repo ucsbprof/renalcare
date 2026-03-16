@@ -1965,6 +1965,60 @@ html, body {
 <div class="toast" id="toast"></div>
 
 <script>
+// ===== SUPABASE =====
+const SUPABASE_URL = 'https://jndutodslomhfoterrbb.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_ekRnlsdMwKthxJv0VEg3vw_tBKc7EIj';
+
+async function dbSaveMeal(meal) {
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/meals`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify(meal)
+    });
+    return res.ok;
+  } catch(e) {
+    console.error('保存エラー:', e);
+    return false;
+  }
+}
+
+async function dbLoadMeals() {
+  try {
+    const userId = getUserId();
+    const today = new Date().toISOString().split('T')[0];
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/meals?user_id=eq.${userId}&recorded_at=gte.${today}&order=recorded_at.desc`,
+      {
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`
+        }
+      }
+    );
+    if (!res.ok) return [];
+    return await res.json();
+  } catch(e) {
+    console.error('読み込みエラー:', e);
+    return [];
+  }
+}
+
+function getUserId() {
+  // ブラウザのlocalStorageにユーザーIDを保存
+  let uid = localStorage.getItem('renalcare_uid');
+  if (!uid) {
+    uid = 'user_' + Math.random().toString(36).substr(2, 9);
+    localStorage.setItem('renalcare_uid', uid);
+  }
+  return uid;
+}
+
 // ===== STATE =====
 const state = {
   userType: 't2d',
@@ -2024,8 +2078,28 @@ function resetRecord() {
   analyzing = false;
 }
 
-function saveMeal() {
-  showToast('✓ 食事を記録しました');
+async function saveMeal() {
+  const dishName = document.getElementById('ai-food-name')?.textContent || '不明';
+  const carbVal  = parseFloat(document.getElementById('edit-carb')?.value)  || 0;
+  const fiberVal = parseFloat(document.getElementById('edit-fiber')?.value) || 0;
+
+  const meal = {
+    user_id:    getUserId(),
+    dish_name:  dishName,
+    calories:   parseInt(document.querySelector('#ai-chips .chip-v')?.textContent) || 0,
+    protein:    0,
+    carb:       carbVal,
+    fiber:      fiberVal,
+    potassium:  0,
+    phosphorus: 0
+  };
+
+  const ok = await dbSaveMeal(meal);
+  if (ok) {
+    showToast('✓ 食事を記録しました');
+  } else {
+    showToast('⚠ 保存できませんでした。再試行してください。');
+  }
   resetRecord();
   navTo('home');
 }
