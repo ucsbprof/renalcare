@@ -2386,13 +2386,15 @@ let analyzing = false;
 let capturedImageBase64 = null;
 
 function startAnalysis() {
-  // カメラ/ファイル選択を起動
   const input = document.createElement('input');
   input.type = 'file';
   input.accept = 'image/*';
-  // captureを指定しないことでiOSでカメラ/アルバム選択が出る
+  input.style.display = 'none';
+  // iOSのSafari対応：DOMに追加してからclickする
+  document.body.appendChild(input);
   input.onchange = (e) => {
     const file = e.target.files[0];
+    document.body.removeChild(input);
     if (!file) return;
     analyzeImage(file);
   };
