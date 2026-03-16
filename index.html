@@ -1404,8 +1404,10 @@ html, body {
         </div>
       </div>
 
-      <!-- Camera zone - labelでinputをトリガー（iOS Safari対応） -->
-      <input type="file" id="fileInput" accept="image/*" style="display:none;" onchange="handleFileSelect(event)">
+      <!-- Camera zone - iOS Safari対応 -->
+      <input type="file" id="fileInput" accept="image/*" 
+        style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;" 
+        onchange="handleFileSelect(event)">
 
       <label for="fileInput" class="camera-zone" id="cameraZone">
         <span class="camera-icon">📸</span>
@@ -2388,9 +2390,9 @@ let capturedImageBase64 = null;
 function handleFileSelect(e) {
   const file = e.target.files[0];
   if (!file) return;
-  // inputをリセット（同じ画像を再選択できるよう）
-  e.target.value = '';
   analyzeImage(file);
+  // inputをリセット（同じ画像を再選択できるよう・ファイル取得後に行う）
+  setTimeout(() => { e.target.value = ''; }, 100);
 }
 
 // 後方互換のため残す
