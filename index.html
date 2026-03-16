@@ -323,7 +323,7 @@ html, body {
 }
 
 /* ===== PAGE SECTIONS ===== */
-.page { display: none; padding: 16px; overflow-y: auto; height: 100%; }
+.page { display: none; padding: 16px; }
 .page.active { display: block; }
 
 .page-title-row {
@@ -1404,15 +1404,17 @@ html, body {
         </div>
       </div>
 
-      <!-- Camera zone -->
-      <div class="camera-zone" id="cameraZone" onclick="startAnalysis()">
+      <!-- Camera zone - labelでinputをトリガー（iOS Safari対応） -->
+      <input type="file" id="fileInput" accept="image/*" style="display:none;" onchange="handleFileSelect(event)">
+
+      <label for="fileInput" class="camera-zone" id="cameraZone">
         <span class="camera-icon">📸</span>
-        <div class="camera-text">タップして写真を撮影</div>
-        <div class="camera-sub">または食事画像をここにドロップ</div>
-      </div>
+        <div class="camera-text">タップして写真を選択</div>
+        <div class="camera-sub">カメラまたはアルバムから選べます</div>
+      </label>
 
       <div class="cam-btns">
-        <button class="btn btn-primary cam-btn" onclick="startAnalysis()">📷 カメラで撮影</button>
+        <label for="fileInput" class="btn btn-primary cam-btn" style="display:flex;align-items:center;justify-content:center;cursor:pointer;">📷 写真を選択</label>
         <button class="btn btn-outline cam-btn" onclick="showEatOutModal()">🏪 外食から選ぶ</button>
       </div>
       <button class="btn btn-ghost btn-full" onclick="showManualEntry()" style="margin-bottom:4px;">✏️ 写真なしで手動入力</button>
@@ -1991,9 +1993,8 @@ async function dbSaveMeal(meal) {
 async function dbLoadMeals() {
   try {
     const userId = getUserId();
-    const today = new Date().toISOString().split('T')[0];
     const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/meals?user_id=eq.${userId}&recorded_at=gte.${today}&order=recorded_at.desc`,
+      `${SUPABASE_URL}/rest/v1/meals?user_id=eq.${userId}&order=recorded_at.desc&limit=50`,
       {
         headers: {
           'apikey': SUPABASE_KEY,
@@ -2033,7 +2034,6 @@ const state = {
 document.addEventListener('DOMContentLoaded', () => {
   updateHomeDate();
   renderMenuGrid();
-  renderHistory();
 });
 
 async function renderHistory() {
@@ -2385,20 +2385,17 @@ let analyzing = false;
 // 撮影した画像のbase64データを保持
 let capturedImageBase64 = null;
 
+function handleFileSelect(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  // inputをリセット（同じ画像を再選択できるよう）
+  e.target.value = '';
+  analyzeImage(file);
+}
+
+// 後方互換のため残す
 function startAnalysis() {
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.accept = 'image/*';
-  input.style.display = 'none';
-  // iOSのSafari対応：DOMに追加してからclickする
-  document.body.appendChild(input);
-  input.onchange = (e) => {
-    const file = e.target.files[0];
-    document.body.removeChild(input);
-    if (!file) return;
-    analyzeImage(file);
-  };
-  input.click();
+  document.getElementById('fileInput')?.click();
 }
 
 async function analyzeImage(file) {
@@ -4142,7 +4139,8 @@ if (zone) {
   zone.addEventListener('drop', e => {
     e.preventDefault();
     zone.classList.remove('active-drop');
-    startAnalysis();
+    const file = e.dataTransfer.files[0];
+    if (file) analyzeImage(file);
   });
 }
 </script>
