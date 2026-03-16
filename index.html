@@ -2320,8 +2320,9 @@ async function analyzeImage(file) {
     img.src = base64;
   });
 
-  // 画像プレビュー表示
-  zone.innerHTML = `<img src="${base64}" style="width:100%;height:100%;object-fit:cover;border-radius:var(--r);">`;
+  // 画像プレビュー表示（createObjectURLはiOSでも確実に動く）
+  const objectUrl = URL.createObjectURL(file);
+  zone.innerHTML = `<img src="${objectUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:var(--r);">`;
   zone.style.padding = '0';
 
   if (loadingText) loadingText.textContent = 'AIが食事内容を解析中...';
