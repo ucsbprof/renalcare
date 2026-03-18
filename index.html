@@ -1421,6 +1421,9 @@ html, body {
           <label class="form-label">料理名・メモ</label>
           <input class="form-input" type="text" id="record-name" placeholder="例：朝食・鮭定食" />
         </div>
+        <button class="btn btn-outline btn-full" onclick="showFoodSearchModal()" style="margin-bottom:8px;">
+          🔍 献立・食品から栄養成分を入力
+        </button>
         <div class="form-row">
           <label class="form-label">食事の時間</label>
           <select class="form-input" id="record-meal-type">
@@ -1884,6 +1887,19 @@ html, body {
   </div>
 </div>
 
+<!-- Food Search Modal -->
+<div class="modal-bg" id="foodSearchModal" onclick="closeModal('foodSearchModal')">
+  <div class="modal" onclick="event.stopPropagation()" style="max-height:85vh;overflow-y:auto;">
+    <div class="modal-handle"></div>
+    <div class="modal-title">献立・食品を選ぶ</div>
+    <div class="search-bar" style="margin:12px 0;">
+      <span>🔍</span>
+      <input type="text" id="foodSearchInput" placeholder="料理名で検索..." oninput="searchFoodDB(this.value)" />
+    </div>
+    <div id="foodSearchResults" style="max-height:400px;overflow-y:auto;"></div>
+  </div>
+</div>
+
 <!-- Patient Detail Modal -->
 <div class="modal-bg" id="patientModal" onclick="closeModal('patientModal')">
   <div class="modal" onclick="event.stopPropagation()" style="max-height:85vh;overflow-y:auto;">
@@ -2218,7 +2234,132 @@ function applyUserState() {
 }
 
 // ===== NAV =====
-// ===== MENU DATA =====
+// ===== 食品データベース（日本食品標準成分表・八訂準拠） =====
+const foodDatabase = [
+  // 主食
+  {name:'白飯（150g）',          cal:252, protein:3.8, carb:55.7, fiber:0.5, k:44,  p:51 },
+  {name:'低タンパクご飯（150g）', cal:231, protein:0.5, carb:53.9, fiber:0.2, k:15,  p:15 },
+  {name:'食パン（60g・1枚）',     cal:158, protein:5.3, carb:28.3, fiber:1.4, k:57,  p:52 },
+  {name:'うどん・茹で（200g）',   cal:210, protein:5.2, carb:43.2, fiber:1.6, k:14,  p:34 },
+  {name:'そば・茹で（200g）',     cal:264, protein:9.6, carb:48.0, fiber:3.0, k:170, p:190},
+  {name:'スパゲッティ・茹で（200g）',cal:298,protein:10.4,carb:57.0,fiber:3.0,k:40, p:120},
+  // 肉類
+  {name:'鶏むね肉・皮なし（100g）',cal:105, protein:23.3, carb:0,   fiber:0, k:340, p:220},
+  {name:'鶏もも肉・皮なし（100g）',cal:127, protein:19.0, carb:0,   fiber:0, k:290, p:190},
+  {name:'豚ロース（100g）',       cal:263, protein:19.3, carb:0.2,  fiber:0, k:310, p:180},
+  {name:'牛もも肉（100g）',       cal:193, protein:21.9, carb:0.5,  fiber:0, k:350, p:190},
+  {name:'ローストビーフ（80g）',  cal:166, protein:17.5, carb:3.6,  fiber:0, k:280, p:152},
+  {name:'鶏ハム（50g）',          cal:60,  protein:11.1, carb:0.8,  fiber:0, k:145, p:95 },
+  {name:'豚しゃぶ（80g）',        cal:170, protein:15.8, carb:0.1,  fiber:0, k:256, p:144},
+  // 魚介類
+  {name:'鮭・塩焼き（80g）',      cal:148, protein:20.2, carb:0.1,  fiber:0, k:296, p:216},
+  {name:'鯖・塩焼き（80g）',      cal:213, protein:17.8, carb:0.3,  fiber:0, k:264, p:184},
+  {name:'鯛・塩焼き（80g）',      cal:121, protein:17.4, carb:0.1,  fiber:0, k:312, p:168},
+  {name:'エビ・茹で（60g）',      cal:61,  protein:13.9, carb:0.1,  fiber:0, k:174, p:162},
+  {name:'マグロ・刺身（60g）',    cal:67,  protein:15.8, carb:0.1,  fiber:0, k:222, p:174},
+  {name:'かまぼこ（30g）',        cal:28,  protein:3.8,  carb:2.7,  fiber:0, k:87,  p:48 },
+  // 豆腐・大豆
+  {name:'絹ごし豆腐（150g）',     cal:80,  protein:7.4,  carb:2.4,  fiber:0.3,k:225,p:105},
+  {name:'木綿豆腐（150g）',       cal:108, protein:10.5, carb:1.8,  fiber:0.5,k:210,p:135},
+  {name:'納豆（50g）',            cal:100, protein:8.3,  carb:6.1,  fiber:3.4,k:330,p:190},
+  {name:'豆乳・無調整（200ml）',  cal:92,  protein:7.2,  carb:6.2,  fiber:0.4,k:390,p:108},
+  // 卵
+  {name:'卵（1個・50g）',         cal:76,  protein:6.2,  carb:0.2,  fiber:0, k:65,  p:100},
+  {name:'卵（2個・100g）',        cal:151, protein:12.3, carb:0.3,  fiber:0, k:130, p:200},
+  // 野菜
+  {name:'キャベツ・茹で（80g）',  cal:17,  protein:0.8,  carb:3.1,  fiber:1.4,k:78,  p:22 },
+  {name:'大根・茹で（80g）',      cal:14,  protein:0.5,  carb:2.6,  fiber:1.0,k:152, p:18 },
+  {name:'にんじん・茹で（50g）',  cal:18,  protein:0.4,  carb:3.5,  fiber:1.3,k:130, p:16 },
+  {name:'玉ねぎ・炒め（60g）',    cal:29,  protein:0.6,  carb:5.6,  fiber:1.0,k:102, p:24 },
+  {name:'ほうれん草・茹で（60g）',cal:14,  protein:1.7,  carb:1.1,  fiber:1.7,k:276, p:36 },
+  {name:'レタス（30g）',          cal:4,   protein:0.2,  carb:0.5,  fiber:0.3,k:57,  p:9  },
+  {name:'トマト（100g）',         cal:19,  protein:0.7,  carb:3.7,  fiber:1.0,k:210, p:26 },
+  {name:'きゅうり（50g）',        cal:7,   protein:0.5,  carb:1.2,  fiber:0.3,k:100, p:18 },
+  {name:'ブロッコリー・茹で（60g）',cal:23, protein:3.0,  carb:2.2,  fiber:3.0,k:192, p:66 },
+  // きのこ
+  {name:'しいたけ・焼き（30g）',  cal:14,  protein:1.0,  carb:2.1,  fiber:1.8,k:84,  p:27 },
+  {name:'えのき・茹で（30g）',    cal:10,  protein:0.8,  carb:1.9,  fiber:1.3,k:75,  p:30 },
+  // 乳製品
+  {name:'牛乳（200ml）',          cal:134, protein:6.6,  carb:9.6,  fiber:0, k:300, p:190},
+  {name:'ヨーグルト・無糖（100g）',cal:62,  protein:3.6,  carb:4.9,  fiber:0, k:170, p:120},
+  // 外食・加工食品
+  {name:'おにぎり・鮭（1個）',    cal:178, protein:5.5,  carb:34.0, fiber:0.6,k:95,  p:80 },
+  {name:'おにぎり・梅（1個）',    cal:166, protein:3.0,  carb:35.8, fiber:0.5,k:55,  p:45 },
+  {name:'サンドイッチ・ハム（1個）',cal:245,protein:10.2, carb:30.5, fiber:1.8,k:185, p:155},
+  {name:'カレーライス（1人前）',  cal:578, protein:16.5, carb:92.0, fiber:4.2,k:620, p:285},
+  {name:'ラーメン・醤油（1杯）',  cal:472, protein:18.5, carb:68.0, fiber:2.8,k:380, p:210},
+  {name:'チャーハン（1人前）',    cal:512, protein:14.8, carb:72.0, fiber:1.8,k:285, p:215},
+  {name:'親子丼（1人前）',        cal:498, protein:22.5, carb:68.0, fiber:1.5,k:420, p:265},
+  {name:'天丼（1人前）',          cal:665, protein:18.5, carb:98.0, fiber:2.5,k:345, p:255},
+  {name:'弁当・幕の内（1個）',    cal:550, protein:18.0, carb:78.0, fiber:3.5,k:480, p:280},
+  {name:'ハンバーガー（1個）',    cal:295, protein:13.5, carb:32.5, fiber:1.5,k:220, p:185},
+  {name:'フライドポテト（M）',    cal:320, protein:4.5,  carb:43.0, fiber:3.5,k:560, p:85 },
+  {name:'ピザ・マルゲリータ（1切）',cal:230,protein:9.5, carb:28.5, fiber:1.5,k:195, p:165},
+  {name:'寿司・サーモン（1貫）',  cal:55,  protein:4.2,  carb:8.5,  fiber:0.1,k:60,  p:48 },
+  {name:'寿司・マグロ（1貫）',    cal:48,  protein:4.8,  carb:7.5,  fiber:0.1,k:75,  p:55 },
+  // 献立データベースの主要メニュー
+  {name:'低タンパク粥・梅干し添え',cal:260, protein:4,   carb:54.0, fiber:1.5,k:180, p:80 },
+  {name:'鮭の低塩焼き定食',       cal:480, protein:22,  carb:58.0, fiber:2.0,k:520, p:210},
+  {name:'低タンパクうどん定食',   cal:340, protein:6,   carb:68.0, fiber:2.5,k:210, p:90 },
+  {name:'湯豆腐・低塩ポン酢',     cal:200, protein:10,  carb:6.0,  fiber:1.5,k:200, p:110},
+  {name:'豆腐ハンバーグ定食',     cal:380, protein:18,  carb:42.0, fiber:3.0,k:380, p:160},
+  {name:'低塩チキングリル定食',   cal:480, protein:28,  carb:52.0, fiber:3.5,k:480, p:225},
+];
+
+function showFoodSearchModal() {
+  const modal = document.getElementById('foodSearchModal');
+  if (modal) modal.classList.add('open');
+  const input = document.getElementById('foodSearchInput');
+  if (input) { input.value = ''; searchFoodDB(''); input.focus(); }
+}
+
+function searchFoodDB(query) {
+  const results = document.getElementById('foodSearchResults');
+  if (!results) return;
+  const q = query.trim().toLowerCase();
+  const filtered = q
+    ? foodDatabase.filter(f => f.name.toLowerCase().includes(q))
+    : foodDatabase;
+
+  if (filtered.length === 0) {
+    results.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text3);">見つかりませんでした</div>';
+    return;
+  }
+
+  results.innerHTML = filtered.map(f => `
+    <div onclick="selectFood(${JSON.stringify(f).replace(/"/g,'&quot;')})"
+      style="padding:12px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <div style="font-size:14px;font-weight:600;">${f.name}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px;">
+          ${f.cal}kcal・P${f.protein}g・K${f.k}mg・P(リン)${f.p}mg
+        </div>
+      </div>
+      <div style="color:var(--accent);font-size:18px;">＋</div>
+    </div>`).join('');
+}
+
+function selectFood(food) {
+  // 現在の値に加算
+  const add = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.value = Math.round(((parseFloat(el.value) || 0) + val) * 10) / 10;
+  };
+  add('record-calories',  food.cal);
+  add('record-protein',   food.protein);
+  add('record-carb',      food.carb);
+  add('record-fiber',     food.fiber);
+  add('record-potassium', food.k);
+  add('record-phosphorus',food.p);
+
+  // 料理名が空なら設定
+  const nameEl = document.getElementById('record-name');
+  if (nameEl && !nameEl.value) nameEl.value = food.name;
+
+  recalcGlucose();
+  closeModal('foodSearchModal');
+  showToast(`✓ ${food.name}を追加しました`);
+}
 const menuData = [
   // 和食・朝食
   { emoji:'🍚', name:'低タンパク粥・梅干し添え',       cat:['breakfast','japanese','lowprotein','lowk'], kcal:260, protein:4,  k:180, p:80  },
