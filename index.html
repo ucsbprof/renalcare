@@ -1400,127 +1400,79 @@ html, body {
       <div class="page-title-row">
         <div>
           <div class="page-title">食事を記録</div>
-          <div class="page-sub">写真で自動解析</div>
+          <div class="page-sub">写真＋手動入力で記録</div>
         </div>
       </div>
 
-      <!-- Camera zone -->
-      <div class="camera-zone" id="cameraZone">
-        <span class="camera-icon">📸</span>
-        <div class="camera-text">タップして写真を選択</div>
-        <div class="camera-sub">カメラまたはアルバムから選べます</div>
-        <input type="file" accept="image/*" onchange="handleFileSelect(event)"
-          style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;">
+      <!-- 写真エリア -->
+      <div class="camera-zone" id="cameraZone" style="position:relative;">
+        <span class="camera-icon" id="cameraIcon">📸</span>
+        <div class="camera-text" id="cameraText">タップして写真を選択</div>
+        <div class="camera-sub" id="cameraSub">カメラまたはアルバムから選べます</div>
+        <input type="file" accept="image/*" id="fileInput"
+          style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;"
+          onchange="handleFileSelect(event)">
       </div>
 
-      <div class="cam-btns">
-        <label class="btn btn-primary cam-btn" style="position:relative;display:flex;align-items:center;justify-content:center;cursor:pointer;">
-          📷 写真を選択
-          <input type="file" accept="image/*" onchange="handleFileSelect(event)"
-            style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;">
-        </label>
-        <button class="btn btn-outline cam-btn" onclick="showEatOutModal()">🏪 外食から選ぶ</button>
-      </div>
-      <button class="btn btn-ghost btn-full" onclick="showManualEntry()" style="margin-bottom:4px;">✏️ 写真なしで手動入力</button>
-      </div>
-
-      <!-- AI Result (hidden by default) -->
-      <div id="aiResult" style="display:none;">
-        <div class="ai-result">
-          <div class="ai-header">
-            <div class="ai-badge">AI 解析済み</div>
-            <div class="ai-food" id="ai-food-name">鮭の塩焼き定食</div>
-          </div>
-          <div style="font-size:12px;color:var(--text3);margin-bottom:12px;" id="ai-detected">
-            ✓ 鮭の塩焼き、白米150g、わかめ味噌汁、漬物 を検出
-          </div>
-          <div class="chips" id="ai-chips">
-            <div class="chip"><span class="chip-l">カロリー</span><span class="chip-v" style="color:var(--green)">520kcal</span></div>
-            <div class="chip"><span class="chip-l">炭水化物</span><span class="chip-v" style="color:var(--accent)">68g</span></div>
-            <div class="chip"><span class="chip-l">食物繊維</span><span class="chip-v" style="color:var(--green)">3g</span></div>
-            <div class="chip"><span class="chip-l">タンパク質</span><span class="chip-v" style="color:var(--amber)">28g</span></div>
-            <div class="chip"><span class="chip-l">脂質</span><span class="chip-v">12g</span></div>
-            <div class="chip"><span class="chip-l">カリウム</span><span class="chip-v" style="color:var(--amber)">680mg</span></div>
-            <div class="chip"><span class="chip-l">リン</span><span class="chip-v" style="color:var(--red)">280mg</span></div>
-            <div class="chip"><span class="chip-l">ナトリウム</span><span class="chip-v">820mg</span></div>
-            <div class="chip"><span class="chip-l">水分</span><span class="chip-v">250mL</span></div>
-          </div>
-
-          <div class="alert-box alert-warn" id="ai-protein-alert">
-            <div class="alert-title">⚠ タンパク質について</div>
-            タンパク質が28gと高めです。今日の残り摂取可能量は12gです。夕食は豆腐・野菜中心にすることをおすすめします。
-          </div>
-
-          <div class="alert-box alert-ok" id="ai-glucose-result">
-            <div class="alert-title">🩸 推定血糖値上昇</div>
-            炭水化物68g－食物繊維3g＝糖質65g → <strong>推定 +325 mg/dL</strong>（糖尿病モード：1g×5mg/dL）<br>
-            <span style="font-size:11px;color:var(--text3)">食後1〜2時間で最大値に達する見込み</span>
-          </div>
+      <!-- 記録フォーム -->
+      <div class="card">
+        <div class="card-title">食事の内容</div>
+        <div class="form-row">
+          <label class="form-label">料理名・メモ</label>
+          <input class="form-input" type="text" id="record-name" placeholder="例：朝食・鮭定食" />
         </div>
-
-        <!-- Manual edit -->
-        <button class="btn btn-ghost btn-full" onclick="toggleEdit()" style="margin-bottom:10px;">✏️ 手動で修正する</button>
-
-        <div class="edit-form" id="editForm">
-          <div class="card">
-            <div class="card-title">手動修正</div>
-            <div class="form-grid">
-              <div class="form-row">
-                <label class="form-label">カロリー (kcal)</label>
-                <input class="form-input" type="number" value="520" />
-              </div>
-              <div class="form-row">
-                <label class="form-label">炭水化物 (g)</label>
-                <input class="form-input" type="number" id="edit-carb" value="68" oninput="recalcGlucose()" />
-              </div>
-              <div class="form-row">
-                <label class="form-label">食物繊維 (g)</label>
-                <input class="form-input" type="number" id="edit-fiber" value="3" oninput="recalcGlucose()" />
-              </div>
-              <div class="form-row">
-                <label class="form-label">タンパク質 (g)</label>
-                <input class="form-input" type="number" value="28" />
-              </div>
-              <div class="form-row">
-                <label class="form-label">カリウム (mg)</label>
-                <input class="form-input" type="number" value="680" />
-              </div>
-              <div class="form-row">
-                <label class="form-label">リン (mg)</label>
-                <input class="form-input" type="number" value="280" />
-              </div>
-              <div class="form-row">
-                <label class="form-label">水分 (mL)</label>
-                <input class="form-input" type="number" value="250" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div style="display:flex;gap:10px;">
-          <button class="btn btn-primary" style="flex:1;" onclick="saveMeal()">✓ この内容で保存</button>
-          <button class="btn btn-outline" onclick="resetRecord()">やり直す</button>
+        <div class="form-row">
+          <label class="form-label">食事の時間</label>
+          <select class="form-input" id="record-meal-type">
+            <option value="breakfast">🌅 朝食</option>
+            <option value="lunch">☀️ 昼食</option>
+            <option value="dinner">🌙 夕食</option>
+            <option value="snack">🍬 間食</option>
+          </select>
         </div>
       </div>
 
-      <!-- Remaining today -->
-      <div class="card" style="margin-top:12px;">
-        <div class="card-title">今日の残り摂取可能量</div>
-        <div class="nutr-row">
-          <div class="nutr-name">タンパク質</div>
-          <div class="nutr-bar"><div class="prog-wrap" style="margin:0"><div class="prog-fill pg-blue" style="width:25%"></div></div></div>
-          <div class="nutr-val" style="color:var(--green)">残 12g</div>
+      <!-- 栄養成分入力 -->
+      <div class="card">
+        <div class="card-title">栄養成分（わかる範囲で入力）</div>
+        <div class="form-grid">
+          <div class="form-row">
+            <label class="form-label">カロリー (kcal)</label>
+            <input class="form-input" type="number" id="record-calories" placeholder="0" />
+          </div>
+          <div class="form-row">
+            <label class="form-label">タンパク質 (g)</label>
+            <input class="form-input" type="number" id="record-protein" placeholder="0" />
+          </div>
+          <div class="form-row">
+            <label class="form-label">炭水化物 (g)</label>
+            <input class="form-input" type="number" id="record-carb" placeholder="0" oninput="recalcGlucose()" />
+          </div>
+          <div class="form-row">
+            <label class="form-label">食物繊維 (g)</label>
+            <input class="form-input" type="number" id="record-fiber" placeholder="0" oninput="recalcGlucose()" />
+          </div>
+          <div class="form-row">
+            <label class="form-label">カリウム (mg)</label>
+            <input class="form-input" type="number" id="record-potassium" placeholder="0" />
+          </div>
+          <div class="form-row">
+            <label class="form-label">リン (mg)</label>
+            <input class="form-input" type="number" id="record-phosphorus" placeholder="0" />
+          </div>
         </div>
-        <div class="nutr-row">
-          <div class="nutr-name">カリウム</div>
-          <div class="nutr-bar"><div class="prog-wrap" style="margin:0"><div class="prog-fill pg-amber" style="width:48%"></div></div></div>
-          <div class="nutr-val" style="color:var(--green)">残 180mg</div>
-        </div>
-        <div class="nutr-row">
-          <div class="nutr-name">リン</div>
-          <div class="nutr-bar"><div class="prog-wrap" style="margin:0"><div class="prog-fill pg-red" style="width:34%"></div></div></div>
-          <div class="nutr-val" style="color:var(--green)">残 80mg</div>
-        </div>
+      </div>
+
+      <!-- 血糖値推定 -->
+      <div class="alert-box alert-ok" id="ai-glucose-result">
+        <div class="alert-title">🩸 推定血糖値上昇</div>
+        <div>炭水化物と食物繊維を入力すると自動計算されます</div>
+      </div>
+
+      <!-- 保存ボタン -->
+      <div style="display:flex;gap:10px;margin-top:8px;">
+        <button class="btn btn-primary" style="flex:1;" onclick="saveMeal()">✓ 保存する</button>
+        <button class="btn btn-outline" onclick="resetRecord()">リセット</button>
       </div>
     </div>
 
@@ -2038,6 +1990,20 @@ const state = {
 document.addEventListener('DOMContentLoaded', () => {
   updateHomeDate();
   renderMenuGrid();
+
+  // ファイル選択イベントをJSで登録（iOS Safari対応）
+  ['fileInputZone', 'fileInputBtn'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener('change', function(e) {
+        const file = e.target.files && e.target.files[0];
+        if (file) {
+          e.target.value = '';
+          handleFileSelect(e);
+        }
+      });
+    }
+  });
 });
 
 async function renderHistory() {
@@ -2099,43 +2065,42 @@ function cycleUserType() {
 }
 
 function resetRecord() {
+  window._currentPhotoBase64 = null;
   const zone = document.getElementById('cameraZone');
   if (zone) {
-    zone.innerHTML = '<span class="camera-icon">📷</span><div class="camera-text">タップして写真を撮影</div><div class="camera-sub">または画像をドラッグ＆ドロップ</div>';
-    zone.style.borderColor = '';
-    zone.style.background = '';
+    zone.innerHTML = `
+      <span class="camera-icon">📸</span>
+      <div class="camera-text">タップして写真を選択</div>
+      <div class="camera-sub">カメラまたはアルバムから選べます</div>
+      <input type="file" accept="image/*" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;" onchange="handleFileSelect(event)">`;
+    zone.style.padding = '';
+    zone.style.overflow = '';
   }
-  const aiResult = document.getElementById('aiResult');
-  if (aiResult) aiResult.style.display = 'none';
+  ['record-name','record-calories','record-protein','record-carb',
+   'record-fiber','record-potassium','record-phosphorus'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  const glucoseEl = document.getElementById('ai-glucose-result');
+  if (glucoseEl) {
+    const div = glucoseEl.querySelector('div:not(.alert-title)');
+    if (div) div.textContent = '炭水化物と食物繊維を入力すると自動計算されます';
+  }
   analyzing = false;
 }
 
 async function saveMeal() {
-  const dishName = document.getElementById('ai-food-name')?.textContent || '不明';
-  const carbVal  = parseFloat(document.getElementById('edit-carb')?.value)  || 0;
-  const fiberVal = parseFloat(document.getElementById('edit-fiber')?.value) || 0;
-
-  // チップから栄養値を取得
-  const chips = document.querySelectorAll('#ai-chips .chip');
-  const vals = {};
-  chips.forEach(c => {
-    const label = c.querySelector('.chip-l')?.textContent || '';
-    const val   = parseFloat(c.querySelector('.chip-v')?.textContent) || 0;
-    if (label.includes('カロリー'))   vals.calories  = val;
-    if (label.includes('タンパク質')) vals.protein   = val;
-    if (label.includes('カリウム'))   vals.potassium = val;
-    if (label.includes('リン'))       vals.phosphorus= val;
-  });
-
   const meal = {
     user_id:    getUserId(),
-    dish_name:  dishName,
-    calories:   vals.calories   || 0,
-    protein:    vals.protein    || 0,
-    carb:       carbVal,
-    fiber:      fiberVal,
-    potassium:  vals.potassium  || 0,
-    phosphorus: vals.phosphorus || 0
+    dish_name:  document.getElementById('record-name')?.value || '記録',
+    calories:   parseFloat(document.getElementById('record-calories')?.value)  || 0,
+    protein:    parseFloat(document.getElementById('record-protein')?.value)   || 0,
+    carb:       parseFloat(document.getElementById('record-carb')?.value)      || 0,
+    fiber:      parseFloat(document.getElementById('record-fiber')?.value)     || 0,
+    potassium:  parseFloat(document.getElementById('record-potassium')?.value) || 0,
+    phosphorus: parseFloat(document.getElementById('record-phosphorus')?.value)|| 0,
+    meal_type:  document.getElementById('record-meal-type')?.value || 'meal',
+    photo_base64: window._currentPhotoBase64 ? window._currentPhotoBase64.substring(0, 50000) : null
   };
 
   const ok = await dbSaveMeal(meal);
@@ -2392,209 +2357,48 @@ let capturedImageBase64 = null;
 function handleFileSelect(e) {
   const file = e.target.files[0];
   if (!file) return;
-  analyzeImage(file);
-  // inputをリセット（同じ画像を再選択できるよう・ファイル取得後に行う）
+  const zone = document.getElementById('cameraZone');
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    // 写真プレビューをカメラゾーンに表示
+    zone.innerHTML = `
+      <img src="${ev.target.result}" style="width:100%;height:100%;object-fit:cover;border-radius:var(--r);">
+      <div style="position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,0.6);color:#fff;font-size:11px;padding:4px 8px;border-radius:6px;">タップで変更</div>
+      <input type="file" accept="image/*" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;" onchange="handleFileSelect(event)">`;
+    zone.style.padding = '0';
+    zone.style.overflow = 'hidden';
+    // base64を保存
+    window._currentPhotoBase64 = ev.target.result;
+  };
+  reader.readAsDataURL(file);
   setTimeout(() => { e.target.value = ''; }, 100);
 }
 
 // 後方互換のため残す
-function startAnalysis() {
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.accept = 'image/*';
-  input.style.cssText = 'position:fixed;top:-100px;left:-100px;width:1px;height:1px;';
-  document.body.appendChild(input);
-  input.addEventListener('change', function() {
-    const file = this.files[0];
-    document.body.removeChild(input);
-    if (file) analyzeImage(file);
-  });
-  input.addEventListener('cancel', function() {
-    document.body.removeChild(input);
-  });
-  input.click();
-}
 
-async function analyzeImage(file) {
-  const zone = document.getElementById('cameraZone');
-  const loadingOverlay = document.getElementById('loadingOverlay');
-  const loadingText = document.getElementById('loadingText');
-  if (!zone) return;
-  analyzing = true;
 
-  // FileReaderをPromiseでラップ
-  const base64 = await new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = e => resolve(e.target.result);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
 
-  // 画像をCanvasで圧縮（最大800px、品質0.7）
-  const compressedBase64 = await new Promise((resolve) => {
-    const img = new Image();
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      const maxSize = 800;
-      let w = img.width, h = img.height;
-      if (w > maxSize || h > maxSize) {
-        if (w > h) { h = Math.round(h * maxSize / w); w = maxSize; }
-        else { w = Math.round(w * maxSize / h); h = maxSize; }
-      }
-      canvas.width = w; canvas.height = h;
-      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-      resolve(canvas.toDataURL('image/jpeg', 0.7).split(',')[1]);
-    };
-    img.src = base64;
-  });
 
-  // 画像プレビュー表示（base64をそのまま使用・iOS対応）
-  zone.innerHTML = `<img src="${base64}" style="width:100%;height:100%;object-fit:cover;border-radius:var(--r);" />`;
-  zone.style.padding = '0';
-  zone.style.overflow = 'hidden';
 
-  if (loadingText) loadingText.textContent = 'AIが食事内容を解析中...';
-  if (loadingOverlay) loadingOverlay.classList.add('open');
 
-  try {
-    const mimeType = 'image/jpeg';
-    const imageData = compressedBase64;
 
-    const prompt = `この食事画像を分析して、腎臓病患者向けの栄養情報を以下のJSON形式のみで返答してください（説明文・コードブロック不要）：
-{"dishName":"料理名","calories":数値,"protein":数値,"carb":数値,"fiber":数値,"potassium":数値,"phosphorus":数値,"description":"料理の説明"}
-すべて1人前の推定値。数値のみ（単位なし）。`;
 
-    const res = await fetch('/api/gemini', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{
-          parts: [
-            { text: prompt },
-            { inline_data: { mime_type: mimeType, data: imageData } }
-          ]
-        }],
-        generationConfig: { temperature: 0.3, maxOutputTokens: 500 }
-      })
-    });
 
-    console.log('API response status:', res.status);
-    const data = await res.json();
-    console.log('Full API data:', JSON.stringify(data));
 
-    // quotaエラーチェック
-    if (data.error) {
-      const msg = data.error.status === 'RESOURCE_EXHAUSTED'
-        ? 'AI解析の無料枠が上限に達しました。手動で入力してください。'
-        : 'AI解析でエラーが発生しました。手動で入力してください。';
-      throw new Error(msg);
-    }
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    console.log('Gemini raw response:', text);
-    const clean = text.replace(/```json|```/g, '').trim();
-    console.log('Cleaned response:', clean);
-    if (!clean) throw new Error('Empty response from Gemini');
-    const result = JSON.parse(clean);
-
-    if (loadingOverlay) loadingOverlay.classList.remove('open');
-    showAnalysisResult(result);
-
-  } catch(err) {
-    console.error('解析エラー:', err);
-    if (loadingOverlay) loadingOverlay.classList.remove('open');
-    const msg = err.message || '解析に失敗しました';
-    showToast(msg);
-    // 手動入力フォームを表示
-    showManualEntry();
-  }
-}
-
-function showManualEntry() {
-  const aiResult = document.getElementById('aiResult');
-  const editForm = document.getElementById('editForm');
-  const foodName = document.getElementById('ai-food-name');
-  const detected = document.getElementById('ai-detected');
-  const chips    = document.getElementById('ai-chips');
-
-  if (foodName) foodName.textContent = '手動入力';
-  if (detected) detected.textContent = '栄養成分を直接入力してください';
-  if (chips) chips.innerHTML = '';
-
-  const glucoseEl = document.getElementById('ai-glucose-result');
-  if (glucoseEl) {
-    const div = glucoseEl.querySelector('div:not(.alert-title)');
-    if (div) div.textContent = '炭水化物と食物繊維を入力すると自動計算されます';
-  }
-
-  if (aiResult) { aiResult.style.display = 'block'; aiResult.classList.add('fade-in'); }
-  if (editForm) editForm.classList.add('open');
-
-  ['edit-carb','edit-fiber'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.value = 0;
-  });
-}
-
-function showAnalysisResult(result) {
-  const aiResult = document.getElementById('aiResult');
-  if (aiResult) { aiResult.style.display = 'block'; aiResult.classList.add('fade-in'); }
-
-  const nameEl = document.getElementById('ai-food-name');
-  if (nameEl) nameEl.textContent = result.dishName || '解析完了';
-
-  const detectedEl = document.getElementById('ai-detected');
-  if (detectedEl) detectedEl.textContent = '✓ ' + (result.description || result.dishName || '解析完了');
-
-  const chipsEl = document.getElementById('ai-chips');
-  if (chipsEl) {
-    chipsEl.innerHTML = `
-      <div class="chip"><span class="chip-l">カロリー</span><span class="chip-v" style="color:var(--green)">${result.calories || 0}kcal</span></div>
-      <div class="chip"><span class="chip-l">炭水化物</span><span class="chip-v" style="color:var(--accent)">${result.carb || 0}g</span></div>
-      <div class="chip"><span class="chip-l">食物繊維</span><span class="chip-v" style="color:var(--green)">${result.fiber || 0}g</span></div>
-      <div class="chip"><span class="chip-l">タンパク質</span><span class="chip-v" style="color:var(--amber)">${result.protein || 0}g</span></div>
-      <div class="chip"><span class="chip-l">カリウム</span><span class="chip-v" style="color:var(--amber)">${result.potassium || 0}mg</span></div>
-      <div class="chip"><span class="chip-l">リン</span><span class="chip-v" style="color:var(--red)">${result.phosphorus || 0}mg</span></div>`;
-  }
-
-  const carbInput = document.getElementById('edit-carb');
-  const fiberInput = document.getElementById('edit-fiber');
-  if (carbInput) carbInput.value = result.carb || 0;
-  if (fiberInput) fiberInput.value = result.fiber || 0;
-
-  const carb = result.carb || 0;
-  const fiber = result.fiber || 0;
+function recalcGlucose() {
+  const carb  = parseFloat(document.getElementById('record-carb')?.value)  || 0;
+  const fiber = parseFloat(document.getElementById('record-fiber')?.value) || 0;
   const sugar = Math.max(0, carb - fiber);
   const fMap = { normal:1, t2d:3, t1d:5 };
   const lMap = { normal:'標準モード：糖質×1', t2d:'2型糖尿病モード：糖質×3', t1d:'1型糖尿病モード：糖質×5' };
   const factor = fMap[state.userType] || 1;
-  const rise = Math.round(sugar * factor);
-  const label = lMap[state.userType] || lMap.normal;
-
+  const rise   = Math.round(sugar * factor);
+  const label  = lMap[state.userType] || lMap.normal;
   const glucoseEl = document.getElementById('ai-glucose-result');
   if (glucoseEl) {
     const div = glucoseEl.querySelector('div:not(.alert-title)');
     if (div) div.innerHTML = `炭水化物${carb}g－食物繊維${fiber}g＝糖質${sugar}g → <strong>推定 +${rise} mg/dL</strong>（${label}）<br><span style="font-size:11px;color:var(--text3)">食後1〜2時間で最大値に達する見込み</span>`;
   }
-}
-
-function toggleEdit() {
-  const form = document.getElementById('editForm');
-  form.classList.toggle('open');
-}
-
-function recalcGlucose() {
-  const carb  = parseFloat(document.getElementById('edit-carb').value)  || 0;
-  const fiber = parseFloat(document.getElementById('edit-fiber').value) || 0;
-  // 砂糖の量 = 炭水化物 - 食物繊維
-  const sugar = Math.max(0, carb - fiber);
-  // 健常者: 糖質×1、2型糖尿病: 糖質×3、1型糖尿病: 糖質×5
-  const factorMap = { normal:1, t2d:3, t1d:5 };
-  const factor = factorMap[state.userType] || 1;
-  const rise  = Math.round(sugar * factor);
-  const labelMap = { normal:'標準モード：糖質×1', t2d:'2型糖尿病モード：糖質×3', t1d:'1型糖尿病モード：糖質×5' };
-  const label = labelMap[state.userType] || labelMap.normal;
-  document.getElementById('ai-glucose-result').querySelector('div:not(.alert-title)').innerHTML =
-    `炭水化物${carb}g－食物繊維${fiber}g＝糖質${sugar}g → <strong>推定 +${rise} mg/dL</strong>（${label}）<br><span style="font-size:11px;color:var(--text3)">食後1〜2時間で最大値に達する見込み</span>`;
 }
 
 // ===== Gemini APIキー（ここに入力） =====
@@ -4100,42 +3904,10 @@ async function showMenuDetail(name) {
   const container = document.getElementById('patientDetailContent');
   const modal = document.getElementById('patientModal');
 
-  // まずDBから即座に表示
+  // DBからレシピを取得して表示
   const savedRecipe = recipeDatabase[name] || null;
-  if (savedRecipe) {
-    container.innerHTML = buildRecipeHTML(m, savedRecipe);
-    modal.classList.add('open');
-    return;
-  }
-
-  // DBにない場合はサーバーレス関数経由でAI生成
-  container.innerHTML = buildRecipeHTML(m, null);
+  container.innerHTML = buildRecipeHTML(m, savedRecipe);
   modal.classList.add('open');
-
-  // ローディング表示を追加
-  container.innerHTML += `<div id="aiRecipeLoading" style="text-align:center;padding:16px;">
-    <div class="loader" style="margin:0 auto 8px;"></div>
-    <div style="font-size:13px;color:var(--text2);">AIがレシピを生成中...</div>
-  </div>`;
-
-  try {
-    const prompt = `あなたは腎臓病患者向けの管理栄養士です。料理名：${m.name}（カロリー${m.kcal}kcal、タンパク質${m.protein}g、カリウム${m.k}mg、リン${m.p}mg）の本格レシピをJSON形式のみで返答してください。{"ingredients":[{"name":"食材名","amount":"分量"}],"steps":["手順1","手順2"],"tip":"コツ","kidney":"腎臓病患者へのポイント"}`;
-
-    const res = await fetch('/api/gemini', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0.7, maxOutputTokens: 1200 } })
-    });
-    const data = await res.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    const clean = text.replace(/```json|```/g, '').trim();
-    const recipe = JSON.parse(clean);
-    container.innerHTML = buildRecipeHTML(m, recipe);
-  } catch(e) {
-    // AI失敗時は基本ポイント表示のまま
-    const loading = document.getElementById('aiRecipeLoading');
-    if (loading) loading.remove();
-  }
 }
 
 // ===== FULL RECIPE DATABASE (全品) =====
@@ -4157,7 +3929,7 @@ if (zone) {
     e.preventDefault();
     zone.classList.remove('active-drop');
     const file = e.dataTransfer.files[0];
-    if (file) analyzeImage(file);
+    if (file) handleFileSelect({target:{files:[file]}});
   });
 }
 </script>
