@@ -1894,9 +1894,30 @@ html, body {
     <div class="modal-title">献立・食品を選ぶ</div>
     <div class="search-bar" style="margin:12px 0;">
       <span>🔍</span>
-      <input type="text" id="foodSearchInput" placeholder="料理名で検索..." oninput="searchFoodDB(this.value)" />
+      <input type="text" id="foodSearchInput" placeholder="料理名で検索（例：ハンバーグ、鮭）..." oninput="searchFoodDB(this.value)" />
     </div>
-    <div id="foodSearchResults" style="max-height:400px;overflow-y:auto;"></div>
+    <div id="foodSearchResults" style="max-height:350px;overflow-y:auto;"></div>
+    <div style="padding:12px;border-top:1px solid var(--border);margin-top:4px;">
+      <div style="font-size:12px;color:var(--text3);margin-bottom:8px;">探している料理が見つかりませんか？</div>
+      <button class="btn btn-ghost btn-full" onclick="showFoodRequestForm()" style="font-size:13px;">
+        📝 この料理の追加をリクエストする
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Food Request Modal -->
+<div class="modal-bg" id="foodRequestModal" onclick="closeModal('foodRequestModal')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div class="modal-title">料理の追加リクエスト</div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:16px;">追加してほしい料理名を入力してください。確認後、順次データベースに追加します。</div>
+    <div class="form-row">
+      <label class="form-label">料理名</label>
+      <input class="form-input" type="text" id="requestFoodName" placeholder="例：豚の角煮、茶碗蒸し..." />
+    </div>
+    <button class="btn btn-primary btn-full" style="margin-top:12px;" onclick="submitFoodRequest()">リクエストを送る</button>
+    <button class="btn btn-ghost btn-full" onclick="closeModal('foodRequestModal')">キャンセル</button>
   </div>
 </div>
 
@@ -2310,33 +2331,125 @@ function showFoodSearchModal() {
   const modal = document.getElementById('foodSearchModal');
   if (modal) modal.classList.add('open');
   const input = document.getElementById('foodSearchInput');
-  if (input) { input.value = ''; searchFoodDB(''); input.focus(); }
+  if (input) { input.value = ''; input.focus(); }
+  searchFoodDB('');
 }
 
-function searchFoodDB(query) {
+function showFoodRequestForm() {
+  const input = document.getElementById('foodSearchInput');
+  const requestInput = document.getElementById('requestFoodName');
+  if (requestInput && input) requestInput.value = input.value;
+  closeModal('foodSearchModal');
+  const m = document.getElementById('foodRequestModal');
+  if (m) m.classList.add('open');
+}
+
+async function submitFoodRequest() {
+  const name = document.getElementById('requestFoodName')?.value?.trim();
+  if (!name) { showToast('料理名を入力してください'); return; }
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/food_requests`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({ food_name: name })
+    });
+    if (res.ok) {
+      showToast(`✓「${name}」のリクエストを送りました！`);
+      closeModal('foodRequestModal');
+    } else {
+      showToast('送信に失敗しました。もう一度お試しください。');
+    }
+  } catch(e) {
+    showToast('送信に失敗しました。');
+  }
+}
+
+
+async function searchFoodDB(query) {
   const results = document.getElementById('foodSearchResults');
   if (!results) return;
-  const q = query.trim().toLowerCase();
-  const filtered = q
-    ? foodDatabase.filter(f => f.name.toLowerCase().includes(q))
-    : foodDatabase;
 
-  if (filtered.length === 0) {
+  const q = query.trim();
+
+  // ローカルDBから検索（オフライン対応）
+  const localFiltered = q
+    ? foodDatabase.filter(f => f.name.includes(q))
+    : foodDatabase.slice(0, 30);
+
+  // Supabaseからも検索
+  try {
+    const url = q
+      ? `${SUPABASE_URL}/rest/v1/foods?name=ilike.*${encodeURIComponent(q)}*&limit=50&order=category`
+      : `${SUPABASE_URL}/rest/v1/foods?limit=50&order=category`;
+
+    const res = await fetch(url, {
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`
+      }
+    });
+
+    if (res.ok) {
+      const dbFoods = await res.json();
+      // Supabaseのデータを表示
+      const allFoods = dbFoods.length > 0 ? dbFoods.map(f => ({
+        name: f.name,
+        cal: f.calories,
+        protein: f.protein,
+        carb: f.carb,
+        fiber: f.fiber,
+        k: f.potassium,
+        p: f.phosphorus,
+        unit: f.unit,
+        category: f.category
+      })) : localFiltered;
+
+      renderFoodResults(allFoods);
+      return;
+    }
+  } catch(e) {
+    // Supabase失敗時はローカルDBを使用
+  }
+
+  renderFoodResults(localFiltered);
+}
+
+function renderFoodResults(foods) {
+  const results = document.getElementById('foodSearchResults');
+  if (!results) return;
+
+  if (foods.length === 0) {
     results.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text3);">見つかりませんでした</div>';
     return;
   }
 
-  results.innerHTML = filtered.map(f => `
-    <div onclick="selectFood(${JSON.stringify(f).replace(/"/g,'&quot;')})"
-      style="padding:12px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;align-items:center;">
-      <div>
-        <div style="font-size:14px;font-weight:600;">${f.name}</div>
-        <div style="font-size:11px;color:var(--text3);margin-top:2px;">
-          ${f.cal}kcal・P${f.protein}g・K${f.k}mg・P(リン)${f.p}mg
+  // カテゴリでグループ化
+  const grouped = {};
+  foods.forEach(f => {
+    const cat = f.category || 'その他';
+    if (!grouped[cat]) grouped[cat] = [];
+    grouped[cat].push(f);
+  });
+
+  results.innerHTML = Object.entries(grouped).map(([cat, items]) => `
+    <div style="padding:8px 12px;background:var(--surface2);font-size:11px;font-weight:700;color:var(--accent);letter-spacing:.05em;">${cat}</div>
+    ${items.map(f => `
+      <div onclick='selectFood(${JSON.stringify({name:f.name,cal:f.cal||f.calories,protein:f.protein,carb:f.carb,fiber:f.fiber,k:f.k||f.potassium,p:f.p||f.phosphorus}).replace(/'/g,"&#39;")})'
+        style="padding:12px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <div style="font-size:14px;font-weight:600;">${f.name}</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px;">
+            ${f.unit||''}　${f.cal||f.calories||0}kcal・P${f.protein||0}g・K${f.k||f.potassium||0}mg・リン${f.p||f.phosphorus||0}mg
+          </div>
         </div>
-      </div>
-      <div style="color:var(--accent);font-size:18px;">＋</div>
-    </div>`).join('');
+        <div style="color:var(--accent);font-size:20px;padding-left:8px;">＋</div>
+      </div>`).join('')}
+  `).join('');
 }
 
 function selectFood(food) {
