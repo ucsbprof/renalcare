@@ -610,6 +610,42 @@ html, body {
 .chip-l { color: var(--text3); }
 .chip-v { font-family: 'JetBrains Mono', monospace; font-weight: 600; }
 
+/* 食材カテゴリ選択チップ */
+.food-cat-chip {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 20px;
+  padding: 6px 13px;
+  font-size: 13px;
+  cursor: pointer;
+  color: var(--text2);
+  transition: all 0.15s;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.food-cat-chip:active { transform: scale(0.95); }
+.food-cat-chip.sel-main    { background: rgba(79,195,247,0.15); border-color: var(--accent);  color: var(--accent); }
+.food-cat-chip.sel-protein { background: rgba(74,222,128,0.15); border-color: var(--green);   color: var(--green); }
+.food-cat-chip.sel-sub     { background: rgba(192,132,252,0.15);border-color: var(--purple);  color: var(--purple); }
+.food-cat-chip.sel-soup    { background: rgba(252,211,77,0.15); border-color: var(--amber);   color: var(--amber); }
+
+.food-cat-section { margin-bottom: 14px; }
+.food-cat-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  margin-bottom: 7px;
+}
+.food-cat-label.lbl-main    { color: var(--accent); }
+.food-cat-label.lbl-protein { color: var(--green); }
+.food-cat-label.lbl-sub     { color: var(--purple); }
+.food-cat-label.lbl-soup    { color: var(--amber); }
+.food-cat-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 14px 0;
+}
+
 .alert-box {
   border-radius: var(--rs);
   padding: 12px 14px;
@@ -1424,6 +1460,51 @@ html, body {
         <button class="btn btn-outline btn-full" onclick="showFoodSearchModal()" style="margin-bottom:8px;">
           🔍 献立・食品から栄養成分を入力
         </button>
+
+        <!-- 食材カテゴリ簡易選択 -->
+        <div style="margin:14px 0 4px;">
+          <div class="food-cat-section">
+            <div class="food-cat-label lbl-main">🍚 主食</div>
+            <div class="chips" style="margin-bottom:0;">
+              <div class="food-cat-chip" data-cat="main" onclick="toggleFoodCat(this)">米類</div>
+              <div class="food-cat-chip" data-cat="main" onclick="toggleFoodCat(this)">パン類</div>
+              <div class="food-cat-chip" data-cat="main" onclick="toggleFoodCat(this)">麺類</div>
+              <div class="food-cat-chip" data-cat="main" onclick="toggleFoodCat(this)">粉物類</div>
+              <div class="food-cat-chip" data-cat="main" onclick="toggleFoodCat(this)">その他</div>
+            </div>
+          </div>
+          <div class="food-cat-divider"></div>
+          <div class="food-cat-section">
+            <div class="food-cat-label lbl-protein">🥩 メイン食材</div>
+            <div class="chips" style="margin-bottom:0;">
+              <div class="food-cat-chip" data-cat="protein" onclick="toggleFoodCat(this)">肉類</div>
+              <div class="food-cat-chip" data-cat="protein" onclick="toggleFoodCat(this)">魚介類</div>
+              <div class="food-cat-chip" data-cat="protein" onclick="toggleFoodCat(this)">卵・乳製品</div>
+              <div class="food-cat-chip" data-cat="protein" onclick="toggleFoodCat(this)">大豆類</div>
+            </div>
+          </div>
+          <div class="food-cat-divider"></div>
+          <div class="food-cat-section">
+            <div class="food-cat-label lbl-sub">🥦 サブ食材</div>
+            <div class="chips" style="margin-bottom:0;">
+              <div class="food-cat-chip" data-cat="sub" onclick="toggleFoodCat(this)">野菜類</div>
+              <div class="food-cat-chip" data-cat="sub" onclick="toggleFoodCat(this)">根菜・いも類</div>
+              <div class="food-cat-chip" data-cat="sub" onclick="toggleFoodCat(this)">きのこ・海藻類</div>
+              <div class="food-cat-chip" data-cat="sub" onclick="toggleFoodCat(this)">練り物・その他</div>
+            </div>
+          </div>
+          <div class="food-cat-divider"></div>
+          <div class="food-cat-section">
+            <div class="food-cat-label lbl-soup">🍵 汁物・デザート</div>
+            <div class="chips" style="margin-bottom:0;">
+              <div class="food-cat-chip" data-cat="soup" onclick="toggleFoodCat(this)">汁物</div>
+              <div class="food-cat-chip" data-cat="soup" onclick="toggleFoodCat(this)">飲み物</div>
+              <div class="food-cat-chip" data-cat="soup" onclick="toggleFoodCat(this)">果物</div>
+              <div class="food-cat-chip" data-cat="soup" onclick="toggleFoodCat(this)">菓子・デザート</div>
+            </div>
+          </div>
+        </div>
+
         <div class="form-row">
           <label class="form-label">食事の時間</label>
           <select class="form-input" id="record-meal-type">
@@ -2101,6 +2182,28 @@ function cycleUserType() {
   showToast((tLabels[state.userType] || '標準モード') + 'に変更しました');
 }
 
+// 食材カテゴリ チップ選択
+const FOOD_CAT_CLASS = { main:'sel-main', protein:'sel-protein', sub:'sel-sub', soup:'sel-soup' };
+
+function toggleFoodCat(el) {
+  const cat = el.dataset.cat;
+  el.classList.toggle(FOOD_CAT_CLASS[cat]);
+}
+
+function getSelectedFoodCats() {
+  const result = {};
+  ['main','protein','sub','soup'].forEach(cat => {
+    result[cat] = [...document.querySelectorAll(`.food-cat-chip[data-cat="${cat}"].${FOOD_CAT_CLASS[cat]}`)].map(c => c.textContent);
+  });
+  return result;
+}
+
+function resetFoodCats() {
+  document.querySelectorAll('.food-cat-chip').forEach(c => {
+    c.className = 'food-cat-chip';
+  });
+}
+
 function resetRecord() {
   window._currentPhotoBase64 = null;
   const zone = document.getElementById('cameraZone');
@@ -2124,6 +2227,7 @@ function resetRecord() {
     if (div) div.textContent = '炭水化物と食物繊維を入力すると自動計算されます';
   }
   analyzing = false;
+  resetFoodCats();
 }
 
 async function saveMeal() {
@@ -2137,6 +2241,7 @@ async function saveMeal() {
     potassium:  parseFloat(document.getElementById('record-potassium')?.value) || 0,
     phosphorus: parseFloat(document.getElementById('record-phosphorus')?.value)|| 0,
     meal_type:  document.getElementById('record-meal-type')?.value || 'meal',
+    food_categories: getSelectedFoodCats(),
     photo_base64: window._currentPhotoBase64 ? window._currentPhotoBase64.substring(0, 50000) : null
   };
 
