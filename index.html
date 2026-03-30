@@ -2420,8 +2420,15 @@ function updateNutritionPreview() {
   const pho  = document.getElementById('record-phosphorus');
   if (cal && !cal.dataset.manualEdit) cal.value = kcal;
   if (pro && !pro.dataset.manualEdit) pro.value = protein;
-  if (crb && !crb.dataset.manualEdit) { crb.value = carb; crb.dispatchEvent(new Event('input')); }
-  if (fbr && !fbr.dataset.manualEdit) { fbr.value = fiber; fbr.dispatchEvent(new Event('input')); }
+  if (crb && !crb.dataset.manualEdit) {
+    crb.value = carb;
+    // manualEditフラグを立てずに血糖値再計算だけ呼ぶ
+    recalcGlucose();
+  }
+  if (fbr && !fbr.dataset.manualEdit) {
+    fbr.value = fiber;
+    recalcGlucose();
+  }
   if (pot && !pot.dataset.manualEdit) pot.value = potassium;
   if (pho && !pho.dataset.manualEdit) pho.value = phosphorus;
 }
