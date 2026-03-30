@@ -646,6 +646,75 @@ html, body {
   margin: 14px 0;
 }
 
+/* 量ボタン */
+.portion-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+.portion-label {
+  font-size: 12px;
+  color: var(--text2);
+  white-space: nowrap;
+}
+.portion-btn {
+  flex: 1;
+  padding: 7px 4px;
+  border-radius: 20px;
+  border: 1px solid var(--border2);
+  background: var(--surface2);
+  color: var(--text2);
+  font-size: 12px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s;
+  line-height: 1.3;
+}
+.portion-btn:active { transform: scale(0.95); }
+.portion-btn.active {
+  background: rgba(79,195,247,0.15);
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+}
+/* 栄養概算プレビュー */
+.nutrition-preview {
+  background: var(--surface2);
+  border-radius: var(--rs);
+  padding: 10px 12px;
+  margin-top: 10px;
+  display: none;
+}
+.nutrition-preview.visible { display: block; }
+.nutrition-preview-title {
+  font-size: 11px;
+  color: var(--text3);
+  margin-bottom: 6px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+.nutrition-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+.nutrition-preview-item {
+  text-align: center;
+}
+.nutrition-preview-val {
+  font-size: 14px;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+}
+.nutrition-preview-key {
+  font-size: 10px;
+  color: var(--text3);
+  margin-top: 1px;
+}
+
 .alert-box {
   border-radius: var(--rs);
   padding: 12px 14px;
@@ -1505,6 +1574,48 @@ html, body {
           </div>
         </div>
 
+        <!-- 量の選択 -->
+        <div class="portion-row">
+          <span class="portion-label">🍽️ 量</span>
+          <div class="portion-btn" data-portion="small" onclick="selectPortion(this)">少なめ<br><span style="font-size:10px;opacity:0.7;">1/2人前</span></div>
+          <div class="portion-btn active" data-portion="normal" onclick="selectPortion(this)">普通<br><span style="font-size:10px;opacity:0.7;">1人前</span></div>
+          <div class="portion-btn" data-portion="large" onclick="selectPortion(this)">多め<br><span style="font-size:10px;opacity:0.7;">1.5人前</span></div>
+        </div>
+
+        <!-- 栄養概算プレビュー -->
+        <div class="nutrition-preview" id="nutrition-preview">
+          <div class="nutrition-preview-title">概算栄養成分（自動計算）</div>
+          <div class="nutrition-preview-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:6px;">
+            <div class="nutrition-preview-item">
+              <div class="nutrition-preview-val" style="color:var(--green);" id="prev-kcal">—</div>
+              <div class="nutrition-preview-key">kcal</div>
+            </div>
+            <div class="nutrition-preview-item">
+              <div class="nutrition-preview-val" style="color:var(--accent);" id="prev-protein">—</div>
+              <div class="nutrition-preview-key">タンパク質g</div>
+            </div>
+            <div class="nutrition-preview-item">
+              <div class="nutrition-preview-val" style="color:var(--text2);" id="prev-carb">—</div>
+              <div class="nutrition-preview-key">炭水化物g</div>
+            </div>
+          </div>
+          <div class="nutrition-preview-grid" style="grid-template-columns:repeat(3,1fr);">
+            <div class="nutrition-preview-item">
+              <div class="nutrition-preview-val" style="color:var(--text2);" id="prev-fiber">—</div>
+              <div class="nutrition-preview-key">食物繊維g</div>
+            </div>
+            <div class="nutrition-preview-item">
+              <div class="nutrition-preview-val" style="color:var(--amber);" id="prev-k">—</div>
+              <div class="nutrition-preview-key">カリウムmg</div>
+            </div>
+            <div class="nutrition-preview-item">
+              <div class="nutrition-preview-val" style="color:var(--red);" id="prev-p">—</div>
+              <div class="nutrition-preview-key">リンmg</div>
+            </div>
+          </div>
+          <div style="font-size:10px;color:var(--text3);margin-top:6px;text-align:right;">※ 概算値。栄養成分欄に自動入力されます</div>
+        </div>
+
         <div class="form-row">
           <label class="form-label">食事の時間</label>
           <select class="form-input" id="record-meal-type">
@@ -1522,27 +1633,27 @@ html, body {
         <div class="form-grid">
           <div class="form-row">
             <label class="form-label">カロリー (kcal)</label>
-            <input class="form-input" type="number" id="record-calories" placeholder="0" />
+            <input class="form-input" type="number" id="record-calories" placeholder="0" oninput="this.dataset.manualEdit='1'" />
           </div>
           <div class="form-row">
             <label class="form-label">タンパク質 (g)</label>
-            <input class="form-input" type="number" id="record-protein" placeholder="0" />
+            <input class="form-input" type="number" id="record-protein" placeholder="0" oninput="this.dataset.manualEdit='1'" />
           </div>
           <div class="form-row">
             <label class="form-label">炭水化物 (g)</label>
-            <input class="form-input" type="number" id="record-carb" placeholder="0" oninput="recalcGlucose()" />
+            <input class="form-input" type="number" id="record-carb" placeholder="0" oninput="this.dataset.manualEdit='1';recalcGlucose()" />
           </div>
           <div class="form-row">
             <label class="form-label">食物繊維 (g)</label>
-            <input class="form-input" type="number" id="record-fiber" placeholder="0" oninput="recalcGlucose()" />
+            <input class="form-input" type="number" id="record-fiber" placeholder="0" oninput="this.dataset.manualEdit='1';recalcGlucose()" />
           </div>
           <div class="form-row">
             <label class="form-label">カリウム (mg)</label>
-            <input class="form-input" type="number" id="record-potassium" placeholder="0" />
+            <input class="form-input" type="number" id="record-potassium" placeholder="0" oninput="this.dataset.manualEdit='1'" />
           </div>
           <div class="form-row">
             <label class="form-label">リン (mg)</label>
-            <input class="form-input" type="number" id="record-phosphorus" placeholder="0" />
+            <input class="form-input" type="number" id="record-phosphorus" placeholder="0" oninput="this.dataset.manualEdit='1'" />
           </div>
         </div>
       </div>
@@ -2185,9 +2296,107 @@ function cycleUserType() {
 // 食材カテゴリ チップ選択
 const FOOD_CAT_CLASS = { main:'sel-main', protein:'sel-protein', sub:'sel-sub', soup:'sel-soup' };
 
+// 食材カテゴリごとの1人前あたり概算栄養値 {kcal, protein, potassium, phosphorus}
+const FOOD_CAT_NUTRITION = {
+  // 主食
+  '米類':          { kcal:252, protein:3.8, carb:55.0, fiber:0.3, potassium:29,  phosphorus:34  },
+  'パン類':        { kcal:210, protein:7.0, carb:40.0, fiber:2.0, potassium:86,  phosphorus:67  },
+  '麺類':          { kcal:230, protein:6.5, carb:44.0, fiber:1.5, potassium:40,  phosphorus:55  },
+  '粉物類':        { kcal:280, protein:7.5, carb:48.0, fiber:1.8, potassium:95,  phosphorus:80  },
+  'その他':        { kcal:200, protein:4.0, carb:38.0, fiber:1.0, potassium:50,  phosphorus:50  },
+  // メイン食材
+  '肉類':          { kcal:210, protein:18.0,carb:0.5,  fiber:0.0, potassium:310, phosphorus:170 },
+  '魚介類':        { kcal:150, protein:20.0,carb:0.2,  fiber:0.0, potassium:340, phosphorus:200 },
+  '卵・乳製品':    { kcal:130, protein:10.0,carb:3.0,  fiber:0.0, potassium:130, phosphorus:150 },
+  '大豆類':        { kcal:120, protein:10.0,carb:6.0,  fiber:2.5, potassium:200, phosphorus:140 },
+  // サブ食材
+  '野菜類':        { kcal:30,  protein:1.5, carb:5.0,  fiber:2.0, potassium:260, phosphorus:35  },
+  '根菜・いも類':  { kcal:80,  protein:1.8, carb:17.0, fiber:2.5, potassium:340, phosphorus:45  },
+  'きのこ・海藻類':{ kcal:15,  protein:1.2, carb:3.0,  fiber:2.8, potassium:230, phosphorus:30  },
+  '練り物・その他':{ kcal:90,  protein:7.0, carb:9.0,  fiber:0.5, potassium:100, phosphorus:140 },
+  // 汁物・デザート
+  '汁物':          { kcal:40,  protein:2.5, carb:4.0,  fiber:0.5, potassium:180, phosphorus:50  },
+  '飲み物':        { kcal:50,  protein:0.5, carb:10.0, fiber:0.0, potassium:80,  phosphorus:20  },
+  '果物':          { kcal:60,  protein:0.5, carb:14.0, fiber:1.5, potassium:200, phosphorus:15  },
+  '菓子・デザート':{ kcal:180, protein:2.0, carb:30.0, fiber:0.5, potassium:60,  phosphorus:45  },
+};
+
+const PORTION_RATIO = { small: 0.5, normal: 1.0, large: 1.5 };
+
+function selectPortion(el) {
+  document.querySelectorAll('.portion-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  updateNutritionPreview();
+}
+
+function getCurrentPortion() {
+  const active = document.querySelector('.portion-btn.active');
+  return active ? PORTION_RATIO[active.dataset.portion] || 1.0 : 1.0;
+}
+
 function toggleFoodCat(el) {
   const cat = el.dataset.cat;
   el.classList.toggle(FOOD_CAT_CLASS[cat]);
+  updateNutritionPreview();
+}
+
+function updateNutritionPreview() {
+  const selected = [];
+  ['main','protein','sub','soup'].forEach(cat => {
+    document.querySelectorAll(`.food-cat-chip[data-cat="${cat}"].${FOOD_CAT_CLASS[cat]}`).forEach(c => {
+      selected.push(c.textContent.trim());
+    });
+  });
+
+  const preview = document.getElementById('nutrition-preview');
+  if (!selected.length) {
+    if (preview) preview.classList.remove('visible');
+    return;
+  }
+
+  const ratio = getCurrentPortion();
+  let kcal = 0, protein = 0, carb = 0, fiber = 0, potassium = 0, phosphorus = 0;
+  selected.forEach(name => {
+    const n = FOOD_CAT_NUTRITION[name];
+    if (n) {
+      kcal      += n.kcal      * ratio;
+      protein   += n.protein   * ratio;
+      carb      += n.carb      * ratio;
+      fiber     += n.fiber     * ratio;
+      potassium += n.potassium * ratio;
+      phosphorus+= n.phosphorus* ratio;
+    }
+  });
+
+  kcal      = Math.round(kcal);
+  protein   = Math.round(protein   * 10) / 10;
+  carb      = Math.round(carb      * 10) / 10;
+  fiber     = Math.round(fiber     * 10) / 10;
+  potassium = Math.round(potassium);
+  phosphorus= Math.round(phosphorus);
+
+  document.getElementById('prev-kcal').textContent    = kcal;
+  document.getElementById('prev-protein').textContent = protein;
+  document.getElementById('prev-carb').textContent    = carb;
+  document.getElementById('prev-fiber').textContent   = fiber;
+  document.getElementById('prev-k').textContent       = potassium;
+  document.getElementById('prev-p').textContent       = phosphorus;
+
+  if (preview) preview.classList.add('visible');
+
+  // 栄養成分フォームに自動入力
+  const cal  = document.getElementById('record-calories');
+  const pro  = document.getElementById('record-protein');
+  const crb  = document.getElementById('record-carb');
+  const fbr  = document.getElementById('record-fiber');
+  const pot  = document.getElementById('record-potassium');
+  const pho  = document.getElementById('record-phosphorus');
+  if (cal && !cal.dataset.manualEdit) cal.value = kcal;
+  if (pro && !pro.dataset.manualEdit) pro.value = protein;
+  if (crb && !crb.dataset.manualEdit) { crb.value = carb; crb.dispatchEvent(new Event('input')); }
+  if (fbr && !fbr.dataset.manualEdit) { fbr.value = fiber; fbr.dispatchEvent(new Event('input')); }
+  if (pot && !pot.dataset.manualEdit) pot.value = potassium;
+  if (pho && !pho.dataset.manualEdit) pho.value = phosphorus;
 }
 
 function getSelectedFoodCats() {
@@ -2228,6 +2437,15 @@ function resetRecord() {
   }
   analyzing = false;
   resetFoodCats();
+  ['record-calories','record-protein','record-carb','record-fiber','record-potassium','record-phosphorus'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) delete el.dataset.manualEdit;
+  });
+  const preview = document.getElementById('nutrition-preview');
+  if (preview) preview.classList.remove('visible');
+  document.querySelectorAll('.portion-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.portion === 'normal');
+  });
 }
 
 async function saveMeal() {
