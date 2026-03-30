@@ -1536,6 +1536,7 @@ html, body {
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;">
               <div class="food-cat-label lbl-main" style="margin-bottom:0;">🍚 主食</div>
               <div style="display:flex;gap:4px;">
+                <div class="portion-btn" data-group="main" data-portion="none" onclick="selectGroupPortion(this)">なし</div>
                 <div class="portion-btn" data-group="main" data-portion="small" onclick="selectGroupPortion(this)">少</div>
                 <div class="portion-btn active" data-group="main" data-portion="normal" onclick="selectGroupPortion(this)">普通</div>
                 <div class="portion-btn" data-group="main" data-portion="large" onclick="selectGroupPortion(this)">多</div>
@@ -1554,6 +1555,7 @@ html, body {
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;">
               <div class="food-cat-label lbl-protein" style="margin-bottom:0;">🥩 メイン食材</div>
               <div style="display:flex;gap:4px;">
+                <div class="portion-btn" data-group="protein" data-portion="none" onclick="selectGroupPortion(this)">なし</div>
                 <div class="portion-btn" data-group="protein" data-portion="small" onclick="selectGroupPortion(this)">少</div>
                 <div class="portion-btn active" data-group="protein" data-portion="normal" onclick="selectGroupPortion(this)">普通</div>
                 <div class="portion-btn" data-group="protein" data-portion="large" onclick="selectGroupPortion(this)">多</div>
@@ -1571,6 +1573,7 @@ html, body {
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;">
               <div class="food-cat-label lbl-sub" style="margin-bottom:0;">🥦 サブ食材</div>
               <div style="display:flex;gap:4px;">
+                <div class="portion-btn" data-group="sub" data-portion="none" onclick="selectGroupPortion(this)">なし</div>
                 <div class="portion-btn" data-group="sub" data-portion="small" onclick="selectGroupPortion(this)">少</div>
                 <div class="portion-btn active" data-group="sub" data-portion="normal" onclick="selectGroupPortion(this)">普通</div>
                 <div class="portion-btn" data-group="sub" data-portion="large" onclick="selectGroupPortion(this)">多</div>
@@ -1588,6 +1591,7 @@ html, body {
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;">
               <div class="food-cat-label lbl-soup" style="margin-bottom:0;">🍵 汁物・デザート</div>
               <div style="display:flex;gap:4px;">
+                <div class="portion-btn" data-group="soup" data-portion="none" onclick="selectGroupPortion(this)">なし</div>
                 <div class="portion-btn" data-group="soup" data-portion="small" onclick="selectGroupPortion(this)">少</div>
                 <div class="portion-btn active" data-group="soup" data-portion="normal" onclick="selectGroupPortion(this)">普通</div>
                 <div class="portion-btn" data-group="soup" data-portion="large" onclick="selectGroupPortion(this)">多</div>
@@ -2341,7 +2345,7 @@ const FOOD_CAT_NUTRITION = {
   '菓子・デザート':{ kcal:180, protein:2.0, carb:30.0, fiber:0.5, potassium:60,  phosphorus:45  },
 };
 
-const PORTION_RATIO = { small: 0.5, normal: 1.0, large: 1.5 };
+const PORTION_RATIO = { none: 0.0, small: 0.5, normal: 1.0, large: 1.5 };
 
 function selectGroupPortion(el) {
   const group = el.dataset.group;
