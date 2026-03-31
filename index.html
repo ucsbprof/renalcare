@@ -2146,6 +2146,58 @@ html, body {
   </div>
 </div>
 
+<!-- Edit Meal Modal -->
+<div class="modal-bg" id="editModal" onclick="closeModal('editModal')">
+  <div class="modal" onclick="event.stopPropagation()" style="max-height:90vh;overflow-y:auto;">
+    <div class="modal-handle"></div>
+    <div class="modal-title">記録を編集</div>
+    <input type="hidden" id="edit-id" />
+    <div style="margin-top:16px;">
+      <div class="form-row">
+        <label class="form-label">料理名・メモ</label>
+        <input class="form-input" type="text" id="edit-name" placeholder="例：朝食・鮭定食" />
+      </div>
+      <div class="form-row">
+        <label class="form-label">食事の種類</label>
+        <select class="form-input" id="edit-meal-type">
+          <option value="breakfast">🌅 朝食</option>
+          <option value="lunch">☀️ 昼食</option>
+          <option value="dinner">🌙 夕食</option>
+          <option value="snack">🍬 間食</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label class="form-label">日時</label>
+        <input class="form-input" type="datetime-local" id="edit-datetime" />
+      </div>
+      <div class="form-grid">
+        <div class="form-row">
+          <label class="form-label">カロリー (kcal)</label>
+          <input class="form-input" type="number" id="edit-calories" placeholder="0" />
+        </div>
+        <div class="form-row">
+          <label class="form-label">タンパク質 (g)</label>
+          <input class="form-input" type="number" id="edit-protein" placeholder="0" />
+        </div>
+        <div class="form-row">
+          <label class="form-label">炭水化物 (g)</label>
+          <input class="form-input" type="number" id="edit-carb" placeholder="0" />
+        </div>
+        <div class="form-row">
+          <label class="form-label">カリウム (mg)</label>
+          <input class="form-input" type="number" id="edit-potassium" placeholder="0" />
+        </div>
+        <div class="form-row">
+          <label class="form-label">リン (mg)</label>
+          <input class="form-input" type="number" id="edit-phosphorus" placeholder="0" />
+        </div>
+      </div>
+    </div>
+    <button class="btn btn-primary btn-full" style="margin-top:16px;" onclick="saveEditMeal()">✓ 更新する</button>
+    <button class="btn btn-ghost btn-full" style="margin-top:8px;" onclick="closeModal('editModal')">キャンセル</button>
+  </div>
+</div>
+
 <!-- Target Modal -->
 <div class="modal-bg" id="targetModal" onclick="closeModal('targetModal')">
   <div class="modal" onclick="event.stopPropagation()">
@@ -2243,6 +2295,7 @@ const state = {
 document.addEventListener('DOMContentLoaded', () => {
   updateHomeDate();
   renderMenuGrid();
+  updateHomeSummary();
 
   // ファイル選択イベントをJSで登録（iOS Safari対応）
   ['fileInputZone', 'fileInputBtn'].forEach(id => {
@@ -2265,30 +2318,146 @@ async function renderHistory() {
 
   list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text3);">読み込み中...</div>';
 
-  const meals = await dbLoadMeals();
+  // LocalStorageから読み込み（メイン）
+  let meals = localLoadMeals();
+
+  // Supabaseからも試みてマージ（オプション）
+  try {
+    const remoteMeals = await dbLoadMeals();
+    if (remoteMeals && remoteMeals.length > 0) {
+      const localIds = new Set(meals.map(m => m.id));
+      remoteMeals.forEach(rm => {
+        if (!localIds.has(rm.id) && rm.id) meals.push(rm);
+      });
+      meals.sort((a, b) => new Date(b.recorded_at) - new Date(a.recorded_at));
+    }
+  } catch(e) {}
 
   if (!meals || meals.length === 0) {
-    list.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text3);">まだ記録がありません</div>';
+    list.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text3);">まだ記録がありません<br><span style="font-size:12px;margin-top:8px;display:block;">「記録」タブから食事を登録してください</span></div>';
     return;
   }
 
-  list.innerHTML = meals.map(m => {
-    const date = new Date(m.recorded_at);
-    const timeStr = `${date.getMonth()+1}/${date.getDate()} ${date.getHours()}:${String(date.getMinutes()).padStart(2,'0')}`;
+  // 日付ごとにグループ化
+  const grouped = {};
+  meals.forEach(m => {
+    const dateKey = new Date(m.recorded_at).toDateString();
+    if (!grouped[dateKey]) grouped[dateKey] = [];
+    grouped[dateKey].push(m);
+  });
+
+  const mealTypeLabel = { breakfast:'🌅 朝食', lunch:'☀️ 昼食', dinner:'🌙 夕食', snack:'🍬 間食', meal:'食事' };
+
+  list.innerHTML = Object.entries(grouped).map(([dateKey, dayMeals]) => {
+    const d = new Date(dateKey);
+    const days = ['日','月','火','水','木','金','土'];
+    const now = new Date();
+    const isToday = d.toDateString() === now.toDateString();
+    const isYesterday = d.toDateString() === new Date(now - 86400000).toDateString();
+    const dateLabel = isToday ? '今日' : isYesterday ? '昨日' : `${d.getMonth()+1}月${d.getDate()}日（${days[d.getDay()]}）`;
+
+    const dayTotal = dayMeals.reduce((acc, m) => {
+      acc.calories   += m.calories   || 0;
+      acc.protein    += m.protein    || 0;
+      acc.potassium  += m.potassium  || 0;
+      acc.phosphorus += m.phosphorus || 0;
+      return acc;
+    }, { calories: 0, protein: 0, potassium: 0, phosphorus: 0 });
+
     return `
-      <div class="card" style="margin-bottom:10px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-          <div>
-            <div style="font-weight:600;font-size:14px;">${m.dish_name || '不明'}</div>
-            <div style="font-size:12px;color:var(--text3);margin-top:2px;">${timeStr}</div>
-          </div>
-          <div style="text-align:right;font-size:12px;color:var(--text2);">
-            <div>${m.calories || 0} kcal</div>
-            <div>P: ${m.protein || 0}g</div>
-          </div>
+      <div style="margin-bottom:6px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 4px;">
+          <div style="font-size:13px;font-weight:700;color:${isToday ? 'var(--accent)' : 'var(--text2)'};">${dateLabel}</div>
+          <div style="font-size:11px;color:var(--text3);">計: ${Math.round(dayTotal.calories)}kcal / P: ${Math.round(dayTotal.protein * 10)/10}g</div>
         </div>
+        ${dayMeals.map(m => {
+          const timeStr = `${new Date(m.recorded_at).getHours()}:${String(new Date(m.recorded_at).getMinutes()).padStart(2,'0')}`;
+          const mLabel = mealTypeLabel[m.meal_type] || '食事';
+          const protColor = m.protein > state.targets.protein * 0.4 ? 'var(--red)' : 'var(--accent)';
+          const kColor = m.potassium > state.targets.potassium * 0.5 ? 'var(--amber)' : 'var(--text2)';
+          return `
+            <div class="card" style="margin-bottom:8px;">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+                <div style="flex:1;min-width:0;">
+                  <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+                    <span style="font-weight:600;font-size:14px;">${m.dish_name || '食事'}</span>
+                    <span style="font-size:10px;color:var(--text3);background:var(--surface2);padding:2px 7px;border-radius:10px;">${mLabel}</span>
+                    <span style="font-size:10px;color:var(--text3);">${timeStr}</span>
+                  </div>
+                  <div style="display:flex;gap:10px;margin-top:8px;flex-wrap:wrap;">
+                    <span style="font-size:12px;color:var(--green);">${Math.round(m.calories || 0)} kcal</span>
+                    <span style="font-size:12px;color:${protColor};">P: ${m.protein || 0}g</span>
+                    <span style="font-size:12px;color:${kColor};">K: ${m.potassium || 0}mg</span>
+                    <span style="font-size:12px;color:var(--red);">P: ${m.phosphorus || 0}mg</span>
+                  </div>
+                </div>
+                <div style="display:flex;gap:6px;flex-shrink:0;">
+                  <button class="btn btn-ghost btn-sm" onclick="openEditModal(${JSON.stringify(m).replace(/"/g, '&quot;')})" style="font-size:12px;padding:6px 10px;">✏️</button>
+                  <button class="btn btn-sm" onclick="deleteMealConfirm('${m.id}')" style="background:var(--red-dim);color:var(--red);border:1px solid var(--red);font-size:12px;padding:6px 10px;">🗑</button>
+                </div>
+              </div>
+            </div>`;
+        }).join('')}
       </div>`;
   }).join('');
+}
+
+function deleteMealConfirm(id) {
+  if (!confirm('この記録を削除しますか？')) return;
+  if (localDeleteMeal(id)) {
+    showToast('🗑 記録を削除しました');
+    renderHistory();
+    updateHomeSummary();
+  } else {
+    showToast('⚠ 削除できませんでした');
+  }
+}
+
+function openEditModal(meal) {
+  if (typeof meal === 'string') {
+    try { meal = JSON.parse(meal); } catch(e) { return; }
+  }
+  window._editingMeal = meal;
+
+  document.getElementById('edit-id').value         = meal.id || '';
+  document.getElementById('edit-name').value       = meal.dish_name || '';
+  document.getElementById('edit-meal-type').value  = meal.meal_type || 'breakfast';
+  document.getElementById('edit-calories').value   = meal.calories || 0;
+  document.getElementById('edit-protein').value    = meal.protein || 0;
+  document.getElementById('edit-carb').value       = meal.carb || 0;
+  document.getElementById('edit-potassium').value  = meal.potassium || 0;
+  document.getElementById('edit-phosphorus').value = meal.phosphorus || 0;
+
+  // 日時の設定
+  const dt = new Date(meal.recorded_at);
+  const localISO = new Date(dt.getTime() - dt.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+  document.getElementById('edit-datetime').value = localISO;
+
+  document.getElementById('editModal').classList.add('open');
+}
+
+function saveEditMeal() {
+  const id = document.getElementById('edit-id').value;
+  const dtVal = document.getElementById('edit-datetime').value;
+  const updated = {
+    dish_name:  document.getElementById('edit-name').value.trim() || '食事',
+    meal_type:  document.getElementById('edit-meal-type').value,
+    calories:   parseFloat(document.getElementById('edit-calories').value)   || 0,
+    protein:    parseFloat(document.getElementById('edit-protein').value)    || 0,
+    carb:       parseFloat(document.getElementById('edit-carb').value)       || 0,
+    potassium:  parseFloat(document.getElementById('edit-potassium').value)  || 0,
+    phosphorus: parseFloat(document.getElementById('edit-phosphorus').value) || 0,
+    recorded_at: dtVal ? new Date(dtVal).toISOString() : (window._editingMeal?.recorded_at || new Date().toISOString())
+  };
+
+  if (localUpdateMeal(id, updated)) {
+    showToast('✅ 記録を更新しました');
+    closeModal('editModal');
+    renderHistory();
+    updateHomeSummary();
+  } else {
+    showToast('⚠ 更新できませんでした');
+  }
 }
 
 function closeModal(id) {
@@ -2485,24 +2654,180 @@ function resetRecord() {
 }
 
 async function saveMeal() {
+  const now = new Date();
   const meal = {
+    id:          'meal_' + now.getTime() + '_' + Math.random().toString(36).substr(2, 5),
     user_id:    getUserId(),
-    dish_name:  document.getElementById('record-name')?.value || '記録',
+    dish_name:  document.getElementById('record-name')?.value.trim() || '記録',
     calories:   parseFloat(document.getElementById('record-calories')?.value)  || 0,
     protein:    parseFloat(document.getElementById('record-protein')?.value)   || 0,
     carb:       parseFloat(document.getElementById('record-carb')?.value)      || 0,
     fiber:      parseFloat(document.getElementById('record-fiber')?.value)     || 0,
     potassium:  parseFloat(document.getElementById('record-potassium')?.value) || 0,
     phosphorus: parseFloat(document.getElementById('record-phosphorus')?.value)|| 0,
-    meal_type:  document.getElementById('record-meal-type')?.value || 'meal',
+    meal_type:  document.getElementById('record-meal-type')?.value || 'breakfast',
     food_categories: getSelectedFoodCats(),
-    photo_base64: window._currentPhotoBase64 ? window._currentPhotoBase64.substring(0, 50000) : null
+    photo_base64: window._currentPhotoBase64 ? window._currentPhotoBase64.substring(0, 50000) : null,
+    recorded_at: now.toISOString()
   };
 
-  const ok = await dbSaveMeal(meal);
-  showToast(ok ? '✓ 食事を記録しました' : '⚠ 保存できませんでした');
+  // ① まずLocalStorageに確実保存
+  localSaveMeal(meal);
+
+  // ② バックグラウンドでSupabaseにも試みる（失敗しても無視）
+  dbSaveMeal(meal).catch(() => {});
+
+  showToast('✅ 食事を記録しました（' + formatDateJP(now) + '）');
   resetRecord();
   navTo('home');
+  updateHomeSummary();
+}
+
+// LocalStorage保存
+function localSaveMeal(meal) {
+  try {
+    const key = 'renalcare_meals';
+    const existing = JSON.parse(localStorage.getItem(key) || '[]');
+    existing.unshift(meal); // 新しい順に追加
+    // 最大500件保存
+    if (existing.length > 500) existing.splice(500);
+    localStorage.setItem(key, JSON.stringify(existing));
+  } catch(e) {
+    console.error('LocalStorage保存エラー:', e);
+  }
+}
+
+// LocalStorage更新（編集時）
+function localUpdateMeal(id, updated) {
+  try {
+    const key = 'renalcare_meals';
+    const existing = JSON.parse(localStorage.getItem(key) || '[]');
+    const idx = existing.findIndex(m => m.id === id);
+    if (idx !== -1) {
+      existing[idx] = { ...existing[idx], ...updated };
+      localStorage.setItem(key, JSON.stringify(existing));
+      return true;
+    }
+    return false;
+  } catch(e) {
+    return false;
+  }
+}
+
+// LocalStorage削除
+function localDeleteMeal(id) {
+  try {
+    const key = 'renalcare_meals';
+    const existing = JSON.parse(localStorage.getItem(key) || '[]');
+    const filtered = existing.filter(m => m.id !== id);
+    localStorage.setItem(key, JSON.stringify(filtered));
+    return true;
+  } catch(e) {
+    return false;
+  }
+}
+
+// LocalStorage読み込み
+function localLoadMeals() {
+  try {
+    return JSON.parse(localStorage.getItem('renalcare_meals') || '[]');
+  } catch(e) {
+    return [];
+  }
+}
+
+function formatDateJP(date) {
+  const d = new Date(date);
+  const days = ['日','月','火','水','木','金','土'];
+  return `${d.getMonth()+1}月${d.getDate()}日（${days[d.getDay()]}） ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+
+function formatDateShort(date) {
+  const d = new Date(date);
+  const now = new Date();
+  const today = now.toDateString();
+  const yesterday = new Date(now - 86400000).toDateString();
+  const prefix = d.toDateString() === today ? '今日' : d.toDateString() === yesterday ? '昨日' : `${d.getMonth()+1}/${d.getDate()}`;
+  return `${prefix} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+
+// 今日の合計を計算してホーム画面を更新
+function updateHomeSummary() {
+  const meals = localLoadMeals();
+  const today = new Date().toDateString();
+  const todayMeals = meals.filter(m => new Date(m.recorded_at).toDateString() === today);
+
+  const totals = todayMeals.reduce((acc, m) => {
+    acc.calories   += m.calories   || 0;
+    acc.protein    += m.protein    || 0;
+    acc.potassium  += m.potassium  || 0;
+    acc.phosphorus += m.phosphorus || 0;
+    return acc;
+  }, { calories: 0, protein: 0, potassium: 0, phosphorus: 0 });
+
+  // ホーム画面の数値を更新（実際のHTML IDに合わせる）
+  const setMetric = (id, val, unit) => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = val + '<span class="metric-unit">' + unit + '</span>';
+  };
+  setMetric('m-kcal',      Math.round(totals.calories),                   'kcal');
+  setMetric('m-protein',   Math.round(totals.protein * 10) / 10,          'g');
+  setMetric('m-potassium', Math.round(totals.potassium).toLocaleString(),  'mg');
+  setMetric('m-phosphorus',Math.round(totals.phosphorus),                 'mg');
+
+  // プログレスバー更新
+  const updateBar = (barId, val, max) => {
+    const el = document.getElementById(barId);
+    if (el) el.style.width = Math.min(100, max > 0 ? Math.round(val / max * 100) : 0) + '%';
+  };
+  updateBar('prog-protein',    totals.protein,    state.targets.protein);
+  updateBar('prog-potassium',  totals.potassium,  state.targets.potassium);
+  updateBar('prog-phosphorus', totals.phosphorus, state.targets.phosphorus);
+
+  // 詳細栄養欄の数値を更新
+  const nutrRows = document.querySelectorAll('.nutr-row');
+  const nutrData = [
+    { val: Math.round(totals.potassium).toLocaleString() + 'mg',       pct: state.targets.potassium  > 0 ? totals.potassium  / state.targets.potassium  * 100 : 0 },
+    { val: Math.round(totals.phosphorus) + 'mg',                        pct: state.targets.phosphorus > 0 ? totals.phosphorus / state.targets.phosphorus * 100 : 0 },
+    { val: (Math.round(totals.protein * 10)/10) + 'g',                  pct: state.targets.protein    > 0 ? totals.protein    / state.targets.protein    * 100 : 0 },
+  ];
+  nutrData.forEach((nd, i) => {
+    if (nutrRows[i]) {
+      const valEl = nutrRows[i].querySelector('.nutr-val');
+      const barEl = nutrRows[i].querySelector('.prog-fill');
+      if (valEl) valEl.textContent = nd.val;
+      if (barEl) barEl.style.width = Math.min(100, Math.round(nd.pct)) + '%';
+    }
+  });
+
+  // ホームの今日の食事リストを更新
+  const homeMeals = document.getElementById('home-meals');
+  if (homeMeals) {
+    const mealTypeEmoji = { breakfast:'🍳', lunch:'🍱', dinner:'🍽', snack:'🍬', meal:'🍴' };
+    const mealTypeLabel = { breakfast:'朝食', lunch:'昼食', dinner:'夕食', snack:'間食', meal:'食事' };
+    const addBtn = '<div class="meal-item" style="opacity:0.5;border:1px dashed var(--border);" onclick="navTo(\'record\')"><div class="meal-emoji" style="font-size:20px;">＋</div><div class="meal-info"><div class="meal-name" style="color:var(--text3)">追加記録</div><div class="meal-time">タップして記録</div></div></div>';
+    if (todayMeals.length === 0) {
+      homeMeals.innerHTML = '<div class="meal-item" style="opacity:0.5;border:1px dashed var(--border);" onclick="navTo(\'record\')"><div class="meal-emoji" style="font-size:20px;">＋</div><div class="meal-info"><div class="meal-name" style="color:var(--text3)">食事を記録する</div><div class="meal-time">タップして記録</div></div></div>';
+    } else {
+      const mealHTML = todayMeals.slice(0, 5).map(m => {
+        const d = new Date(m.recorded_at);
+        const timeStr = d.getHours() + ':' + String(d.getMinutes()).padStart(2,'0');
+        const emoji = mealTypeEmoji[m.meal_type] || '🍴';
+        const label = mealTypeLabel[m.meal_type] || '食事';
+        const tag = m.protein > state.targets.protein * 0.35
+          ? '<div class="tag tag-amber">タンパク注意</div>'
+          : '<div class="tag tag-green">記録済</div>';
+        return '<div class="meal-item">' +
+          '<div class="meal-emoji">' + emoji + '</div>' +
+          '<div class="meal-info">' +
+          '<div class="meal-name">' + label + ' — ' + (m.dish_name || '食事') + '</div>' +
+          '<div class="meal-time">' + timeStr + '</div>' +
+          '<div class="meal-tags">' + tag + '</div></div>' +
+          '<div class="meal-kcal">' + Math.round(m.calories||0) + '<div class="meal-kcal-unit">kcal</div></div></div>';
+      }).join('');
+      homeMeals.innerHTML = mealHTML + addBtn;
+    }
+  }
 }
 
 function selectEatout(name, el) {
