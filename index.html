@@ -347,8 +347,9 @@ html, body {
 .doc-card { background: var(--surface); border: 1px solid var(--border); border-radius: 24px; padding: 36px 28px; width: 100%; max-width: 400px; }
 .doc-title { font-family: 'Kaisei Opti', serif; font-size: 24px; margin-bottom: 6px; text-align: center; }
 .doc-sub { font-size: 13px; color: var(--text2); text-align: center; margin-bottom: 28px; }
-.detail-section { margin-bottom: 16px; }
-.detail-label { font-size: 11px; color: var(--text3); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
+.food-tab { flex-shrink:0; padding:5px 12px; border-radius:20px; font-size:12px; border:1.5px solid var(--border2); color:var(--text2); cursor:pointer; transition:all 0.15s; white-space:nowrap; }
+.food-tab.active { border-color:var(--accent); color:var(--accent); background:var(--accent-glow); }
+#foodCatTabs::-webkit-scrollbar { display:none; }
 </style>
 </head>
 <body>
@@ -554,11 +555,36 @@ html, body {
       </div>
       <div class="card">
         <div class="card-title">栄養管理 詳細</div>
-        <div class="nutr-row"><div class="nutr-name">カリウム</div><div class="nutr-bar"><div class="prog-wrap" style="margin:0"><div class="prog-fill pg-amber" style="width:91%"></div></div></div><div class="nutr-val" style="color:var(--amber)">1,820mg</div><div class="nutr-max">/ 2,000</div></div>
-        <div class="nutr-row"><div class="nutr-name">リン</div><div class="nutr-bar"><div class="prog-wrap" style="margin:0"><div class="prog-fill pg-red" style="width:89%"></div></div></div><div class="nutr-val" style="color:var(--red)">620mg</div><div class="nutr-max">/ 700</div></div>
-        <div class="nutr-row"><div class="nutr-name">タンパク質</div><div class="nutr-bar"><div class="prog-wrap" style="margin:0"><div class="prog-fill pg-blue" style="width:95%"></div></div></div><div class="nutr-val" style="color:var(--accent)">38g</div><div class="nutr-max">/ 40g</div></div>
-        <div class="nutr-row"><div class="nutr-name">ナトリウム</div><div class="nutr-bar"><div class="prog-wrap" style="margin:0"><div class="prog-fill pg-green" style="width:62%"></div></div></div><div class="nutr-val" style="color:var(--green)">1,240mg</div><div class="nutr-max">/ 2,000</div></div>
-        <div class="nutr-row"><div class="nutr-name">水分</div><div class="nutr-bar"><div class="prog-wrap" style="margin:0"><div class="prog-fill pg-blue" style="width:55%"></div></div></div><div class="nutr-val" style="color:var(--accent)">825mL</div><div class="nutr-max">/ 1,500</div></div>
+        <div class="nutr-row"><div class="nutr-name">カリウム</div><div class="nutr-bar"><div class="prog-wrap" style="margin:0"><div class="prog-fill pg-amber" id="nutr-bar-k" style="width:0%"></div></div></div><div class="nutr-val" style="color:var(--amber)" id="nutr-val-k">—</div><div class="nutr-max">/ <span id="nutr-max-k">2,000</span></div></div>
+        <div class="nutr-row"><div class="nutr-name">リン</div><div class="nutr-bar"><div class="prog-wrap" style="margin:0"><div class="prog-fill pg-red" id="nutr-bar-p" style="width:0%"></div></div></div><div class="nutr-val" style="color:var(--red)" id="nutr-val-p">—</div><div class="nutr-max">/ <span id="nutr-max-p">700</span></div></div>
+        <div class="nutr-row"><div class="nutr-name">タンパク質</div><div class="nutr-bar"><div class="prog-wrap" style="margin:0"><div class="prog-fill pg-blue" id="nutr-bar-pr" style="width:0%"></div></div></div><div class="nutr-val" style="color:var(--accent)" id="nutr-val-pr">—</div><div class="nutr-max">/ <span id="nutr-max-pr">40</span>g</div></div>
+      </div>
+      <!-- 水分摂取カード -->
+      <div class="card" style="border-color:rgba(79,195,247,0.3);">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <div class="card-title" style="margin-bottom:0;">💧 今日の水分摂取</div>
+          <div style="font-size:11px;color:var(--text3);">目標 <span id="water-target-label">1,500</span>mL</div>
+        </div>
+        <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:10px;">
+          <div id="water-total" style="font-family:'JetBrains Mono',monospace;font-size:32px;font-weight:700;color:var(--accent);">0</div>
+          <div style="font-size:13px;color:var(--text2);">mL</div>
+          <div id="water-badge" style="font-size:11px;padding:3px 8px;border-radius:12px;background:var(--green-dim);color:var(--green);border:1px solid var(--green);display:none;"></div>
+        </div>
+        <div class="prog-wrap" style="margin-bottom:12px;">
+          <div class="prog-fill pg-blue" id="prog-water" style="width:0%;transition:width 0.6s ease;"></div>
+        </div>
+        <!-- クイック追加ボタン -->
+        <div style="font-size:11px;color:var(--text3);margin-bottom:8px;">タップして追加</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button onclick="addWater(100)"  class="btn btn-ghost btn-sm">+100mL</button>
+          <button onclick="addWater(150)"  class="btn btn-ghost btn-sm">+150mL<span style="font-size:9px;color:var(--text3);display:block;">コップ</span></button>
+          <button onclick="addWater(200)"  class="btn btn-ghost btn-sm">+200mL</button>
+          <button onclick="addWater(350)"  class="btn btn-ghost btn-sm">+350mL<span style="font-size:9px;color:var(--text3);display:block;">缶</span></button>
+          <button onclick="addWater(500)"  class="btn btn-ghost btn-sm">+500mL<span style="font-size:9px;color:var(--text3);display:block;">ペットボトル</span></button>
+          <button onclick="addWaterCustom()" class="btn btn-ghost btn-sm">直接入力</button>
+        </div>
+        <div id="water-log-list" style="margin-top:10px;"></div>
+        <button onclick="resetTodayWater()" style="font-size:11px;color:var(--text3);background:none;border:none;cursor:pointer;margin-top:6px;">🗑 今日の記録をリセット</button>
       </div>
       <div class="ad-banner" id="ad-home"><div><div class="ad-label">広告</div><div class="ad-text">🏥 腎臓専門クリニック — 無料相談受付中</div></div><div class="ad-x" onclick="document.getElementById('ad-home').style.display='none'">✕</div></div>
     </div>
@@ -647,6 +673,25 @@ html, body {
               <div class="food-cat-chip" data-cat="soup" onclick="toggleFoodCat(this)">飲み物</div>
               <div class="food-cat-chip" data-cat="soup" onclick="toggleFoodCat(this)">果物</div>
               <div class="food-cat-chip" data-cat="soup" onclick="toggleFoodCat(this)">菓子・デザート</div>
+            </div>
+          </div>
+          <div class="food-cat-divider"></div>
+          <div class="food-cat-section">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;">
+              <div class="food-cat-label" style="margin-bottom:0;color:var(--accent);">💧 飲物類</div>
+              <div style="display:flex;gap:4px;">
+                <div class="portion-btn" data-group="drink" data-portion="none" onclick="selectGroupPortion(this)">なし</div>
+                <div class="portion-btn" data-group="drink" data-portion="small" onclick="selectGroupPortion(this)">少</div>
+                <div class="portion-btn active" data-group="drink" data-portion="normal" onclick="selectGroupPortion(this)">普通</div>
+                <div class="portion-btn" data-group="drink" data-portion="large" onclick="selectGroupPortion(this)">多</div>
+              </div>
+            </div>
+            <div class="chips" style="margin-bottom:0;">
+              <div class="food-cat-chip" data-cat="drink" onclick="toggleFoodCatAndSearch(this,'飲み物')">水・お茶</div>
+              <div class="food-cat-chip" data-cat="drink" onclick="toggleFoodCatAndSearch(this,'コーヒー')">コーヒー・紅茶</div>
+              <div class="food-cat-chip" data-cat="drink" onclick="toggleFoodCatAndSearch(this,'牛乳')">牛乳・豆乳</div>
+              <div class="food-cat-chip" data-cat="drink" onclick="toggleFoodCatAndSearch(this,'ジュース')">ジュース</div>
+              <div class="food-cat-chip" data-cat="drink" onclick="toggleFoodCatAndSearch(this,'飲料')">その他</div>
             </div>
           </div>
         </div>
@@ -847,11 +892,30 @@ html, body {
   <div class="modal" onclick="event.stopPropagation()" style="max-height:85vh;overflow-y:auto;">
     <div class="modal-handle"></div>
     <div class="modal-title">献立・食品を選ぶ</div>
-    <div class="search-bar" style="margin:12px 0;">
+    <div class="search-bar" style="margin:12px 0 8px;">
       <span>🔍</span>
-      <input type="text" id="foodSearchInput" placeholder="料理名で検索（例：ハンバーグ、鮭）..." oninput="searchFoodDB(this.value)" />
+      <input type="text" id="foodSearchInput" placeholder="食品名で検索（例：ご飯、鶏肉）..." oninput="searchFoodDB(this.value)" />
     </div>
-    <div id="foodSearchResults" style="max-height:350px;overflow-y:auto;"></div>
+    <!-- カテゴリータブ -->
+    <div id="foodCatTabs" style="display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:4px;scrollbar-width:none;">
+      <div class="food-tab active" onclick="setFoodTab(this,'all')">すべて</div>
+      <div class="food-tab" onclick="setFoodTab(this,'米類')">🍚 米類</div>
+      <div class="food-tab" onclick="setFoodTab(this,'パン類')">🍞 パン類</div>
+      <div class="food-tab" onclick="setFoodTab(this,'麺類')">🍜 麺類</div>
+      <div class="food-tab" onclick="setFoodTab(this,'肉類')">🥩 肉類</div>
+      <div class="food-tab" onclick="setFoodTab(this,'魚介類')">🐟 魚介類</div>
+      <div class="food-tab" onclick="setFoodTab(this,'卵・乳製品')">🥚 卵・乳製品</div>
+      <div class="food-tab" onclick="setFoodTab(this,'大豆類')">🫘 大豆類</div>
+      <div class="food-tab" onclick="setFoodTab(this,'野菜類')">🥦 野菜類</div>
+      <div class="food-tab" onclick="setFoodTab(this,'根菜・いも類')">🥕 根菜・いも類</div>
+      <div class="food-tab" onclick="setFoodTab(this,'飲み物')">🥤 飲み物</div>
+      <div class="food-tab" onclick="setFoodTab(this,'汁物')">🍵 汁物</div>
+      <div class="food-tab" onclick="setFoodTab(this,'果物')">🍊 果物</div>
+      <div class="food-tab" onclick="setFoodTab(this,'菓子・デザート')">🍮 デザート</div>
+      <div class="food-tab" onclick="setFoodTab(this,'外食')">🏪 外食</div>
+      <div class="food-tab" onclick="setFoodTab(this,'低タンパク献立')">💊 低タンパク</div>
+    </div>
+    <div id="foodSearchResults" style="max-height:320px;overflow-y:auto;"></div>
     <div style="padding:12px;border-top:1px solid var(--border);margin-top:4px;">
       <div style="font-size:12px;color:var(--text3);margin-bottom:8px;">探している料理が見つかりませんか？</div>
       <button class="btn btn-ghost btn-full" onclick="showFoodRequestForm()" style="font-size:13px;">📝 この料理の追加をリクエストする</button>
@@ -1047,6 +1111,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderMenuGrid();
     updateHomeSummary();
     updateHba1cCard();
+    updateWaterCard();
     showScreen('s-app');
     navTo('home');
   } else {
@@ -1256,7 +1321,7 @@ function cycleUserType() {
   showToast(mDesc[state.userType]+'に変更しました');
 }
 
-const FOOD_CAT_CLASS = { main:'sel-main', protein:'sel-protein', sub:'sel-sub', soup:'sel-soup' };
+const FOOD_CAT_CLASS = { main:'sel-main', protein:'sel-protein', sub:'sel-sub', soup:'sel-soup', drink:'sel-main' };
 const FOOD_CAT_NUTRITION = {
   '米類':{ kcal:252, protein:3.8, carb:55.0, fiber:0.3, potassium:29, phosphorus:34 },
   'パン類':{ kcal:210, protein:7.0, carb:40.0, fiber:2.0, potassium:86, phosphorus:67 },
@@ -1274,7 +1339,11 @@ const FOOD_CAT_NUTRITION = {
   '汁物':{ kcal:40, protein:2.5, carb:4.0, fiber:0.5, potassium:180, phosphorus:50 },
   '飲み物':{ kcal:50, protein:0.5, carb:10.0, fiber:0.0, potassium:80, phosphorus:20 },
   '果物':{ kcal:60, protein:0.5, carb:14.0, fiber:1.5, potassium:200, phosphorus:15 },
-  '菓子・デザート':{ kcal:180, protein:2.0, carb:30.0, fiber:0.5, potassium:60, phosphorus:45 },
+  '水・お茶':{ kcal:0, protein:0, carb:0, fiber:0, potassium:0, phosphorus:0 },
+  'コーヒー・紅茶':{ kcal:4, protein:0.2, carb:0.7, fiber:0, potassium:65, phosphorus:3 },
+  '牛乳・豆乳':{ kcal:67, protein:3.3, carb:4.8, fiber:0, potassium:150, phosphorus:95 },
+  'ジュース':{ kcal:45, protein:0.3, carb:10.5, fiber:0.3, potassium:120, phosphorus:12 },
+  'その他飲料':{ kcal:40, protein:0.2, carb:9.0, fiber:0, potassium:60, phosphorus:10 },
 };
 const PORTION_RATIO = { none:0.0, small:0.5, normal:1.0, large:1.5 };
 
@@ -1470,6 +1539,7 @@ function updateHomeSummary() {
     }
   }
   updateGlucoseGraph();
+  updateWaterCard();
 }
 
 function setPeriod(el, period) { document.querySelectorAll('.period-btn').forEach(b=>b.classList.remove('active')); el.classList.add('active'); }
@@ -1821,14 +1891,195 @@ const foodDatabase = [
   {name:'低塩チキングリル定食',cat:'低タンパク献立',cal:480,protein:28,carb:52.0,fiber:3.5,k:480,p:225},
 ];
 
-function showFoodSearchModal() {
-  const modal=document.getElementById('foodSearchModal');
+// ===== 水分記録 =====
+const WATER_KEY = 'renalcare_water';
+
+function getTodayWaterLog() {
+  try {
+    const all = JSON.parse(localStorage.getItem(WATER_KEY) || '[]');
+    const today = new Date().toDateString();
+    return all.filter(e => new Date(e.time).toDateString() === today);
+  } catch(e) { return []; }
+}
+
+function addWater(ml) {
+  try {
+    const all = JSON.parse(localStorage.getItem(WATER_KEY) || '[]');
+    all.push({ time: new Date().toISOString(), ml });
+    localStorage.setItem(WATER_KEY, JSON.stringify(all));
+  } catch(e) {}
+  updateWaterCard();
+  showToast(`💧 ${ml}mL 追加しました`);
+}
+
+function addWaterCustom() {
+  const ml = parseInt(prompt('水分量を入力してください（mL）', '200'));
+  if (!isNaN(ml) && ml > 0) addWater(ml);
+}
+
+function resetTodayWater() {
+  if (!confirm('今日の水分記録をリセットしますか？')) return;
+  try {
+    const all = JSON.parse(localStorage.getItem(WATER_KEY) || '[]');
+    const today = new Date().toDateString();
+    localStorage.setItem(WATER_KEY, JSON.stringify(all.filter(e => new Date(e.time).toDateString() !== today)));
+  } catch(e) {}
+  updateWaterCard();
+}
+
+function updateWaterCard() {
+  const log = getTodayWaterLog();
+  const total = log.reduce((s, e) => s + (e.ml || 0), 0);
+  const target = state.targets?.water || 1500;
+  const pct = Math.min(100, Math.round(total / target * 100));
+
+  const totalEl = document.getElementById('water-total');
+  const progEl = document.getElementById('prog-water');
+  const badgeEl = document.getElementById('water-badge');
+  const targetEl = document.getElementById('water-target-label');
+  const logListEl = document.getElementById('water-log-list');
+
+  if (totalEl) totalEl.textContent = total.toLocaleString();
+  if (progEl) progEl.style.width = pct + '%';
+  if (targetEl) targetEl.textContent = target.toLocaleString();
+  if (badgeEl) {
+    if (pct >= 100) { badgeEl.style.display='inline-flex'; badgeEl.textContent='✓ 目標達成'; badgeEl.style.background='var(--green-dim)'; badgeEl.style.color='var(--green)'; badgeEl.style.border='1px solid var(--green)'; }
+    else if (pct >= 80) { badgeEl.style.display='inline-flex'; badgeEl.textContent='もう少し！'; badgeEl.style.background='var(--amber-dim)'; badgeEl.style.color='var(--amber)'; badgeEl.style.border='1px solid var(--amber)'; }
+    else badgeEl.style.display = 'none';
+  }
+  if (logListEl) {
+    if (log.length === 0) { logListEl.innerHTML = ''; return; }
+    logListEl.innerHTML = '<div style="font-size:11px;color:var(--text3);margin-bottom:4px;">今日の記録</div>' +
+      log.slice().reverse().slice(0,5).map(e => {
+        const t = new Date(e.time);
+        return `<div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0;border-bottom:1px solid var(--border);color:var(--text2);">
+          <span>${t.getHours()}:${String(t.getMinutes()).padStart(2,'0')}</span>
+          <span style="color:var(--accent);font-weight:600;">+${e.ml}mL</span>
+        </div>`;
+      }).join('');
+  }
+}
+
+// ===== 食品検索カテゴリータブ =====
+let _currentFoodTab = 'all';
+
+function setFoodTab(el, cat) {
+  document.querySelectorAll('.food-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  _currentFoodTab = cat;
+  const input = document.getElementById('foodSearchInput');
+  searchFoodDB(input ? input.value : '');
+}
+
+function showFoodSearchModal(defaultTab) {
+  const modal = document.getElementById('foodSearchModal');
   if (modal) modal.classList.add('open');
-  const input=document.getElementById('foodSearchInput');
-  if (input) { input.value=''; input.focus(); }
+  // デフォルトタブリセット
+  _currentFoodTab = defaultTab || 'all';
+  document.querySelectorAll('.food-tab').forEach(t => {
+    const isActive = (t.textContent.includes(defaultTab) || (!defaultTab && t.textContent === 'すべて'));
+    t.classList.toggle('active', !!isActive);
+  });
+  if (!defaultTab) document.querySelector('.food-tab')?.classList.add('active');
+  const input = document.getElementById('foodSearchInput');
+  if (input) { input.value = ''; }
   searchFoodDB('');
 }
 
+// 第二カテゴリーチップから検索を開く
+function toggleFoodCatAndSearch(el, searchWord) {
+  toggleFoodCat(el);
+  // 食品検索モーダルを開いて該当カテゴリーで検索
+  showFoodSearchModal();
+  const input = document.getElementById('foodSearchInput');
+  if (input) { input.value = searchWord; }
+  searchFoodDB(searchWord);
+}
+
+async function searchFoodDB(query) {
+  const results = document.getElementById('foodSearchResults');
+  if (!results) return;
+  const q = query.trim();
+
+  // ローカルDBを優先（nutrition_data.jsonが存在しないため）
+  let foods = foodDatabase;
+
+  // カテゴリータブでフィルタ
+  if (_currentFoodTab && _currentFoodTab !== 'all') {
+    // タブ名とfoodDatabase.catを対応
+    const tabCatMap = {
+      '米類':['主食'], 'パン類':['主食'], '麺類':['主食'],
+      '肉類':['肉類'], '魚介類':['魚介類'], '卵・乳製品':['卵','乳製品'],
+      '大豆類':['豆腐・大豆'], '野菜類':['野菜'], '根菜・いも類':['野菜'],
+      '飲み物':['乳製品','外食'], '汁物':['外食'], '果物':['野菜'],
+      '菓子・デザート':['外食'], '外食':['外食'], '低タンパク献立':['低タンパク献立']
+    };
+    const cats = tabCatMap[_currentFoodTab];
+    if (cats) foods = foods.filter(f => cats.includes(f.cat));
+    // 名前でも絞り込み
+    if (_currentFoodTab === '米類') foods = foods.filter(f => f.name.includes('飯') || f.name.includes('粥') || f.name.includes('米') || f.name.includes('ご飯'));
+    if (_currentFoodTab === 'パン類') foods = foods.filter(f => f.name.includes('パン') || f.name.includes('食パン'));
+    if (_currentFoodTab === '麺類') foods = foods.filter(f => f.name.includes('うどん')||f.name.includes('そうめん')||f.name.includes('スパゲッティ')||f.name.includes('麺'));
+    if (_currentFoodTab === '飲み物') foods = foodDatabase.filter(f => f.name.includes('牛乳')||f.name.includes('飲'));
+    if (_currentFoodTab === '果物') foods = [];
+  }
+
+  // キーワード検索
+  if (q) foods = foodDatabase.filter(f => f.name.includes(q) || f.cat.includes(q));
+
+  // nutrition_data.jsonが利用可能なら追加検索
+  try {
+    const db = await loadNutritionDB();
+    if (db && db.length > 0) {
+      let dbFoods = db;
+      if (q) dbFoods = db.filter(f => f.name.toLowerCase().includes(q.toLowerCase()));
+      else if (_currentFoodTab !== 'all') dbFoods = db.filter(f => (f.cat||'').includes(_currentFoodTab));
+      if (dbFoods.length > 0) {
+        const mapped = dbFoods.slice(0, 40).map(f => ({
+          name: f.name, cat: f.cat || 'その他',
+          cal: f.servings[1]?.kcal || f.servings[0]?.kcal || 0,
+          protein: f.servings[1]?.protein || f.servings[0]?.protein || 0,
+          carb: f.servings[1]?.carb || f.servings[0]?.carb || 0,
+          fiber: f.servings[1]?.fiber || f.servings[0]?.fiber || 0,
+          k: f.servings[1]?.k || f.servings[0]?.k || 0,
+          p: f.servings[1]?.p || f.servings[0]?.p || 0,
+          unit: f.servings[1]?.label || f.servings[0]?.label || '',
+        }));
+        renderFoodResults(mapped);
+        return;
+      }
+    }
+  } catch(e) {}
+
+  renderFoodResults(foods.slice(0, 40));
+}
+
+function renderFoodResults(foods) {
+  const results = document.getElementById('foodSearchResults');
+  if (!results) return;
+  if (foods.length === 0) {
+    results.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text3);">見つかりませんでした<br><span style="font-size:11px;">別のカテゴリーまたはキーワードで検索してください</span></div>';
+    return;
+  }
+  // カテゴリーでグループ化
+  const grouped = {};
+  foods.forEach(f => {
+    const cat = f.cat || 'その他';
+    if (!grouped[cat]) grouped[cat] = [];
+    grouped[cat].push(f);
+  });
+  results.innerHTML = Object.entries(grouped).map(([cat, items]) => `
+    <div style="padding:6px 12px;background:var(--surface2);font-size:11px;font-weight:700;color:var(--accent);letter-spacing:.05em;position:sticky;top:0;">${cat}</div>
+    ${items.map(f => `<div onclick='selectFood(${JSON.stringify({name:f.name,cal:f.cal||0,protein:f.protein||0,carb:f.carb||0,fiber:f.fiber||0,k:f.k||0,p:f.p||0}).replace(/'/g,"&#39;")})'
+      style="padding:11px 12px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;align-items:center;active:background:var(--surface2);">
+      <div>
+        <div style="font-size:14px;font-weight:600;">${f.name}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px;">${f.unit||''}　${f.cal||0}kcal・P${f.protein||0}g・K${f.k||0}mg・リン${f.p||0}mg</div>
+      </div>
+      <div style="color:var(--accent);font-size:20px;padding-left:8px;flex-shrink:0;">＋</div>
+    </div>`).join('')}
+  `).join('');
+}
 function showFoodRequestForm() {
   const input=document.getElementById('foodSearchInput');
   const requestInput=document.getElementById('requestFoodName');
