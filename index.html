@@ -507,6 +507,35 @@ html, body {
         </svg>
         <div style="font-size:11px;color:var(--text3);margin-top:6px;" id="home-glucose-mode">💉 糖尿病モードで計算中（GI値考慮）</div>
       </div>
+      <!-- HbA1c推算カード -->
+      <div class="card" id="hba1c-card" style="border-color:rgba(192,132,252,0.3);">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+          <div class="card-title" style="margin-bottom:0;">推算 HbA1c</div>
+          <div style="font-size:10px;color:var(--text3);cursor:pointer;" onclick="showHba1cInfo()">ℹ️ 計算方法</div>
+        </div>
+        <div style="display:flex;align-items:baseline;gap:10px;margin:8px 0;">
+          <div id="hba1c-val" style="font-family:'JetBrains Mono',monospace;font-size:42px;font-weight:700;color:var(--purple);line-height:1;">—</div>
+          <div style="font-size:14px;color:var(--text2);">%</div>
+          <div id="hba1c-badge" style="font-size:11px;padding:4px 10px;border-radius:20px;font-weight:600;display:none;"></div>
+        </div>
+        <div id="hba1c-avg-label" style="font-size:12px;color:var(--text3);margin-bottom:10px;">食事記録が蓄積されると計算されます（目安：3日〜）</div>
+        <!-- 30日間トレンドバー -->
+        <div id="hba1c-trend-wrap" style="display:none;">
+          <div style="font-size:11px;color:var(--text3);margin-bottom:6px;">過去30日間の推移</div>
+          <div id="hba1c-trend-chart" style="height:36px;display:flex;align-items:flex-end;gap:2px;"></div>
+          <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text3);margin-top:3px;"><span>30日前</span><span>今日</span></div>
+        </div>
+        <div style="background:var(--surface2);border-radius:8px;padding:10px;margin-top:10px;">
+          <div style="font-size:10px;color:var(--text3);margin-bottom:6px;">HbA1c 目安</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <span style="font-size:11px;padding:3px 8px;border-radius:12px;background:var(--green-dim);color:var(--green);border:1px solid var(--green);">✓ 正常 〜5.5%</span>
+            <span style="font-size:11px;padding:3px 8px;border-radius:12px;background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber);">注意 5.6〜6.4%</span>
+            <span style="font-size:11px;padding:3px 8px;border-radius:12px;background:var(--red-dim);color:var(--red);border:1px solid var(--red);">⚠ 糖尿病域 6.5%〜</span>
+          </div>
+        </div>
+        <div style="font-size:10px;color:var(--text3);margin-top:8px;line-height:1.6;">※ Nathan式（国際標準）による概算値です。実際の血液検査とは差異があります。医師の検査結果と必ず照合してください。</div>
+      </div>
+
       <div class="card">
         <div class="card-title">今日の食事</div>
         <div id="home-meals">
@@ -1009,6 +1038,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updateHomeDate();
     renderMenuGrid();
     updateHomeSummary();
+    updateHba1cCard();
     showScreen('s-app');
     navTo('home');
   } else {
@@ -1303,11 +1333,18 @@ function resetRecord() {
 
 async function saveMeal() {
   const now = new Date();
+  const carb = parseFloat(document.getElementById('record-carb')?.value)||0;
+  const fiber = parseFloat(document.getElementById('record-fiber')?.value)||0;
+  const sugar = Math.max(0, carb - fiber);
+  const fMap = {normal:1, t2d:3, t1d:5};
+  const rise = Math.round(sugar * (fMap[state.userType]||1));
+  if (rise > 0) saveGlucoseLog(rise);
+
   const meal = { id:'meal_'+now.getTime()+'_'+Math.random().toString(36).substr(2,5), user_id:getUserId(), dish_name:document.getElementById('record-name')?.value.trim()||'記録', calories:parseFloat(document.getElementById('record-calories')?.value)||0, protein:parseFloat(document.getElementById('record-protein')?.value)||0, carb:parseFloat(document.getElementById('record-carb')?.value)||0, fiber:parseFloat(document.getElementById('record-fiber')?.value)||0, potassium:parseFloat(document.getElementById('record-potassium')?.value)||0, phosphorus:parseFloat(document.getElementById('record-phosphorus')?.value)||0, meal_type:document.getElementById('record-meal-type')?.value||'breakfast', food_categories:getSelectedFoodCats(), photo_base64:window._currentPhotoBase64?window._currentPhotoBase64.substring(0,50000):null, recorded_at:now.toISOString() };
   localSaveMeal(meal);
   dbSaveMeal(meal).catch(()=>{});
   showToast('✅ 食事を記録しました');
-  resetRecord(); navTo('home'); updateHomeSummary();
+  resetRecord(); navTo('home'); updateHomeSummary(); updateHba1cCard();
 }
 
 function localSaveMeal(meal) { try { const key='renalcare_meals'; const existing=JSON.parse(localStorage.getItem(key)||'[]'); existing.unshift(meal); if (existing.length>500) existing.splice(500); localStorage.setItem(key, JSON.stringify(existing)); } catch(e) {} }
@@ -1407,7 +1444,123 @@ function recalcGlucose() {
   if (glucoseEl) { const div=glucoseEl.querySelector('div:not(.alert-title)'); if (div) div.innerHTML=`糖質${sugar}g → <strong>推定 +${rise} mg/dL</strong>（${lMap[state.userType]||lMap.normal}）`; }
 }
 
-// ===== 食品データベース =====
+// ===== HbA1c 推算 =====
+// Nathan式: HbA1c(%) = (平均血糖値mg/dL + 46.7) / 28.7
+// 参考: Nathan DM et al. Diabetes Care 2008
+
+const HBA1C_KEY = 'renalcare_glucose_log';
+
+function saveGlucoseLog(estimatedRise) {
+  // 食後血糖上昇値を空腹時血糖(推定100mg/dL)に加算して保存
+  const fastingBase = 100;
+  const postprandial = fastingBase + estimatedRise;
+  try {
+    const log = JSON.parse(localStorage.getItem(HBA1C_KEY) || '[]');
+    log.push({ date: new Date().toISOString(), glucose: postprandial, rise: estimatedRise });
+    // 90日分のみ保持
+    const cutoff = new Date(Date.now() - 90 * 86400000).toISOString();
+    const filtered = log.filter(e => e.date >= cutoff);
+    localStorage.setItem(HBA1C_KEY, JSON.stringify(filtered));
+  } catch(e) {}
+}
+
+function calcHba1c() {
+  try {
+    const log = JSON.parse(localStorage.getItem(HBA1C_KEY) || '[]');
+    if (log.length < 3) return null;
+    // 30日以内のデータで計算
+    const cutoff = new Date(Date.now() - 30 * 86400000).toISOString();
+    const recent = log.filter(e => e.date >= cutoff);
+    if (recent.length < 3) return null;
+    const avgGlucose = recent.reduce((s, e) => s + e.glucose, 0) / recent.length;
+    const hba1c = (avgGlucose + 46.7) / 28.7;
+    return Math.round(hba1c * 10) / 10;
+  } catch(e) { return null; }
+}
+
+function getHba1cTrend() {
+  // 過去30日を週ごとに集計して返す（最大30点）
+  try {
+    const log = JSON.parse(localStorage.getItem(HBA1C_KEY) || '[]');
+    const cutoff = new Date(Date.now() - 30 * 86400000).getTime();
+    const recent = log.filter(e => new Date(e.date).getTime() >= cutoff);
+    if (recent.length < 2) return [];
+    // 日ごとに平均を計算
+    const byDay = {};
+    recent.forEach(e => {
+      const day = e.date.slice(0, 10);
+      if (!byDay[day]) byDay[day] = [];
+      byDay[day].push(e.glucose);
+    });
+    return Object.entries(byDay).sort(([a],[b])=>a.localeCompare(b)).map(([day, vals]) => {
+      const avg = vals.reduce((s,v)=>s+v,0)/vals.length;
+      return Math.round((avg + 46.7) / 28.7 * 10) / 10;
+    });
+  } catch(e) { return []; }
+}
+
+function updateHba1cCard() {
+  const hba1c = calcHba1c();
+  const valEl = document.getElementById('hba1c-val');
+  const badgeEl = document.getElementById('hba1c-badge');
+  const labelEl = document.getElementById('hba1c-avg-label');
+  const trendWrap = document.getElementById('hba1c-trend-wrap');
+  const trendChart = document.getElementById('hba1c-trend-chart');
+  if (!valEl) return;
+
+  if (hba1c === null) {
+    valEl.textContent = '—';
+    if (badgeEl) { badgeEl.style.display='none'; }
+    return;
+  }
+
+  valEl.textContent = hba1c.toFixed(1);
+
+  // バッジ色と評価
+  let badgeClass, badgeText, color;
+  if (hba1c < 5.6) {
+    badgeText='正常範囲'; color='var(--green)';
+    badgeEl.style.background='var(--green-dim)'; badgeEl.style.border='1px solid var(--green)';
+  } else if (hba1c < 6.5) {
+    badgeText='境界域・注意'; color='var(--amber)';
+    badgeEl.style.background='var(--amber-dim)'; badgeEl.style.border='1px solid var(--amber)';
+  } else {
+    badgeText='糖尿病域⚠'; color='var(--red)';
+    badgeEl.style.background='var(--red-dim)'; badgeEl.style.border='1px solid var(--red)';
+  }
+  valEl.style.color = color;
+  if (badgeEl) { badgeEl.style.display='inline-flex'; badgeEl.textContent=badgeText; badgeEl.style.color=color; }
+
+  // 平均血糖値も表示
+  try {
+    const log = JSON.parse(localStorage.getItem(HBA1C_KEY)||'[]');
+    const cutoff = new Date(Date.now()-30*86400000).toISOString();
+    const recent = log.filter(e=>e.date>=cutoff);
+    const avg = Math.round(recent.reduce((s,e)=>s+e.glucose,0)/recent.length);
+    if (labelEl) labelEl.textContent = `30日平均血糖値 約${avg} mg/dL（${recent.length}件の食事記録から算出）`;
+  } catch(e) {}
+
+  // トレンドチャート
+  const trend = getHba1cTrend();
+  if (trend.length >= 2 && trendWrap && trendChart) {
+    trendWrap.style.display = 'block';
+    const max = Math.max(...trend, 7);
+    const min = Math.min(...trend, 5);
+    const range = max - min || 1;
+    trendChart.innerHTML = trend.map(v => {
+      const pct = Math.round(((v - min) / range) * 100);
+      const h = Math.max(4, Math.round(pct * 0.32) + 4);
+      const c = v < 5.6 ? 'var(--green)' : v < 6.5 ? 'var(--amber)' : 'var(--red)';
+      return `<div style="flex:1;height:${h}px;background:${c};border-radius:2px 2px 0 0;opacity:0.8;" title="${v}%"></div>`;
+    }).join('');
+  }
+}
+
+function showHba1cInfo() {
+  showToast('Nathan式: HbA1c = (平均血糖値 + 46.7) ÷ 28.7');
+}
+
+
 const foodDatabase = [
   {name:'白飯（150g）',cat:'主食',cal:252,protein:3.8,carb:55.7,fiber:0.5,k:44,p:51},
   {name:'低タンパクご飯（150g）',cat:'主食',cal:231,protein:0.5,carb:53.9,fiber:0.2,k:15,p:15},
