@@ -176,12 +176,6 @@ html, body {
 .gb-warn { background: var(--amber-dim); color: var(--amber); border: 1px solid var(--amber); }
 .gb-high { background: var(--red-dim); color: var(--red); border: 1px solid var(--red); }
 
-.camera-zone { border: 2px dashed var(--border2); border-radius: var(--r); padding: 40px 24px; text-align: center; background: var(--surface2); cursor: pointer; transition: all 0.3s; margin-bottom: 16px; position: relative; overflow: hidden; }
-.camera-zone:hover, .camera-zone.active-drop { border-color: var(--accent); background: var(--accent-glow); }
-.camera-icon { font-size: 52px; display: block; margin-bottom: 12px; }
-.camera-text { font-size: 15px; color: var(--text2); }
-.camera-sub { font-size: 12px; color: var(--text3); margin-top: 6px; }
-
 .ai-result { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--r); padding: 16px; margin-bottom: 12px; animation: slideUp 0.4s ease; }
 @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
@@ -458,7 +452,7 @@ html, body {
     <div class="page active" id="page-home">
       <div class="page-title-row">
         <div><div class="page-title">今日の記録</div><div class="page-sub" id="home-date">読み込み中...</div></div>
-        <button class="btn btn-primary btn-sm" onclick="navTo('record')">📸 記録する</button>
+        <button class="btn btn-primary btn-sm" onclick="navTo('record')">✏️ 記録する</button>
       </div>
       <div class="metrics-row stagger" id="home-metrics">
         <div class="metric-card m-green">
@@ -591,13 +585,7 @@ html, body {
 
     <!-- RECORD -->
     <div class="page" id="page-record">
-      <div class="page-title-row"><div><div class="page-title">食事を記録</div><div class="page-sub">写真＋手動入力で記録</div></div></div>
-      <div class="camera-zone" id="cameraZone" style="position:relative;">
-        <span class="camera-icon" id="cameraIcon">📸</span>
-        <div class="camera-text" id="cameraText">タップして写真を選択</div>
-        <div class="camera-sub" id="cameraSub">カメラまたはアルバムから選べます</div>
-        <input type="file" accept="image/*" id="fileInput" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;" onchange="handleFileSelect(event)">
-      </div>
+      <div class="page-title-row"><div><div class="page-title">食事を記録</div><div class="page-sub">食事内容を入力して記録</div></div></div>
       <div class="card">
         <div class="card-title">食事の内容</div>
         <div class="form-row"><label class="form-label">料理名・メモ</label><input class="form-input" type="text" id="record-name" placeholder="例：朝食・鮭定食" /></div>
@@ -845,7 +833,7 @@ html, body {
   </div>
   <div class="bottom-nav">
     <div class="nav-btn active" id="nav-home" onclick="navTo('home')"><div class="nav-icon">🏠</div><div class="nav-label">ホーム</div></div>
-    <div class="nav-btn" id="nav-record" onclick="navTo('record')"><div class="nav-icon">📸</div><div class="nav-label">記録</div></div>
+    <div class="nav-btn" id="nav-record" onclick="navTo('record')"><div class="nav-icon">✏️</div><div class="nav-label">記録</div></div>
     <div class="nav-btn" id="nav-menu" onclick="navTo('menu')"><div class="nav-icon">🍽️</div><div class="nav-label">献立</div></div>
     <div class="nav-btn" id="nav-history" onclick="navTo('history')"><div class="nav-icon">📊</div><div class="nav-label">履歴</div></div>
     <div class="nav-btn" id="nav-settings" onclick="navTo('settings')"><div class="nav-icon">⚙️</div><div class="nav-label">設定</div></div>
@@ -1398,8 +1386,6 @@ function resetFoodCats() { document.querySelectorAll('.food-cat-chip').forEach(c
 
 function resetRecord() {
   window._currentPhotoBase64 = null;
-  const zone = document.getElementById('cameraZone');
-  if (zone) { zone.innerHTML = `<span class="camera-icon">📸</span><div class="camera-text">タップして写真を選択</div><div class="camera-sub">カメラまたはアルバムから選べます</div><input type="file" accept="image/*" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;" onchange="handleFileSelect(event)">`; zone.style.padding=''; zone.style.overflow=''; }
   ['record-name','record-calories','record-protein','record-carb','record-fiber','record-potassium','record-phosphorus'].forEach(id => { const el = document.getElementById(id); if (el) el.value=''; });
   const glucoseEl = document.getElementById('ai-glucose-result');
   if (glucoseEl) { const div = glucoseEl.querySelector('div:not(.alert-title)'); if (div) div.textContent='炭水化物と食物繊維を入力すると自動計算されます'; }
@@ -1431,7 +1417,6 @@ async function saveMeal() {
     phosphorus: parseFloat(document.getElementById('record-phosphorus')?.value)||0,
     meal_type: document.getElementById('record-meal-type')?.value||'breakfast',
     food_categories: getSelectedFoodCats(),
-    photo_base64: window._currentPhotoBase64 ? window._currentPhotoBase64.substring(0,50000) : null,
     recorded_at: now.toISOString()
   };
   const saved = localSaveMeal(meal);
@@ -1579,18 +1564,6 @@ function navTo(page) {
   const nb=document.getElementById('nav-'+page);
   if (nb) nb.classList.add('active');
   if (page==='history') renderHistory();
-}
-function handleFileSelect(e) {
-  const file=e.target.files[0]; if (!file) return;
-  const zone=document.getElementById('cameraZone');
-  const reader=new FileReader();
-  reader.onload=(ev)=>{
-    zone.innerHTML=`<img src="${ev.target.result}" style="width:100%;height:100%;object-fit:cover;border-radius:var(--r);"><div style="position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,0.6);color:#fff;font-size:11px;padding:4px 8px;border-radius:6px;">タップで変更</div><input type="file" accept="image/*" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;" onchange="handleFileSelect(event)">`;
-    zone.style.padding='0'; zone.style.overflow='hidden';
-    window._currentPhotoBase64=ev.target.result;
-  };
-  reader.readAsDataURL(file);
-  setTimeout(()=>{e.target.value='';},100);
 }
 // ===== 動的血糖値グラフ =====
 // 糖尿病タイプ別の食後血糖カーブパラメータ
@@ -2270,14 +2243,6 @@ function showMenuDetail(name) {
 }
 
 function showToast(msg) { const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500); }
-
-const zone=document.getElementById('cameraZone');
-if (zone) {
-  zone.addEventListener('dragover',e=>{e.preventDefault();zone.classList.add('active-drop');});
-  zone.addEventListener('dragleave',()=>zone.classList.remove('active-drop'));
-  zone.addEventListener('drop',e=>{e.preventDefault();zone.classList.remove('active-drop');const file=e.dataTransfer.files[0];if(file)handleFileSelect({target:{files:[file]}});});
-}
-
 
 // ============================================================
 // 栄養成分DB（nutrition_data.jsonがなければローカルDBを使用）
