@@ -1824,44 +1824,141 @@ function showHba1cInfo() {
 
 
 const foodDatabase = [
-  {name:'白飯（150g）',cat:'主食',cal:252,protein:3.8,carb:55.7,fiber:0.5,k:44,p:51},
-  {name:'低タンパクご飯（150g）',cat:'主食',cal:231,protein:0.5,carb:53.9,fiber:0.2,k:15,p:15},
-  {name:'食パン（60g・1枚）',cat:'主食',cal:158,protein:5.3,carb:28.3,fiber:1.4,k:57,p:52},
-  {name:'うどん・茹で（200g）',cat:'主食',cal:210,protein:5.2,carb:43.2,fiber:1.6,k:14,p:34},
-  {name:'そうめん（200g）',cat:'主食',cal:300,protein:7.0,carb:60.0,fiber:1.5,k:30,p:75},
-  {name:'スパゲッティ・茹で（200g）',cat:'主食',cal:298,protein:10.4,carb:57.0,fiber:3.0,k:40,p:120},
-  {name:'鶏むね肉・皮なし（100g）',cat:'肉類',cal:105,protein:23.3,carb:0,fiber:0,k:340,p:220},
-  {name:'鶏もも肉・皮なし（100g）',cat:'肉類',cal:127,protein:19.0,carb:0,fiber:0,k:290,p:190},
-  {name:'豚ロース（100g）',cat:'肉類',cal:263,protein:19.3,carb:0.2,fiber:0,k:310,p:180},
-  {name:'牛もも肉（100g）',cat:'肉類',cal:193,protein:21.9,carb:0.5,fiber:0,k:350,p:190},
-  {name:'鮭・塩焼き（80g）',cat:'魚介類',cal:148,protein:20.2,carb:0.1,fiber:0,k:296,p:216},
-  {name:'鯖・塩焼き（80g）',cat:'魚介類',cal:213,protein:17.8,carb:0.3,fiber:0,k:264,p:184},
-  {name:'鯛・塩焼き（80g）',cat:'魚介類',cal:121,protein:17.4,carb:0.1,fiber:0,k:312,p:168},
-  {name:'マグロ・刺身（60g）',cat:'魚介類',cal:67,protein:15.8,carb:0.1,fiber:0,k:222,p:174},
-  {name:'かまぼこ（30g）',cat:'魚介類',cal:28,protein:3.8,carb:2.7,fiber:0,k:87,p:48},
-  {name:'絹ごし豆腐（150g）',cat:'豆腐・大豆',cal:80,protein:7.4,carb:2.4,fiber:0.3,k:225,p:105},
-  {name:'木綿豆腐（150g）',cat:'豆腐・大豆',cal:108,protein:10.5,carb:1.8,fiber:0.5,k:210,p:135},
-  {name:'納豆（50g）',cat:'豆腐・大豆',cal:100,protein:8.3,carb:6.1,fiber:3.4,k:330,p:190},
-  {name:'卵（1個・50g）',cat:'卵',cal:76,protein:6.2,carb:0.2,fiber:0,k:65,p:100},
-  {name:'卵（2個・100g）',cat:'卵',cal:151,protein:12.3,carb:0.3,fiber:0,k:130,p:200},
-  {name:'キャベツ・茹で（80g）',cat:'野菜',cal:17,protein:0.8,carb:3.1,fiber:1.4,k:78,p:22},
-  {name:'大根・茹で（80g）',cat:'野菜',cal:14,protein:0.5,carb:2.6,fiber:1.0,k:152,p:18},
-  {name:'ほうれん草・茹で（60g）',cat:'野菜',cal:14,protein:1.7,carb:1.1,fiber:1.7,k:276,p:36},
-  {name:'トマト（100g）',cat:'野菜',cal:19,protein:0.7,carb:3.7,fiber:1.0,k:210,p:26},
-  {name:'きゅうり（50g）',cat:'野菜',cal:7,protein:0.5,carb:1.2,fiber:0.3,k:100,p:18},
-  {name:'ブロッコリー・茹で（60g）',cat:'野菜',cal:23,protein:3.0,carb:2.2,fiber:3.0,k:192,p:66},
-  {name:'牛乳（200ml）',cat:'乳製品',cal:134,protein:6.6,carb:9.6,fiber:0,k:300,p:190},
-  {name:'おにぎり・鮭（1個）',cat:'外食',cal:178,protein:5.5,carb:34.0,fiber:0.6,k:95,p:80},
-  {name:'カレーライス（1人前）',cat:'外食',cal:578,protein:16.5,carb:92.0,fiber:4.2,k:620,p:285},
-  {name:'ラーメン・醤油（1杯）',cat:'外食',cal:472,protein:18.5,carb:68.0,fiber:2.8,k:380,p:210},
-  {name:'ハンバーガー（1個）',cat:'外食',cal:295,protein:13.5,carb:32.5,fiber:1.5,k:220,p:185},
-  {name:'寿司・サーモン（1貫）',cat:'外食',cal:55,protein:4.2,carb:8.5,fiber:0.1,k:60,p:48},
-  {name:'低タンパク粥・梅干し添え',cat:'低タンパク献立',cal:260,protein:4,carb:54.0,fiber:1.5,k:180,p:80},
-  {name:'鮭の低塩焼き定食',cat:'低タンパク献立',cal:480,protein:22,carb:58.0,fiber:2.0,k:520,p:210},
-  {name:'低タンパクうどん定食',cat:'低タンパク献立',cal:340,protein:6,carb:68.0,fiber:2.5,k:210,p:90},
-  {name:'湯豆腐・低塩ポン酢',cat:'低タンパク献立',cal:200,protein:10,carb:6.0,fiber:1.5,k:200,p:110},
-  {name:'豆腐ハンバーグ定食',cat:'低タンパク献立',cal:380,protein:18,carb:42.0,fiber:3.0,k:380,p:160},
-  {name:'低塩チキングリル定食',cat:'低タンパク献立',cal:480,protein:28,carb:52.0,fiber:3.5,k:480,p:225},
+  // ===== 主食：米類 =====
+  {name:'白飯（茶碗1杯・150g）',       cat:'米類', cal:252,protein:3.8,carb:55.7,fiber:0.5,k:44, p:51 },
+  {name:'白飯（大盛り・220g）',         cat:'米類', cal:370,protein:5.6,carb:81.6,fiber:0.7,k:64, p:75 },
+  {name:'玄米ご飯（茶碗1杯・150g）',   cat:'米類', cal:248,protein:4.2,carb:51.3,fiber:2.1,k:95, p:130},
+  {name:'低タンパクご飯（150g）',       cat:'米類', cal:231,protein:0.5,carb:53.9,fiber:0.2,k:15, p:15 },
+  {name:'お粥（茶碗1杯・220g）',        cat:'米類', cal:156,protein:2.3,carb:34.3,fiber:0.2,k:33, p:31 },
+  {name:'おにぎり・梅（1個・100g）',    cat:'米類', cal:170,protein:2.7,carb:37.5,fiber:0.3,k:30, p:35 },
+  {name:'おにぎり・鮭（1個・100g）',    cat:'米類', cal:178,protein:5.5,carb:34.0,fiber:0.3,k:70, p:60 },
+
+  // ===== 主食：パン類 =====
+  {name:'食パン（1枚・60g）',           cat:'パン類', cal:158,protein:5.3,carb:28.3,fiber:1.4,k:57, p:52 },
+  {name:'食パン（2枚・120g）',          cat:'パン類', cal:316,protein:10.6,carb:56.6,fiber:2.8,k:114,p:104},
+  {name:'ロールパン（1個・30g）',       cat:'パン類', cal:95, protein:3.0,carb:16.4,fiber:0.6,k:35, p:34 },
+  {name:'低タンパクパン（1枚・60g）',   cat:'パン類', cal:145,protein:0.5,carb:33.0,fiber:0.5,k:10, p:10 },
+  {name:'フランスパン（2切れ・60g）',   cat:'パン類', cal:166,protein:5.8,carb:32.4,fiber:1.4,k:48, p:50 },
+
+  // ===== 主食：麺類 =====
+  {name:'うどん・茹で（1玉・200g）',    cat:'麺類', cal:210,protein:5.2,carb:43.2,fiber:1.6,k:14, p:34 },
+  {name:'そば・茹で（1玉・180g）',      cat:'麺類', cal:234,protein:8.6,carb:43.2,fiber:3.1,k:54, p:130},
+  {name:'そうめん・茹で（1人前・180g）',cat:'麺類', cal:252,protein:6.3,carb:52.2,fiber:1.3,k:27, p:68 },
+  {name:'ラーメン・茹で（1玉・200g）',  cat:'麺類', cal:264,protein:8.8,carb:51.6,fiber:2.2,k:46, p:88 },
+  {name:'スパゲッティ・茹で（1人前・200g）',cat:'麺類',cal:298,protein:10.4,carb:57.0,fiber:3.0,k:40,p:120},
+  {name:'低タンパクうどん（1玉・200g）',cat:'麺類', cal:190,protein:0.4,carb:46.0,fiber:0.4,k:10, p:10 },
+
+  // ===== 肉類 =====
+  {name:'鶏むね肉・焼き（100g）',       cat:'肉類', cal:116,protein:24.4,carb:0,  fiber:0,k:340,p:220},
+  {name:'鶏もも肉・焼き（100g）',       cat:'肉類', cal:151,protein:20.9,carb:0,  fiber:0,k:320,p:200},
+  {name:'鶏ささみ・茹で（100g）',       cat:'肉類', cal:107,protein:24.6,carb:0,  fiber:0,k:370,p:240},
+  {name:'豚ロース・焼き（100g）',       cat:'肉類', cal:263,protein:19.3,carb:0.2,fiber:0,k:310,p:180},
+  {name:'豚ひき肉・炒め（100g）',       cat:'肉類', cal:236,protein:17.7,carb:0,  fiber:0,k:280,p:160},
+  {name:'牛もも肉・焼き（100g）',       cat:'肉類', cal:193,protein:21.9,carb:0.5,fiber:0,k:350,p:190},
+  {name:'牛ひき肉・炒め（100g）',       cat:'肉類', cal:272,protein:17.1,carb:0.5,fiber:0,k:290,p:160},
+  {name:'ハム（2枚・40g）',             cat:'肉類', cal:81, protein:7.4,carb:1.2, fiber:0,k:104,p:80 },
+  {name:'ベーコン（2枚・30g）',         cat:'肉類', cal:121,protein:6.2,carb:0.5, fiber:0,k:78, p:72 },
+
+  // ===== 魚介類 =====
+  {name:'鮭・塩焼き（1切れ・80g）',     cat:'魚介類', cal:148,protein:20.2,carb:0.1,fiber:0,k:296,p:216},
+  {name:'鯖・塩焼き（1切れ・80g）',     cat:'魚介類', cal:213,protein:17.8,carb:0.3,fiber:0,k:264,p:184},
+  {name:'鯛・塩焼き（1切れ・80g）',     cat:'魚介類', cal:121,protein:17.4,carb:0.1,fiber:0,k:312,p:168},
+  {name:'ぶり・照り焼き（1切れ・80g）', cat:'魚介類', cal:208,protein:17.3,carb:5.0,fiber:0,k:264,p:144},
+  {name:'マグロ・刺身（5切れ・60g）',   cat:'魚介類', cal:67, protein:15.8,carb:0.1,fiber:0,k:222,p:174},
+  {name:'エビ・蒸し（5尾・80g）',       cat:'魚介類', cal:68, protein:15.5,carb:0.1,fiber:0,k:200,p:192},
+  {name:'かまぼこ（4切れ・60g）',       cat:'魚介類', cal:57, protein:7.6,carb:5.4, fiber:0,k:87, p:64 },
+  {name:'ツナ缶・水煮（1缶・70g）',     cat:'魚介類', cal:70, protein:15.7,carb:0.1,fiber:0,k:175,p:154},
+  {name:'さんま・塩焼き（1尾・100g）',  cat:'魚介類', cal:297,protein:18.1,carb:0.1,fiber:0,k:200,p:180},
+
+  // ===== 卵・乳製品 =====
+  {name:'卵・目玉焼き（1個・60g）',     cat:'卵・乳製品', cal:91, protein:7.4,carb:0.2,fiber:0,k:78, p:120},
+  {name:'卵・ゆで（1個・60g）',         cat:'卵・乳製品', cal:91, protein:7.4,carb:0.2,fiber:0,k:78, p:120},
+  {name:'卵・炒り（2個・120g）',        cat:'卵・乳製品', cal:182,protein:14.8,carb:0.4,fiber:0,k:156,p:240},
+  {name:'牛乳（コップ1杯・200ml）',     cat:'卵・乳製品', cal:134,protein:6.6,carb:9.6,fiber:0,k:300,p:190},
+  {name:'ヨーグルト・無糖（100g）',     cat:'卵・乳製品', cal:62, protein:3.6,carb:4.9,fiber:0,k:170,p:120},
+  {name:'チーズ・スライス（1枚・18g）', cat:'卵・乳製品', cal:61, protein:4.1,carb:0.2,fiber:0,k:18, p:97 },
+
+  // ===== 大豆類 =====
+  {name:'絹ごし豆腐（半丁・150g）',     cat:'大豆類', cal:80, protein:7.4,carb:2.4,fiber:0.3,k:225,p:105},
+  {name:'木綿豆腐（半丁・150g）',       cat:'大豆類', cal:108,protein:10.5,carb:1.8,fiber:0.5,k:210,p:135},
+  {name:'納豆（1パック・50g）',         cat:'大豆類', cal:100,protein:8.3,carb:6.1,fiber:3.4,k:330,p:190},
+  {name:'豆腐ハンバーグ（100g）',       cat:'大豆類', cal:150,protein:9.5,carb:8.5,fiber:1.2,k:200,p:110},
+  {name:'厚揚げ（1枚・100g）',          cat:'大豆類', cal:143,protein:10.7,carb:0.9,fiber:0.7,k:130,p:150},
+
+  // ===== 野菜類 =====
+  {name:'キャベツ・茹で（小鉢・80g）',  cat:'野菜類', cal:17, protein:0.8,carb:3.1,fiber:1.4,k:78, p:22 },
+  {name:'レタス（2枚・60g）',           cat:'野菜類', cal:8,  protein:0.4,carb:1.2,fiber:0.6,k:120,p:18 },
+  {name:'きゅうり（1本・100g）',        cat:'野菜類', cal:14, protein:1.0,carb:2.4,fiber:0.6,k:200,p:36 },
+  {name:'トマト（中1個・150g）',        cat:'野菜類', cal:29, protein:1.1,carb:5.6,fiber:1.5,k:315,p:39 },
+  {name:'ピーマン・炒め（50g）',        cat:'野菜類', cal:17, protein:0.5,carb:2.8,fiber:1.1,k:95, p:18 },
+  {name:'なす・炒め（80g）',            cat:'野菜類', cal:30, protein:0.9,carb:3.8,fiber:1.8,k:176,p:26 },
+  {name:'ほうれん草・茹で（小鉢・60g）',cat:'野菜類', cal:14, protein:1.7,carb:1.1,fiber:1.7,k:276,p:36 },
+  {name:'ブロッコリー・茹で（60g）',    cat:'野菜類', cal:23, protein:3.0,carb:2.2,fiber:3.0,k:192,p:66 },
+  {name:'白菜・煮物（100g）',           cat:'野菜類', cal:14, protein:0.8,carb:2.2,fiber:1.3,k:160,p:30 },
+  {name:'もやし・炒め（80g）',          cat:'野菜類', cal:25, protein:2.2,carb:2.3,fiber:1.5,k:56, p:34 },
+
+  // ===== 根菜・いも類 =====
+  {name:'じゃがいも・茹で（中1個・100g）',cat:'根菜・いも類',cal:76,protein:1.6,carb:16.7,fiber:1.3,k:340,p:40},
+  {name:'さつまいも・蒸し（100g）',     cat:'根菜・いも類',cal:131,protein:1.2,carb:30.3,fiber:2.2,k:480,p:46},
+  {name:'大根・煮物（100g）',           cat:'根菜・いも類',cal:18, protein:0.5,carb:3.5,fiber:1.4,k:230,p:18},
+  {name:'にんじん・煮物（50g）',        cat:'根菜・いも類',cal:20, protein:0.4,carb:4.1,fiber:1.4,k:135,p:18},
+  {name:'ごぼう・煮物（50g）',          cat:'根菜・いも類',cal:33, protein:0.9,carb:5.7,fiber:2.9,k:160,p:38},
+
+  // ===== 汁物 =====
+  {name:'味噌汁・豆腐（1杯・180ml）',   cat:'汁物', cal:49, protein:3.2,carb:3.8,fiber:0.5,k:220,p:80 },
+  {name:'味噌汁・わかめ（1杯・180ml）', cat:'汁物', cal:25, protein:1.8,carb:2.5,fiber:0.7,k:320,p:45 },
+  {name:'すまし汁（1杯・180ml）',       cat:'汁物', cal:8,  protein:0.5,carb:0.8,fiber:0,  k:85, p:15 },
+  {name:'コンソメスープ（1杯・150ml）', cat:'汁物', cal:10, protein:0.5,carb:1.2,fiber:0,  k:80, p:12 },
+
+  // ===== 飲み物 =====
+  {name:'水・白湯（200ml）',            cat:'飲み物', cal:0,  protein:0,  carb:0,  fiber:0,k:0,  p:0  },
+  {name:'緑茶・ほうじ茶（200ml）',      cat:'飲み物', cal:4,  protein:0.2,carb:0.6,fiber:0,k:27, p:4  },
+  {name:'麦茶（200ml）',                cat:'飲み物', cal:2,  protein:0.1,carb:0.4,fiber:0,k:14, p:4  },
+  {name:'コーヒー・ブラック（200ml）',  cat:'飲み物', cal:8,  protein:0.4,carb:1.4,fiber:0,k:130,p:6  },
+  {name:'コーヒー・砂糖ミルク（200ml）',cat:'飲み物', cal:56, protein:0.9,carb:9.4,fiber:0,k:145,p:26 },
+  {name:'牛乳（200ml）',                cat:'飲み物', cal:134,protein:6.6,carb:9.6,fiber:0,k:300,p:190},
+  {name:'豆乳・無調整（200ml）',        cat:'飲み物', cal:92, protein:7.2,carb:3.0,fiber:0.4,k:230,p:98},
+  {name:'オレンジジュース（200ml）',    cat:'飲み物', cal:84, protein:1.4,carb:19.2,fiber:0.4,k:360,p:28},
+  {name:'りんごジュース（200ml）',      cat:'飲み物', cal:90, protein:0.2,carb:22.6,fiber:0.2,k:180,p:10},
+  {name:'スポーツドリンク（500ml）',    cat:'飲み物', cal:115,protein:0,  carb:28.5,fiber:0,k:195,p:15},
+  {name:'缶コーヒー・微糖（185ml）',    cat:'飲み物', cal:28, protein:0.7,carb:5.4,fiber:0,k:92, p:9  },
+
+  // ===== 果物 =====
+  {name:'りんご（中1/2個・120g）',      cat:'果物', cal:69, protein:0.2,carb:17.8,fiber:1.4,k:144,p:14},
+  {name:'みかん（1個・80g）',           cat:'果物', cal:38, protein:0.5,carb:9.1, fiber:0.8,k:120,p:14},
+  {name:'バナナ（1本・100g）',          cat:'果物', cal:93, protein:1.1,carb:21.4,fiber:1.1,k:360,p:27},
+  {name:'いちご（5粒・75g）',           cat:'果物', cal:26, protein:0.7,carb:5.8, fiber:0.8,k:135,p:21},
+  {name:'ぶどう（10粒・100g）',         cat:'果物', cal:59, protein:0.4,carb:15.2,fiber:0.5,k:130,p:15},
+
+  // ===== 菓子・デザート =====
+  {name:'ヨーカン（1切れ・50g）',       cat:'菓子・デザート', cal:158,protein:1.5,carb:37.0,fiber:0.9,k:30, p:18},
+  {name:'せんべい（2枚・20g）',         cat:'菓子・デザート', cal:76, protein:1.5,carb:16.6,fiber:0.2,k:18, p:32},
+  {name:'カステラ（1切れ・50g）',       cat:'菓子・デザート', cal:162,protein:3.4,carb:32.3,fiber:0.3,k:55, p:45},
+  {name:'アイスクリーム（1個・100g）',  cat:'菓子・デザート', cal:180,protein:3.5,carb:22.5,fiber:0,  k:160,p:100},
+  {name:'プリン（1個・100g）',          cat:'菓子・デザート', cal:126,protein:4.5,carb:15.2,fiber:0,  k:140,p:110},
+  {name:'低タンパクプリン（1個・100g）',cat:'菓子・デザート', cal:130,protein:0.5,carb:30.0,fiber:0,  k:30, p:20},
+
+  // ===== 外食・コンビニ =====
+  {name:'カレーライス（1人前）',        cat:'外食', cal:578,protein:16.5,carb:92.0,fiber:4.2,k:620,p:285},
+  {name:'ラーメン・醤油（1杯）',        cat:'外食', cal:472,protein:18.5,carb:68.0,fiber:2.8,k:380,p:210},
+  {name:'ラーメン・塩（1杯）',          cat:'外食', cal:436,protein:17.2,carb:64.0,fiber:2.4,k:340,p:195},
+  {name:'チャーハン（1人前）',          cat:'外食', cal:520,protein:12.5,carb:78.0,fiber:2.0,k:280,p:180},
+  {name:'親子丼（1人前）',              cat:'外食', cal:542,protein:22.8,carb:78.5,fiber:1.8,k:420,p:240},
+  {name:'天ぷらそば（1杯）',            cat:'外食', cal:510,protein:18.5,carb:74.0,fiber:3.5,k:380,p:220},
+  {name:'ハンバーガー（1個）',          cat:'外食', cal:295,protein:13.5,carb:32.5,fiber:1.5,k:220,p:185},
+  {name:'サンドイッチ・ハム（1個）',    cat:'外食', cal:245,protein:9.5,carb:30.5,fiber:1.8,k:185,p:140},
+  {name:'弁当・幕の内（1個）',          cat:'外食', cal:620,protein:20.5,carb:88.0,fiber:3.5,k:480,p:260},
+  {name:'寿司・にぎり5貫',              cat:'外食', cal:310,protein:18.5,carb:42.0,fiber:0.5,k:280,p:220},
+
+  // ===== 低タンパク献立 =====
+  {name:'低タンパク粥・梅干し（1食）',  cat:'低タンパク献立', cal:260,protein:4.0,carb:54.0,fiber:1.5,k:180,p:80 },
+  {name:'鮭の低塩焼き定食（1食）',      cat:'低タンパク献立', cal:480,protein:22.0,carb:58.0,fiber:2.0,k:520,p:210},
+  {name:'低タンパクうどん定食（1食）',  cat:'低タンパク献立', cal:340,protein:6.0,carb:68.0,fiber:2.5,k:210,p:90 },
+  {name:'湯豆腐・低塩ポン酢（1食）',   cat:'低タンパク献立', cal:200,protein:10.0,carb:6.0,fiber:1.5,k:200,p:110},
+  {name:'豆腐ハンバーグ定食（1食）',   cat:'低タンパク献立', cal:380,protein:18.0,carb:42.0,fiber:3.0,k:380,p:160},
+  {name:'低塩チキングリル定食（1食）',  cat:'低タンパク献立', cal:480,protein:28.0,carb:52.0,fiber:3.5,k:480,p:225},
+  {name:'根菜の低カリウム煮物（1食）',  cat:'低タンパク献立', cal:180,protein:4.5,carb:32.0,fiber:3.5,k:180,p:75 },
+  {name:'低タンパクパスタ・トマト（1食）',cat:'低タンパク献立',cal:360,protein:5.5,carb:72.0,fiber:3.0,k:280,p:85},
 ];
 
 // ===== 水分記録 =====
@@ -1980,20 +2077,25 @@ async function searchFoodDB(query) {
   // カテゴリータブでフィルタ
   if (_currentFoodTab && _currentFoodTab !== 'all') {
     // タブ名とfoodDatabase.catを対応
-    const tabCatMap = {
-      '米類':['主食'], 'パン類':['主食'], '麺類':['主食'],
-      '肉類':['肉類'], '魚介類':['魚介類'], '卵・乳製品':['卵','乳製品'],
-      '大豆類':['豆腐・大豆'], '野菜類':['野菜'], '根菜・いも類':['野菜'],
-      '飲み物':['乳製品','外食'], '汁物':['外食'], '果物':['野菜'],
-      '菓子・デザート':['外食'], '外食':['外食'], '低タンパク献立':['低タンパク献立']
-    };
+  const tabCatMap = {
+    '米類':           ['米類'],
+    'パン類':         ['パン類'],
+    '麺類':           ['麺類'],
+    '肉類':           ['肉類'],
+    '魚介類':         ['魚介類'],
+    '卵・乳製品':     ['卵・乳製品'],
+    '大豆類':         ['大豆類'],
+    '野菜類':         ['野菜類'],
+    '根菜・いも類':   ['根菜・いも類'],
+    '飲み物':         ['飲み物'],
+    '汁物':           ['汁物'],
+    '果物':           ['果物'],
+    '菓子・デザート': ['菓子・デザート'],
+    '外食':           ['外食'],
+    '低タンパク献立': ['低タンパク献立'],
+  };
     const cats = tabCatMap[_currentFoodTab];
     if (cats) foods = foods.filter(f => cats.includes(f.cat));
-    // 名前でも絞り込み
-    if (_currentFoodTab === '米類') foods = foods.filter(f => f.name.includes('飯') || f.name.includes('粥') || f.name.includes('米') || f.name.includes('ご飯'));
-    if (_currentFoodTab === 'パン類') foods = foods.filter(f => f.name.includes('パン') || f.name.includes('食パン'));
-    if (_currentFoodTab === '麺類') foods = foods.filter(f => f.name.includes('うどん')||f.name.includes('そうめん')||f.name.includes('スパゲッティ')||f.name.includes('麺'));
-    if (_currentFoodTab === '飲み物') foods = foodDatabase.filter(f => f.name.includes('牛乳')||f.name.includes('飲'));
     if (_currentFoodTab === '果物') foods = [];
   }
 
