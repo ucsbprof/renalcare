@@ -1652,7 +1652,7 @@ function updateGlucoseGraph() {
   if (modeEl) modeEl.textContent = '📊 ' + (modeMap[type] || '');
 }
 
-
+function recalcGlucose() {
   const carb=parseFloat(document.getElementById('record-carb')?.value)||0;
   const fiber=parseFloat(document.getElementById('record-fiber')?.value)||0;
   const sugar=Math.max(0,carb-fiber);
