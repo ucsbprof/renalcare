@@ -2066,95 +2066,6 @@ function toggleFoodCatAndSearch(el, searchWord) {
   searchFoodDB(searchWord);
 }
 
-async function searchFoodDB(query) {
-  const results = document.getElementById('foodSearchResults');
-  if (!results) return;
-  const q = query.trim();
-
-  // ローカルDBを優先（nutrition_data.jsonが存在しないため）
-  let foods = foodDatabase;
-
-  // カテゴリータブでフィルタ
-  if (_currentFoodTab && _currentFoodTab !== 'all') {
-    // タブ名とfoodDatabase.catを対応
-  const tabCatMap = {
-    '米類':           ['米類'],
-    'パン類':         ['パン類'],
-    '麺類':           ['麺類'],
-    '肉類':           ['肉類'],
-    '魚介類':         ['魚介類'],
-    '卵・乳製品':     ['卵・乳製品'],
-    '大豆類':         ['大豆類'],
-    '野菜類':         ['野菜類'],
-    '根菜・いも類':   ['根菜・いも類'],
-    '飲み物':         ['飲み物'],
-    '汁物':           ['汁物'],
-    '果物':           ['果物'],
-    '菓子・デザート': ['菓子・デザート'],
-    '外食':           ['外食'],
-    '低タンパク献立': ['低タンパク献立'],
-  };
-    const cats = tabCatMap[_currentFoodTab];
-    if (cats) foods = foods.filter(f => cats.includes(f.cat));
-    if (_currentFoodTab === '果物') foods = [];
-  }
-
-  // キーワード検索
-  if (q) foods = foodDatabase.filter(f => f.name.includes(q) || f.cat.includes(q));
-
-  // nutrition_data.jsonが利用可能なら追加検索
-  try {
-    const db = await loadNutritionDB();
-    if (db && db.length > 0) {
-      let dbFoods = db;
-      if (q) dbFoods = db.filter(f => f.name.toLowerCase().includes(q.toLowerCase()));
-      else if (_currentFoodTab !== 'all') dbFoods = db.filter(f => (f.cat||'').includes(_currentFoodTab));
-      if (dbFoods.length > 0) {
-        const mapped = dbFoods.slice(0, 40).map(f => ({
-          name: f.name, cat: f.cat || 'その他',
-          cal: f.servings[1]?.kcal || f.servings[0]?.kcal || 0,
-          protein: f.servings[1]?.protein || f.servings[0]?.protein || 0,
-          carb: f.servings[1]?.carb || f.servings[0]?.carb || 0,
-          fiber: f.servings[1]?.fiber || f.servings[0]?.fiber || 0,
-          k: f.servings[1]?.k || f.servings[0]?.k || 0,
-          p: f.servings[1]?.p || f.servings[0]?.p || 0,
-          unit: f.servings[1]?.label || f.servings[0]?.label || '',
-        }));
-        renderFoodResults(mapped);
-        return;
-      }
-    }
-  } catch(e) {}
-
-  renderFoodResults(foods.slice(0, 40));
-}
-
-function renderFoodResults(foods) {
-  const results = document.getElementById('foodSearchResults');
-  if (!results) return;
-  if (foods.length === 0) {
-    results.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text3);">見つかりませんでした<br><span style="font-size:11px;">別のカテゴリーまたはキーワードで検索してください</span></div>';
-    return;
-  }
-  // カテゴリーでグループ化
-  const grouped = {};
-  foods.forEach(f => {
-    const cat = f.cat || 'その他';
-    if (!grouped[cat]) grouped[cat] = [];
-    grouped[cat].push(f);
-  });
-  results.innerHTML = Object.entries(grouped).map(([cat, items]) => `
-    <div style="padding:6px 12px;background:var(--surface2);font-size:11px;font-weight:700;color:var(--accent);letter-spacing:.05em;position:sticky;top:0;">${cat}</div>
-    ${items.map(f => `<div onclick='selectFood(${JSON.stringify({name:f.name,cal:f.cal||0,protein:f.protein||0,carb:f.carb||0,fiber:f.fiber||0,k:f.k||0,p:f.p||0}).replace(/'/g,"&#39;")})'
-      style="padding:11px 12px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;align-items:center;active:background:var(--surface2);">
-      <div>
-        <div style="font-size:14px;font-weight:600;">${f.name}</div>
-        <div style="font-size:11px;color:var(--text3);margin-top:2px;">${f.unit||''}　${f.cal||0}kcal・P${f.protein||0}g・K${f.k||0}mg・リン${f.p||0}mg</div>
-      </div>
-      <div style="color:var(--accent);font-size:20px;padding-left:8px;flex-shrink:0;">＋</div>
-    </div>`).join('')}
-  `).join('');
-}
 function showFoodRequestForm() {
   const input=document.getElementById('foodSearchInput');
   const requestInput=document.getElementById('requestFoodName');
@@ -2172,50 +2083,40 @@ async function submitFoodRequest() {
   } catch(e) { showToast('送信に失敗しました。'); }
 }
 
-async function searchFoodDB(query) {
-  const results=document.getElementById('foodSearchResults');
+function searchFoodDB(query) {
+  const results = document.getElementById('foodSearchResults');
   if (!results) return;
-  const q=query.trim();
-
-  // まず nutrition_data.json（2538食品）を検索
-  try {
-    const db = await loadNutritionDB();
-    if (db && db.length > 0) {
-      const filtered = q ? db.filter(f => f.name.toLowerCase().includes(q.toLowerCase())).slice(0,40) : db.slice(0,40);
-      if (filtered.length > 0) {
-        renderFoodResults(filtered.map(f => ({
-          name: f.name,
-          cat: f.cat || 'その他',
-          cal: f.servings[1]?.kcal || f.servings[0]?.kcal || 0,
-          protein: f.servings[1]?.protein || f.servings[0]?.protein || 0,
-          carb: f.servings[1]?.carb || f.servings[0]?.carb || 0,
-          fiber: f.servings[1]?.fiber || f.servings[0]?.fiber || 0,
-          k: f.servings[1]?.k || f.servings[0]?.k || 0,
-          p: f.servings[1]?.p || f.servings[0]?.p || 0,
-          unit: f.servings[1]?.label || f.servings[0]?.label || '',
-        })));
-        return;
-      }
-    }
-  } catch(e) {}
-
-  // フォールバック: ローカルDBから検索
-  const localFiltered = q ? foodDatabase.filter(f=>f.name.includes(q)) : foodDatabase.slice(0,30);
-  renderFoodResults(localFiltered);
+  const q = query.trim();
+  let foods = foodDatabase;
+  if (_currentFoodTab && _currentFoodTab !== 'all') {
+    foods = foods.filter(f => f.cat === _currentFoodTab);
+  }
+  if (q) {
+    foods = foodDatabase.filter(f => f.name.includes(q) || f.cat.includes(q));
+  }
+  renderFoodResults(foods.slice(0, 80));
 }
 
 function renderFoodResults(foods) {
-  const results=document.getElementById('foodSearchResults');
+  const results = document.getElementById('foodSearchResults');
   if (!results) return;
-  if (foods.length===0) { results.innerHTML='<div style="text-align:center;padding:20px;color:var(--text3);">見つかりませんでした</div>'; return; }
-  const grouped={};
-  foods.forEach(f => { const cat=f.cat||'その他'; if (!grouped[cat]) grouped[cat]=[]; grouped[cat].push(f); });
-  results.innerHTML=Object.entries(grouped).map(([cat,items])=>`
-    <div style="padding:8px 12px;background:var(--surface2);font-size:11px;font-weight:700;color:var(--accent);letter-spacing:.05em;">${cat}</div>
-    ${items.map(f=>`<div onclick='selectFood(${JSON.stringify({name:f.name,cal:f.cal||0,protein:f.protein||0,carb:f.carb||0,fiber:f.fiber||0,k:f.k||0,p:f.p||0}).replace(/'/g,"&#39;")})'
-      style="padding:12px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;align-items:center;">
-      <div><div style="font-size:14px;font-weight:600;">${f.name}</div><div style="font-size:11px;color:var(--text3);margin-top:2px;">${f.unit||''}　${f.cal||0}kcal・P${f.protein||0}g・K${f.k||0}mg・リン${f.p||0}mg</div></div>
-      <div style="color:var(--accent);font-size:20px;padding-left:8px;">＋</div></div>`).join('')}`).join('');
+  if (foods.length === 0) {
+    results.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text3);">見つかりませんでした<br><span style="font-size:11px;">別のカテゴリーまたはキーワードで検索してください</span></div>';
+    return;
+  }
+  const grouped = {};
+  foods.forEach(f => { const cat = f.cat||'その他'; if (!grouped[cat]) grouped[cat]=[]; grouped[cat].push(f); });
+  results.innerHTML = Object.entries(grouped).map(([cat, items]) => `
+    <div style="padding:6px 12px;background:var(--surface2);font-size:11px;font-weight:700;color:var(--accent);letter-spacing:.05em;position:sticky;top:0;">${cat}</div>
+    ${items.map(f => `<div onclick='selectFood(${JSON.stringify({name:f.name,cal:f.cal||0,protein:f.protein||0,carb:f.carb||0,fiber:f.fiber||0,k:f.k||0,p:f.p||0}).replace(/'/g,"&#39;")})'
+      style="padding:11px 12px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <div style="font-size:14px;font-weight:600;">${f.name}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px;">${f.cal||0}kcal・P${f.protein||0}g・K${f.k||0}mg・リン${f.p||0}mg</div>
+      </div>
+      <div style="color:var(--accent);font-size:20px;padding-left:8px;flex-shrink:0;">＋</div>
+    </div>`).join('')}
+  `).join('');
 }
 
 // 現在選択中の食品（量調整用）
