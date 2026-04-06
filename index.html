@@ -398,26 +398,76 @@ html, body {
     <div class="ob-dots"><div class="ob-dot"></div><div class="ob-dot active"></div><div class="ob-dot"></div><div class="ob-dot"></div></div>
   </div>
   <div class="ob-card fade-in" id="ob-step3" style="display:none;">
-    <div class="ob-step">ステップ 3 / 4</div>
-    <div class="ob-question">担当医から指示された<br>1日の目標値を入力してください</div>
-    <div style="font-size:12px;color:var(--text3);margin-bottom:16px;">※ わからない場合は初期値のまま後で変更できます</div>
-    <div class="form-grid" style="margin-bottom:10px;">
-      <div class="form-row"><label class="form-label">タンパク質 (g)</label><input class="form-input" id="ob-protein" type="number" value="40" /></div>
-      <div class="form-row"><label class="form-label">カリウム (mg)</label><input class="form-input" id="ob-potassium" type="number" value="2000" /></div>
-      <div class="form-row"><label class="form-label">リン (mg)</label><input class="form-input" id="ob-phosphorus" type="number" value="700" /></div>
-      <div class="form-row"><label class="form-label">水分 (mL)</label><input class="form-input" id="ob-water" type="number" value="1500" /></div>
+    <div class="ob-step">ステップ 3 / 5</div>
+    <div class="ob-question">CKD（腎臓病）の<br>ステージを教えてください</div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:14px;">※ わからない場合は「不明」を選択してください</div>
+    <div class="ob-choices" style="gap:8px;">
+      <div class="ob-choice" id="oc-ckd1" onclick="selectCkdStage('ckd1')">
+        <div class="ob-choice-icon" style="font-size:20px;">1️⃣</div>
+        <div class="ob-choice-text"><div class="name" style="font-size:13px;">前期（G1〜G2）</div><div class="desc">GFR 60以上 — 軽度</div></div>
+      </div>
+      <div class="ob-choice" id="oc-ckd2" onclick="selectCkdStage('ckd2')">
+        <div class="ob-choice-icon" style="font-size:20px;">2️⃣</div>
+        <div class="ob-choice-text"><div class="name" style="font-size:13px;">中期（G3）</div><div class="desc">GFR 30〜59 — 中等度</div></div>
+      </div>
+      <div class="ob-choice" id="oc-ckd3" onclick="selectCkdStage('ckd3')">
+        <div class="ob-choice-icon" style="font-size:20px;">3️⃣</div>
+        <div class="ob-choice-text"><div class="name" style="font-size:13px;">後期（G4〜G5）</div><div class="desc">GFR 29以下 — 高度〜末期</div></div>
+      </div>
+      <div class="ob-choice" id="oc-ckd4" onclick="selectCkdStage('ckd4')">
+        <div class="ob-choice-icon" style="font-size:20px;">💉</div>
+        <div class="ob-choice-text"><div class="name" style="font-size:13px;">透析期</div><div class="desc">血液透析・腹膜透析</div></div>
+      </div>
+      <div class="ob-choice" id="oc-ckdx" onclick="selectCkdStage('ckdx')">
+        <div class="ob-choice-icon" style="font-size:20px;">❓</div>
+        <div class="ob-choice-text"><div class="name" style="font-size:13px;">不明</div><div class="desc">わからない・未検査</div></div>
+      </div>
     </div>
-    <button class="btn btn-primary btn-full" onclick="goObStep(4)">次へ →</button>
+    <button class="btn btn-primary btn-full" id="ob-btn3" disabled onclick="goObStep(4)">次へ →</button>
     <div style="margin-top:10px;"><button class="btn btn-ghost btn-full" onclick="goObStep(2)">← 戻る</button></div>
-    <div class="ob-dots"><div class="ob-dot"></div><div class="ob-dot"></div><div class="ob-dot active"></div><div class="ob-dot"></div></div>
+    <div class="ob-dots"><div class="ob-dot"></div><div class="ob-dot"></div><div class="ob-dot active"></div><div class="ob-dot"></div><div class="ob-dot"></div></div>
   </div>
   <div class="ob-card fade-in" id="ob-step4" style="display:none;">
-    <div class="ob-step">ステップ 4 / 4</div>
+    <div class="ob-step">ステップ 4 / 5</div>
+    <div class="ob-question">1日の目標値の<br>設定方法を選んでください</div>
+    <div class="ob-choices" style="gap:10px;margin-bottom:16px;">
+      <div class="ob-choice" id="oc-auto" onclick="selectTargetMode('auto')">
+        <div class="ob-choice-icon">🤖</div>
+        <div class="ob-choice-text"><div class="name">自動計算（推奨）</div><div class="desc">体格・病期から自動で目標値を計算</div></div>
+      </div>
+      <div class="ob-choice" id="oc-manual" onclick="selectTargetMode('manual')">
+        <div class="ob-choice-icon">✏️</div>
+        <div class="ob-choice-text"><div class="name">手動設定</div><div class="desc">医師・病院から指示された数値を入力</div></div>
+      </div>
+    </div>
+    <!-- 自動計算プレビュー -->
+    <div id="ob-auto-preview" style="display:none;background:var(--surface2);border-radius:12px;padding:14px;margin-bottom:14px;font-size:13px;">
+      <div style="font-size:11px;color:var(--accent);font-weight:700;margin-bottom:10px;">📊 推奨目標値（自動計算）</div>
+      <div id="ob-auto-values" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;"></div>
+      <div style="font-size:10px;color:var(--text3);margin-top:8px;">※ 日本腎臓学会ガイドラインに基づく目安です。<br>医師の指示がある場合は「手動設定」を選んでください。</div>
+    </div>
+    <!-- 手動入力欄 -->
+    <div id="ob-manual-inputs" style="display:none;">
+      <div class="form-grid" style="margin-bottom:10px;">
+        <div class="form-row"><label class="form-label">カロリー (kcal)</label><input class="form-input" id="ob-calories" type="number" value="1800" /></div>
+        <div class="form-row"><label class="form-label">タンパク質 (g)</label><input class="form-input" id="ob-protein" type="number" value="40" /></div>
+        <div class="form-row"><label class="form-label">カリウム (mg)</label><input class="form-input" id="ob-potassium" type="number" value="2000" /></div>
+        <div class="form-row"><label class="form-label">リン (mg)</label><input class="form-input" id="ob-phosphorus" type="number" value="700" /></div>
+        <div class="form-row"><label class="form-label">水分 (mL)</label><input class="form-input" id="ob-water" type="number" value="1500" /></div>
+        <div class="form-row"><label class="form-label">塩分 (g)</label><input class="form-input" id="ob-salt" type="number" value="6" /></div>
+      </div>
+    </div>
+    <button class="btn btn-primary btn-full" id="ob-btn4" disabled onclick="goObStep(5)">次へ →</button>
+    <div style="margin-top:10px;"><button class="btn btn-ghost btn-full" onclick="goObStep(3)">← 戻る</button></div>
+    <div class="ob-dots"><div class="ob-dot"></div><div class="ob-dot"></div><div class="ob-dot"></div><div class="ob-dot active"></div><div class="ob-dot"></div></div>
+  </div>
+  <div class="ob-card fade-in" id="ob-step5" style="display:none;">
+    <div class="ob-step">ステップ 5 / 5</div>
     <div class="ob-question">確認してください</div>
     <div id="ob-confirm-box" style="background:var(--surface2);border-radius:12px;padding:16px;margin-bottom:20px;font-size:13px;line-height:2;color:var(--text2);"></div>
     <button class="btn btn-primary btn-full" onclick="finishOnboarding()">✓ アプリを始める</button>
-    <div style="margin-top:10px;"><button class="btn btn-ghost btn-full" onclick="goObStep(3)">← 戻る</button></div>
-    <div class="ob-dots"><div class="ob-dot"></div><div class="ob-dot"></div><div class="ob-dot"></div><div class="ob-dot active"></div></div>
+    <div style="margin-top:10px;"><button class="btn btn-ghost btn-full" onclick="goObStep(4)">← 戻る</button></div>
+    <div class="ob-dots"><div class="ob-dot"></div><div class="ob-dot"></div><div class="ob-dot"></div><div class="ob-dot"></div><div class="ob-dot active"></div></div>
   </div>
 </div>
 
@@ -491,23 +541,22 @@ html, body {
           <div style="font-size:12px;color:var(--text2);">mg/dL</div>
           <div class="glucose-badge" id="home-glucose-badge" style="display:none;"></div>
         </div>
-        <svg id="glucose-svg" viewBox="0 0 340 80" style="width:100%;height:80px;">
+        <svg id="glucose-svg" viewBox="0 0 340 80" style="width:100%;height:80px;cursor:pointer;" onclick="handleGlucoseTap(event)">
           <defs>
             <linearGradient id="gGrad" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stop-color="rgba(252,211,77,0.3)"/>
               <stop offset="100%" stop-color="rgba(252,211,77,0)"/>
             </linearGradient>
           </defs>
-          <!-- 正常域ゾーン -->
           <rect x="0" y="28" width="340" height="28" fill="rgba(74,222,128,0.06)" rx="2"/>
           <text x="2" y="26" fill="rgba(74,222,128,0.6)" font-size="7" font-family="monospace">140</text>
           <text x="2" y="58" fill="rgba(74,222,128,0.6)" font-size="7" font-family="monospace">70</text>
-          <!-- 動的グラフ描画エリア -->
           <g id="glucose-graph-lines"></g>
-          <!-- 時刻ラベル -->
           <g id="glucose-time-labels"></g>
+          <g id="glucose-tap-indicator"></g>
           <text id="glucose-empty-msg" x="170" y="45" fill="var(--text3)" font-size="10" text-anchor="middle">食事を記録するとグラフが表示されます</text>
         </svg>
+        <div id="glucose-tap-tooltip" style="display:none;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:6px 12px;font-size:12px;margin-top:4px;text-align:center;"></div>
         <div style="font-size:11px;color:var(--text3);margin-top:6px;" id="home-glucose-mode">—</div>
       </div>
       <!-- HbA1c推算カード -->
@@ -807,6 +856,134 @@ html, body {
       <div id="historyList" class="stagger"></div>
     </div>
 
+    <!-- HEALTH -->
+    <div class="page" id="page-health">
+      <div class="page-title-row"><div><div class="page-title">健康記録</div><div class="page-sub">血糖・血圧・運動・トイレ</div></div></div>
+
+      <!-- 食前血糖値 -->
+      <div class="card" style="border-color:rgba(252,211,77,0.3);">
+        <div class="card-title">🩸 血糖値の記録</div>
+        <div style="display:flex;gap:10px;margin-bottom:10px;">
+          <div style="flex:1;">
+            <label class="form-label">食前血糖値 (mg/dL)</label>
+            <input class="form-input" type="number" id="h-glucose-before" placeholder="例：95" min="40" max="600" />
+          </div>
+          <div style="flex:1;">
+            <label class="form-label">食後血糖値 (mg/dL)</label>
+            <input class="form-input" type="number" id="h-glucose-after" placeholder="例：145" min="40" max="600" />
+          </div>
+        </div>
+        <div style="margin-bottom:10px;">
+          <label class="form-label">測定タイミング</label>
+          <select class="form-input" id="h-glucose-timing">
+            <option value="before_breakfast">朝食前</option>
+            <option value="after_breakfast">朝食後2時間</option>
+            <option value="before_lunch">昼食前</option>
+            <option value="after_lunch">昼食後2時間</option>
+            <option value="before_dinner">夕食前</option>
+            <option value="after_dinner">夕食後2時間</option>
+            <option value="bedtime">就寝前</option>
+          </select>
+        </div>
+        <button class="btn btn-primary btn-full" onclick="saveHealthRecord('glucose')">✓ 血糖値を記録</button>
+        <div id="h-glucose-today" style="margin-top:10px;"></div>
+      </div>
+
+      <!-- 血圧 -->
+      <div class="card" style="border-color:rgba(248,113,113,0.3);">
+        <div class="card-title">❤️ 血圧の記録</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;">
+          <div>
+            <label class="form-label">収縮期 (mmHg)</label>
+            <input class="form-input" type="number" id="h-bp-sys" placeholder="120" min="60" max="250" />
+          </div>
+          <div>
+            <label class="form-label">拡張期 (mmHg)</label>
+            <input class="form-input" type="number" id="h-bp-dia" placeholder="80" min="40" max="150" />
+          </div>
+          <div>
+            <label class="form-label">脈拍 (bpm)</label>
+            <input class="form-input" type="number" id="h-bp-pulse" placeholder="70" min="30" max="200" />
+          </div>
+        </div>
+        <div style="margin-bottom:10px;">
+          <label class="form-label">測定タイミング</label>
+          <select class="form-input" id="h-bp-timing">
+            <option value="morning">朝（起床後）</option>
+            <option value="evening">夕（就寝前）</option>
+            <option value="other">その他</option>
+          </select>
+        </div>
+        <button class="btn btn-primary btn-full" onclick="saveHealthRecord('bp')">✓ 血圧を記録</button>
+        <div id="h-bp-today" style="margin-top:10px;"></div>
+      </div>
+
+      <!-- 尿量・トイレ -->
+      <div class="card" style="border-color:rgba(79,195,247,0.3);">
+        <div class="card-title">🚽 尿量・トイレの記録</div>
+        <div style="display:flex;gap:10px;margin-bottom:10px;">
+          <div style="flex:1;">
+            <label class="form-label">今回の尿量 (mL)</label>
+            <input class="form-input" type="number" id="h-urine-vol" placeholder="例：200" min="0" max="1000" />
+          </div>
+          <div style="flex:1;">
+            <label class="form-label">色・状態</label>
+            <select class="form-input" id="h-urine-color">
+              <option value="clear">透明〜淡黄色（正常）</option>
+              <option value="yellow">黄色（正常）</option>
+              <option value="dark">濃い黄色（水分不足）</option>
+              <option value="orange">オレンジ・茶色（要注意）</option>
+              <option value="red">赤・ピンク（要受診）</option>
+              <option value="foam">泡立ち（タンパク尿の可能性）</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-full" onclick="saveHealthRecord('urine')">✓ 尿量を記録</button>
+        <div id="h-urine-today" style="margin-top:10px;font-size:13px;color:var(--text2);"></div>
+      </div>
+
+      <!-- 運動 -->
+      <div class="card" style="border-color:rgba(74,222,128,0.3);">
+        <div class="card-title">🏃 運動の記録</div>
+        <div style="margin-bottom:10px;">
+          <label class="form-label">運動の種類</label>
+          <select class="form-input" id="h-exercise-type">
+            <option value="walk">ウォーキング</option>
+            <option value="run">ランニング</option>
+            <option value="bike">自転車</option>
+            <option value="swim">水泳</option>
+            <option value="stretch">ストレッチ・体操</option>
+            <option value="rehab">リハビリ</option>
+            <option value="other">その他</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:10px;margin-bottom:10px;">
+          <div style="flex:1;">
+            <label class="form-label">時間 (分)</label>
+            <input class="form-input" type="number" id="h-exercise-min" placeholder="例：30" min="1" max="300" />
+          </div>
+          <div style="flex:1;">
+            <label class="form-label">強度</label>
+            <select class="form-input" id="h-exercise-intensity">
+              <option value="light">軽い（会話できる）</option>
+              <option value="moderate">普通</option>
+              <option value="hard">きつい</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-full" onclick="saveHealthRecord('exercise')">✓ 運動を記録</button>
+        <div id="h-exercise-today" style="margin-top:10px;"></div>
+      </div>
+
+      <!-- 今日のサマリー -->
+      <div class="card">
+        <div class="card-title">📋 今日の健康サマリー</div>
+        <div id="health-summary-today" style="font-size:13px;color:var(--text2);line-height:2;">
+          記録するとここに表示されます
+        </div>
+      </div>
+    </div>
+
     <!-- SETTINGS -->
     <div class="page" id="page-settings">
       <div class="page-title-row"><div><div class="page-title">設定</div><div class="page-sub">プロフィール・目標値</div></div></div>
@@ -846,7 +1023,7 @@ html, body {
   <div class="bottom-nav">
     <div class="nav-btn active" id="nav-home" onclick="navTo('home')"><div class="nav-icon">🏠</div><div class="nav-label">ホーム</div></div>
     <div class="nav-btn" id="nav-record" onclick="navTo('record')"><div class="nav-icon">✏️</div><div class="nav-label">記録</div></div>
-    <div class="nav-btn" id="nav-menu" onclick="navTo('menu')"><div class="nav-icon">🍽️</div><div class="nav-label">献立</div></div>
+    <div class="nav-btn" id="nav-health" onclick="navTo('health')"><div class="nav-icon">💊</div><div class="nav-label">健康</div></div>
     <div class="nav-btn" id="nav-history" onclick="navTo('history')"><div class="nav-icon">📊</div><div class="nav-label">履歴</div></div>
     <div class="nav-btn" id="nav-settings" onclick="navTo('settings')"><div class="nav-icon">⚙️</div><div class="nav-label">設定</div></div>
   </div>
@@ -995,6 +1172,19 @@ html, body {
   </div>
 </div>
 
+<!-- 食事詳細モーダル -->
+<div class="modal-bg" id="mealDetailModal" onclick="closeModal('mealDetailModal')">
+  <div class="modal" onclick="event.stopPropagation()" style="max-height:90vh;overflow-y:auto;">
+    <div class="modal-handle"></div>
+    <div id="mealDetailContent"></div>
+    <div style="display:flex;gap:10px;margin-top:16px;">
+      <button class="btn btn-primary" style="flex:1;" onclick="editFromDetail()">✏️ 編集する</button>
+      <button class="btn btn-sm" id="mealDetailDeleteBtn" style="background:var(--red-dim);color:var(--red);border:1px solid var(--red);padding:0 16px;">🗑 削除</button>
+    </div>
+    <button class="btn btn-ghost btn-full" style="margin-top:8px;" onclick="closeModal('mealDetailModal')">閉じる</button>
+  </div>
+</div>
+
 <div class="modal-bg" id="editModal" onclick="closeModal('editModal')">
   <div class="modal" onclick="event.stopPropagation()" style="max-height:90vh;overflow-y:auto;">
     <div class="modal-handle"></div>
@@ -1002,12 +1192,20 @@ html, body {
     <input type="hidden" id="edit-id" />
     <div style="margin-top:16px;">
       <div class="form-row"><label class="form-label">料理名・メモ</label><input class="form-input" type="text" id="edit-name" /></div>
-      <div class="form-row"><label class="form-label">食事の種類</label><select class="form-input" id="edit-meal-type"><option value="breakfast">🌅 朝食</option><option value="lunch">☀️ 昼食</option><option value="dinner">🌙 夕食</option><option value="snack">🍬 間食</option></select></div>
+      <div class="form-row"><label class="form-label">食事の種類</label>
+        <select class="form-input" id="edit-meal-type">
+          <option value="breakfast">🌅 朝食</option>
+          <option value="lunch">☀️ 昼食</option>
+          <option value="dinner">🌙 夕食</option>
+          <option value="snack">🍬 間食</option>
+        </select>
+      </div>
       <div class="form-row"><label class="form-label">日時</label><input class="form-input" type="datetime-local" id="edit-datetime" /></div>
       <div class="form-grid">
         <div class="form-row"><label class="form-label">カロリー (kcal)</label><input class="form-input" type="number" id="edit-calories" /></div>
         <div class="form-row"><label class="form-label">タンパク質 (g)</label><input class="form-input" type="number" id="edit-protein" /></div>
         <div class="form-row"><label class="form-label">炭水化物 (g)</label><input class="form-input" type="number" id="edit-carb" /></div>
+        <div class="form-row"><label class="form-label">食物繊維 (g)</label><input class="form-input" type="number" id="edit-fiber" /></div>
         <div class="form-row"><label class="form-label">カリウム (mg)</label><input class="form-input" type="number" id="edit-potassium" /></div>
         <div class="form-row"><label class="form-label">リン (mg)</label><input class="form-input" type="number" id="edit-phosphorus" /></div>
       </div>
@@ -1193,34 +1391,106 @@ function checkObName() {
   document.getElementById('ob-btn2').disabled = document.getElementById('ob-name').value.trim().length < 2;
 }
 
+function selectCkdStage(stage) {
+  state.ckdStage = stage;
+  document.querySelectorAll('[id^="oc-ckd"]').forEach(c => c.classList.remove('selected'));
+  document.getElementById('oc-'+stage)?.classList.add('selected');
+  document.getElementById('ob-btn3').disabled = false;
+}
+
+function selectTargetMode(mode) {
+  state.targetMode = mode;
+  document.querySelectorAll('#oc-auto,#oc-manual').forEach(c => c.classList.remove('selected'));
+  document.getElementById('oc-'+mode)?.classList.add('selected');
+  document.getElementById('ob-btn4').disabled = false;
+  document.getElementById('ob-auto-preview').style.display = mode==='auto' ? 'block' : 'none';
+  document.getElementById('ob-manual-inputs').style.display = mode==='manual' ? 'block' : 'none';
+  if (mode === 'auto') {
+    const calc = calcAutoTargets();
+    const el = document.getElementById('ob-auto-values');
+    if (el && calc) el.innerHTML = [
+      ['カロリー', calc.calories+'kcal'],
+      ['タンパク質', calc.protein+'g'],
+      ['カリウム', calc.potassium+'mg'],
+      ['リン', calc.phosphorus+'mg'],
+      ['水分', calc.water+'mL'],
+      ['塩分', calc.salt+'g以下'],
+    ].map(([k,v])=>`<div style="background:var(--surface);border-radius:8px;padding:8px;text-align:center;"><div style="font-size:10px;color:var(--text3);">${k}</div><div style="font-size:14px;font-weight:700;color:var(--accent);">${v}</div></div>`).join('');
+  }
+}
+
+// ===== CKD・糖尿病の目標値自動計算 =====
+// 参考: 日本腎臓学会CKD診療ガイドライン2023
+function calcAutoTargets() {
+  const weight = parseFloat(state.weight) || 60;
+  const height = parseFloat(state.height) || 165;
+  const ibw = (height/100 - 1.0) * 0.9 * 100; // 標準体重(kg) 簡易式
+  const bw = Math.min(weight, ibw * 1.25); // 肥満の場合は補正
+  const stage = state.ckdStage || 'ckdx';
+  const type = state.userType || 'normal';
+
+  // カロリー: 標準体重×25〜35kcal（CKDは30前後）
+  const calories = Math.round(ibw * 30 / 50) * 50;
+
+  // タンパク質: ステージ別
+  const proteinMap = {
+    ckd1: ibw * 0.8,   // G1-2: 0.6〜1.0 → 0.8
+    ckd2: ibw * 0.65,  // G3: 0.6〜0.8 → 0.65
+    ckd3: ibw * 0.5,   // G4-5: 0.4〜0.6 → 0.5
+    ckd4: ibw * 0.9,   // 透析: 0.9〜1.2（透析で失われる）
+    ckdx: ibw * 0.8,
+  };
+  const protein = Math.round(proteinMap[stage]);
+
+  // カリウム (mg)
+  const potassiumMap = { ckd1:3500, ckd2:2500, ckd3:1500, ckd4:1500, ckdx:2500 };
+  const potassium = potassiumMap[stage];
+
+  // リン (mg): タンパク質×15 が目安
+  const phosphorus = Math.round(protein * 15 / 50) * 50;
+
+  // 水分 (mL): 透析は厳しく制限
+  const waterMap = { ckd1:1800, ckd2:1500, ckd3:1200, ckd4:500, ckdx:1500 };
+  const water = waterMap[stage];
+
+  // 塩分: CKDは3g以上6g未満
+  const salt = stage === 'ckd4' ? 6 : 6;
+
+  // 糖尿病合併の場合カロリー調整
+  const calFinal = type !== 'normal' ? Math.min(calories, Math.round(ibw * 28 / 50) * 50) : calories;
+
+  return { calories:calFinal, protein, potassium, phosphorus, water, salt };
+}
+
 function goObStep(n) {
-  ['ob-step1','ob-step2','ob-step3','ob-step4'].forEach(id => {
+  ['ob-step1','ob-step2','ob-step3','ob-step4','ob-step5'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = 'none';
   });
   const target = document.getElementById('ob-step'+n);
   if (target) target.style.display = 'block';
   state.obStep = n;
-  // ステップ4: 確認画面を生成
-  if (n === 4) {
+  if (n === 5) {
     const typeMap = { normal:'慢性腎不全のみ', t2d:'慢性腎不全＋2型糖尿病', t1d:'慢性腎不全＋1型糖尿病' };
+    const stageMap = { ckd1:'前期（G1-2）', ckd2:'中期（G3）', ckd3:'後期（G4-5）', ckd4:'透析期', ckdx:'不明' };
     const genderMap = { male:'男性', female:'女性' };
     const name = document.getElementById('ob-name')?.value || '';
     const age = document.getElementById('ob-age')?.value || '—';
     const gender = document.getElementById('ob-gender')?.value || 'male';
     const height = document.getElementById('ob-height')?.value || '—';
     const weight = document.getElementById('ob-weight')?.value || '—';
-    const protein = document.getElementById('ob-protein')?.value || 40;
-    const potassium = document.getElementById('ob-potassium')?.value || 2000;
-    const phosphorus = document.getElementById('ob-phosphorus')?.value || 700;
+    const calc = state.targetMode === 'auto' ? calcAutoTargets() : null;
     const box = document.getElementById('ob-confirm-box');
     if (box) box.innerHTML = `
       <div>👤 <strong>${name}</strong>（${genderMap[gender]}・${age}歳）</div>
       <div>📏 身長 ${height}cm / ⚖️ 体重 ${weight}kg</div>
       <div>🩺 ${typeMap[state.obType||'normal']}</div>
+      <div>🫁 CKD ${stageMap[state.ckdStage||'ckdx']}</div>
       <div style="border-top:1px solid var(--border);margin:8px 0;padding-top:8px;">
-        タンパク質: ${protein}g / カリウム: ${potassium}mg<br>
-        リン: ${phosphorus}mg
+        目標: カロリー ${calc?calc.calories:(document.getElementById('ob-calories')?.value||'—')}kcal /
+        タンパク質 ${calc?calc.protein:(document.getElementById('ob-protein')?.value||'—')}g<br>
+        カリウム ${calc?calc.potassium:(document.getElementById('ob-potassium')?.value||'—')}mg /
+        リン ${calc?calc.phosphorus:(document.getElementById('ob-phosphorus')?.value||'—')}mg
       </div>`;
   }
 }
@@ -1234,10 +1504,24 @@ function finishOnboarding() {
   state.gender = document.getElementById('ob-gender')?.value || 'male';
   state.height = document.getElementById('ob-height')?.value || '';
   state.weight = document.getElementById('ob-weight')?.value || '';
-  state.targets.protein = parseInt(document.getElementById('ob-protein')?.value) || 40;
-  state.targets.potassium = parseInt(document.getElementById('ob-potassium')?.value) || 2000;
-  state.targets.phosphorus = parseInt(document.getElementById('ob-phosphorus')?.value) || 700;
-  state.targets.water = parseInt(document.getElementById('ob-water')?.value) || 1500;
+  state.ckdStage = state.ckdStage || 'ckdx';
+
+  if (state.targetMode === 'auto') {
+    const calc = calcAutoTargets();
+    state.targets.calories  = calc.calories;
+    state.targets.protein   = calc.protein;
+    state.targets.potassium = calc.potassium;
+    state.targets.phosphorus= calc.phosphorus;
+    state.targets.water     = calc.water;
+    state.targets.salt      = calc.salt;
+  } else {
+    state.targets.calories  = parseInt(document.getElementById('ob-calories')?.value)||1800;
+    state.targets.protein   = parseInt(document.getElementById('ob-protein')?.value)||40;
+    state.targets.potassium = parseInt(document.getElementById('ob-potassium')?.value)||2000;
+    state.targets.phosphorus= parseInt(document.getElementById('ob-phosphorus')?.value)||700;
+    state.targets.water     = parseInt(document.getElementById('ob-water')?.value)||1500;
+    state.targets.salt      = parseInt(document.getElementById('ob-salt')?.value)||6;
+  }
   state.diabetesMode = state.userType !== 'normal';
   saveActiveProfile({ ...state });
   setActiveUid(uid);
@@ -1271,11 +1555,35 @@ async function renderHistory() {
     const isToday = d.toDateString() === now.toDateString();
     const isYesterday = d.toDateString() === new Date(now - 86400000).toDateString();
     const dateLabel = isToday ? '今日' : isYesterday ? '昨日' : `${d.getMonth()+1}月${d.getDate()}日（${days[d.getDay()]}）`;
-    const dayTotal = dayMeals.reduce((acc, m) => { acc.calories += m.calories||0; acc.protein += m.protein||0; return acc; }, { calories:0, protein:0 });
-    return `<div style="margin-bottom:6px;"><div style="display:flex;justify-content:space-between;align-items:center;padding:8px 4px;"><div style="font-size:13px;font-weight:700;color:${isToday?'var(--accent)':'var(--text2)'};">${dateLabel}</div><div style="font-size:11px;color:var(--text3);">計: ${Math.round(dayTotal.calories)}kcal / P: ${Math.round(dayTotal.protein*10)/10}g</div></div>${dayMeals.map(m => {
-      const timeStr = `${new Date(m.recorded_at).getHours()}:${String(new Date(m.recorded_at).getMinutes()).padStart(2,'0')}`;
-      return `<div class="card" style="margin-bottom:8px;"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;"><div style="flex:1;min-width:0;"><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;"><span style="font-weight:600;font-size:14px;">${m.dish_name||'食事'}</span><span style="font-size:10px;color:var(--text3);background:var(--surface2);padding:2px 7px;border-radius:10px;">${mealTypeLabel[m.meal_type]||'食事'}</span><span style="font-size:10px;color:var(--text3);">${timeStr}</span></div><div style="display:flex;gap:10px;margin-top:8px;flex-wrap:wrap;"><span style="font-size:12px;color:var(--green);">${Math.round(m.calories||0)} kcal</span><span style="font-size:12px;color:var(--accent);">P: ${m.protein||0}g</span><span style="font-size:12px;color:var(--amber);">K: ${m.potassium||0}mg</span><span style="font-size:12px;color:var(--red);">P: ${m.phosphorus||0}mg</span></div></div><div style="display:flex;gap:6px;flex-shrink:0;"><button class="btn btn-ghost btn-sm" onclick="openEditModal(${JSON.stringify(m).replace(/"/g,'&quot;')})" style="font-size:12px;padding:6px 10px;">✏️</button><button class="btn btn-sm" onclick="deleteMealConfirm('${m.id}')" style="background:var(--red-dim);color:var(--red);border:1px solid var(--red);font-size:12px;padding:6px 10px;">🗑</button></div></div></div>`;
-    }).join('')}</div>`;
+    const dayTotal = dayMeals.reduce((acc, m) => { acc.calories += m.calories||0; acc.protein += m.protein||0; acc.potassium += m.potassium||0; acc.phosphorus += m.phosphorus||0; return acc; }, { calories:0, protein:0, potassium:0, phosphorus:0 });
+    return `<div style="margin-bottom:6px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 4px;">
+        <div style="font-size:13px;font-weight:700;color:${isToday?'var(--accent)':'var(--text2)'};">${dateLabel}</div>
+        <div style="font-size:11px;color:var(--text3);">合計: ${Math.round(dayTotal.calories)}kcal / P: ${Math.round(dayTotal.protein*10)/10}g / K: ${Math.round(dayTotal.potassium)}mg</div>
+      </div>
+      ${dayMeals.map(m => {
+        const timeStr = `${new Date(m.recorded_at).getHours()}:${String(new Date(m.recorded_at).getMinutes()).padStart(2,'0')}`;
+        const mealJson = JSON.stringify(m).replace(/"/g,'&quot;');
+        return `<div class="card" style="margin-bottom:8px;cursor:pointer;" onclick="showMealDetail(${mealJson})">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+            <div style="flex:1;min-width:0;">
+              <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+                <span style="font-weight:600;font-size:14px;">${m.dish_name||'食事'}</span>
+                <span style="font-size:10px;color:var(--text3);background:var(--surface2);padding:2px 7px;border-radius:10px;">${mealTypeLabel[m.meal_type]||'食事'}</span>
+                <span style="font-size:10px;color:var(--text3);">${timeStr}</span>
+              </div>
+              <div style="display:flex;gap:10px;margin-top:6px;flex-wrap:wrap;">
+                <span style="font-size:12px;color:var(--green);">${Math.round(m.calories||0)} kcal</span>
+                <span style="font-size:12px;color:var(--accent);">P: ${m.protein||0}g</span>
+                <span style="font-size:12px;color:var(--amber);">K: ${m.potassium||0}mg</span>
+                <span style="font-size:12px;color:var(--red);">リン: ${m.phosphorus||0}mg</span>
+              </div>
+            </div>
+            <div style="font-size:11px;color:var(--accent);flex-shrink:0;padding-top:2px;">詳細 ›</div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
   }).join('');
 }
 
@@ -1285,26 +1593,80 @@ function deleteMealConfirm(id) {
   else showToast('⚠ 削除できませんでした');
 }
 
+function showMealDetail(meal) {
+  if (typeof meal === 'string') { try { meal = JSON.parse(meal); } catch(e) { return; } }
+  window._detailMeal = meal;
+  const mealTypeLabel = { breakfast:'🌅 朝食', lunch:'☀️ 昼食', dinner:'🌙 夕食', snack:'🍬 間食', meal:'食事' };
+  const dt = new Date(meal.recorded_at);
+  const dateStr = `${dt.getMonth()+1}月${dt.getDate()}日 ${dt.getHours()}:${String(dt.getMinutes()).padStart(2,'0')}`;
+  const nutrients = [
+    { label:'カロリー',   val:`${Math.round(meal.calories||0)} kcal`,   color:'var(--green)' },
+    { label:'タンパク質', val:`${meal.protein||0} g`,                    color:'var(--accent)' },
+    { label:'炭水化物',   val:`${meal.carb||0} g`,                       color:'var(--text2)' },
+    { label:'食物繊維',   val:`${meal.fiber||0} g`,                      color:'var(--text2)' },
+    { label:'カリウム',   val:`${meal.potassium||0} mg`,                  color:'var(--amber)' },
+    { label:'リン',       val:`${meal.phosphorus||0} mg`,                 color:'var(--red)' },
+  ];
+  document.getElementById('mealDetailContent').innerHTML = `
+    <div style="margin-bottom:16px;">
+      <div style="font-size:20px;font-weight:700;margin-bottom:4px;">${meal.dish_name||'食事'}</div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <span style="font-size:12px;color:var(--text3);background:var(--surface2);padding:3px 10px;border-radius:20px;">${mealTypeLabel[meal.meal_type]||'食事'}</span>
+        <span style="font-size:12px;color:var(--text3);">🕐 ${dateStr}</span>
+      </div>
+    </div>
+    <div style="background:var(--surface2);border-radius:12px;padding:14px;margin-bottom:4px;">
+      <div style="font-size:11px;color:var(--text3);margin-bottom:12px;letter-spacing:1px;">栄養成分</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        ${nutrients.map(n => `
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:var(--surface);border-radius:8px;">
+            <span style="font-size:12px;color:var(--text3);">${n.label}</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:${n.color};">${n.val}</span>
+          </div>`).join('')}
+      </div>
+    </div>`;
+  // 削除ボタンにIDをセット
+  const delBtn = document.getElementById('mealDetailDeleteBtn');
+  if (delBtn) delBtn.onclick = () => { closeModal('mealDetailModal'); deleteMealConfirm(meal.id); };
+  document.getElementById('mealDetailModal').classList.add('open');
+}
+
+function editFromDetail() {
+  closeModal('mealDetailModal');
+  if (window._detailMeal) openEditModal(window._detailMeal);
+}
+
 function openEditModal(meal) {
   if (typeof meal === 'string') { try { meal = JSON.parse(meal); } catch(e) { return; } }
   window._editingMeal = meal;
-  document.getElementById('edit-id').value = meal.id||'';
-  document.getElementById('edit-name').value = meal.dish_name||'';
+  document.getElementById('edit-id').value        = meal.id||'';
+  document.getElementById('edit-name').value      = meal.dish_name||'';
   document.getElementById('edit-meal-type').value = meal.meal_type||'breakfast';
-  document.getElementById('edit-calories').value = meal.calories||0;
-  document.getElementById('edit-protein').value = meal.protein||0;
-  document.getElementById('edit-carb').value = meal.carb||0;
+  document.getElementById('edit-calories').value  = meal.calories||0;
+  document.getElementById('edit-protein').value   = meal.protein||0;
+  document.getElementById('edit-carb').value      = meal.carb||0;
+  document.getElementById('edit-fiber').value     = meal.fiber||0;
   document.getElementById('edit-potassium').value = meal.potassium||0;
-  document.getElementById('edit-phosphorus').value = meal.phosphorus||0;
+  document.getElementById('edit-phosphorus').value= meal.phosphorus||0;
   const dt = new Date(meal.recorded_at);
-  document.getElementById('edit-datetime').value = new Date(dt.getTime()-dt.getTimezoneOffset()*60000).toISOString().slice(0,16);
+  document.getElementById('edit-datetime').value  = new Date(dt.getTime()-dt.getTimezoneOffset()*60000).toISOString().slice(0,16);
   document.getElementById('editModal').classList.add('open');
 }
 
 function saveEditMeal() {
   const id = document.getElementById('edit-id').value;
   const dtVal = document.getElementById('edit-datetime').value;
-  const updated = { dish_name:document.getElementById('edit-name').value.trim()||'食事', meal_type:document.getElementById('edit-meal-type').value, calories:parseFloat(document.getElementById('edit-calories').value)||0, protein:parseFloat(document.getElementById('edit-protein').value)||0, carb:parseFloat(document.getElementById('edit-carb').value)||0, potassium:parseFloat(document.getElementById('edit-potassium').value)||0, phosphorus:parseFloat(document.getElementById('edit-phosphorus').value)||0, recorded_at:dtVal?new Date(dtVal).toISOString():(window._editingMeal?.recorded_at||new Date().toISOString()) };
+  const updated = {
+    dish_name:   document.getElementById('edit-name').value.trim()||'食事',
+    meal_type:   document.getElementById('edit-meal-type').value,
+    calories:    parseFloat(document.getElementById('edit-calories').value)||0,
+    protein:     parseFloat(document.getElementById('edit-protein').value)||0,
+    carb:        parseFloat(document.getElementById('edit-carb').value)||0,
+    fiber:       parseFloat(document.getElementById('edit-fiber').value)||0,
+    potassium:   parseFloat(document.getElementById('edit-potassium').value)||0,
+    phosphorus:  parseFloat(document.getElementById('edit-phosphorus').value)||0,
+    recorded_at: dtVal ? new Date(dtVal).toISOString() : (window._editingMeal?.recorded_at||new Date().toISOString())
+  };
   if (localUpdateMeal(id, updated)) { showToast('✅ 記録を更新しました'); closeModal('editModal'); renderHistory(); updateHomeSummary(); }
   else showToast('⚠ 更新できませんでした');
 }
@@ -1451,12 +1813,23 @@ async function saveMeal() {
   };
   const saved = localSaveMeal(meal);
   dbSaveMeal(meal).catch(()=>{});
-  if (saved) {
-    showToast('✅ 食事を記録しました');
-  } else {
-    showToast('⚠️ 保存に失敗しました。容量不足の可能性があります');
+
+  // 水分連動：食事の水分量を自動加算
+  const waterFromMeal = estimateWaterFromMeal(meal);
+  if (waterFromMeal > 0) {
+    try {
+      const all = JSON.parse(localStorage.getItem(WATER_KEY)||'[]');
+      all.push({ time: now.toISOString(), ml: waterFromMeal, auto: true, source: meal.dish_name||'食事' });
+      localStorage.setItem(WATER_KEY, JSON.stringify(all));
+    } catch(e) {}
   }
-  resetRecord(); navTo('home'); updateHomeSummary(); updateHba1cCard();
+
+  if (saved) {
+    showToast(`✅ 記録しました${waterFromMeal>0?' (水分+'+waterFromMeal+'mL)':''}`);
+  } else {
+    showToast('⚠️ 保存に失敗しました');
+  }
+  resetRecord(); navTo('home'); updateHomeSummary(); updateHba1cCard(); updateWaterCard();
 }
 
 function localSaveMeal(meal) {
@@ -1594,7 +1967,191 @@ function navTo(page) {
   const nb=document.getElementById('nav-'+page);
   if (nb) nb.classList.add('active');
   if (page==='history') renderHistory();
+  if (page==='health') renderHealthPage();
 }
+
+// ===== 健康記録 =====
+const HEALTH_KEY = 'renalcare_health';
+
+function saveHealthRecord(type) {
+  const now = new Date().toISOString();
+  let record = { type, time: now };
+
+  if (type === 'glucose') {
+    const before = parseInt(document.getElementById('h-glucose-before')?.value)||null;
+    const after  = parseInt(document.getElementById('h-glucose-after')?.value)||null;
+    const timing = document.getElementById('h-glucose-timing')?.value||'';
+    if (!before && !after) { showToast('血糖値を入力してください'); return; }
+    record = { ...record, before, after, timing };
+    // 食前血糖値をグラフの基準値として保存
+    if (before) saveGlucoseLog(0, before);
+    document.getElementById('h-glucose-before').value = '';
+    document.getElementById('h-glucose-after').value = '';
+  } else if (type === 'bp') {
+    const sys   = parseInt(document.getElementById('h-bp-sys')?.value)||null;
+    const dia   = parseInt(document.getElementById('h-bp-dia')?.value)||null;
+    const pulse = parseInt(document.getElementById('h-bp-pulse')?.value)||null;
+    const timing= document.getElementById('h-bp-timing')?.value||'';
+    if (!sys || !dia) { showToast('収縮期・拡張期を入力してください'); return; }
+    record = { ...record, sys, dia, pulse, timing };
+    document.getElementById('h-bp-sys').value = '';
+    document.getElementById('h-bp-dia').value = '';
+    document.getElementById('h-bp-pulse').value = '';
+  } else if (type === 'urine') {
+    const vol   = parseInt(document.getElementById('h-urine-vol')?.value)||null;
+    const color = document.getElementById('h-urine-color')?.value||'';
+    if (!vol) { showToast('尿量を入力してください'); return; }
+    record = { ...record, vol, color };
+    document.getElementById('h-urine-vol').value = '';
+  } else if (type === 'exercise') {
+    const exType = document.getElementById('h-exercise-type')?.value||'walk';
+    const min    = parseInt(document.getElementById('h-exercise-min')?.value)||null;
+    const intensity = document.getElementById('h-exercise-intensity')?.value||'moderate';
+    if (!min) { showToast('時間を入力してください'); return; }
+    record = { ...record, exType, min, intensity };
+    document.getElementById('h-exercise-min').value = '';
+  }
+
+  try {
+    const all = JSON.parse(localStorage.getItem(HEALTH_KEY)||'[]');
+    all.unshift(record);
+    if (all.length > 1000) all.splice(1000);
+    localStorage.setItem(HEALTH_KEY, JSON.stringify(all));
+  } catch(e) {}
+
+  showToast('✅ 記録しました');
+  renderHealthPage();
+}
+
+function getTodayHealthRecords(type) {
+  try {
+    const all = JSON.parse(localStorage.getItem(HEALTH_KEY)||'[]');
+    const today = new Date().toDateString();
+    return all.filter(r => new Date(r.time).toDateString()===today && r.type===type);
+  } catch(e) { return []; }
+}
+
+function renderHealthPage() {
+  // 血糖値
+  const glucoseRecs = getTodayHealthRecords('glucose');
+  const glucoseEl = document.getElementById('h-glucose-today');
+  if (glucoseEl) {
+    if (glucoseRecs.length === 0) { glucoseEl.innerHTML = ''; }
+    else {
+      const timingLabel = { before_breakfast:'朝食前',after_breakfast:'朝食後',before_lunch:'昼食前',after_lunch:'昼食後',before_dinner:'夕食前',after_dinner:'夕食後',bedtime:'就寝前' };
+      glucoseEl.innerHTML = '<div style="font-size:11px;color:var(--text3);margin-bottom:6px;">今日の記録</div>' +
+        glucoseRecs.map(r => {
+          const t = new Date(r.time); const ts = `${t.getHours()}:${String(t.getMinutes()).padStart(2,'0')}`;
+          return `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px;">
+            <span style="color:var(--text3);">${timingLabel[r.timing]||r.timing} ${ts}</span>
+            <span>${r.before?'<span style="color:var(--amber);">食前 '+r.before+'</span>':''} ${r.after?'<span style="color:var(--red);">食後 '+r.after+'</span>':''} mg/dL</span>
+          </div>`;
+        }).join('');
+    }
+  }
+  // 血圧
+  const bpRecs = getTodayHealthRecords('bp');
+  const bpEl = document.getElementById('h-bp-today');
+  if (bpEl) {
+    if (bpRecs.length === 0) { bpEl.innerHTML = ''; }
+    else {
+      bpEl.innerHTML = '<div style="font-size:11px;color:var(--text3);margin-bottom:6px;">今日の記録</div>' +
+        bpRecs.map(r => {
+          const t = new Date(r.time); const ts = `${t.getHours()}:${String(t.getMinutes()).padStart(2,'0')}`;
+          const bpColor = r.sys >= 140 ? 'var(--red)' : r.sys >= 130 ? 'var(--amber)' : 'var(--green)';
+          return `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px;">
+            <span style="color:var(--text3);">${ts}</span>
+            <span style="color:${bpColor};font-weight:600;">${r.sys}/${r.dia} mmHg</span>
+            <span style="color:var(--text3);">${r.pulse||'—'} bpm</span>
+          </div>`;
+        }).join('');
+    }
+  }
+  // 尿量
+  const urineRecs = getTodayHealthRecords('urine');
+  const urineEl = document.getElementById('h-urine-today');
+  if (urineEl) {
+    const total = urineRecs.reduce((s,r)=>s+(r.vol||0),0);
+    urineEl.innerHTML = urineRecs.length > 0
+      ? `今日の合計尿量: <strong style="color:var(--accent);">${total}mL</strong>（${urineRecs.length}回）`
+      : '';
+  }
+  // 運動
+  const exRecs = getTodayHealthRecords('exercise');
+  const exEl = document.getElementById('h-exercise-today');
+  const exMap = { walk:'ウォーキング',run:'ランニング',bike:'自転車',swim:'水泳',stretch:'ストレッチ',rehab:'リハビリ',other:'その他' };
+  if (exEl) {
+    if (exRecs.length === 0) { exEl.innerHTML = ''; }
+    else {
+      const totalMin = exRecs.reduce((s,r)=>s+(r.min||0),0);
+      exEl.innerHTML = `<div style="font-size:12px;color:var(--text2);">今日の運動: <strong style="color:var(--green);">${totalMin}分</strong></div>` +
+        exRecs.map(r=>`<div style="font-size:11px;color:var(--text3);">${exMap[r.exType]||r.exType} ${r.min}分</div>`).join('');
+    }
+  }
+  // サマリー
+  const sumEl = document.getElementById('health-summary-today');
+  if (sumEl) {
+    const lines = [];
+    if (glucoseRecs.length) {
+      const lastG = glucoseRecs[0];
+      lines.push(`🩸 血糖値: ${lastG.before?'食前'+lastG.before:''}${lastG.after?' 食後'+lastG.after:''} mg/dL`);
+    }
+    if (bpRecs.length) {
+      const lastB = bpRecs[0];
+      lines.push(`❤️ 血圧: ${lastB.sys}/${lastB.dia} mmHg`);
+    }
+    if (urineRecs.length) {
+      lines.push(`🚽 尿量: ${urineRecs.reduce((s,r)=>s+(r.vol||0),0)}mL（${urineRecs.length}回）`);
+    }
+    if (exRecs.length) {
+      lines.push(`🏃 運動: ${exRecs.reduce((s,r)=>s+(r.min||0),0)}分`);
+    }
+    sumEl.innerHTML = lines.length ? lines.join('<br>') : '記録するとここに表示されます';
+  }
+}
+
+// ===== 血糖値グラフのタップ =====
+let _glucosePoints = [];
+
+function handleGlucoseTap(event) {
+  if (_glucosePoints.length === 0) return;
+  const svg = document.getElementById('glucose-svg');
+  if (!svg) return;
+  const rect = svg.getBoundingClientRect();
+  const x = event.clientX - rect.left;
+  const xRatio = x / rect.width;
+  const padL = 22, padR = 8, graphW = 340 - padL - padR;
+  const xSvg = xRatio * 340;
+  const tRatio = Math.max(0, Math.min(1, (xSvg - padL) / graphW));
+  // 最も近いポイントを探す
+  const totalMin = _glucosePoints[_glucosePoints.length-1]?.t || 1;
+  const targetT = tRatio * totalMin;
+  const closest = _glucosePoints.reduce((a,b) => Math.abs(b.t-targetT) < Math.abs(a.t-targetT) ? b : a);
+  const h = Math.floor(6 + closest.t / 60);
+  const m = String(Math.round(closest.t % 60)).padStart(2,'0');
+  const g = Math.round(closest.g);
+  const status = g < 100 ? '正常' : g < 140 ? '良好' : g < 180 ? 'やや高め' : '高め';
+  const color = g < 100 ? '#4ade80' : g < 140 ? '#4ade80' : g < 180 ? '#fcd34d' : '#f87171';
+  const tooltip = document.getElementById('glucose-tap-tooltip');
+  if (tooltip) {
+    tooltip.style.display = 'block';
+    tooltip.innerHTML = `<span style="color:var(--text3);">${h}:${m}</span>　<strong style="color:${color};font-size:16px;">${g} mg/dL</strong>　<span style="color:${color};">${status}</span>`;
+  }
+  // インジケーターライン更新
+  const indicator = document.getElementById('glucose-tap-indicator');
+  if (indicator) {
+    const padT=8, padB=12, svgH=80, minG=60, maxG=220, graphH=svgH-padT-padB;
+    const xOf = t => padL + (t/totalMin)*graphW;
+    const yOf = g => padT + graphH - ((g-minG)/(maxG-minG))*graphH;
+    indicator.innerHTML = `
+      <line x1="${xOf(closest.t).toFixed(1)}" y1="${padT}" x2="${xOf(closest.t).toFixed(1)}" y2="${svgH-padB}" stroke="white" stroke-width="1" stroke-dasharray="3,2" opacity="0.6"/>
+      <circle cx="${xOf(closest.t).toFixed(1)}" cy="${yOf(closest.g).toFixed(1)}" r="5" fill="white" stroke="#fcd34d" stroke-width="2"/>
+    `;
+  }
+}
+
+// updateGlucoseGraphでポイントをグローバルに保存
+
 // ===== 動的血糖値グラフ =====
 // 糖尿病タイプ別の食後血糖カーブパラメータ
 // peak: 食後何分でピーク, duration: 何分で基礎値に戻る, factor: 上昇倍率
@@ -1678,6 +2235,7 @@ function updateGlucoseGraph() {
     });
     points.push({ t, g: Math.max(minG, Math.min(maxG, glucose)) });
   }
+  _glucosePoints = points; // タップ用にグローバル保存
 
   // パスを生成
   const pathD = points.map((p, i) => `${i===0?'M':'L'}${xOf(p.t).toFixed(1)},${yOf(p.g).toFixed(1)}`).join(' ');
@@ -1725,6 +2283,29 @@ function updateGlucoseGraph() {
   if (modeEl) modeEl.textContent = '📊 ' + (modeMap[type] || '');
 }
 
+// 食事から水分量を推定（汁物・飲み物カテゴリー選択 + 食品DB）
+function estimateWaterFromMeal(meal) {
+  let water = 0;
+  // チップ選択から推定（FOOD_CAT_NUTRITIONに水分データがないため食品名から推定）
+  const cats = meal.food_categories || {};
+  // 汁物・飲み物チップで選ばれた食品の水分を推定
+  const drinkWaterMap = {
+    '水・お茶（200ml）': 200, 'コーヒー・紅茶（200ml）': 200,
+    '牛乳（200ml）': 175, '豆乳（200ml）': 185, 'ジュース（200ml）': 190,
+    '味噌汁（1杯）': 150, 'すまし汁（1杯）': 160,
+  };
+  [...(cats.soup||[]), ...(cats.drink||[])].forEach(name => {
+    water += drinkWaterMap[name] || 0;
+  });
+  // 主食からも水分を推定（ご飯150g→約50ml、お粥→多め）
+  (cats.main||[]).forEach(name => {
+    if (name.includes('粥')) water += 180;
+    else if (name.includes('うどん') || name.includes('そば') || name.includes('ラーメン')) water += 200;
+    else if (name.includes('飯') || name.includes('米')) water += 50;
+  });
+  return Math.round(water);
+}
+
 function recalcGlucose() {
   const carb=parseFloat(document.getElementById('record-carb')?.value)||0;
   const fiber=parseFloat(document.getElementById('record-fiber')?.value)||0;
@@ -1742,14 +2323,15 @@ function recalcGlucose() {
 
 const HBA1C_KEY = 'renalcare_glucose_log';
 
-function saveGlucoseLog(estimatedRise) {
-  // 食後血糖上昇値を空腹時血糖(推定100mg/dL)に加算して保存
-  const fastingBase = 100;
+function saveGlucoseLog(estimatedRise, fastingOverride) {
+  // fastingOverride: 食前血糖値を直接指定した場合
+  const fastingBase = fastingOverride || (state.lastFasting || 100);
   const postprandial = fastingBase + estimatedRise;
+  // 食前血糖値を記録した場合は基準値として保存
+  if (fastingOverride) state.lastFasting = fastingOverride;
   try {
     const log = JSON.parse(localStorage.getItem(HBA1C_KEY) || '[]');
-    log.push({ date: new Date().toISOString(), glucose: postprandial, rise: estimatedRise });
-    // 90日分のみ保持
+    log.push({ date: new Date().toISOString(), glucose: postprandial, rise: estimatedRise, fasting: fastingBase });
     const cutoff = new Date(Date.now() - 90 * 86400000).toISOString();
     const filtered = log.filter(e => e.date >= cutoff);
     localStorage.setItem(HBA1C_KEY, JSON.stringify(filtered));
@@ -1878,27 +2460,46 @@ const foodDatabase = [
   {name:'スパゲッティ・茹で（1人前・200g）',cat:'麺類',cal:298,protein:10.4,carb:57.0,fiber:3.0,k:40,p:120},
   {name:'低タンパクうどん（1玉・200g）',cat:'麺類', cal:190,protein:0.4,carb:46.0,fiber:0.4,k:10, p:10 },
 
-  // ===== 肉類 =====
-  {name:'鶏むね肉・焼き（100g）',       cat:'肉類', cal:116,protein:24.4,carb:0,  fiber:0,k:340,p:220},
-  {name:'鶏もも肉・焼き（100g）',       cat:'肉類', cal:151,protein:20.9,carb:0,  fiber:0,k:320,p:200},
-  {name:'鶏ささみ・茹で（100g）',       cat:'肉類', cal:107,protein:24.6,carb:0,  fiber:0,k:370,p:240},
-  {name:'豚ロース・焼き（100g）',       cat:'肉類', cal:263,protein:19.3,carb:0.2,fiber:0,k:310,p:180},
-  {name:'豚ひき肉・炒め（100g）',       cat:'肉類', cal:236,protein:17.7,carb:0,  fiber:0,k:280,p:160},
-  {name:'牛もも肉・焼き（100g）',       cat:'肉類', cal:193,protein:21.9,carb:0.5,fiber:0,k:350,p:190},
-  {name:'牛ひき肉・炒め（100g）',       cat:'肉類', cal:272,protein:17.1,carb:0.5,fiber:0,k:290,p:160},
-  {name:'ハム（2枚・40g）',             cat:'肉類', cal:81, protein:7.4,carb:1.2, fiber:0,k:104,p:80 },
-  {name:'ベーコン（2枚・30g）',         cat:'肉類', cal:121,protein:6.2,carb:0.5, fiber:0,k:78, p:72 },
+  // ===== 肉類・加工肉 =====
+  {name:'鶏むね肉・焼き（100g）',       cat:'肉類', cal:116,protein:24.4,carb:0,   fiber:0,  k:340,p:220},
+  {name:'鶏もも肉・焼き（100g）',       cat:'肉類', cal:151,protein:20.9,carb:0,   fiber:0,  k:320,p:200},
+  {name:'鶏ささみ・茹で（100g）',       cat:'肉類', cal:107,protein:24.6,carb:0,   fiber:0,  k:370,p:240},
+  {name:'豚ロース・焼き（100g）',       cat:'肉類', cal:263,protein:19.3,carb:0.2, fiber:0,  k:310,p:180},
+  {name:'豚バラ肉・焼き（100g）',       cat:'肉類', cal:395,protein:14.4,carb:0,   fiber:0,  k:240,p:130},
+  {name:'豚ひき肉・炒め（100g）',       cat:'肉類', cal:236,protein:17.7,carb:0,   fiber:0,  k:280,p:160},
+  {name:'牛もも肉・焼き（100g）',       cat:'肉類', cal:193,protein:21.9,carb:0.5, fiber:0,  k:350,p:190},
+  {name:'牛ひき肉・炒め（100g）',       cat:'肉類', cal:272,protein:17.1,carb:0.5, fiber:0,  k:290,p:160},
+  {name:'ハム・ロース（2枚・40g）',     cat:'肉類', cal:81, protein:7.4, carb:1.2,  fiber:0,  k:104,p:80 },
+  {name:'ハム・ボンレス（2枚・40g）',   cat:'肉類', cal:57, protein:8.0, carb:0.8,  fiber:0,  k:120,p:84 },
+  {name:'ベーコン（2枚・30g）',         cat:'肉類', cal:121,protein:6.2, carb:0.5,  fiber:0,  k:78, p:72 },
+  {name:'ウインナー（2本・40g）',       cat:'肉類', cal:129,protein:5.9, carb:1.2,  fiber:0,  k:96, p:72 },
+  {name:'フランクフルト（1本・50g）',   cat:'肉類', cal:162,protein:7.1, carb:2.5,  fiber:0,  k:105,p:78 },
+  {name:'ソーセージ・魚肉（1本・30g）', cat:'肉類', cal:63, protein:3.6, carb:4.2,  fiber:0,  k:57, p:60 },
+  {name:'コンビーフ缶（40g）',          cat:'肉類', cal:79, protein:8.4, carb:0.8,  fiber:0,  k:56, p:72 },
+  {name:'焼き鳥・缶（1缶・75g）',       cat:'肉類', cal:135,protein:14.5,carb:5.1,  fiber:0,  k:165,p:140},
+  {name:'チキンナゲット（5個・100g）',  cat:'肉類', cal:228,protein:15.6,carb:13.5, fiber:0.5,k:240,p:170},
+  {name:'ハンバーグ・冷凍（1個・100g）',cat:'肉類', cal:200,protein:13.5,carb:10.2, fiber:0.8,k:260,p:155},
+  {name:'餃子・冷凍（5個・100g）',      cat:'肉類', cal:191,protein:8.6, carb:21.0, fiber:1.8,k:210,p:110},
+  {name:'シュウマイ（3個・60g）',       cat:'肉類', cal:120,protein:7.8, carb:12.5, fiber:0.8,k:130,p:88 },
 
-  // ===== 魚介類 =====
+  // ===== 魚介類・加工魚 =====
   {name:'鮭・塩焼き（1切れ・80g）',     cat:'魚介類', cal:148,protein:20.2,carb:0.1,fiber:0,k:296,p:216},
   {name:'鯖・塩焼き（1切れ・80g）',     cat:'魚介類', cal:213,protein:17.8,carb:0.3,fiber:0,k:264,p:184},
   {name:'鯛・塩焼き（1切れ・80g）',     cat:'魚介類', cal:121,protein:17.4,carb:0.1,fiber:0,k:312,p:168},
   {name:'ぶり・照り焼き（1切れ・80g）', cat:'魚介類', cal:208,protein:17.3,carb:5.0,fiber:0,k:264,p:144},
   {name:'マグロ・刺身（5切れ・60g）',   cat:'魚介類', cal:67, protein:15.8,carb:0.1,fiber:0,k:222,p:174},
   {name:'エビ・蒸し（5尾・80g）',       cat:'魚介類', cal:68, protein:15.5,carb:0.1,fiber:0,k:200,p:192},
-  {name:'かまぼこ（4切れ・60g）',       cat:'魚介類', cal:57, protein:7.6,carb:5.4, fiber:0,k:87, p:64 },
+  {name:'かまぼこ（4切れ・60g）',       cat:'魚介類', cal:57, protein:7.6, carb:5.4,fiber:0,k:87, p:64 },
+  {name:'ちくわ（1本・30g）',           cat:'魚介類', cal:37, protein:3.7, carb:4.3,fiber:0,k:60, p:57 },
+  {name:'さつま揚げ（1枚・60g）',       cat:'魚介類', cal:88, protein:7.8, carb:8.0,fiber:0,k:108,p:96 },
+  {name:'はんぺん（1枚・100g）',        cat:'魚介類', cal:94, protein:9.9, carb:11.4,fiber:0,k:160,p:100},
   {name:'ツナ缶・水煮（1缶・70g）',     cat:'魚介類', cal:70, protein:15.7,carb:0.1,fiber:0,k:175,p:154},
+  {name:'ツナ缶・油漬け（1缶・70g）',   cat:'魚介類', cal:196,protein:14.2,carb:0,  fiber:0,k:133,p:133},
+  {name:'サバ缶・水煮（1缶・180g）',    cat:'魚介類', cal:291,protein:34.2,carb:0.2,fiber:0,k:540,p:414},
+  {name:'サバ缶・味噌煮（1缶・180g）',  cat:'魚介類', cal:349,protein:30.6,carb:10.8,fiber:0.7,k:468,p:360},
   {name:'さんま・塩焼き（1尾・100g）',  cat:'魚介類', cal:297,protein:18.1,carb:0.1,fiber:0,k:200,p:180},
+  {name:'イカ・焼き（100g）',           cat:'魚介類', cal:118,protein:23.6,carb:0.4,fiber:0,k:280,p:280},
+  {name:'タコ・茹で（80g）',            cat:'魚介類', cal:66, protein:14.4,carb:0.1,fiber:0,k:216,p:120},
 
   // ===== 卵・乳製品 =====
   {name:'卵・目玉焼き（1個・60g）',     cat:'卵・乳製品', cal:91, protein:7.4,carb:0.2,fiber:0,k:78, p:120},
@@ -1968,17 +2569,28 @@ const foodDatabase = [
   {name:'プリン（1個・100g）',          cat:'菓子・デザート', cal:126,protein:4.5,carb:15.2,fiber:0,  k:140,p:110},
   {name:'低タンパクプリン（1個・100g）',cat:'菓子・デザート', cal:130,protein:0.5,carb:30.0,fiber:0,  k:30, p:20},
 
-  // ===== 外食・コンビニ =====
-  {name:'カレーライス（1人前）',        cat:'外食', cal:578,protein:16.5,carb:92.0,fiber:4.2,k:620,p:285},
-  {name:'ラーメン・醤油（1杯）',        cat:'外食', cal:472,protein:18.5,carb:68.0,fiber:2.8,k:380,p:210},
-  {name:'ラーメン・塩（1杯）',          cat:'外食', cal:436,protein:17.2,carb:64.0,fiber:2.4,k:340,p:195},
-  {name:'チャーハン（1人前）',          cat:'外食', cal:520,protein:12.5,carb:78.0,fiber:2.0,k:280,p:180},
-  {name:'親子丼（1人前）',              cat:'外食', cal:542,protein:22.8,carb:78.5,fiber:1.8,k:420,p:240},
-  {name:'天ぷらそば（1杯）',            cat:'外食', cal:510,protein:18.5,carb:74.0,fiber:3.5,k:380,p:220},
-  {name:'ハンバーガー（1個）',          cat:'外食', cal:295,protein:13.5,carb:32.5,fiber:1.5,k:220,p:185},
-  {name:'サンドイッチ・ハム（1個）',    cat:'外食', cal:245,protein:9.5,carb:30.5,fiber:1.8,k:185,p:140},
-  {name:'弁当・幕の内（1個）',          cat:'外食', cal:620,protein:20.5,carb:88.0,fiber:3.5,k:480,p:260},
-  {name:'寿司・にぎり5貫',              cat:'外食', cal:310,protein:18.5,carb:42.0,fiber:0.5,k:280,p:220},
+  // ===== 外食・コンビニ・惣菜 =====
+  {name:'カレーライス（1人前）',            cat:'外食', cal:578,protein:16.5,carb:92.0,fiber:4.2,k:620,p:285},
+  {name:'ラーメン・醤油（1杯）',            cat:'外食', cal:472,protein:18.5,carb:68.0,fiber:2.8,k:380,p:210},
+  {name:'ラーメン・塩（1杯）',              cat:'外食', cal:436,protein:17.2,carb:64.0,fiber:2.4,k:340,p:195},
+  {name:'チャーハン（1人前）',              cat:'外食', cal:520,protein:12.5,carb:78.0,fiber:2.0,k:280,p:180},
+  {name:'親子丼（1人前）',                  cat:'外食', cal:542,protein:22.8,carb:78.5,fiber:1.8,k:420,p:240},
+  {name:'天ぷらそば（1杯）',                cat:'外食', cal:510,protein:18.5,carb:74.0,fiber:3.5,k:380,p:220},
+  {name:'ハンバーガー（1個）',              cat:'外食', cal:295,protein:13.5,carb:32.5,fiber:1.5,k:220,p:185},
+  {name:'チーズバーガー（1個）',            cat:'外食', cal:340,protein:16.5,carb:33.0,fiber:1.5,k:240,p:220},
+  {name:'サンドイッチ・ハム（1個）',        cat:'外食', cal:245,protein:9.5, carb:30.5,fiber:1.8,k:185,p:140},
+  {name:'弁当・幕の内（1個）',              cat:'外食', cal:620,protein:20.5,carb:88.0,fiber:3.5,k:480,p:260},
+  {name:'弁当・から揚げ（1個）',            cat:'外食', cal:650,protein:22.0,carb:80.0,fiber:2.5,k:390,p:250},
+  {name:'寿司・にぎり5貫',                  cat:'外食', cal:310,protein:18.5,carb:42.0,fiber:0.5,k:280,p:220},
+  {name:'から揚げ（3個・100g）',            cat:'外食', cal:307,protein:20.4,carb:11.5,fiber:0.5,k:300,p:200},
+  {name:'コロッケ（1個・80g）',             cat:'外食', cal:190,protein:4.8, carb:22.5,fiber:1.5,k:280,p:75 },
+  {name:'メンチカツ（1個・80g）',           cat:'外食', cal:216,protein:9.6, carb:16.0,fiber:0.8,k:220,p:110},
+  {name:'冷凍ピザ（1/4枚・100g）',          cat:'外食', cal:256,protein:10.5,carb:33.5,fiber:2.0,k:195,p:165},
+  {name:'カップラーメン（1個）',            cat:'外食', cal:380,protein:9.5, carb:55.0,fiber:2.0,k:260,p:145},
+  {name:'カップうどん（1個）',              cat:'外食', cal:307,protein:7.2, carb:57.5,fiber:2.0,k:180,p:110},
+  {name:'レトルトカレー（1袋・200g）',      cat:'外食', cal:240,protein:8.0, carb:32.0,fiber:3.5,k:420,p:130},
+  {name:'チルドシュウマイ（5個・100g）',    cat:'外食', cal:200,protein:13.0,carb:20.8,fiber:1.2,k:215,p:145},
+  {name:'スーパーの唐揚げ（3個・100g）',    cat:'外食', cal:287,protein:19.2,carb:9.8, fiber:0.4,k:285,p:195},
 
   // ===== 低タンパク献立 =====
   {name:'低タンパク粥・梅干し（1食）',  cat:'低タンパク献立', cal:260,protein:4.0,carb:54.0,fiber:1.5,k:180,p:80 },
