@@ -197,6 +197,10 @@ html, body {
 .portion-btn:active { transform: scale(0.95); }
 .portion-btn.active { background: rgba(79,195,247,0.15); border-color: var(--accent); color: var(--accent); font-weight: 600; }
 
+.meal-type-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px 6px; border-radius: var(--rs); border: 1.5px solid var(--border2); background: var(--surface2); color: var(--text2); cursor: pointer; transition: all 0.2s; line-height: 1.2; }
+.meal-type-btn:active { transform: scale(0.95); }
+.meal-type-btn.active { background: rgba(79,195,247,0.18); border-color: var(--accent); color: var(--accent); font-weight: 600; box-shadow: 0 0 0 1px var(--accent); }
+
 .nutrition-preview { background: var(--surface2); border-radius: var(--rs); padding: 10px 12px; margin-top: 10px; display: none; }
 .nutrition-preview.visible { display: block; }
 .nutrition-preview-title { font-size: 11px; color: var(--text3); margin-bottom: 6px; font-weight: 600; letter-spacing: 0.04em; }
@@ -613,21 +617,34 @@ html, body {
           <div style="font-size:13px;color:var(--text2);">mL</div>
           <div id="water-badge" style="font-size:11px;padding:3px 8px;border-radius:12px;background:var(--green-dim);color:var(--green);border:1px solid var(--green);display:none;"></div>
         </div>
+        <!-- 内訳 -->
+        <div style="display:flex;gap:6px;margin-bottom:10px;font-size:12px;">
+          <div style="flex:1;background:var(--surface2);border-radius:8px;padding:8px 10px;text-align:center;">
+            <div style="color:var(--text3);margin-bottom:2px;">🍽 食事</div>
+            <div id="water-from-meal" style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--accent);">0</div>
+            <div style="font-size:10px;color:var(--text3);">mL</div>
+          </div>
+          <div style="flex:1;background:var(--surface2);border-radius:8px;padding:8px 10px;text-align:center;">
+            <div style="color:var(--text3);margin-bottom:2px;">🥤 飲料</div>
+            <div id="water-from-drink" style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--green);">0</div>
+            <div style="font-size:10px;color:var(--text3);">mL</div>
+          </div>
+        </div>
         <div class="prog-wrap" style="margin-bottom:12px;">
           <div class="prog-fill pg-blue" id="prog-water" style="width:0%;transition:width 0.6s ease;"></div>
         </div>
-        <!-- クイック追加ボタン -->
-        <div style="font-size:11px;color:var(--text3);margin-bottom:8px;">タップして追加</div>
+        <!-- 飲料追加ボタン -->
+        <div style="font-size:11px;color:var(--text3);margin-bottom:8px;">飲料をタップして追加（修正・削除も可能）</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;">
-          <button onclick="addWater(100)"  class="btn btn-ghost btn-sm">+100mL</button>
-          <button onclick="addWater(150)"  class="btn btn-ghost btn-sm">+150mL<span style="font-size:9px;color:var(--text3);display:block;">コップ</span></button>
-          <button onclick="addWater(200)"  class="btn btn-ghost btn-sm">+200mL</button>
-          <button onclick="addWater(350)"  class="btn btn-ghost btn-sm">+350mL<span style="font-size:9px;color:var(--text3);display:block;">缶</span></button>
-          <button onclick="addWater(500)"  class="btn btn-ghost btn-sm">+500mL<span style="font-size:9px;color:var(--text3);display:block;">ペットボトル</span></button>
-          <button onclick="addWaterCustom()" class="btn btn-ghost btn-sm">直接入力</button>
+          <button onclick="addDrink(100)"  class="btn btn-ghost btn-sm">+100mL</button>
+          <button onclick="addDrink(150)"  class="btn btn-ghost btn-sm">+150mL<span style="font-size:9px;color:var(--text3);display:block;">コップ</span></button>
+          <button onclick="addDrink(200)"  class="btn btn-ghost btn-sm">+200mL</button>
+          <button onclick="addDrink(350)"  class="btn btn-ghost btn-sm">+350mL<span style="font-size:9px;color:var(--text3);display:block;">缶</span></button>
+          <button onclick="addDrink(500)"  class="btn btn-ghost btn-sm">+500mL<span style="font-size:9px;color:var(--text3);display:block;">ペットボトル</span></button>
+          <button onclick="addDrinkCustom()" class="btn btn-ghost btn-sm">直接入力</button>
         </div>
         <div id="water-log-list" style="margin-top:10px;"></div>
-        <button onclick="resetTodayWater()" style="font-size:11px;color:var(--text3);background:none;border:none;cursor:pointer;margin-top:6px;">🗑 今日の記録をリセット</button>
+        <button onclick="resetTodayWater()" style="font-size:11px;color:var(--text3);background:none;border:none;cursor:pointer;margin-top:6px;">🗑 今日の飲料記録をリセット</button>
       </div>
       <div class="ad-banner" id="ad-home"><div><div class="ad-label">広告</div><div class="ad-text">🏥 腎臓専門クリニック — 無料相談受付中</div></div><div class="ad-x" onclick="document.getElementById('ad-home').style.display='none'">✕</div></div>
     </div>
@@ -637,7 +654,32 @@ html, body {
       <div class="page-title-row"><div><div class="page-title">食事を記録</div><div class="page-sub">食事内容を入力して記録</div></div></div>
       <div class="card">
         <div class="card-title">食事の内容</div>
-        <div class="form-row"><label class="form-label">料理名・メモ</label><input class="form-input" type="text" id="record-name" placeholder="例：朝食・鮭定食" /></div>
+        <div class="form-row">
+          <label class="form-label">📅 記録する日付</label>
+          <input class="form-input" type="date" id="record-date" />
+        </div>
+        <div class="form-row">
+          <label class="form-label">🍽 食事の区分</label>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;" id="meal-type-selector">
+            <div class="meal-type-btn active" data-type="breakfast" onclick="selectMealType(this)">
+              <div style="font-size:18px;">🌅</div>
+              <div style="font-size:11px;margin-top:2px;">朝食</div>
+            </div>
+            <div class="meal-type-btn" data-type="lunch" onclick="selectMealType(this)">
+              <div style="font-size:18px;">☀️</div>
+              <div style="font-size:11px;margin-top:2px;">昼食</div>
+            </div>
+            <div class="meal-type-btn" data-type="dinner" onclick="selectMealType(this)">
+              <div style="font-size:18px;">🌙</div>
+              <div style="font-size:11px;margin-top:2px;">夕食</div>
+            </div>
+            <div class="meal-type-btn" data-type="snack" onclick="selectMealType(this)">
+              <div style="font-size:18px;">🍬</div>
+              <div style="font-size:11px;margin-top:2px;">間食</div>
+            </div>
+          </div>
+        </div>
+        <div class="form-row"><label class="form-label">料理名・メモ</label><input class="form-input" type="text" id="record-name" placeholder="例：鮭定食、豆腐ハンバーグ" /></div>
         <button class="btn btn-outline btn-full" onclick="showFoodSearchModal()" style="margin-bottom:8px;">🔍 献立・食品から栄養成分を入力</button>
         <div style="margin:14px 0 4px;">
           <div class="food-cat-section">
@@ -758,15 +800,7 @@ html, body {
           </div>
           <div style="font-size:10px;color:var(--text3);margin-top:6px;text-align:right;">※ 概算値。栄養成分欄に自動入力されます</div>
         </div>
-        <div class="form-row">
-          <label class="form-label">食事の時間</label>
-          <select class="form-input" id="record-meal-type">
-            <option value="breakfast">🌅 朝食</option>
-            <option value="lunch">☀️ 昼食</option>
-            <option value="dinner">🌙 夕食</option>
-            <option value="snack">🍬 間食</option>
-          </select>
-        </div>
+        <input type="hidden" id="record-meal-type" value="breakfast" />
       </div>
       <div class="card">
         <div class="card-title">栄養成分（わかる範囲で入力）</div>
@@ -1312,6 +1346,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updateWaterCard();
     showScreen('s-app');
     navTo('home');
+    initRecordDate();
   } else {
     updateHomeDate();
     renderMenuGrid();
@@ -1683,6 +1718,20 @@ function cycleUserType() {
   showToast(mDesc[state.userType]+'に変更しました');
 }
 
+function selectMealType(el) {
+  document.querySelectorAll('.meal-type-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('record-meal-type').value = el.dataset.type;
+}
+
+function initRecordDate() {
+  const el = document.getElementById('record-date');
+  if (el && !el.value) {
+    const d = new Date();
+    el.value = d.toISOString().slice(0, 10);
+  }
+}
+
 const FOOD_CAT_CLASS = { main:'sel-main', protein:'sel-protein', sub:'sel-sub', soup:'sel-soup', drink:'sel-main' };
 const FOOD_CAT_NUTRITION = {
   // 主食
@@ -1779,6 +1828,15 @@ function resetFoodCats() { document.querySelectorAll('.food-cat-chip').forEach(c
 function resetRecord() {
   window._currentPhotoBase64 = null;
   ['record-name','record-calories','record-protein','record-carb','record-fiber','record-potassium','record-phosphorus'].forEach(id => { const el = document.getElementById(id); if (el) el.value=''; });
+  // 日付を今日にリセット
+  const dateEl = document.getElementById('record-date');
+  if (dateEl) { const d = new Date(); dateEl.value = d.toISOString().slice(0, 10); }
+  // 食事区分を朝食にリセット
+  document.querySelectorAll('.meal-type-btn').forEach(b => b.classList.remove('active'));
+  const bfBtn = document.querySelector('.meal-type-btn[data-type="breakfast"]');
+  if (bfBtn) bfBtn.classList.add('active');
+  const mealTypeHidden = document.getElementById('record-meal-type');
+  if (mealTypeHidden) mealTypeHidden.value = 'breakfast';
   const glucoseEl = document.getElementById('ai-glucose-result');
   if (glucoseEl) { const div = glucoseEl.querySelector('div:not(.alert-title)'); if (div) div.textContent='炭水化物と食物繊維を入力すると自動計算されます'; }
   resetFoodCats();
@@ -1809,17 +1867,27 @@ async function saveMeal() {
     phosphorus: parseFloat(document.getElementById('record-phosphorus')?.value)||0,
     meal_type: document.getElementById('record-meal-type')?.value||'breakfast',
     food_categories: getSelectedFoodCats(),
-    recorded_at: now.toISOString()
+    recorded_at: (() => {
+      const dateVal = document.getElementById('record-date')?.value;
+      if (dateVal) {
+        // 日付が指定されている場合は、その日の現在時刻として記録
+        const d = new Date(now);
+        const parts = dateVal.split('-');
+        d.setFullYear(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]));
+        return d.toISOString();
+      }
+      return now.toISOString();
+    })()
   };
   const saved = localSaveMeal(meal);
   dbSaveMeal(meal).catch(()=>{});
 
-  // 水分連動：食事の水分量を自動加算
+  // 水分連動：食事の水分量を自動加算（食事の日付に合わせて記録）
   const waterFromMeal = estimateWaterFromMeal(meal);
   if (waterFromMeal > 0) {
     try {
       const all = JSON.parse(localStorage.getItem(WATER_KEY)||'[]');
-      all.push({ time: now.toISOString(), ml: waterFromMeal, auto: true, source: meal.dish_name||'食事' });
+      all.push({ time: meal.recorded_at, ml: waterFromMeal, auto: true, source: meal.dish_name||'食事' });
       localStorage.setItem(WATER_KEY, JSON.stringify(all));
     } catch(e) {}
   }
@@ -1968,6 +2036,7 @@ function navTo(page) {
   if (nb) nb.classList.add('active');
   if (page==='history') renderHistory();
   if (page==='health') renderHealthPage();
+  if (page==='record') initRecordDate();
 }
 
 // ===== 健康記録 =====
@@ -2001,7 +2070,7 @@ function saveHealthRecord(type) {
     const vol   = parseInt(document.getElementById('h-urine-vol')?.value)||null;
     const color = document.getElementById('h-urine-color')?.value||'';
     if (!vol) { showToast('尿量を入力してください'); return; }
-    record = { ...record, vol, color };
+    record = { ...record, id: 'urine_'+Date.now(), vol, color };
     document.getElementById('h-urine-vol').value = '';
   } else if (type === 'exercise') {
     const exType = document.getElementById('h-exercise-type')?.value||'walk';
@@ -2029,6 +2098,31 @@ function getTodayHealthRecords(type) {
     const today = new Date().toDateString();
     return all.filter(r => new Date(r.time).toDateString()===today && r.type===type);
   } catch(e) { return []; }
+}
+
+function editUrineRecord(id, currentVol, currentColor) {
+  const newVol = parseInt(prompt('尿量を修正してください（mL）', currentVol));
+  if (isNaN(newVol) || newVol <= 0) return;
+  const colorLabel = { clear:'透明〜淡黄色（正常）', yellow:'黄色（正常）', dark:'濃い黄色（水分不足）', orange:'オレンジ・茶色（要注意）', red:'赤・ピンク（要受診）', foam:'泡立ち（タンパク尿の可能性）' };
+  const colorKeys = Object.keys(colorLabel);
+  const colorNames = Object.values(colorLabel);
+  const promptMsg = '色・状態を選んでください:\n' + colorKeys.map((k,i) => `${i+1}. ${colorNames[i]}`).join('\n');
+  const choice = parseInt(prompt(promptMsg, colorKeys.indexOf(currentColor)+1));
+  const newColor = (choice >= 1 && choice <= colorKeys.length) ? colorKeys[choice-1] : currentColor;
+  try {
+    const all = JSON.parse(localStorage.getItem(HEALTH_KEY)||'[]');
+    const idx = all.findIndex(r => r.id === id);
+    if (idx !== -1) { all[idx].vol = newVol; all[idx].color = newColor; localStorage.setItem(HEALTH_KEY, JSON.stringify(all)); showToast('✅ 尿量を修正しました'); renderHealthPage(); }
+  } catch(e) { showToast('⚠️ 修正できませんでした'); }
+}
+
+function deleteUrineRecord(id) {
+  if (!confirm('この記録を削除しますか？')) return;
+  try {
+    const all = JSON.parse(localStorage.getItem(HEALTH_KEY)||'[]');
+    localStorage.setItem(HEALTH_KEY, JSON.stringify(all.filter(r => r.id !== id)));
+    showToast('🗑 削除しました'); renderHealthPage();
+  } catch(e) {}
 }
 
 function renderHealthPage() {
@@ -2071,10 +2165,31 @@ function renderHealthPage() {
   const urineRecs = getTodayHealthRecords('urine');
   const urineEl = document.getElementById('h-urine-today');
   if (urineEl) {
-    const total = urineRecs.reduce((s,r)=>s+(r.vol||0),0);
-    urineEl.innerHTML = urineRecs.length > 0
-      ? `今日の合計尿量: <strong style="color:var(--accent);">${total}mL</strong>（${urineRecs.length}回）`
-      : '';
+    if (urineRecs.length === 0) {
+      urineEl.innerHTML = '';
+    } else {
+      const total = urineRecs.reduce((s,r)=>s+(r.vol||0),0);
+      const colorLabel = { clear:'透明〜淡黄', yellow:'黄色', dark:'濃い黄色', orange:'オレンジ', red:'赤・ピンク', foam:'泡立ち' };
+      const colorIcon  = { clear:'🟡', yellow:'🟡', dark:'🟠', orange:'🟠', red:'🔴', foam:'⚪' };
+      urineEl.innerHTML =
+        `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <div style="font-size:12px;color:var(--text3);">本日の合計 <strong style="color:var(--accent);font-size:15px;">${total}mL</strong>（${urineRecs.length}回）</div>
+        </div>` +
+        urineRecs.slice().reverse().map((r, revIdx) => {
+          const idx = urineRecs.length - 1 - revIdx;
+          const t = new Date(r.time);
+          const ts = `${t.getHours()}:${String(t.getMinutes()).padStart(2,'0')}`;
+          return `<div id="urine-row-${r.id||idx}" style="display:flex;align-items:center;gap:8px;padding:6px 8px;background:var(--surface2);border-radius:8px;margin-bottom:6px;">
+            <div style="font-size:13px;color:var(--text3);min-width:40px;">${ts}</div>
+            <div style="flex:1;">
+              <span id="urine-vol-display-${r.id||idx}" style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--accent);">${r.vol}mL</span>
+              <span style="font-size:11px;color:var(--text3);margin-left:6px;">${colorIcon[r.color]||'🟡'} ${colorLabel[r.color]||''}</span>
+            </div>
+            <button onclick="editUrineRecord('${r.id||idx}', ${r.vol}, '${r.color}')" style="background:none;border:1px solid var(--border2);border-radius:6px;padding:3px 8px;font-size:11px;color:var(--text2);cursor:pointer;">編集</button>
+            <button onclick="deleteUrineRecord('${r.id||idx}')" style="background:none;border:1px solid rgba(248,113,113,0.3);border-radius:6px;padding:3px 8px;font-size:11px;color:var(--red);cursor:pointer;">削除</button>
+          </div>`;
+        }).join('');
+    }
   }
   // 運動
   const exRecs = getTodayHealthRecords('exercise');
@@ -2283,25 +2398,43 @@ function updateGlucoseGraph() {
   if (modeEl) modeEl.textContent = '📊 ' + (modeMap[type] || '');
 }
 
+// 食品ごとの水分含有量マップ（ml/100g相当）
+const FOOD_WATER_MAP = {
+  // 主食
+  '白米（茶碗1杯）': 50, '玄米（茶碗1杯）': 48, '食パン（1枚）': 20, 'うどん（1玉）': 160,
+  'そば（1玉）': 130, 'ラーメン（1玉）': 120, 'スパゲッティ（1人前）': 80,
+  // 汁物
+  '味噌汁（1杯）': 150, 'すまし汁（1杯）': 160,
+  // 飲み物チップ
+  '水・お茶（200ml）': 200, 'コーヒー・紅茶（200ml）': 200,
+  '牛乳（200ml）': 175, '豆乳（200ml）': 185, 'ジュース（200ml）': 190,
+};
+
+// 食品DBエントリーの水分（カテゴリ別推定）
+function estimateFoodDBWater(food) {
+  if (!food) return 0;
+  const cat = food.cat || '';
+  const name = food.name || '';
+  if (cat === '飲み物' || cat === '汁物') return 150;
+  if (name.includes('うどん') || name.includes('そば') || name.includes('ラーメン') || name.includes('フォー')) return 160;
+  if (name.includes('粥') || name.includes('雑炊')) return 200;
+  if (name.includes('鍋') || name.includes('スープ') || name.includes('チゲ')) return 120;
+  if (name.includes('ご飯') || name.includes('米') || name.includes('おにぎり')) return 50;
+  if (name.includes('パン')) return 15;
+  return 0;
+}
+
 // 食事から水分量を推定（汁物・飲み物カテゴリー選択 + 食品DB）
 function estimateWaterFromMeal(meal) {
   let water = 0;
-  // チップ選択から推定（FOOD_CAT_NUTRITIONに水分データがないため食品名から推定）
   const cats = meal.food_categories || {};
-  // 汁物・飲み物チップで選ばれた食品の水分を推定
-  const drinkWaterMap = {
-    '水・お茶（200ml）': 200, 'コーヒー・紅茶（200ml）': 200,
-    '牛乳（200ml）': 175, '豆乳（200ml）': 185, 'ジュース（200ml）': 190,
-    '味噌汁（1杯）': 150, 'すまし汁（1杯）': 160,
-  };
-  [...(cats.soup||[]), ...(cats.drink||[])].forEach(name => {
-    water += drinkWaterMap[name] || 0;
+  // チップ選択から推定
+  [...(cats.soup||[]), ...(cats.drink||[]), ...(cats.main||[])].forEach(name => {
+    water += FOOD_WATER_MAP[name] || 0;
   });
-  // 主食からも水分を推定（ご飯150g→約50ml、お粥→多め）
-  (cats.main||[]).forEach(name => {
-    if (name.includes('粥')) water += 180;
-    else if (name.includes('うどん') || name.includes('そば') || name.includes('ラーメン')) water += 200;
-    else if (name.includes('飯') || name.includes('米')) water += 50;
+  // 食品DB選択から推定（food_db_selectionsがある場合）
+  (meal.food_db_selections || []).forEach(sel => {
+    water += estimateFoodDBWater(sel);
   });
   return Math.round(water);
 }
@@ -2614,59 +2747,96 @@ function getTodayWaterLog() {
   } catch(e) { return []; }
 }
 
-function addWater(ml) {
+// 後方互換：旧来のaddWater呼び出しも飲料として追加
+function addWater(ml) { addDrink(ml); }
+
+function addDrink(ml) {
   try {
     const all = JSON.parse(localStorage.getItem(WATER_KEY) || '[]');
-    all.push({ time: new Date().toISOString(), ml });
+    all.push({ id: 'drink_'+Date.now(), time: new Date().toISOString(), ml, auto: false });
     localStorage.setItem(WATER_KEY, JSON.stringify(all));
   } catch(e) {}
   updateWaterCard();
   showToast(`💧 ${ml}mL 追加しました`);
 }
 
-function addWaterCustom() {
-  const ml = parseInt(prompt('水分量を入力してください（mL）', '200'));
-  if (!isNaN(ml) && ml > 0) addWater(ml);
+function addDrinkCustom() {
+  const ml = parseInt(prompt('飲料の水分量を入力してください（mL）', '200'));
+  if (!isNaN(ml) && ml > 0) addDrink(ml);
+}
+
+function editDrinkRecord(id, currentMl) {
+  const newMl = parseInt(prompt('水分量を修正してください（mL）', currentMl));
+  if (isNaN(newMl) || newMl <= 0) return;
+  try {
+    const all = JSON.parse(localStorage.getItem(WATER_KEY) || '[]');
+    const idx = all.findIndex(e => e.id === id);
+    if (idx !== -1) { all[idx].ml = newMl; localStorage.setItem(WATER_KEY, JSON.stringify(all)); showToast('✅ 修正しました'); updateWaterCard(); }
+  } catch(e) {}
+}
+
+function deleteDrinkRecord(id) {
+  if (!confirm('この飲料記録を削除しますか？')) return;
+  try {
+    const all = JSON.parse(localStorage.getItem(WATER_KEY) || '[]');
+    localStorage.setItem(WATER_KEY, JSON.stringify(all.filter(e => e.id !== id)));
+    showToast('🗑 削除しました'); updateWaterCard();
+  } catch(e) {}
 }
 
 function resetTodayWater() {
-  if (!confirm('今日の水分記録をリセットしますか？')) return;
+  if (!confirm('今日の飲料記録をリセットしますか？（食事から自動計算された水分は残ります）')) return;
   try {
     const all = JSON.parse(localStorage.getItem(WATER_KEY) || '[]');
     const today = new Date().toDateString();
-    localStorage.setItem(WATER_KEY, JSON.stringify(all.filter(e => new Date(e.time).toDateString() !== today)));
+    // auto=trueの食事水分は残し、手動追加の飲料のみ削除
+    localStorage.setItem(WATER_KEY, JSON.stringify(all.filter(e => !(new Date(e.time).toDateString() === today && !e.auto))));
   } catch(e) {}
   updateWaterCard();
 }
 
 function updateWaterCard() {
   const log = getTodayWaterLog();
-  const total = log.reduce((s, e) => s + (e.ml || 0), 0);
+  // 食事水分（auto:true）と飲料（auto:false/未設定）を分離
+  const mealWater  = log.filter(e => e.auto).reduce((s,e) => s+(e.ml||0), 0);
+  const drinkWater = log.filter(e => !e.auto).reduce((s,e) => s+(e.ml||0), 0);
+  const total = mealWater + drinkWater;
   const target = state.targets?.water || 1500;
   const pct = Math.min(100, Math.round(total / target * 100));
 
-  const totalEl = document.getElementById('water-total');
-  const progEl = document.getElementById('prog-water');
-  const badgeEl = document.getElementById('water-badge');
-  const targetEl = document.getElementById('water-target-label');
+  const totalEl   = document.getElementById('water-total');
+  const progEl    = document.getElementById('prog-water');
+  const badgeEl   = document.getElementById('water-badge');
+  const targetEl  = document.getElementById('water-target-label');
   const logListEl = document.getElementById('water-log-list');
+  const mealEl    = document.getElementById('water-from-meal');
+  const drinkEl   = document.getElementById('water-from-drink');
 
-  if (totalEl) totalEl.textContent = total.toLocaleString();
-  if (progEl) progEl.style.width = pct + '%';
+  if (totalEl)  totalEl.textContent  = total.toLocaleString();
+  if (progEl)   progEl.style.width   = pct + '%';
   if (targetEl) targetEl.textContent = target.toLocaleString();
+  if (mealEl)   mealEl.textContent   = mealWater.toLocaleString();
+  if (drinkEl)  drinkEl.textContent  = drinkWater.toLocaleString();
+
   if (badgeEl) {
-    if (pct >= 100) { badgeEl.style.display='inline-flex'; badgeEl.textContent='✓ 目標達成'; badgeEl.style.background='var(--green-dim)'; badgeEl.style.color='var(--green)'; badgeEl.style.border='1px solid var(--green)'; }
-    else if (pct >= 80) { badgeEl.style.display='inline-flex'; badgeEl.textContent='もう少し！'; badgeEl.style.background='var(--amber-dim)'; badgeEl.style.color='var(--amber)'; badgeEl.style.border='1px solid var(--amber)'; }
-    else badgeEl.style.display = 'none';
+    if (pct >= 100)      { badgeEl.style.display='inline-flex'; badgeEl.textContent='✓ 目標達成'; badgeEl.style.background='var(--green-dim)'; badgeEl.style.color='var(--green)'; badgeEl.style.border='1px solid var(--green)'; }
+    else if (pct >= 80)  { badgeEl.style.display='inline-flex'; badgeEl.textContent='もう少し！'; badgeEl.style.background='var(--amber-dim)'; badgeEl.style.color='var(--amber)'; badgeEl.style.border='1px solid var(--amber)'; }
+    else                 badgeEl.style.display = 'none';
   }
+
   if (logListEl) {
-    if (log.length === 0) { logListEl.innerHTML = ''; return; }
-    logListEl.innerHTML = '<div style="font-size:11px;color:var(--text3);margin-bottom:4px;">今日の記録</div>' +
-      log.slice().reverse().slice(0,5).map(e => {
+    // 飲料のみ（auto:false）を表示（修正・削除ボタン付き）
+    const drinkLog = log.filter(e => !e.auto);
+    if (drinkLog.length === 0) { logListEl.innerHTML = ''; return; }
+    logListEl.innerHTML = '<div style="font-size:11px;color:var(--text3);margin-bottom:4px;">今日の飲料記録</div>' +
+      drinkLog.slice().reverse().map(e => {
         const t = new Date(e.time);
-        return `<div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0;border-bottom:1px solid var(--border);color:var(--text2);">
-          <span>${t.getHours()}:${String(t.getMinutes()).padStart(2,'0')}</span>
-          <span style="color:var(--accent);font-weight:600;">+${e.ml}mL</span>
+        const ts = `${t.getHours()}:${String(t.getMinutes()).padStart(2,'0')}`;
+        return `<div style="display:flex;align-items:center;gap:6px;font-size:12px;padding:4px 6px;background:var(--surface2);border-radius:6px;margin-bottom:4px;">
+          <span style="color:var(--text3);min-width:36px;">${ts}</span>
+          <span style="flex:1;color:var(--accent);font-weight:600;">+${e.ml}mL</span>
+          <button onclick="editDrinkRecord('${e.id}', ${e.ml})" style="background:none;border:1px solid var(--border2);border-radius:5px;padding:2px 7px;font-size:11px;color:var(--text2);cursor:pointer;">編集</button>
+          <button onclick="deleteDrinkRecord('${e.id}')" style="background:none;border:1px solid rgba(248,113,113,0.3);border-radius:5px;padding:2px 7px;font-size:11px;color:var(--red);cursor:pointer;">削除</button>
         </div>`;
       }).join('');
   }
