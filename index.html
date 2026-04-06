@@ -676,10 +676,10 @@ html, body {
             </div>
             <div class="chips" style="margin-bottom:0;">
               <div class="food-cat-chip" data-cat="drink" onclick="toggleFoodCatAndSearch(this,'飲み物')">水・お茶</div>
-              <div class="food-cat-chip" data-cat="drink" onclick="toggleFoodCatAndSearch(this,'コーヒー')">コーヒー・紅茶</div>
-              <div class="food-cat-chip" data-cat="drink" onclick="toggleFoodCatAndSearch(this,'牛乳')">牛乳・豆乳</div>
-              <div class="food-cat-chip" data-cat="drink" onclick="toggleFoodCatAndSearch(this,'ジュース')">ジュース</div>
-              <div class="food-cat-chip" data-cat="drink" onclick="toggleFoodCatAndSearch(this,'飲料')">その他</div>
+              <div class="food-cat-chip" data-cat="drink" onclick="toggleFoodCatAndSearch(this,'飲み物')">コーヒー・紅茶</div>
+              <div class="food-cat-chip" data-cat="drink" onclick="toggleFoodCatAndSearch(this,'飲み物')">牛乳・豆乳</div>
+              <div class="food-cat-chip" data-cat="drink" onclick="toggleFoodCatAndSearch(this,'飲み物')">ジュース</div>
+              <div class="food-cat-chip" data-cat="drink" onclick="toggleFoodCatAndSearch(this,'飲み物')">その他</div>
             </div>
           </div>
         </div>
@@ -886,22 +886,22 @@ html, body {
     </div>
     <!-- カテゴリータブ -->
     <div id="foodCatTabs" style="display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:4px;scrollbar-width:none;">
-      <div class="food-tab active" onclick="setFoodTab(this,'all')">すべて</div>
-      <div class="food-tab" onclick="setFoodTab(this,'米類')">🍚 米類</div>
-      <div class="food-tab" onclick="setFoodTab(this,'パン類')">🍞 パン類</div>
-      <div class="food-tab" onclick="setFoodTab(this,'麺類')">🍜 麺類</div>
-      <div class="food-tab" onclick="setFoodTab(this,'肉類')">🥩 肉類</div>
-      <div class="food-tab" onclick="setFoodTab(this,'魚介類')">🐟 魚介類</div>
-      <div class="food-tab" onclick="setFoodTab(this,'卵・乳製品')">🥚 卵・乳製品</div>
-      <div class="food-tab" onclick="setFoodTab(this,'大豆類')">🫘 大豆類</div>
-      <div class="food-tab" onclick="setFoodTab(this,'野菜類')">🥦 野菜類</div>
-      <div class="food-tab" onclick="setFoodTab(this,'根菜・いも類')">🥕 根菜・いも類</div>
-      <div class="food-tab" onclick="setFoodTab(this,'飲み物')">🥤 飲み物</div>
-      <div class="food-tab" onclick="setFoodTab(this,'汁物')">🍵 汁物</div>
-      <div class="food-tab" onclick="setFoodTab(this,'果物')">🍊 果物</div>
-      <div class="food-tab" onclick="setFoodTab(this,'菓子・デザート')">🍮 デザート</div>
-      <div class="food-tab" onclick="setFoodTab(this,'外食')">🏪 外食</div>
-      <div class="food-tab" onclick="setFoodTab(this,'低タンパク献立')">💊 低タンパク</div>
+      <div class="food-tab active" data-cat="all"        onclick="setFoodTab(this,'all')">すべて</div>
+      <div class="food-tab" data-cat="米類"              onclick="setFoodTab(this,'米類')">🍚 米類</div>
+      <div class="food-tab" data-cat="パン類"            onclick="setFoodTab(this,'パン類')">🍞 パン類</div>
+      <div class="food-tab" data-cat="麺類"              onclick="setFoodTab(this,'麺類')">🍜 麺類</div>
+      <div class="food-tab" data-cat="肉類"              onclick="setFoodTab(this,'肉類')">🥩 肉類</div>
+      <div class="food-tab" data-cat="魚介類"            onclick="setFoodTab(this,'魚介類')">🐟 魚介類</div>
+      <div class="food-tab" data-cat="卵・乳製品"        onclick="setFoodTab(this,'卵・乳製品')">🥚 卵・乳製品</div>
+      <div class="food-tab" data-cat="大豆類"            onclick="setFoodTab(this,'大豆類')">🫘 大豆類</div>
+      <div class="food-tab" data-cat="野菜類"            onclick="setFoodTab(this,'野菜類')">🥦 野菜類</div>
+      <div class="food-tab" data-cat="根菜・いも類"      onclick="setFoodTab(this,'根菜・いも類')">🥕 根菜・いも類</div>
+      <div class="food-tab" data-cat="飲み物"            onclick="setFoodTab(this,'飲み物')">🥤 飲み物</div>
+      <div class="food-tab" data-cat="汁物"              onclick="setFoodTab(this,'汁物')">🍵 汁物</div>
+      <div class="food-tab" data-cat="果物"              onclick="setFoodTab(this,'果物')">🍊 果物</div>
+      <div class="food-tab" data-cat="菓子・デザート"    onclick="setFoodTab(this,'菓子・デザート')">🍮 デザート</div>
+      <div class="food-tab" data-cat="外食"              onclick="setFoodTab(this,'外食')">🏪 外食</div>
+      <div class="food-tab" data-cat="低タンパク献立"    onclick="setFoodTab(this,'低タンパク献立')">💊 低タンパク</div>
     </div>
     <div id="foodSearchResults" style="max-height:320px;overflow-y:auto;"></div>
     <div style="padding:12px;border-top:1px solid var(--border);margin-top:4px;">
@@ -2044,26 +2044,26 @@ function setFoodTab(el, cat) {
 function showFoodSearchModal(defaultTab) {
   const modal = document.getElementById('foodSearchModal');
   if (modal) modal.classList.add('open');
-  // デフォルトタブリセット
   _currentFoodTab = defaultTab || 'all';
+  // data-cat属性で正確に一致するタブをアクティブにする
   document.querySelectorAll('.food-tab').forEach(t => {
-    const isActive = (t.textContent.includes(defaultTab) || (!defaultTab && t.textContent === 'すべて'));
-    t.classList.toggle('active', !!isActive);
+    t.classList.remove('active');
+    if (t.dataset.cat === _currentFoodTab) t.classList.add('active');
   });
-  if (!defaultTab) document.querySelector('.food-tab')?.classList.add('active');
+  // defaultTabなし（すべて）の場合は最初のタブをアクティブ
+  if (!defaultTab) {
+    const first = document.querySelector('.food-tab');
+    if (first) first.classList.add('active');
+  }
   const input = document.getElementById('foodSearchInput');
-  if (input) { input.value = ''; }
+  if (input) input.value = '';
   searchFoodDB('');
 }
 
 // 第二カテゴリーチップから検索を開く
-function toggleFoodCatAndSearch(el, searchWord) {
+function toggleFoodCatAndSearch(el, tabCat) {
   toggleFoodCat(el);
-  // 食品検索モーダルを開いて該当カテゴリーで検索
-  showFoodSearchModal();
-  const input = document.getElementById('foodSearchInput');
-  if (input) { input.value = searchWord; }
-  searchFoodDB(searchWord);
+  showFoodSearchModal(tabCat);
 }
 
 function showFoodRequestForm() {
