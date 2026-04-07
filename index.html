@@ -201,6 +201,38 @@ html, body {
 .meal-type-btn:active { transform: scale(0.95); }
 .meal-type-btn.active { background: rgba(79,195,247,0.18); border-color: var(--accent); color: var(--accent); font-weight: 600; box-shadow: 0 0 0 1px var(--accent); }
 
+/* ===== 薬管理 ===== */
+.med-time-block { margin-bottom: 10px; }
+.med-time-header { display: flex; align-items: center; gap: 8px; padding: 8px 4px 6px; border-bottom: 1px solid var(--border); margin-bottom: 6px; }
+.med-time-icon { font-size: 16px; }
+.med-time-label { font-size: 13px; font-weight: 600; color: var(--text2); flex: 1; }
+.med-time-badge { font-size: 11px; padding: 2px 8px; border-radius: 10px; }
+.med-time-list { display: flex; flex-direction: column; gap: 6px; }
+.med-card { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--rs); transition: all 0.2s; }
+.med-card:active { transform: scale(0.98); }
+.med-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; background: var(--surface2); }
+.med-info { flex: 1; min-width: 0; }
+.med-name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.med-hospital { font-size: 11px; color: var(--text3); margin-top: 1px; }
+.med-dose { font-size: 12px; color: var(--text2); margin-top: 2px; }
+.med-status-btn { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 10px; border-radius: 8px; border: 1.5px solid var(--border2); background: var(--surface2); cursor: pointer; transition: all 0.2s; flex-shrink: 0; min-width: 56px; }
+.med-status-btn:active { transform: scale(0.95); }
+.med-status-btn.taken { background: var(--green-dim); border-color: var(--green); }
+.med-status-btn.skipped { background: var(--red-dim); border-color: var(--red); }
+.med-status-icon { font-size: 18px; line-height: 1; }
+.med-status-text { font-size: 10px; font-weight: 600; }
+.med-status-btn.taken .med-status-text { color: var(--green); }
+.med-status-btn.skipped .med-status-text { color: var(--red); }
+.med-status-btn:not(.taken):not(.skipped) .med-status-text { color: var(--text3); }
+
+.med-timing-chip { display:flex;align-items:center;gap:6px;padding:10px 12px;background:var(--surface2);border:1.5px solid var(--border2);border-radius:var(--rs);cursor:pointer;font-size:13px;color:var(--text2);transition:all 0.15s;user-select:none; }
+.med-timing-chip:active { transform:scale(0.96); }
+.med-timing-chip.selected { background:rgba(79,195,247,0.15);border-color:var(--accent);color:var(--accent);font-weight:600; }
+.med-color-opt { width:26px;height:26px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all 0.15s;flex-shrink:0; }
+.med-color-opt.active { border-color:var(--text);transform:scale(1.15); }
+.med-time-block { display:none; }
+.med-time-block.has-meds { display:block; }
+
 .nutrition-preview { background: var(--surface2); border-radius: var(--rs); padding: 10px 12px; margin-top: 10px; display: none; }
 .nutrition-preview.visible { display: block; }
 .nutrition-preview-title { font-size: 11px; color: var(--text3); margin-bottom: 6px; font-weight: 600; letter-spacing: 0.04em; }
@@ -646,6 +678,47 @@ html, body {
         <div id="water-log-list" style="margin-top:10px;"></div>
         <button onclick="resetTodayWater()" style="font-size:11px;color:var(--text3);background:none;border:none;cursor:pointer;margin-top:6px;">🗑 今日の飲料記録をリセット</button>
       </div>
+
+      <!-- 水分収支カード（透析患者向け） -->
+      <div class="card" style="border-color:rgba(192,132,252,0.3);" id="water-balance-card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <div class="card-title" style="margin-bottom:0;">⚖️ 水分収支（透析管理）</div>
+          <div style="font-size:10px;color:var(--text3);cursor:pointer;" onclick="showWaterBalanceInfo()">ℹ️</div>
+        </div>
+        <!-- 不感蒸泄 -->
+        <div style="background:var(--surface2);border-radius:10px;padding:10px 12px;margin-bottom:8px;">
+          <div style="font-size:11px;color:var(--text3);margin-bottom:6px;">💨 不感蒸泄（体格から自動計算）</div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <div style="flex:1;text-align:center;">
+              <div id="insensible-val" style="font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:700;color:var(--purple);">—</div>
+              <div style="font-size:10px;color:var(--text3);">mL/日</div>
+            </div>
+            <div style="flex:2;font-size:11px;color:var(--text3);line-height:1.7;" id="insensible-detail">体重・身長を設定で入力すると計算されます</div>
+          </div>
+        </div>
+        <!-- 運動による発汗 -->
+        <div style="background:var(--surface2);border-radius:10px;padding:10px 12px;margin-bottom:8px;">
+          <div style="font-size:11px;color:var(--text3);margin-bottom:4px;">🏃 運動による水分蒸発（今日の記録から）</div>
+          <div id="exercise-sweat-val" style="font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:700;color:var(--green);">0 mL</div>
+        </div>
+        <!-- 水分収支の計算式 -->
+        <div style="border:1px solid rgba(192,132,252,0.3);border-radius:10px;padding:12px;background:rgba(192,132,252,0.05);">
+          <div style="font-size:11px;color:var(--text3);margin-bottom:8px;">📊 本日の水分増加量（推定）</div>
+          <div style="font-size:12px;color:var(--text2);line-height:2.2;">
+            <div style="display:flex;justify-content:space-between;"><span>摂取水分</span><span id="wb-intake" style="color:var(--accent);font-weight:600;">0 mL</span></div>
+            <div style="display:flex;justify-content:space-between;"><span>― 尿量</span><span id="wb-urine" style="color:var(--red);font-weight:600;">0 mL</span></div>
+            <div style="display:flex;justify-content:space-between;"><span>― 不感蒸泄</span><span id="wb-insensible" style="color:var(--purple);font-weight:600;">0 mL</span></div>
+            <div style="display:flex;justify-content:space-between;"><span>― 運動発汗</span><span id="wb-sweat" style="color:var(--green);font-weight:600;">0 mL</span></div>
+            <div style="height:1px;background:var(--border);margin:4px 0;"></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <span style="font-weight:700;color:var(--text);">＝ 水分増加量</span>
+              <span id="wb-result" style="font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:700;">0 mL</span>
+            </div>
+          </div>
+          <div id="wb-warning" style="display:none;margin-top:8px;padding:6px 10px;border-radius:6px;font-size:11px;"></div>
+        </div>
+        <div style="font-size:10px;color:var(--text3);margin-top:8px;line-height:1.6;">※ 不感蒸泄は体重×約15mL/kg/日（安静時）。運動発汗は強度と時間から概算。透析患者の除水量管理の目安として使用してください。</div>
+      </div>
       <div class="ad-banner" id="ad-home"><div><div class="ad-label">広告</div><div class="ad-text">🏥 腎臓専門クリニック — 無料相談受付中</div></div><div class="ad-x" onclick="document.getElementById('ad-home').style.display='none'">✕</div></div>
     </div>
 
@@ -685,11 +758,10 @@ html, body {
           <div class="food-cat-section">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;">
               <div class="food-cat-label lbl-main" style="margin-bottom:0;">🍚 主食</div>
-              <div style="display:flex;gap:4px;">
-                <div class="portion-btn" data-group="main" data-portion="none" onclick="selectGroupPortion(this)">なし</div>
-                <div class="portion-btn" data-group="main" data-portion="small" onclick="selectGroupPortion(this)">少</div>
-                <div class="portion-btn active" data-group="main" data-portion="normal" onclick="selectGroupPortion(this)">普通</div>
-                <div class="portion-btn" data-group="main" data-portion="large" onclick="selectGroupPortion(this)">多</div>
+              <div style="display:flex;align-items:center;gap:4px;">
+                <span style="font-size:11px;color:var(--text3);">量:</span>
+                <input type="number" class="portion-gram-input" id="gram-main" data-group="main" value="1.0" min="0" max="5" step="0.5" oninput="updateGroupGram('main')" style="width:58px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:3px 6px;color:var(--text);font-size:13px;text-align:center;" />
+                <span style="font-size:11px;color:var(--text3);">倍 <span id="gram-main-hint" style="color:var(--text3);font-size:10px;">（1.0=標準量）</span></span>
               </div>
             </div>
             <div class="chips" style="margin-bottom:0;">
@@ -700,17 +772,18 @@ html, body {
               <div class="food-cat-chip" data-cat="main" onclick="toggleFoodCat(this)">そば（1玉）</div>
               <div class="food-cat-chip" data-cat="main" onclick="toggleFoodCat(this)">ラーメン（1玉）</div>
               <div class="food-cat-chip" data-cat="main" onclick="toggleFoodCat(this)">スパゲッティ（1人前）</div>
+              <div class="food-cat-chip" data-cat="main" onclick="toggleFoodCat(this)">春雨スープ（1人前）</div>
+              <div class="food-cat-chip" data-cat="main" onclick="toggleFoodCat(this)">低タンパクご飯（1杯）</div>
             </div>
           </div>
           <div class="food-cat-divider"></div>
           <div class="food-cat-section">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;">
               <div class="food-cat-label lbl-protein" style="margin-bottom:0;">🥩 メイン食材</div>
-              <div style="display:flex;gap:4px;">
-                <div class="portion-btn" data-group="protein" data-portion="none" onclick="selectGroupPortion(this)">なし</div>
-                <div class="portion-btn" data-group="protein" data-portion="small" onclick="selectGroupPortion(this)">少</div>
-                <div class="portion-btn active" data-group="protein" data-portion="normal" onclick="selectGroupPortion(this)">普通</div>
-                <div class="portion-btn" data-group="protein" data-portion="large" onclick="selectGroupPortion(this)">多</div>
+              <div style="display:flex;align-items:center;gap:4px;">
+                <span style="font-size:11px;color:var(--text3);">量:</span>
+                <input type="number" class="portion-gram-input" id="gram-protein" data-group="protein" value="1.0" min="0" max="5" step="0.5" oninput="updateGroupGram('protein')" style="width:58px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:3px 6px;color:var(--text);font-size:13px;text-align:center;" />
+                <span style="font-size:11px;color:var(--text3);">倍</span>
               </div>
             </div>
             <div class="chips" style="margin-bottom:0;">
@@ -729,11 +802,10 @@ html, body {
           <div class="food-cat-section">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;">
               <div class="food-cat-label lbl-sub" style="margin-bottom:0;">🥦 サブ食材</div>
-              <div style="display:flex;gap:4px;">
-                <div class="portion-btn" data-group="sub" data-portion="none" onclick="selectGroupPortion(this)">なし</div>
-                <div class="portion-btn" data-group="sub" data-portion="small" onclick="selectGroupPortion(this)">少</div>
-                <div class="portion-btn active" data-group="sub" data-portion="normal" onclick="selectGroupPortion(this)">普通</div>
-                <div class="portion-btn" data-group="sub" data-portion="large" onclick="selectGroupPortion(this)">多</div>
+              <div style="display:flex;align-items:center;gap:4px;">
+                <span style="font-size:11px;color:var(--text3);">量:</span>
+                <input type="number" class="portion-gram-input" id="gram-sub" data-group="sub" value="1.0" min="0" max="5" step="0.5" oninput="updateGroupGram('sub')" style="width:58px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:3px 6px;color:var(--text);font-size:13px;text-align:center;" />
+                <span style="font-size:11px;color:var(--text3);">倍</span>
               </div>
             </div>
             <div class="chips" style="margin-bottom:0;">
@@ -744,17 +816,21 @@ html, body {
               <div class="food-cat-chip" data-cat="sub" onclick="toggleFoodCat(this)">大根・煮物（小鉢）</div>
               <div class="food-cat-chip" data-cat="sub" onclick="toggleFoodCat(this)">じゃがいも（中1個）</div>
               <div class="food-cat-chip" data-cat="sub" onclick="toggleFoodCat(this)">さつまいも（小）</div>
+              <div class="food-cat-chip" data-cat="sub" onclick="toggleFoodCat(this)">春雨（乾燥20g）</div>
+              <div class="food-cat-chip" data-cat="sub" onclick="toggleFoodCat(this)">こんにゃく（100g）</div>
+              <div class="food-cat-chip" data-cat="sub" onclick="toggleFoodCat(this)">しらたき（100g）</div>
+              <div class="food-cat-chip" data-cat="sub" onclick="toggleFoodCat(this)">もやし（小鉢）</div>
+              <div class="food-cat-chip" data-cat="sub" onclick="toggleFoodCat(this)">白菜（小鉢）</div>
             </div>
           </div>
           <div class="food-cat-divider"></div>
           <div class="food-cat-section">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;">
               <div class="food-cat-label lbl-soup" style="margin-bottom:0;">🍵 汁物・デザート</div>
-              <div style="display:flex;gap:4px;">
-                <div class="portion-btn" data-group="soup" data-portion="none" onclick="selectGroupPortion(this)">なし</div>
-                <div class="portion-btn" data-group="soup" data-portion="small" onclick="selectGroupPortion(this)">少</div>
-                <div class="portion-btn active" data-group="soup" data-portion="normal" onclick="selectGroupPortion(this)">普通</div>
-                <div class="portion-btn" data-group="soup" data-portion="large" onclick="selectGroupPortion(this)">多</div>
+              <div style="display:flex;align-items:center;gap:4px;">
+                <span style="font-size:11px;color:var(--text3);">量:</span>
+                <input type="number" class="portion-gram-input" id="gram-soup" data-group="soup" value="1.0" min="0" max="5" step="0.5" oninput="updateGroupGram('soup')" style="width:58px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:3px 6px;color:var(--text);font-size:13px;text-align:center;" />
+                <span style="font-size:11px;color:var(--text3);">倍</span>
               </div>
             </div>
             <div class="chips" style="margin-bottom:0;">
@@ -770,11 +846,10 @@ html, body {
           <div class="food-cat-section">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;">
               <div class="food-cat-label" style="margin-bottom:0;color:var(--accent);">💧 飲物類</div>
-              <div style="display:flex;gap:4px;">
-                <div class="portion-btn" data-group="drink" data-portion="none" onclick="selectGroupPortion(this)">なし</div>
-                <div class="portion-btn" data-group="drink" data-portion="small" onclick="selectGroupPortion(this)">少</div>
-                <div class="portion-btn active" data-group="drink" data-portion="normal" onclick="selectGroupPortion(this)">普通</div>
-                <div class="portion-btn" data-group="drink" data-portion="large" onclick="selectGroupPortion(this)">多</div>
+              <div style="display:flex;align-items:center;gap:4px;">
+                <span style="font-size:11px;color:var(--text3);">量:</span>
+                <input type="number" class="portion-gram-input" id="gram-drink" data-group="drink" value="1.0" min="0" max="5" step="0.5" oninput="updateGroupGram('drink')" style="width:58px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:3px 6px;color:var(--text);font-size:13px;text-align:center;" />
+                <span style="font-size:11px;color:var(--text3);">倍</span>
               </div>
             </div>
             <div class="chips" style="margin-bottom:0;">
@@ -811,6 +886,15 @@ html, body {
           <div class="form-row"><label class="form-label">食物繊維 (g)</label><input class="form-input" type="number" id="record-fiber" placeholder="0" oninput="this.dataset.manualEdit='1';recalcGlucose()" /></div>
           <div class="form-row"><label class="form-label">カリウム (mg)</label><input class="form-input" type="number" id="record-potassium" placeholder="0" oninput="this.dataset.manualEdit='1'" /></div>
           <div class="form-row"><label class="form-label">リン (mg)</label><input class="form-input" type="number" id="record-phosphorus" placeholder="0" oninput="this.dataset.manualEdit='1'" /></div>
+        </div>
+        <!-- 推定最大血糖値 -->
+        <div id="peak-glucose-row" style="display:none;margin-top:6px;padding:10px 12px;background:var(--amber-dim);border:1px solid rgba(252,211,77,0.3);border-radius:var(--rs);">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:12px;color:var(--text2);">🩸 この食事の推定最大血糖値</span>
+            <span id="peak-glucose-val" style="font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:700;color:var(--amber);">—</span>
+            <span style="font-size:11px;color:var(--text3);">mg/dL</span>
+          </div>
+          <div id="peak-glucose-detail" style="font-size:11px;color:var(--text3);margin-top:3px;"></div>
         </div>
       </div>
       <div class="alert-box alert-ok" id="ai-glucose-result">
@@ -1018,6 +1102,120 @@ html, body {
       </div>
     </div>
 
+    <!-- MEDICINE -->
+    <div class="page" id="page-medicine">
+      <div class="page-title-row">
+        <div><div class="page-title">お薬管理</div><div class="page-sub">処方薬の登録と服薬記録</div></div>
+        <button class="btn btn-primary btn-sm" onclick="showAddMedicineModal()">＋ 薬を追加</button>
+      </div>
+
+      <!-- 日付選択 -->
+      <div class="card" style="padding:12px 16px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <button onclick="changeMedDate(-1)" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:6px 12px;color:var(--text2);cursor:pointer;font-size:16px;">‹</button>
+          <input type="date" id="med-date" class="form-input" style="flex:1;text-align:center;font-weight:600;" onchange="renderMedicinePage()" />
+          <button onclick="changeMedDate(1)" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:6px 12px;color:var(--text2);cursor:pointer;font-size:16px;">›</button>
+          <button onclick="setMedDateToday()" style="background:var(--accent-glow);border:1px solid rgba(79,195,247,0.3);border-radius:8px;padding:6px 10px;color:var(--accent);cursor:pointer;font-size:11px;white-space:nowrap;">今日</button>
+        </div>
+      </div>
+
+      <!-- 服薬サマリー -->
+      <div class="metrics-row" style="margin-bottom:12px;">
+        <div class="metric-card m-green">
+          <div class="card-title">服薬済み</div>
+          <div class="metric-val"><span id="med-taken-count">0</span><span class="metric-unit">回</span></div>
+        </div>
+        <div class="metric-card m-red">
+          <div class="card-title">未服薬</div>
+          <div class="metric-val"><span id="med-missed-count">0</span><span class="metric-unit">回</span></div>
+        </div>
+      </div>
+
+      <!-- 時間帯別服薬リスト -->
+      <div id="med-timing-list"></div>
+
+      <!-- 登録済み薬リスト -->
+      <div class="card" style="margin-top:4px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <div class="card-title" style="margin-bottom:0;">💊 処方薬の一覧</div>
+          <button class="btn btn-ghost btn-sm" onclick="showAddMedicineModal()">＋ 追加</button>
+        </div>
+        <div id="med-list-registered"></div>
+        <div id="med-list-empty" style="text-align:center;padding:20px;color:var(--text3);font-size:13px;">
+          まだ薬が登録されていません<br><span style="font-size:11px;">「＋ 薬を追加」から処方薬を登録してください</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- MEDICINE -->
+    <div class="page" id="page-medicine">
+      <div class="page-title-row">
+        <div><div class="page-title">お薬管理</div><div class="page-sub">処方薬の登録と服薬記録</div></div>
+        <button class="btn btn-primary btn-sm" onclick="showAddMedModal()">＋ 薬を追加</button>
+      </div>
+
+      <!-- 日付選択 -->
+      <div class="card" style="padding:12px 14px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <label class="form-label" style="margin:0;white-space:nowrap;">📅 記録する日付</label>
+          <input class="form-input" type="date" id="med-record-date" style="flex:1;" oninput="renderMedicineLog()" />
+          <button class="btn btn-ghost btn-sm" onclick="setMedDateToday()">今日</button>
+        </div>
+      </div>
+
+      <!-- 服薬タイムライン -->
+      <div id="med-timeline-area">
+        <!-- 朝食前 -->
+        <div class="med-time-block" id="med-block-before_breakfast">
+          <div class="med-time-header"><span class="med-time-icon">🌅</span><span class="med-time-label">朝食前</span><span class="med-time-badge" id="badge-before_breakfast"></span></div>
+          <div class="med-time-list" id="list-before_breakfast"></div>
+        </div>
+        <!-- 朝食後 -->
+        <div class="med-time-block" id="med-block-after_breakfast">
+          <div class="med-time-header"><span class="med-time-icon">🌅</span><span class="med-time-label">朝食後</span><span class="med-time-badge" id="badge-after_breakfast"></span></div>
+          <div class="med-time-list" id="list-after_breakfast"></div>
+        </div>
+        <!-- 昼食前 -->
+        <div class="med-time-block" id="med-block-before_lunch">
+          <div class="med-time-header"><span class="med-time-icon">☀️</span><span class="med-time-label">昼食前</span><span class="med-time-badge" id="badge-before_lunch"></span></div>
+          <div class="med-time-list" id="list-before_lunch"></div>
+        </div>
+        <!-- 昼食後 -->
+        <div class="med-time-block" id="med-block-after_lunch">
+          <div class="med-time-header"><span class="med-time-icon">☀️</span><span class="med-time-label">昼食後</span><span class="med-time-badge" id="badge-after_lunch"></span></div>
+          <div class="med-time-list" id="list-after_lunch"></div>
+        </div>
+        <!-- 夕食前 -->
+        <div class="med-time-block" id="med-block-before_dinner">
+          <div class="med-time-header"><span class="med-time-icon">🌙</span><span class="med-time-label">夕食前</span><span class="med-time-badge" id="badge-before_dinner"></span></div>
+          <div class="med-time-list" id="list-before_dinner"></div>
+        </div>
+        <!-- 夕食後 -->
+        <div class="med-time-block" id="med-block-after_dinner">
+          <div class="med-time-header"><span class="med-time-icon">🌙</span><span class="med-time-label">夕食後</span><span class="med-time-badge" id="badge-after_dinner"></span></div>
+          <div class="med-time-list" id="list-after_dinner"></div>
+        </div>
+        <!-- 就寝前 -->
+        <div class="med-time-block" id="med-block-bedtime">
+          <div class="med-time-header"><span class="med-time-icon">🌛</span><span class="med-time-label">就寝前</span><span class="med-time-badge" id="badge-bedtime"></span></div>
+          <div class="med-time-list" id="list-bedtime"></div>
+        </div>
+        <div id="med-no-meds" style="text-align:center;padding:40px 20px;color:var(--text3);display:none;">
+          <div style="font-size:40px;margin-bottom:10px;">💊</div>
+          <div>まだ薬が登録されていません</div>
+          <div style="font-size:12px;margin-top:6px;">右上の「＋ 薬を追加」から登録してください</div>
+        </div>
+      </div>
+
+      <!-- 登録済み薬一覧 -->
+      <div class="card" style="margin-top:8px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <div class="card-title" style="margin-bottom:0;">📋 登録済み処方薬</div>
+        </div>
+        <div id="med-list-registered"></div>
+      </div>
+    </div>
+
     <!-- SETTINGS -->
     <div class="page" id="page-settings">
       <div class="page-title-row"><div><div class="page-title">設定</div><div class="page-sub">プロフィール・目標値</div></div></div>
@@ -1057,7 +1255,8 @@ html, body {
   <div class="bottom-nav">
     <div class="nav-btn active" id="nav-home" onclick="navTo('home')"><div class="nav-icon">🏠</div><div class="nav-label">ホーム</div></div>
     <div class="nav-btn" id="nav-record" onclick="navTo('record')"><div class="nav-icon">✏️</div><div class="nav-label">記録</div></div>
-    <div class="nav-btn" id="nav-health" onclick="navTo('health')"><div class="nav-icon">💊</div><div class="nav-label">健康</div></div>
+    <div class="nav-btn" id="nav-health" onclick="navTo('health')"><div class="nav-icon">🩺</div><div class="nav-label">健康</div></div>
+    <div class="nav-btn" id="nav-medicine" onclick="navTo('medicine')"><div class="nav-icon">💊</div><div class="nav-label">お薬</div></div>
     <div class="nav-btn" id="nav-history" onclick="navTo('history')"><div class="nav-icon">📊</div><div class="nav-label">履歴</div></div>
     <div class="nav-btn" id="nav-settings" onclick="navTo('settings')"><div class="nav-icon">⚙️</div><div class="nav-label">設定</div></div>
   </div>
@@ -1086,6 +1285,65 @@ html, body {
 </div>
 
 <!-- MODALS -->
+
+<!-- 薬追加・編集モーダル -->
+<div class="modal-bg" id="addMedModal" onclick="closeModal('addMedModal')">
+  <div class="modal" onclick="event.stopPropagation()" style="max-height:90vh;overflow-y:auto;">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="addMedModal-title">💊 薬を追加</div>
+    <input type="hidden" id="med-edit-id" value="" />
+
+    <div class="form-row" style="margin-top:12px;">
+      <label class="form-label">🏥 病院名・処方元</label>
+      <input class="form-input" type="text" id="med-hospital" placeholder="例：○○腎臓内科クリニック" />
+    </div>
+    <div class="form-row">
+      <label class="form-label">💊 薬の名前</label>
+      <input class="form-input" type="text" id="med-name" placeholder="例：フォシーガ錠10mg" />
+    </div>
+    <div class="form-row">
+      <label class="form-label">📝 メモ・補足</label>
+      <input class="form-input" type="text" id="med-note" placeholder="例：血圧の薬、水と一緒に服用" />
+    </div>
+    <div class="form-row">
+      <label class="form-label" style="margin-bottom:8px;">🕐 服用タイミング（複数選択可）</label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;" id="med-timing-grid">
+        <div class="med-timing-chip" data-timing="before_breakfast" onclick="toggleMedTiming(this)"><span>🌅</span> 朝食前</div>
+        <div class="med-timing-chip" data-timing="after_breakfast"  onclick="toggleMedTiming(this)"><span>🌅</span> 朝食後</div>
+        <div class="med-timing-chip" data-timing="before_lunch"     onclick="toggleMedTiming(this)"><span>☀️</span> 昼食前</div>
+        <div class="med-timing-chip" data-timing="after_lunch"      onclick="toggleMedTiming(this)"><span>☀️</span> 昼食後</div>
+        <div class="med-timing-chip" data-timing="before_dinner"    onclick="toggleMedTiming(this)"><span>🌙</span> 夕食前</div>
+        <div class="med-timing-chip" data-timing="after_dinner"     onclick="toggleMedTiming(this)"><span>🌙</span> 夕食後</div>
+        <div class="med-timing-chip" data-timing="bedtime"          onclick="toggleMedTiming(this)"><span>🌛</span> 就寝前</div>
+      </div>
+    </div>
+    <div class="form-grid" style="margin-top:4px;">
+      <div class="form-row">
+        <label class="form-label">1回の錠数・量</label>
+        <input class="form-input" type="text" id="med-dose-amount" placeholder="例：1錠、2カプセル" />
+      </div>
+      <div class="form-row">
+        <label class="form-label">色 / アイコン</label>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:2px;" id="med-color-picker">
+          <div class="med-color-opt" data-color="#4fc3f7" onclick="selectMedColor(this)" style="background:#4fc3f7;" title="青"></div>
+          <div class="med-color-opt" data-color="#4ade80" onclick="selectMedColor(this)" style="background:#4ade80;" title="緑"></div>
+          <div class="med-color-opt" data-color="#fcd34d" onclick="selectMedColor(this)" style="background:#fcd34d;" title="黄"></div>
+          <div class="med-color-opt" data-color="#f87171" onclick="selectMedColor(this)" style="background:#f87171;" title="赤"></div>
+          <div class="med-color-opt" data-color="#c084fc" onclick="selectMedColor(this)" style="background:#c084fc;" title="紫"></div>
+          <div class="med-color-opt" data-color="#fb923c" onclick="selectMedColor(this)" style="background:#fb923c;" title="橙"></div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:12px;">
+      <button class="btn btn-primary" style="flex:1;" onclick="saveMedicine()">✓ 保存する</button>
+      <button class="btn btn-outline" onclick="closeModal('addMedModal')">キャンセル</button>
+    </div>
+    <div id="med-edit-delete-btn" style="display:none;margin-top:8px;">
+      <button class="btn btn-red btn-full" onclick="deleteMedicine()">🗑 この薬を削除する</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-bg" id="premiumModal" onclick="closeModal('premiumModal')">
   <div class="modal" onclick="event.stopPropagation()">
     <div class="modal-handle"></div>
@@ -1113,6 +1371,7 @@ html, body {
       <div class="food-tab" data-cat="米類"              onclick="setFoodTab(this,'米類')">🍚 米類</div>
       <div class="food-tab" data-cat="パン類"            onclick="setFoodTab(this,'パン類')">🍞 パン類</div>
       <div class="food-tab" data-cat="麺類"              onclick="setFoodTab(this,'麺類')">🍜 麺類</div>
+      <div class="food-tab" data-cat="春雨・こんにゃく"  onclick="setFoodTab(this,'春雨・こんにゃく')">🫙 春雨・こんにゃく</div>
       <div class="food-tab" data-cat="肉類"              onclick="setFoodTab(this,'肉類')">🥩 肉類</div>
       <div class="food-tab" data-cat="魚介類"            onclick="setFoodTab(this,'魚介類')">🐟 魚介類</div>
       <div class="food-tab" data-cat="卵・乳製品"        onclick="setFoodTab(this,'卵・乳製品')">🥚 卵・乳製品</div>
@@ -1275,6 +1534,88 @@ html, body {
 </div> id="loadingOverlay"><div class="loader"></div><div class="loading-text" id="loadingText">解析中...</div></div>
 <div class="toast" id="toast"></div>
 
+<!-- 薬追加・編集モーダル -->
+<div class="modal-bg" id="addMedicineModal" onclick="closeModal('addMedicineModal')">
+  <div class="modal" onclick="event.stopPropagation()" style="max-height:92vh;overflow-y:auto;">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="med-modal-title">💊 処方薬を登録</div>
+    <input type="hidden" id="med-edit-id" value="" />
+    <div class="form-row">
+      <label class="form-label">病院名</label>
+      <input class="form-input" type="text" id="med-hospital" placeholder="例：○○腎臓内科クリニック" />
+    </div>
+    <div class="form-row">
+      <label class="form-label">薬名</label>
+      <input class="form-input" type="text" id="med-name" placeholder="例：フォシーガ錠10mg" />
+    </div>
+    <div class="form-row">
+      <label class="form-label">1回の服用量</label>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input class="form-input" type="number" id="med-dose" placeholder="1" min="0.5" step="0.5" style="width:80px;text-align:center;" />
+        <select class="form-input" id="med-unit" style="flex:1;">
+          <option value="錠">錠</option>
+          <option value="カプセル">カプセル</option>
+          <option value="包">包</option>
+          <option value="mL">mL</option>
+          <option value="g">g</option>
+          <option value="その他">その他</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <label class="form-label">服用タイミング（複数選択可）</label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;" id="med-timing-checkboxes">
+        <label style="display:flex;align-items:center;gap:8px;padding:10px;background:var(--surface2);border-radius:8px;border:1.5px solid var(--border);cursor:pointer;" id="med-timing-label-morning_before">
+          <input type="checkbox" id="med-timing-morning_before" value="morning_before" onchange="updateMedTimingLabel('morning_before')" style="accent-color:var(--accent);width:16px;height:16px;" />
+          <div><div style="font-size:13px;">🌅 朝食前</div></div>
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;padding:10px;background:var(--surface2);border-radius:8px;border:1.5px solid var(--border);cursor:pointer;" id="med-timing-label-morning_after">
+          <input type="checkbox" id="med-timing-morning_after" value="morning_after" onchange="updateMedTimingLabel('morning_after')" style="accent-color:var(--accent);width:16px;height:16px;" />
+          <div><div style="font-size:13px;">🌅 朝食後</div></div>
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;padding:10px;background:var(--surface2);border-radius:8px;border:1.5px solid var(--border);cursor:pointer;" id="med-timing-label-morning_during">
+          <input type="checkbox" id="med-timing-morning_during" value="morning_during" onchange="updateMedTimingLabel('morning_during')" style="accent-color:var(--accent);width:16px;height:16px;" />
+          <div><div style="font-size:13px;">🌅 朝食中</div></div>
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;padding:10px;background:var(--surface2);border-radius:8px;border:1.5px solid var(--border);cursor:pointer;" id="med-timing-label-lunch_before">
+          <input type="checkbox" id="med-timing-lunch_before" value="lunch_before" onchange="updateMedTimingLabel('lunch_before')" style="accent-color:var(--accent);width:16px;height:16px;" />
+          <div><div style="font-size:13px;">☀️ 昼食前</div></div>
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;padding:10px;background:var(--surface2);border-radius:8px;border:1.5px solid var(--border);cursor:pointer;" id="med-timing-label-lunch_after">
+          <input type="checkbox" id="med-timing-lunch_after" value="lunch_after" onchange="updateMedTimingLabel('lunch_after')" style="accent-color:var(--accent);width:16px;height:16px;" />
+          <div><div style="font-size:13px;">☀️ 昼食後</div></div>
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;padding:10px;background:var(--surface2);border-radius:8px;border:1.5px solid var(--border);cursor:pointer;" id="med-timing-label-lunch_during">
+          <input type="checkbox" id="med-timing-lunch_during" value="lunch_during" onchange="updateMedTimingLabel('lunch_during')" style="accent-color:var(--accent);width:16px;height:16px;" />
+          <div><div style="font-size:13px;">☀️ 昼食中</div></div>
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;padding:10px;background:var(--surface2);border-radius:8px;border:1.5px solid var(--border);cursor:pointer;" id="med-timing-label-dinner_before">
+          <input type="checkbox" id="med-timing-dinner_before" value="dinner_before" onchange="updateMedTimingLabel('dinner_before')" style="accent-color:var(--accent);width:16px;height:16px;" />
+          <div><div style="font-size:13px;">🌙 夕食前</div></div>
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;padding:10px;background:var(--surface2);border-radius:8px;border:1.5px solid var(--border);cursor:pointer;" id="med-timing-label-dinner_after">
+          <input type="checkbox" id="med-timing-dinner_after" value="dinner_after" onchange="updateMedTimingLabel('dinner_after')" style="accent-color:var(--accent);width:16px;height:16px;" />
+          <div><div style="font-size:13px;">🌙 夕食後</div></div>
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;padding:10px;background:var(--surface2);border-radius:8px;border:1.5px solid var(--border);cursor:pointer;" id="med-timing-label-dinner_during">
+          <input type="checkbox" id="med-timing-dinner_during" value="dinner_during" onchange="updateMedTimingLabel('dinner_during')" style="accent-color:var(--accent);width:16px;height:16px;" />
+          <div><div style="font-size:13px;">🌙 夕食中</div></div>
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;padding:10px;background:var(--surface2);border-radius:8px;border:1.5px solid var(--border);cursor:pointer;" id="med-timing-label-bedtime">
+          <input type="checkbox" id="med-timing-bedtime" value="bedtime" onchange="updateMedTimingLabel('bedtime')" style="accent-color:var(--accent);width:16px;height:16px;" />
+          <div><div style="font-size:13px;">🌛 就寝前</div></div>
+        </label>
+      </div>
+    </div>
+    <div class="form-row">
+      <label class="form-label">メモ（副作用・注意事項など）</label>
+      <input class="form-input" type="text" id="med-memo" placeholder="例：血圧低下に注意" />
+    </div>
+    <button class="btn btn-primary btn-full" onclick="saveMedicine()">✓ 保存する</button>
+    <button class="btn btn-ghost btn-full" style="margin-top:8px;" onclick="closeModal('addMedicineModal')">キャンセル</button>
+  </div>
+</div>
+
 <script>
 // ===== SUPABASE =====
 const SUPABASE_URL = 'https://jndutodslomhfoterrbb.supabase.co';
@@ -1344,6 +1685,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updateHomeSummary();
     updateHba1cCard();
     updateWaterCard();
+    updateWaterBalance();
     showScreen('s-app');
     navTo('home');
     initRecordDate();
@@ -1773,19 +2115,26 @@ const FOOD_CAT_NUTRITION = {
   '牛乳（200ml）':         { kcal:134, protein:6.6, carb:9.6,  fiber:0,   potassium:300, phosphorus:190 },
   '豆乳（200ml）':         { kcal:92,  protein:7.2, carb:3.0,  fiber:0.4, potassium:230, phosphorus:98  },
   'ジュース（200ml）':     { kcal:84,  protein:0.8, carb:19.2, fiber:0.3, potassium:240, phosphorus:20  },
+  // 春雨・こんにゃく類（腎臓病患者に重要な低タンパク・低カリウム食材）
+  '春雨（乾燥20g）':       { kcal:68,  protein:0.0, carb:17.0, fiber:0.2, potassium:2,   phosphorus:6   },
+  '春雨スープ（1人前）':   { kcal:72,  protein:0.2, carb:18.0, fiber:0.3, potassium:25,  phosphorus:12  },
+  'こんにゃく（100g）':    { kcal:5,   protein:0.1, carb:2.3,  fiber:2.2, potassium:33,  phosphorus:5   },
+  'しらたき（100g）':      { kcal:6,   protein:0.2, carb:2.9,  fiber:2.9, potassium:12,  phosphorus:10  },
+  'もやし（小鉢）':        { kcal:14,  protein:1.7, carb:1.3,  fiber:1.3, potassium:69,  phosphorus:31  },
+  '白菜（小鉢）':          { kcal:14,  protein:0.8, carb:2.2,  fiber:1.3, potassium:160, phosphorus:30  },
+  '低タンパクご飯（1杯）': { kcal:231, protein:0.5, carb:53.9, fiber:0.2, potassium:15,  phosphorus:15  },
 };
 const PORTION_RATIO = { none:0.0, small:0.5, normal:1.0, large:1.5 };
 
-function selectGroupPortion(el) {
-  const group = el.dataset.group;
-  document.querySelectorAll(`.portion-btn[data-group="${group}"]`).forEach(b => b.classList.remove('active'));
-  el.classList.add('active');
+function updateGroupGram(group) {
   updateNutritionPreview();
 }
 
 function getGroupPortion(group) {
-  const active = document.querySelector(`.portion-btn[data-group="${group}"].active`);
-  return active ? PORTION_RATIO[active.dataset.portion]||1.0 : 1.0;
+  // 数値入力欄から倍率を取得（旧portion-btnとの互換）
+  const el = document.getElementById('gram-' + group);
+  const val = el ? parseFloat(el.value) : 1.0;
+  return isNaN(val) || val < 0 ? 0 : val;
 }
 
 function toggleFoodCat(el) { el.classList.toggle(FOOD_CAT_CLASS[el.dataset.cat]); updateNutritionPreview(); }
@@ -1837,13 +2186,17 @@ function resetRecord() {
   if (bfBtn) bfBtn.classList.add('active');
   const mealTypeHidden = document.getElementById('record-meal-type');
   if (mealTypeHidden) mealTypeHidden.value = 'breakfast';
+  // グラム倍率を1.0にリセット
+  ['main','protein','sub','soup','drink'].forEach(g => {
+    const el = document.getElementById('gram-' + g);
+    if (el) el.value = '1.0';
+  });
   const glucoseEl = document.getElementById('ai-glucose-result');
   if (glucoseEl) { const div = glucoseEl.querySelector('div:not(.alert-title)'); if (div) div.textContent='炭水化物と食物繊維を入力すると自動計算されます'; }
   resetFoodCats();
   ['record-calories','record-protein','record-carb','record-fiber','record-potassium','record-phosphorus'].forEach(id => { const el=document.getElementById(id); if (el) delete el.dataset.manualEdit; });
   const preview = document.getElementById('nutrition-preview');
   if (preview) preview.classList.remove('visible');
-  ['main','protein','sub','soup'].forEach(group => { document.querySelectorAll(`.portion-btn[data-group="${group}"]`).forEach(b => { b.classList.toggle('active', b.dataset.portion==='normal'); }); });
 }
 
 async function saveMeal() {
@@ -2203,6 +2556,8 @@ function renderHealthPage() {
         exRecs.map(r=>`<div style="font-size:11px;color:var(--text3);">${exMap[r.exType]||r.exType} ${r.min}分</div>`).join('');
     }
   }
+  // 水分収支を更新（尿量・運動が変わったので）
+  updateWaterBalance();
   // サマリー
   const sumEl = document.getElementById('health-summary-today');
   if (sumEl) {
@@ -2225,7 +2580,84 @@ function renderHealthPage() {
   }
 }
 
-// ===== 血糖値グラフのタップ =====
+// ===== 不感蒸泄・水分収支 =====
+function calcInsensibleLoss() {
+  // 不感蒸泄 = 体重(kg) × 15 mL/kg/日（安静時標準）
+  // 発熱があれば体温1℃上昇ごとに+10%だが今は安静時のみ
+  const w = parseFloat(state.weight) || 0;
+  const h = parseFloat(state.height) || 0;
+  if (w <= 0) return null;
+  const base = Math.round(w * 15); // 基本不感蒸泄
+  // 皮膚からの蒸散 ≒ 0.5 × base, 肺からの呼気 ≒ 0.5 × base
+  const skinLoss = Math.round(base * 0.6);
+  const lungLoss = Math.round(base * 0.4);
+  return { total: base, skin: skinLoss, lung: lungLoss, weight: w };
+}
+
+function calcExerciseSweat() {
+  // 運動発汗：強度×時間から概算（軽:3mL/分, 普通:7mL/分, きつい:12mL/分）
+  const sweatRate = { light: 3, moderate: 7, hard: 12 };
+  try {
+    const recs = getTodayHealthRecords('exercise');
+    return recs.reduce((sum, r) => sum + (sweatRate[r.intensity] || 7) * (r.min || 0), 0);
+  } catch(e) { return 0; }
+}
+
+function updateWaterBalance() {
+  const insensible = calcInsensibleLoss();
+  const insEl = document.getElementById('insensible-val');
+  const insDetail = document.getElementById('insensible-detail');
+
+  if (insensible && insEl) {
+    insEl.textContent = insensible.total.toLocaleString();
+    if (insDetail) insDetail.innerHTML =
+      `体重 ${insensible.weight}kg × 15mL/kg/日<br>皮膚蒸散 ${insensible.skin}mL + 呼気 ${insensible.lung}mL`;
+  }
+
+  const sweat = calcExerciseSweat();
+  const sweatEl = document.getElementById('exercise-sweat-val');
+  if (sweatEl) sweatEl.textContent = sweat + ' mL';
+
+  // 水分収支計算
+  const waterLog = getTodayWaterLog();
+  const intake = waterLog.reduce((s, e) => s + (e.ml || 0), 0);
+  const urineRecs = getTodayHealthRecords('urine');
+  const urineTotal = urineRecs.reduce((s, r) => s + (r.vol || 0), 0);
+  const insVal = insensible ? insensible.total : 0;
+  const balance = intake - urineTotal - insVal - sweat;
+
+  const setWB = (id, val, prefix='') => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = prefix + Math.abs(val).toLocaleString() + ' mL';
+  };
+  setWB('wb-intake', intake);
+  setWB('wb-urine', urineTotal);
+  setWB('wb-insensible', insVal);
+  setWB('wb-sweat', sweat);
+
+  const resEl = document.getElementById('wb-result');
+  const warnEl = document.getElementById('wb-warning');
+  if (resEl) {
+    resEl.textContent = (balance >= 0 ? '+' : '') + balance.toLocaleString() + ' mL';
+    if (balance > 1000) {
+      resEl.style.color = 'var(--red)';
+      if (warnEl) { warnEl.style.display='block'; warnEl.style.background='var(--red-dim)'; warnEl.style.color='var(--red)'; warnEl.style.border='1px solid rgba(248,113,113,0.3)'; warnEl.textContent='⚠ 水分が多く蓄積しています。透析前に医療スタッフへご相談ください。'; }
+    } else if (balance > 500) {
+      resEl.style.color = 'var(--amber)';
+      if (warnEl) { warnEl.style.display='block'; warnEl.style.background='var(--amber-dim)'; warnEl.style.color='var(--amber)'; warnEl.style.border='1px solid rgba(252,211,77,0.3)'; warnEl.textContent='注意：水分がやや蓄積しています。摂取量を意識してください。'; }
+    } else if (balance < -200) {
+      resEl.style.color = 'var(--accent)';
+      if (warnEl) { warnEl.style.display='block'; warnEl.style.background='var(--accent-glow)'; warnEl.style.color='var(--accent)'; warnEl.style.border='1px solid rgba(79,195,247,0.3)'; warnEl.textContent='水分が不足気味です。適切な水分補給を心がけてください。'; }
+    } else {
+      resEl.style.color = 'var(--green)';
+      if (warnEl) warnEl.style.display = 'none';
+    }
+  }
+}
+
+function showWaterBalanceInfo() {
+  showToast('不感蒸泄＝体重×15mL/日（皮膚蒸散＋呼気）。透析患者の体重増加目安は中1日<1kg、週末<1.5kg。');
+}
 let _glucosePoints = [];
 
 function handleGlucoseTap(event) {
@@ -2242,7 +2674,7 @@ function handleGlucoseTap(event) {
   const totalMin = _glucosePoints[_glucosePoints.length-1]?.t || 1;
   const targetT = tRatio * totalMin;
   const closest = _glucosePoints.reduce((a,b) => Math.abs(b.t-targetT) < Math.abs(a.t-targetT) ? b : a);
-  const h = Math.floor(6 + closest.t / 60);
+  const h = Math.floor(closest.t / 60);
   const m = String(Math.round(closest.t % 60)).padStart(2,'0');
   const g = Math.round(closest.g);
   const status = g < 100 ? '正常' : g < 140 ? '良好' : g < 180 ? 'やや高め' : '高め';
@@ -2322,9 +2754,9 @@ function updateGlucoseGraph() {
   const type = state.userType || 'normal';
   const curve = GLUCOSE_CURVE[type] || GLUCOSE_CURVE.normal;
   const now = new Date();
-  const startOfDay = new Date(now); startOfDay.setHours(6,0,0,0);
+  const startOfDay = new Date(now); startOfDay.setHours(0,0,0,0);
   const endOfDay   = new Date(now); endOfDay.setHours(23,59,0,0);
-  const totalMin = (endOfDay - startOfDay) / 60000; // 表示範囲（分）
+  const totalMin = (endOfDay - startOfDay) / 60000; // 24時間表示
 
   // SVG座標変換
   const svgW = 340, svgH = 80;
@@ -2376,11 +2808,11 @@ function updateGlucoseGraph() {
     }
   });
 
-  // 時刻ラベル（6時・12時・18時・現在）
+  // 時刻ラベル（0時〜24時、3時間ごと）
   if (labelsEl) {
-    const labels = [0,6*60,12*60,16*60,20*60].filter(t=>t<=totalMin);
+    const labels = [0, 3*60, 6*60, 9*60, 12*60, 15*60, 18*60, 21*60, 23*60].filter(t=>t<=totalMin);
     labelsEl.innerHTML = labels.map(t => {
-      const h = Math.round(6 + t/60);
+      const h = Math.round(t/60);
       return `<text x="${xOf(t).toFixed(1)}" y="${svgH}" fill="var(--text3)" font-size="7" text-anchor="middle">${h}時</text>`;
     }).join('');
   }
@@ -2448,6 +2880,25 @@ function recalcGlucose() {
   const rise=Math.round(sugar*(fMap[state.userType]||1));
   const glucoseEl=document.getElementById('ai-glucose-result');
   if (glucoseEl) { const div=glucoseEl.querySelector('div:not(.alert-title)'); if (div) div.innerHTML=`糖質${sugar}g → <strong>推定 +${rise} mg/dL</strong>（${lMap[state.userType]||lMap.normal}）`; }
+
+  // 栄養成分欄の推定最大血糖値
+  const peakRow = document.getElementById('peak-glucose-row');
+  const peakVal = document.getElementById('peak-glucose-val');
+  const peakDetail = document.getElementById('peak-glucose-detail');
+  if (peakRow && peakVal && (carb > 0)) {
+    const curve = GLUCOSE_CURVE[state.userType] || GLUCOSE_CURVE.normal;
+    const peak = Math.round(curve.fasting + rise);
+    peakVal.textContent = peak;
+    // 色分け
+    if (peak < 140)      { peakVal.style.color='var(--green)'; peakRow.style.background='var(--green-dim)'; peakRow.style.borderColor='rgba(74,222,128,0.3)'; }
+    else if (peak < 180) { peakVal.style.color='var(--amber)'; peakRow.style.background='var(--amber-dim)'; peakRow.style.borderColor='rgba(252,211,77,0.3)'; }
+    else                 { peakVal.style.color='var(--red)';   peakRow.style.background='var(--red-dim)';   peakRow.style.borderColor='rgba(248,113,113,0.3)'; }
+    const status = peak < 140 ? '✓ 良好（140未満）' : peak < 180 ? '⚠ やや高め（140〜180）' : '⚠ 高め（180超）';
+    if (peakDetail) peakDetail.innerHTML = `食後${curve.peak}分頃にピーク予測 — ${status}（空腹時基礎値 ${curve.fasting} + 上昇 ${rise}）`;
+    peakRow.style.display = 'block';
+  } else if (peakRow) {
+    peakRow.style.display = 'none';
+  }
 }
 
 // ===== HbA1c 推算 =====
@@ -2585,7 +3036,17 @@ const foodDatabase = [
   {name:'低タンパクパン（1枚・60g）',   cat:'パン類', cal:145,protein:0.5,carb:33.0,fiber:0.5,k:10, p:10 },
   {name:'フランスパン（2切れ・60g）',   cat:'パン類', cal:166,protein:5.8,carb:32.4,fiber:1.4,k:48, p:50 },
 
-  // ===== 主食：麺類 =====
+  // ===== 春雨・こんにゃく類（腎臓病患者に推奨：低タンパク・低カリウム・低リン） =====
+  {name:'春雨・乾燥（20g）',            cat:'春雨・こんにゃく', cal:68, protein:0.0,carb:17.0,fiber:0.2,k:2,  p:6  },
+  {name:'春雨・茹で（60g）',            cat:'春雨・こんにゃく', cal:48, protein:0.0,carb:12.0,fiber:0.1,k:2,  p:4  },
+  {name:'春雨スープ（1人前）',          cat:'春雨・こんにゃく', cal:72, protein:0.2,carb:18.0,fiber:0.3,k:25, p:12 },
+  {name:'緑豆春雨（乾燥20g）',          cat:'春雨・こんにゃく', cal:70, protein:0.0,carb:17.3,fiber:0.1,k:2,  p:5  },
+  {name:'こんにゃく・板（100g）',       cat:'春雨・こんにゃく', cal:5,  protein:0.1,carb:2.3, fiber:2.2,k:33, p:5  },
+  {name:'こんにゃく・糸（しらたき100g）',cat:'春雨・こんにゃく', cal:6,  protein:0.2,carb:2.9, fiber:2.9,k:12, p:10 },
+  {name:'こんにゃく・球（1個・100g）',  cat:'春雨・こんにゃく', cal:5,  protein:0.1,carb:2.3, fiber:2.2,k:33, p:5  },
+  {name:'刺身こんにゃく（100g）',       cat:'春雨・こんにゃく', cal:8,  protein:0.1,carb:2.5, fiber:2.0,k:20, p:4  },
+
+  // ===== 麺類（春雨・低タンパク追加） =====
   {name:'うどん・茹で（1玉・200g）',    cat:'麺類', cal:210,protein:5.2,carb:43.2,fiber:1.6,k:14, p:34 },
   {name:'そば・茹で（1玉・180g）',      cat:'麺類', cal:234,protein:8.6,carb:43.2,fiber:3.1,k:54, p:130},
   {name:'そうめん・茹で（1人前・180g）',cat:'麺類', cal:252,protein:6.3,carb:52.2,fiber:1.3,k:27, p:68 },
@@ -2827,7 +3288,8 @@ function updateWaterCard() {
   if (logListEl) {
     // 飲料のみ（auto:false）を表示（修正・削除ボタン付き）
     const drinkLog = log.filter(e => !e.auto);
-    if (drinkLog.length === 0) { logListEl.innerHTML = ''; return; }
+    if (drinkLog.length === 0) { logListEl.innerHTML = ''; }
+    else {
     logListEl.innerHTML = '<div style="font-size:11px;color:var(--text3);margin-bottom:4px;">今日の飲料記録</div>' +
       drinkLog.slice().reverse().map(e => {
         const t = new Date(e.time);
@@ -2839,7 +3301,10 @@ function updateWaterCard() {
           <button onclick="deleteDrinkRecord('${e.id}')" style="background:none;border:1px solid rgba(248,113,113,0.3);border-radius:5px;padding:2px 7px;font-size:11px;color:var(--red);cursor:pointer;">削除</button>
         </div>`;
       }).join('');
+    }
   }
+  // 水分収支も更新
+  updateWaterBalance();
 }
 
 // ===== 食品検索カテゴリータブ =====
@@ -3055,6 +3520,300 @@ function showMenuDetail(name) {
   const container=document.getElementById('patientDetailContent');
   container.innerHTML=`<div style="text-align:center;font-size:52px;margin-bottom:10px;">${m.emoji}</div><div class="modal-title" style="text-align:center;">${m.name}</div><div style="text-align:center;font-size:12px;color:var(--text2);margin-bottom:14px;">1人前・腎不全対応レシピ</div><div class="chips" style="justify-content:center;margin-bottom:16px;"><div class="chip"><span class="chip-l">カロリー</span><span class="chip-v" style="color:var(--green)">${m.kcal}kcal</span></div><div class="chip"><span class="chip-l">タンパク質</span><span class="chip-v" style="color:var(--accent)">${m.protein}g</span></div><div class="chip"><span class="chip-l">カリウム</span><span class="chip-v" style="color:var(--amber)">${m.k}mg</span></div><div class="chip"><span class="chip-l">リン</span><span class="chip-v" style="color:var(--red)">${m.p}mg</span></div></div><div class="alert-box alert-info"><div class="alert-title">📋 調理のポイント</div><div style="font-size:13px;line-height:1.8;margin-top:4px;">・野菜は熱湯で3〜5分ゆでこぼしてカリウムをカット<br>・塩の代わりにだし・レモン・ハーブで風味付け<br>・主食は低タンパク専用食品を使用</div></div>`;
   document.getElementById('patientModal').classList.add('open');
+}
+
+// ===== お薬管理 =====
+const MED_KEY      = 'renalcare_medicines';   // 処方薬マスタ
+const MED_LOG_KEY  = 'renalcare_med_log';     // 服薬記録
+
+const MED_TIMING_LABEL = {
+  morning_before:'朝食前', morning_during:'朝食中', morning_after:'朝食後',
+  lunch_before:'昼食前',   lunch_during:'昼食中',   lunch_after:'昼食後',
+  dinner_before:'夕食前',  dinner_during:'夕食中',  dinner_after:'夕食後',
+  bedtime:'就寝前'
+};
+const MED_TIMING_ORDER = [
+  'morning_before','morning_during','morning_after',
+  'lunch_before','lunch_during','lunch_after',
+  'dinner_before','dinner_during','dinner_after',
+  'bedtime'
+];
+const MED_TIMING_ICON = {
+  morning_before:'🌅', morning_during:'🌅', morning_after:'🌅',
+  lunch_before:'☀️',   lunch_during:'☀️',   lunch_after:'☀️',
+  dinner_before:'🌙',  dinner_during:'🌙',  dinner_after:'🌙',
+  bedtime:'🌛'
+};
+
+function loadMedicines()    { try { return JSON.parse(localStorage.getItem(MED_KEY)||'[]'); } catch(e) { return []; } }
+function saveMedicines(arr) { try { localStorage.setItem(MED_KEY, JSON.stringify(arr)); } catch(e) {} }
+function loadMedLog()       { try { return JSON.parse(localStorage.getItem(MED_LOG_KEY)||'[]'); } catch(e) { return []; } }
+function saveMedLog(arr)    { try { localStorage.setItem(MED_LOG_KEY, JSON.stringify(arr)); } catch(e) {} }
+
+// 服薬記録のキー: "YYYY-MM-DD|medId|timing"
+function getMedLogKey(dateStr, medId, timing) { return `${dateStr}|${medId}|${timing}`; }
+
+function getMedLogEntry(dateStr, medId, timing) {
+  const log = loadMedLog();
+  return log.find(e => e.key === getMedLogKey(dateStr, medId, timing)) || null;
+}
+
+function setMedLogEntry(dateStr, medId, timing, status) {
+  // status: 'taken' | 'missed' | null（未記録に戻す）
+  const log = loadMedLog();
+  const key = getMedLogKey(dateStr, medId, timing);
+  const idx = log.findIndex(e => e.key === key);
+  if (status === null) {
+    if (idx !== -1) log.splice(idx, 1);
+  } else {
+    const entry = { key, dateStr, medId, timing, status, updatedAt: new Date().toISOString() };
+    if (idx !== -1) log[idx] = entry; else log.push(entry);
+  }
+  saveMedLog(log);
+}
+
+// 今日の日付文字列取得
+function getTodayStr() { return new Date().toISOString().slice(0,10); }
+
+// モーダルを開く（新規）
+function showAddMedicineModal() {
+  document.getElementById('med-modal-title').textContent = '💊 処方薬を登録';
+  document.getElementById('med-edit-id').value = '';
+  document.getElementById('med-hospital').value = '';
+  document.getElementById('med-name').value = '';
+  document.getElementById('med-dose').value = '1';
+  document.getElementById('med-unit').value = '錠';
+  document.getElementById('med-memo').value = '';
+  MED_TIMING_ORDER.forEach(t => {
+    const cb = document.getElementById('med-timing-' + t);
+    if (cb) cb.checked = false;
+    updateMedTimingLabel(t);
+  });
+  document.getElementById('addMedicineModal').classList.add('open');
+}
+
+// モーダルを開く（編集）
+function editMedicine(id) {
+  const meds = loadMedicines();
+  const med = meds.find(m => m.id === id);
+  if (!med) return;
+  document.getElementById('med-modal-title').textContent = '💊 処方薬を編集';
+  document.getElementById('med-edit-id').value = med.id;
+  document.getElementById('med-hospital').value = med.hospital || '';
+  document.getElementById('med-name').value = med.name || '';
+  document.getElementById('med-dose').value = med.dose || 1;
+  document.getElementById('med-unit').value = med.unit || '錠';
+  document.getElementById('med-memo').value = med.memo || '';
+  MED_TIMING_ORDER.forEach(t => {
+    const cb = document.getElementById('med-timing-' + t);
+    if (cb) cb.checked = (med.timings||[]).includes(t);
+    updateMedTimingLabel(t);
+  });
+  document.getElementById('addMedicineModal').classList.add('open');
+}
+
+function updateMedTimingLabel(timing) {
+  const cb  = document.getElementById('med-timing-' + timing);
+  const lbl = document.getElementById('med-timing-label-' + timing);
+  if (!cb || !lbl) return;
+  if (cb.checked) {
+    lbl.style.borderColor = 'var(--accent)';
+    lbl.style.background  = 'rgba(79,195,247,0.12)';
+  } else {
+    lbl.style.borderColor = 'var(--border)';
+    lbl.style.background  = 'var(--surface2)';
+  }
+}
+
+function saveMedicine() {
+  const name     = document.getElementById('med-name').value.trim();
+  const hospital = document.getElementById('med-hospital').value.trim();
+  const dose     = parseFloat(document.getElementById('med-dose').value) || 1;
+  const unit     = document.getElementById('med-unit').value;
+  const memo     = document.getElementById('med-memo').value.trim();
+  const timings  = MED_TIMING_ORDER.filter(t => document.getElementById('med-timing-' + t)?.checked);
+  if (!name) { showToast('薬名を入力してください'); return; }
+  if (timings.length === 0) { showToast('服用タイミングを1つ以上選択してください'); return; }
+
+  const meds = loadMedicines();
+  const editId = document.getElementById('med-edit-id').value;
+  if (editId) {
+    const idx = meds.findIndex(m => m.id === editId);
+    if (idx !== -1) { meds[idx] = { ...meds[idx], hospital, name, dose, unit, timings, memo }; }
+  } else {
+    meds.push({ id: 'med_' + Date.now(), hospital, name, dose, unit, timings, memo, addedAt: new Date().toISOString() });
+  }
+  saveMedicines(meds);
+  closeModal('addMedicineModal');
+  showToast(editId ? '✅ 薬を更新しました' : '✅ 薬を登録しました');
+  renderMedicinePage();
+}
+
+function deleteMedicine(id) {
+  if (!confirm('この薬の登録を削除しますか？服薬記録も消えます。')) return;
+  const meds = loadMedicines().filter(m => m.id !== id);
+  saveMedicines(meds);
+  const log = loadMedLog().filter(e => !e.key.includes('|' + id + '|'));
+  saveMedLog(log);
+  showToast('🗑 削除しました');
+  renderMedicinePage();
+}
+
+// 服薬状態を切り替え: 未記録 → 服薬済 → 飲まなかった → 未記録
+function toggleMedStatus(dateStr, medId, timing) {
+  const entry = getMedLogEntry(dateStr, medId, timing);
+  let next;
+  if (!entry)                   next = 'taken';
+  else if (entry.status==='taken')  next = 'missed';
+  else                          next = null;
+  setMedLogEntry(dateStr, medId, timing, next);
+  renderMedicinePage();
+  if (next === 'taken')  showToast('✅ 服薬済みとして記録しました');
+  if (next === 'missed') showToast('⚠ 飲まなかったとして記録しました');
+  if (next === null)     showToast('記録を取り消しました');
+}
+
+function changeMedDate(delta) {
+  const el = document.getElementById('med-date');
+  if (!el) return;
+  const d = new Date(el.value + 'T00:00:00');
+  d.setDate(d.getDate() + delta);
+  el.value = d.toISOString().slice(0,10);
+  renderMedicinePage();
+}
+
+function setMedDateToday() {
+  const el = document.getElementById('med-date');
+  if (el) { el.value = getTodayStr(); renderMedicinePage(); }
+}
+
+function renderMedicinePage() {
+  // 日付初期化
+  const dateEl = document.getElementById('med-date');
+  if (dateEl && !dateEl.value) dateEl.value = getTodayStr();
+  const dateStr = dateEl ? dateEl.value : getTodayStr();
+
+  const meds = loadMedicines();
+  const emptyEl = document.getElementById('med-list-empty');
+  const regEl   = document.getElementById('med-list-registered');
+  const timingListEl = document.getElementById('med-timing-list');
+
+  // ===== 処方薬一覧 =====
+  if (meds.length === 0) {
+    if (emptyEl) emptyEl.style.display = 'block';
+    if (regEl)   regEl.innerHTML = '';
+  } else {
+    if (emptyEl) emptyEl.style.display = 'none';
+    // 病院ごとにグルーピング
+    const byHospital = {};
+    meds.forEach(m => {
+      const h = m.hospital || '病院未設定';
+      if (!byHospital[h]) byHospital[h] = [];
+      byHospital[h].push(m);
+    });
+    if (regEl) regEl.innerHTML = Object.entries(byHospital).map(([hospital, hMeds]) => `
+      <div style="margin-bottom:10px;">
+        <div style="font-size:11px;color:var(--accent);font-weight:600;letter-spacing:0.5px;padding:4px 0 6px;border-bottom:1px solid var(--border);margin-bottom:6px;">
+          🏥 ${hospital}
+        </div>
+        ${hMeds.map(med => `
+          <div style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);">
+            <div style="font-size:26px;line-height:1;padding-top:2px;">💊</div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:3px;">${med.name}</div>
+              <div style="font-size:12px;color:var(--text3);margin-bottom:4px;">1回 ${med.dose}${med.unit}</div>
+              <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:4px;">
+                ${(med.timings||[]).map(t => `<span style="font-size:10px;padding:2px 7px;border-radius:12px;background:var(--accent-glow);color:var(--accent);border:1px solid rgba(79,195,247,0.3);">${MED_TIMING_ICON[t]||''} ${MED_TIMING_LABEL[t]||t}</span>`).join('')}
+              </div>
+              ${med.memo ? `<div style="font-size:11px;color:var(--text3);">📝 ${med.memo}</div>` : ''}
+            </div>
+            <div style="display:flex;gap:4px;flex-shrink:0;">
+              <button onclick="editMedicine('${med.id}')" style="background:none;border:1px solid var(--border2);border-radius:6px;padding:4px 8px;font-size:11px;color:var(--text2);cursor:pointer;">編集</button>
+              <button onclick="deleteMedicine('${med.id}')" style="background:none;border:1px solid rgba(248,113,113,0.3);border-radius:6px;padding:4px 8px;font-size:11px;color:var(--red);cursor:pointer;">削除</button>
+            </div>
+          </div>`).join('')}
+      </div>`).join('');
+  }
+
+  // ===== 時間帯別服薬チェックリスト =====
+  // その日に服用すべき timing をまとめる
+  const timingGroups = {};
+  meds.forEach(med => {
+    (med.timings||[]).forEach(t => {
+      if (!timingGroups[t]) timingGroups[t] = [];
+      timingGroups[t].push(med);
+    });
+  });
+
+  let takenCount = 0, totalCount = 0;
+
+  if (timingListEl) {
+    if (Object.keys(timingGroups).length === 0) {
+      timingListEl.innerHTML = '';
+    } else {
+      timingListEl.innerHTML = MED_TIMING_ORDER
+        .filter(t => timingGroups[t])
+        .map(t => {
+          const medsInTiming = timingGroups[t];
+          totalCount += medsInTiming.length;
+          const rows = medsInTiming.map(med => {
+            const entry   = getMedLogEntry(dateStr, med.id, t);
+            const status  = entry ? entry.status : null;
+            takenCount   += (status === 'taken') ? 1 : 0;
+            const isTaken  = status === 'taken';
+            const isMissed = status === 'missed';
+            const btnStyle = (active, color, bg, border) =>
+              `cursor:pointer;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:${active?'700':'400'};` +
+              `color:${active?color:'var(--text3)'};background:${active?bg:'var(--surface2)'};` +
+              `border:1.5px solid ${active?border:'var(--border2)'};transition:all 0.15s;`;
+            return `<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:${isTaken?'rgba(74,222,128,0.06)':isMissed?'rgba(248,113,113,0.06)':'var(--surface2)'};border-radius:10px;margin-bottom:6px;border:1px solid ${isTaken?'rgba(74,222,128,0.2)':isMissed?'rgba(248,113,113,0.2)':'var(--border)'};">
+              <div style="flex:1;min-width:0;">
+                <div style="font-size:13px;font-weight:500;">${med.name}</div>
+                <div style="font-size:11px;color:var(--text3);">${med.dose}${med.unit} · ${med.hospital||''}</div>
+              </div>
+              <div style="display:flex;gap:4px;flex-shrink:0;">
+                <button onclick="toggleMedStatusTo('${dateStr}','${med.id}','${t}','taken')"
+                  style="${btnStyle(isTaken,'var(--green)','rgba(74,222,128,0.15)','var(--green)')}">✓ 服薬</button>
+                <button onclick="toggleMedStatusTo('${dateStr}','${med.id}','${t}','missed')"
+                  style="${btnStyle(isMissed,'var(--red)','rgba(248,113,113,0.15)','var(--red)')}">✕ 未服薬</button>
+              </div>
+            </div>`;
+          }).join('');
+
+          return `<div class="card" style="margin-bottom:10px;padding:12px 14px;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+              <span style="font-size:20px;">${MED_TIMING_ICON[t]||'💊'}</span>
+              <span style="font-size:14px;font-weight:700;color:var(--text);">${MED_TIMING_LABEL[t]||t}</span>
+              <span style="font-size:11px;color:var(--text3);margin-left:auto;">${medsInTiming.length}種類</span>
+            </div>
+            ${rows}
+          </div>`;
+        }).join('');
+    }
+  }
+
+  // サマリー更新
+  const missedCount = totalCount - takenCount - (loadMedLog().filter(e => e.dateStr===dateStr && e.status==='missed').length === 0 ? 0 : loadMedLog().filter(e => e.dateStr===dateStr && e.status==='missed').length);
+  const actualMissed = loadMedLog().filter(e => e.dateStr===dateStr && e.status==='missed').length;
+  const el1 = document.getElementById('med-taken-count');
+  const el2 = document.getElementById('med-missed-count');
+  if (el1) el1.textContent = takenCount;
+  if (el2) el2.textContent = actualMissed;
+}
+
+// ボタンを押したときの処理（toggleMedStatusの改良版）
+function toggleMedStatusTo(dateStr, medId, timing, newStatus) {
+  const entry = getMedLogEntry(dateStr, medId, timing);
+  // 同じボタンを押したら取り消し
+  if (entry && entry.status === newStatus) {
+    setMedLogEntry(dateStr, medId, timing, null);
+    showToast('記録を取り消しました');
+  } else {
+    setMedLogEntry(dateStr, medId, timing, newStatus);
+    if (newStatus === 'taken')  showToast('✅ 服薬済みとして記録しました');
+    if (newStatus === 'missed') showToast('⚠ 飲まなかったとして記録しました');
+  }
+  renderMedicinePage();
 }
 
 function showToast(msg) { const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500); }
