@@ -759,11 +759,17 @@ html, body {
       <div class="page-title-row"><div><div class="page-title">食事を記録</div><div class="page-sub">食事内容を入力して記録</div></div></div>
       <div class="card">
         <div class="card-title">食事の内容</div>
-        <div class="form-row">
-          <label class="form-label">📅 記録する日付</label>
-          <input class="form-input" type="date" id="record-date" />
+        <div style="display:flex;gap:10px;">
+          <div class="form-row" style="flex:1;margin-bottom:0;">
+            <label class="form-label">📅 記録する日付</label>
+            <input class="form-input" type="date" id="record-date" />
+          </div>
+          <div class="form-row" style="flex:1;margin-bottom:0;">
+            <label class="form-label">🕐 食事の時刻</label>
+            <input class="form-input" type="time" id="record-time" />
+          </div>
         </div>
-        <div class="form-row">
+        <div class="form-row" style="margin-top:12px;">
           <label class="form-label">🍽 食事の区分</label>
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;" id="meal-type-selector">
             <div class="meal-type-btn active" data-type="breakfast" onclick="selectMealType(this)">
@@ -1454,6 +1460,9 @@ html, body {
       <div class="food-tab" data-cat="果物"              onclick="setFoodTab(this,'果物')">🍊 果物</div>
       <div class="food-tab" data-cat="菓子・デザート"    onclick="setFoodTab(this,'菓子・デザート')">🍮 デザート</div>
       <div class="food-tab" data-cat="外食"              onclick="setFoodTab(this,'外食')">🏪 外食</div>
+      <div class="food-tab" data-cat="海藻・乾物"        onclick="setFoodTab(this,'海藻・乾物')">🌿 海藻・乾物</div>
+      <div class="food-tab" data-cat="漬物・発酵食品"    onclick="setFoodTab(this,'漬物・発酵食品')">🥒 漬物・キムチ</div>
+      <div class="food-tab" data-cat="調味料"            onclick="setFoodTab(this,'調味料')">🧂 調味料</div>
       <div class="food-tab" data-cat="低タンパク献立"    onclick="setFoodTab(this,'低タンパク献立')">💊 低タンパク</div>
     </div>
     <div id="foodSearchResults" style="max-height:320px;overflow-y:auto;"></div>
@@ -2053,6 +2062,7 @@ function selectMealType(el) {
   document.querySelectorAll('.meal-type-btn').forEach(b => b.classList.remove('active'));
   el.classList.add('active');
   document.getElementById('record-meal-type').value = el.dataset.type;
+  autoSetMealTime(el.dataset.type);
 }
 
 function initRecordDate() {
@@ -2060,6 +2070,27 @@ function initRecordDate() {
   if (el && !el.value) {
     const d = new Date();
     el.value = d.toISOString().slice(0, 10);
+  }
+  // 時刻が未入力なら現在時刻をセット
+  const timeEl = document.getElementById('record-time');
+  if (timeEl && !timeEl.value) {
+    const d = new Date();
+    timeEl.value = `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+  }
+}
+
+// 食事区分ボタンタップ時に時刻を自動提案
+const MEAL_DEFAULT_TIMES = { breakfast:'07:00', lunch:'12:00', dinner:'19:00', snack:'' };
+function autoSetMealTime(mealType) {
+  const timeEl = document.getElementById('record-time');
+  if (!timeEl) return;
+  const suggested = MEAL_DEFAULT_TIMES[mealType];
+  if (suggested) {
+    timeEl.value = suggested;
+  } else {
+    // 間食は現在時刻
+    const d = new Date();
+    timeEl.value = `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
   }
 }
 
@@ -2166,9 +2197,11 @@ function resetFoodCats() { document.querySelectorAll('.food-cat-chip').forEach(c
 function resetRecord() {
   window._currentPhotoBase64 = null;
   ['record-name','record-calories','record-protein','record-carb','record-fiber','record-potassium','record-phosphorus'].forEach(id => { const el = document.getElementById(id); if (el) el.value=''; });
-  // 日付を今日にリセット
+  // 日付・時刻をリセット
   const dateEl = document.getElementById('record-date');
   if (dateEl) { const d = new Date(); dateEl.value = d.toISOString().slice(0, 10); }
+  const timeEl = document.getElementById('record-time');
+  if (timeEl) { const d = new Date(); timeEl.value = `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; }
   // 食事区分を朝食にリセット
   document.querySelectorAll('.meal-type-btn').forEach(b => b.classList.remove('active'));
   const bfBtn = document.querySelector('.meal-type-btn[data-type="breakfast"]');
@@ -2211,11 +2244,16 @@ async function saveMeal() {
     food_categories: getSelectedFoodCats(),
     recorded_at: (() => {
       const dateVal = document.getElementById('record-date')?.value;
+      const timeVal = document.getElementById('record-time')?.value;
       if (dateVal) {
-        // 日付が指定されている場合は、その日の現在時刻として記録
-        const d = new Date(now);
         const parts = dateVal.split('-');
+        const d = new Date(now);
         d.setFullYear(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]));
+        if (timeVal) {
+          // 手動入力の時刻を使用
+          const [h, m] = timeVal.split(':').map(Number);
+          d.setHours(h, m, 0, 0);
+        }
         return d.toISOString();
       }
       return now.toISOString();
@@ -3199,6 +3237,98 @@ const foodDatabase = [
   {name:'低塩チキングリル定食（1食）',  cat:'低タンパク献立', cal:480,protein:28.0,carb:52.0,fiber:3.5,k:480,p:225},
   {name:'根菜の低カリウム煮物（1食）',  cat:'低タンパク献立', cal:180,protein:4.5,carb:32.0,fiber:3.5,k:180,p:75 },
   {name:'低タンパクパスタ・トマト（1食）',cat:'低タンパク献立',cal:360,protein:5.5,carb:72.0,fiber:3.0,k:280,p:85},
+
+  // ===== 海藻・乾物 =====
+  {name:'焼き海苔（1枚・3g）',            cat:'海藻・乾物', cal:6,  protein:0.9,carb:0.5,fiber:0.9,k:57, p:24 },
+  {name:'焼き海苔（5枚・15g）',           cat:'海藻・乾物', cal:29, protein:4.5,carb:2.4,fiber:4.4,k:285,p:120},
+  {name:'味付け海苔（1袋・8g）',          cat:'海藻・乾物', cal:16, protein:2.0,carb:1.6,fiber:1.6,k:120,p:46 },
+  {name:'わかめ・乾燥（5g）',             cat:'海藻・乾物', cal:8,  protein:0.9,carb:0.7,fiber:1.8,k:130,p:14 },
+  {name:'わかめ・水戻し（40g）',          cat:'海藻・乾物', cal:6,  protein:0.7,carb:0.8,fiber:1.4,k:90, p:10 },
+  {name:'とろろ昆布（5g）',               cat:'海藻・乾物', cal:8,  protein:0.4,carb:1.4,fiber:1.7,k:95, p:10 },
+  {name:'昆布・だし用（5g）',             cat:'海藻・乾物', cal:7,  protein:0.4,carb:1.5,fiber:1.5,k:120,p:8  },
+  {name:'ひじき・水煮（50g）',            cat:'海藻・乾物', cal:11, protein:1.1,carb:0.9,fiber:2.4,k:160,p:17 },
+  {name:'もずく（100g）',                 cat:'海藻・乾物', cal:4,  protein:0.2,carb:0.6,fiber:0.2,k:2,  p:7  },
+  {name:'めかぶ（1パック・50g）',         cat:'海藻・乾物', cal:6,  protein:0.5,carb:0.8,fiber:1.0,k:65, p:12 },
+  {name:'高野豆腐（1個・16g）',           cat:'海藻・乾物', cal:82, protein:7.5,carb:0.5,fiber:0.3,k:2,  p:100},
+  {name:'干し椎茸（2枚・8g）',            cat:'海藻・乾物', cal:17, protein:1.4,carb:3.4,fiber:2.4,k:152,p:40 },
+
+  // ===== 漬物・発酵食品 =====
+  {name:'キムチ（50g）',                  cat:'漬物・発酵食品', cal:18, protein:1.4,carb:2.7,fiber:1.3,k:190,p:28 },
+  {name:'キムチ（100g）',                 cat:'漬物・発酵食品', cal:36, protein:2.8,carb:5.4,fiber:2.6,k:380,p:56 },
+  {name:'白菜の浅漬け（50g）',            cat:'漬物・発酵食品', cal:8,  protein:0.5,carb:1.3,fiber:0.7,k:75, p:14 },
+  {name:'たくあん（3切れ・30g）',         cat:'漬物・発酵食品', cal:16, protein:0.5,carb:3.3,fiber:0.4,k:54, p:15 },
+  {name:'きゅうりの塩漬け（30g）',        cat:'漬物・発酵食品', cal:6,  protein:0.4,carb:1.1,fiber:0.4,k:90, p:11 },
+  {name:'梅干し（1個・10g）',             cat:'漬物・発酵食品', cal:3,  protein:0.1,carb:0.7,fiber:0.5,k:90, p:6  },
+  {name:'ぬか漬け・きゅうり（50g）',      cat:'漬物・発酵食品', cal:9,  protein:0.7,carb:1.5,fiber:0.6,k:185,p:26 },
+  {name:'ぬか漬け・大根（50g）',          cat:'漬物・発酵食品', cal:11, protein:0.5,carb:2.2,fiber:0.8,k:180,p:18 },
+  {name:'らっきょう・甘酢漬け（5粒・20g）',cat:'漬物・発酵食品',cal:24,protein:0.3,carb:5.7,fiber:0.9,k:30, p:8  },
+  {name:'福神漬け（大さじ1・15g）',       cat:'漬物・発酵食品', cal:18, protein:0.4,carb:4.2,fiber:0.5,k:38, p:9  },
+
+  // ===== 野菜類（追加） =====
+  {name:'玉ねぎ・生（中1/2個・80g）',     cat:'野菜類', cal:27, protein:0.8,carb:6.4,fiber:1.3,k:120,p:24 },
+  {name:'玉ねぎ・炒め（80g）',            cat:'野菜類', cal:48, protein:0.8,carb:8.5,fiber:1.5,k:110,p:22 },
+  {name:'玉ねぎ・煮込み（100g）',         cat:'野菜類', cal:33, protein:1.0,carb:7.8,fiber:1.6,k:130,p:26 },
+  {name:'長ねぎ（1/2本・50g）',           cat:'野菜類', cal:17, protein:0.6,carb:3.9,fiber:1.1,k:100,p:18 },
+  {name:'小松菜・茹で（60g）',            cat:'野菜類', cal:8,  protein:0.9,carb:0.5,fiber:1.2,k:234,p:27 },
+  {name:'チンゲン菜・炒め（80g）',        cat:'野菜類', cal:10, protein:0.8,carb:1.3,fiber:0.9,k:200,p:28 },
+  {name:'ズッキーニ・炒め（80g）',        cat:'野菜類', cal:18, protein:1.2,carb:2.5,fiber:1.0,k:216,p:40 },
+  {name:'パプリカ・赤（60g）',            cat:'野菜類', cal:22, protein:0.7,carb:5.3,fiber:1.1,k:150,p:24 },
+  {name:'セロリ（1本・50g）',             cat:'野菜類', cal:8,  protein:0.3,carb:1.7,fiber:0.8,k:170,p:17 },
+  {name:'アスパラガス（3本・60g）',       cat:'野菜類', cal:16, protein:1.6,carb:2.2,fiber:1.2,k:168,p:42 },
+  {name:'オクラ（5本・50g）',             cat:'野菜類', cal:17, protein:1.1,carb:3.0,fiber:2.5,k:145,p:27 },
+  {name:'にら（50g）',                    cat:'野菜類', cal:16, protein:1.1,carb:2.5,fiber:1.4,k:180,p:26 },
+  {name:'水菜（50g）',                    cat:'野菜類', cal:11, protein:1.1,carb:1.6,fiber:0.8,k:210,p:38 },
+  {name:'春菊（50g）',                    cat:'野菜類', cal:12, protein:1.1,carb:1.4,fiber:1.3,k:230,p:30 },
+  {name:'カリフラワー・茹で（60g）',      cat:'野菜類', cal:17, protein:1.7,carb:2.6,fiber:1.8,k:156,p:42 },
+  {name:'しいたけ・焼き（2枚・40g）',     cat:'野菜類', cal:11, protein:0.9,carb:2.0,fiber:1.5,k:100,p:36 },
+  {name:'エリンギ（50g）',                cat:'野菜類', cal:17, protein:1.4,carb:3.4,fiber:2.2,k:185,p:55 },
+  {name:'しめじ（50g）',                  cat:'野菜類', cal:9,  protein:1.0,carb:1.5,fiber:1.7,k:185,p:50 },
+
+  // ===== 根菜・いも類（追加） =====
+  {name:'れんこん・煮物（50g）',          cat:'根菜・いも類', cal:33, protein:0.9,carb:7.6,fiber:1.0,k:220,p:35 },
+  {name:'かぼちゃ・煮物（80g）',          cat:'根菜・いも類', cal:62, protein:1.3,carb:13.8,fiber:2.0,k:344,p:40 },
+  {name:'里芋・煮物（100g）',             cat:'根菜・いも類', cal:53, protein:1.5,carb:10.8,fiber:2.3,k:560,p:55 },
+  {name:'山芋・とろろ（50g）',            cat:'根菜・いも類', cal:33, protein:1.1,carb:7.0,fiber:0.5,k:215,p:18 },
+
+  // ===== 調味料・ドレッシング =====
+  {name:'醤油（小さじ1・6g）',            cat:'調味料', cal:5,  protein:0.5,carb:0.6,fiber:0,k:24, p:8  },
+  {name:'醤油（大さじ1・18g）',           cat:'調味料', cal:13, protein:1.4,carb:1.7,fiber:0,k:70, p:24 },
+  {name:'減塩醤油（大さじ1・18g）',       cat:'調味料', cal:13, protein:1.3,carb:1.8,fiber:0,k:68, p:22 },
+  {name:'みそ（大さじ1・18g）',           cat:'調味料', cal:35, protein:2.2,carb:3.8,fiber:0.8,k:72,p:38 },
+  {name:'減塩みそ（大さじ1・18g）',       cat:'調味料', cal:33, protein:2.1,carb:3.6,fiber:0.8,k:68,p:35 },
+  {name:'ケチャップ（大さじ1・18g）',     cat:'調味料', cal:18, protein:0.3,carb:4.3,fiber:0.3,k:90, p:9  },
+  {name:'マヨネーズ（大さじ1・12g）',     cat:'調味料', cal:84, protein:0.2,carb:0.5,fiber:0,k:7,  p:6  },
+  {name:'ソース・中濃（大さじ1・18g）',   cat:'調味料', cal:22, protein:0.3,carb:5.2,fiber:0.2,k:72, p:9  },
+  {name:'ウスターソース（大さじ1・18g）', cat:'調味料', cal:20, protein:0.4,carb:4.8,fiber:0.1,k:90, p:12 },
+  {name:'ポン酢（大さじ1・15g）',         cat:'調味料', cal:9,  protein:0.4,carb:1.7,fiber:0,k:45, p:9  },
+  {name:'めんつゆ・3倍濃縮（大さじ1・15g）',cat:'調味料',cal:15,protein:0.9,carb:2.5,fiber:0,k:55,p:18 },
+  {name:'みりん（大さじ1・18g）',         cat:'調味料', cal:43, protein:0.1,carb:7.8,fiber:0,k:2,  p:2  },
+  {name:'酒・料理酒（大さじ1・15g）',     cat:'調味料', cal:14, protein:0.1,carb:0.7,fiber:0,k:2,  p:2  },
+  {name:'砂糖（小さじ1・3g）',            cat:'調味料', cal:12, protein:0,  carb:3.0,fiber:0,k:0,  p:0  },
+  {name:'塩（小さじ1・6g）',              cat:'調味料', cal:0,  protein:0,  carb:0,  fiber:0,k:0,  p:0  },
+  {name:'バター（小さじ1・4g）',          cat:'調味料', cal:30, protein:0.0,carb:0.0,fiber:0,k:1,  p:1  },
+  {name:'オリーブ油（大さじ1・12g）',     cat:'調味料', cal:111,protein:0,  carb:0,  fiber:0,k:0,  p:0  },
+  {name:'ごま油（大さじ1・12g）',         cat:'調味料', cal:111,protein:0,  carb:0,  fiber:0,k:0,  p:0  },
+  {name:'サラダ油（大さじ1・12g）',       cat:'調味料', cal:111,protein:0,  carb:0,  fiber:0,k:0,  p:0  },
+  {name:'ドレッシング・和風（大さじ1・15g）',cat:'調味料',cal:20,protein:0.2,carb:2.8,fiber:0,k:45,p:6 },
+  {name:'ドレッシング・フレンチ（大さじ1・15g）',cat:'調味料',cal:62,protein:0.1,carb:2.0,fiber:0,k:15,p:3},
+  {name:'マヨネーズ・カロリーハーフ（大さじ1・12g）',cat:'調味料',cal:42,protein:0.2,carb:1.8,fiber:0,k:7,p:5},
+  {name:'豆板醤（小さじ1・6g）',          cat:'調味料', cal:7,  protein:0.5,carb:0.9,fiber:0.4,k:35, p:10 },
+  {name:'コチュジャン（大さじ1・18g）',   cat:'調味料', cal:34, protein:1.0,carb:7.2,fiber:0.5,k:65, p:16 },
+  {name:'オイスターソース（大さじ1・18g）',cat:'調味料',cal:18, protein:0.8,carb:3.6,fiber:0,k:36,  p:18 },
+  {name:'鶏がらスープの素（小さじ1・3g）',cat:'調味料', cal:8,  protein:0.5,carb:1.2,fiber:0,k:15,  p:6  },
+  {name:'コンソメ顆粒（1個・5g）',        cat:'調味料', cal:12, protein:0.5,carb:1.8,fiber:0,k:30,  p:8  },
+  {name:'だしの素（小さじ1・3g）',        cat:'調味料', cal:8,  protein:0.6,carb:0.9,fiber:0,k:18,  p:8  },
+  {name:'カレールー（1かけ・20g）',       cat:'調味料', cal:88, protein:1.4,carb:8.5,fiber:1.2,k:80, p:28 },
+  {name:'生姜チューブ（5g）',             cat:'調味料', cal:2,  protein:0.1,carb:0.5,fiber:0.1,k:18, p:3  },
+  {name:'にんにくチューブ（5g）',         cat:'調味料', cal:6,  protein:0.3,carb:1.3,fiber:0.1,k:22, p:5  },
+  {name:'わさびチューブ（5g）',           cat:'調味料', cal:8,  protein:0.3,carb:1.7,fiber:0.2,k:18, p:5  },
+
+  // ===== 油揚げ・その他加工品 =====
+  {name:'油揚げ・煮物（1枚・30g）',       cat:'大豆類', cal:111,protein:5.3,carb:0.3,fiber:0.4,k:15, p:69 },
+  {name:'がんもどき（小1個・50g）',       cat:'大豆類', cal:107,protein:7.5,carb:0.6,fiber:0.7,k:20, p:90 },
+  {name:'おから（50g）',                  cat:'大豆類', cal:56, protein:3.1,carb:5.7,fiber:5.8,k:175,p:55 },
+  {name:'枝豆（さや付き・100g）',         cat:'大豆類', cal:135,protein:11.7,carb:8.8,fiber:5.0,k:490,p:170},
 ];
 
 // ===== 水分記録 =====
@@ -3364,6 +3494,19 @@ async function submitFoodRequest() {
   } catch(e) { showToast('送信に失敗しました。'); }
 }
 
+// カタカナ→ひらがな変換
+function toHiragana(str) {
+  return str.replace(/[ァ-ヶ]/g, c => String.fromCharCode(c.charCodeAt(0) - 0x60));
+}
+// ひらがな→カタカナ変換
+function toKatakana(str) {
+  return str.replace(/[ぁ-ゖ]/g, c => String.fromCharCode(c.charCodeAt(0) + 0x60));
+}
+// 検索用：入力をひらがな・カタカナ両方で検索できるよう正規化
+function normalizeQuery(q) {
+  return [q, toHiragana(q), toKatakana(q)];
+}
+
 function searchFoodDB(query) {
   const results = document.getElementById('foodSearchResults');
   if (!results) return;
@@ -3373,7 +3516,14 @@ function searchFoodDB(query) {
     foods = foods.filter(f => f.cat === _currentFoodTab);
   }
   if (q) {
-    foods = foodDatabase.filter(f => f.name.includes(q) || f.cat.includes(q));
+    const variants = normalizeQuery(q);
+    const base = _currentFoodTab && _currentFoodTab !== 'all' ? foods : foodDatabase;
+    foods = base.filter(f => {
+      const name = f.name;
+      const nameH = toHiragana(name);
+      const nameK = toKatakana(name);
+      return variants.some(v => name.includes(v) || nameH.includes(v) || nameK.includes(v) || f.cat.includes(v));
+    });
   }
   renderFoodResults(foods.slice(0, 80));
 }
