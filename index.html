@@ -690,43 +690,66 @@ html, body {
 
       <!-- 水分収支カード（透析患者向け） -->
       <div class="card" style="border-color:rgba(192,132,252,0.3);" id="water-balance-card">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-          <div class="card-title" style="margin-bottom:0;">⚖️ 水分収支（透析管理）</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <div class="card-title" style="margin-bottom:0;">⚖️ 本日の体重増加量（推定）</div>
           <div style="font-size:10px;color:var(--text3);cursor:pointer;" onclick="showWaterBalanceInfo()">ℹ️</div>
         </div>
-        <!-- 不感蒸泄 -->
-        <div style="background:var(--surface2);border-radius:10px;padding:10px 12px;margin-bottom:8px;">
-          <div style="font-size:11px;color:var(--text3);margin-bottom:6px;">💨 不感蒸泄（体格から自動計算）</div>
-          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-            <div style="flex:1;text-align:center;">
-              <div id="insensible-val" style="font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:700;color:var(--purple);">—</div>
-              <div style="font-size:10px;color:var(--text3);">mL/日</div>
-            </div>
-            <div style="flex:2;font-size:11px;color:var(--text3);line-height:1.7;" id="insensible-detail">体重・身長を設定で入力すると計算されます</div>
+
+        <!-- 結果メイン表示 -->
+        <div style="text-align:center;padding:14px 0 10px;border:1px solid rgba(192,132,252,0.3);border-radius:12px;background:rgba(192,132,252,0.05);margin-bottom:12px;">
+          <div style="font-size:11px;color:var(--text3);margin-bottom:4px;">水分摂取 ― 尿量 ― 不感蒸泄</div>
+          <div style="display:flex;align-items:baseline;justify-content:center;gap:4px;">
+            <span id="wb-result" style="font-family:'JetBrains Mono',monospace;font-size:38px;font-weight:700;color:var(--green);">0</span>
+            <span style="font-size:14px;color:var(--text2);">g</span>
           </div>
+          <div id="wb-result-kg" style="font-size:12px;color:var(--text3);margin-top:2px;">（≒ 0.00 kg）</div>
+          <div id="wb-warning" style="display:none;margin:8px 12px 0;padding:6px 10px;border-radius:6px;font-size:11px;"></div>
         </div>
-        <!-- 運動による発汗 -->
-        <div style="background:var(--surface2);border-radius:10px;padding:10px 12px;margin-bottom:8px;">
-          <div style="font-size:11px;color:var(--text3);margin-bottom:4px;">🏃 運動による水分蒸発（今日の記録から）</div>
-          <div id="exercise-sweat-val" style="font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:700;color:var(--green);">0 mL</div>
-        </div>
-        <!-- 水分収支の計算式 -->
-        <div style="border:1px solid rgba(192,132,252,0.3);border-radius:10px;padding:12px;background:rgba(192,132,252,0.05);">
-          <div style="font-size:11px;color:var(--text3);margin-bottom:8px;">📊 本日の水分増加量（推定）</div>
-          <div style="font-size:12px;color:var(--text2);line-height:2.2;">
-            <div style="display:flex;justify-content:space-between;"><span>摂取水分</span><span id="wb-intake" style="color:var(--accent);font-weight:600;">0 mL</span></div>
-            <div style="display:flex;justify-content:space-between;"><span>― 尿量</span><span id="wb-urine" style="color:var(--red);font-weight:600;">0 mL</span></div>
-            <div style="display:flex;justify-content:space-between;"><span>― 不感蒸泄</span><span id="wb-insensible" style="color:var(--purple);font-weight:600;">0 mL</span></div>
-            <div style="display:flex;justify-content:space-between;"><span>― 運動発汗</span><span id="wb-sweat" style="color:var(--green);font-weight:600;">0 mL</span></div>
-            <div style="height:1px;background:var(--border);margin:4px 0;"></div>
+
+        <!-- 内訳 -->
+        <div style="background:var(--surface2);border-radius:10px;padding:12px 14px;">
+          <div style="font-size:11px;color:var(--text3);margin-bottom:10px;letter-spacing:0.5px;">内訳</div>
+          <div style="font-size:13px;color:var(--text2);display:flex;flex-direction:column;gap:8px;">
+            <!-- 摂取水分 -->
             <div style="display:flex;justify-content:space-between;align-items:center;">
-              <span style="font-weight:700;color:var(--text);">＝ 水分増加量</span>
-              <span id="wb-result" style="font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:700;">0 mL</span>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <span style="width:8px;height:8px;border-radius:50%;background:var(--accent);display:inline-block;flex-shrink:0;"></span>
+                <span>水分摂取量</span>
+              </div>
+              <span id="wb-intake" style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--accent);">0 mL</span>
+            </div>
+            <!-- 尿量 -->
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <div style="display:flex;align-items:center;gap:6px;">
+                <span style="width:8px;height:8px;border-radius:50%;background:var(--red);display:inline-block;flex-shrink:0;"></span>
+                <span>― 尿量</span>
+              </div>
+              <span id="wb-urine" style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--red);">0 mL</span>
+            </div>
+            <!-- 不感蒸泄 -->
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <div style="display:flex;align-items:center;gap:6px;">
+                <span style="width:8px;height:8px;border-radius:50%;background:var(--purple);display:inline-block;flex-shrink:0;"></span>
+                <span>― 不感蒸泄</span>
+              </div>
+              <div style="text-align:right;">
+                <div id="wb-insensible" style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--purple);">0 mL</div>
+                <div id="insensible-detail" style="font-size:10px;color:var(--text3);">体重を設定で入力すると計算されます</div>
+              </div>
             </div>
           </div>
-          <div id="wb-warning" style="display:none;margin-top:8px;padding:6px 10px;border-radius:6px;font-size:11px;"></div>
         </div>
-        <div style="font-size:10px;color:var(--text3);margin-top:8px;line-height:1.6;">※ 不感蒸泄は体重×約15mL/kg/日（安静時）。運動発汗は強度と時間から概算。透析患者の除水量管理の目安として使用してください。</div>
+
+        <!-- 透析目安 -->
+        <div style="font-size:10px;color:var(--text3);margin-top:8px;line-height:1.7;">
+          ※ 不感蒸泄 ＝ 体重 × 15 mL/kg/日（皮膚蒸散＋呼気）。水分1mL ≒ 1g として体重換算。<br>
+          ※ 透析患者の体重増加目安は<strong style="color:var(--text2);">ドライウェイト（DW）比</strong>で個人差があります。一般的な指標は中1日 &lt;3%DW、週末 &lt;5%DW。必ず主治医の指示に従ってください。
+        </div>
+        <div id="wb-dw-hint" style="display:none;font-size:11px;margin-top:6px;padding:6px 10px;background:var(--surface2);border-radius:6px;color:var(--text2);line-height:1.7;"></div>
+        <!-- 隠しspan (後方互換) -->
+        <span id="insensible-val" style="display:none;"></span>
+        <span id="exercise-sweat-val" style="display:none;"></span>
+        <span id="wb-sweat" style="display:none;"></span>
       </div>
       <div class="ad-banner" id="ad-home"><div><div class="ad-label">広告</div><div class="ad-text">🏥 腎臓専門クリニック — 無料相談受付中</div></div><div class="ad-x" onclick="document.getElementById('ad-home').style.display='none'">✕</div></div>
     </div>
@@ -2572,49 +2595,63 @@ function calcExerciseSweat() {
 
 function updateWaterBalance() {
   const insensible = calcInsensibleLoss();
-  const insEl = document.getElementById('insensible-val');
-  const insDetail = document.getElementById('insensible-detail');
 
-  if (insensible && insEl) {
-    insEl.textContent = insensible.total.toLocaleString();
-    if (insDetail) insDetail.innerHTML =
-      `体重 ${insensible.weight}kg × 15mL/kg/日<br>皮膚蒸散 ${insensible.skin}mL + 呼気 ${insensible.lung}mL`;
+  // 不感蒸泄の内訳テキスト更新
+  const insDetail = document.getElementById('insensible-detail');
+  if (insensible && insDetail) {
+    insDetail.textContent = `体重 ${insensible.weight}kg × 15mL/kg/日`;
   }
 
-  const sweat = calcExerciseSweat();
-  const sweatEl = document.getElementById('exercise-sweat-val');
-  if (sweatEl) sweatEl.textContent = sweat + ' mL';
-
-  // 水分収支計算
+  // 水分収支計算： 摂取水分 − 尿量 − 不感蒸泄
   const waterLog = getTodayWaterLog();
-  const intake = waterLog.reduce((s, e) => s + (e.ml || 0), 0);
+  const intake    = waterLog.reduce((s, e) => s + (e.ml || 0), 0);
   const urineRecs = getTodayHealthRecords('urine');
   const urineTotal = urineRecs.reduce((s, r) => s + (r.vol || 0), 0);
-  const insVal = insensible ? insensible.total : 0;
-  const balance = intake - urineTotal - insVal - sweat;
+  const insVal    = insensible ? insensible.total : 0;
 
-  const setWB = (id, val, prefix='') => {
-    const el = document.getElementById(id);
-    if (el) el.textContent = prefix + Math.abs(val).toLocaleString() + ' mL';
-  };
-  setWB('wb-intake', intake);
-  setWB('wb-urine', urineTotal);
-  setWB('wb-insensible', insVal);
-  setWB('wb-sweat', sweat);
+  // 結果（mL ≒ g）
+  const balanceG = intake - urineTotal - insVal;
 
-  const resEl = document.getElementById('wb-result');
-  const warnEl = document.getElementById('wb-warning');
+  // 内訳表示
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val.toLocaleString() + ' mL'; };
+  set('wb-intake',     intake);
+  set('wb-urine',      urineTotal);
+  set('wb-insensible', insVal);
+
+  // 結果メイン表示
+  const resEl   = document.getElementById('wb-result');
+  const resKgEl = document.getElementById('wb-result-kg');
+  const warnEl  = document.getElementById('wb-warning');
+
+  // ドライウェイト目安ヒント（体重が設定されていれば個人値を表示）
+  const dwHint = document.getElementById('wb-dw-hint');
+  const bw = parseFloat(state.weight) || 0;
+  if (dwHint) {
+    if (bw > 0) {
+      const limit1 = (bw * 0.03).toFixed(1);
+      const limit2 = (bw * 0.05).toFixed(1);
+      dwHint.style.display = 'block';
+      dwHint.innerHTML = `📌 あなたの体重 ${bw}kg を基準にした目安（DW比）：<br>中1日 &lt; <strong>${limit1} kg</strong>（3%）、週末 &lt; <strong>${limit2} kg</strong>（5%）<br><span style="color:var(--text3)">※ DWが設定されていない場合は現在の体重で試算。必ず主治医に確認してください。</span>`;
+    } else {
+      dwHint.style.display = 'none';
+    }
+  }
+
   if (resEl) {
-    resEl.textContent = (balance >= 0 ? '+' : '') + balance.toLocaleString() + ' mL';
-    if (balance > 1000) {
+    resEl.textContent = (balanceG >= 0 ? '+' : '') + balanceG.toLocaleString();
+    const kg = (balanceG / 1000).toFixed(2);
+    if (resKgEl) resKgEl.textContent = `（≒ ${balanceG >= 0 ? '+' : ''}${kg} kg）`;
+
+    // 色・警告
+    if (balanceG > 1000) {
       resEl.style.color = 'var(--red)';
       if (warnEl) { warnEl.style.display='block'; warnEl.style.background='var(--red-dim)'; warnEl.style.color='var(--red)'; warnEl.style.border='1px solid rgba(248,113,113,0.3)'; warnEl.textContent='⚠ 水分が多く蓄積しています。透析前に医療スタッフへご相談ください。'; }
-    } else if (balance > 500) {
+    } else if (balanceG > 500) {
       resEl.style.color = 'var(--amber)';
       if (warnEl) { warnEl.style.display='block'; warnEl.style.background='var(--amber-dim)'; warnEl.style.color='var(--amber)'; warnEl.style.border='1px solid rgba(252,211,77,0.3)'; warnEl.textContent='注意：水分がやや蓄積しています。摂取量を意識してください。'; }
-    } else if (balance < -200) {
+    } else if (balanceG < 0) {
       resEl.style.color = 'var(--accent)';
-      if (warnEl) { warnEl.style.display='block'; warnEl.style.background='var(--accent-glow)'; warnEl.style.color='var(--accent)'; warnEl.style.border='1px solid rgba(79,195,247,0.3)'; warnEl.textContent='水分が不足気味です。適切な水分補給を心がけてください。'; }
+      if (warnEl) { warnEl.style.display='block'; warnEl.style.background='var(--accent-glow)'; warnEl.style.color='var(--accent)'; warnEl.style.border='1px solid rgba(79,195,247,0.3)'; warnEl.textContent='マイナスの場合、尿量や不感蒸泄が摂取量を上回っています。数値をご確認ください。'; }
     } else {
       resEl.style.color = 'var(--green)';
       if (warnEl) warnEl.style.display = 'none';
@@ -2623,7 +2660,7 @@ function updateWaterBalance() {
 }
 
 function showWaterBalanceInfo() {
-  showToast('不感蒸泄＝体重×15mL/日（皮膚蒸散＋呼気）。透析患者の体重増加目安は中1日<1kg、週末<1.5kg。');
+  showToast('体重増加量 ＝ 水分摂取 − 尿量 − 不感蒸泄。増加目安はDW比3〜5%で個人差あり。主治医に確認してください。');
 }
 let _glucosePoints = [];
 
