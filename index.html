@@ -674,18 +674,6 @@ html, body {
         <div class="prog-wrap" style="margin-bottom:12px;">
           <div class="prog-fill pg-blue" id="prog-water" style="width:0%;transition:width 0.6s ease;"></div>
         </div>
-        <!-- 飲料追加ボタン -->
-        <div style="font-size:11px;color:var(--text3);margin-bottom:8px;">飲料をタップして追加（修正・削除も可能）</div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;">
-          <button onclick="addDrink(100)"  class="btn btn-ghost btn-sm">+100mL</button>
-          <button onclick="addDrink(150)"  class="btn btn-ghost btn-sm">+150mL<span style="font-size:9px;color:var(--text3);display:block;">コップ</span></button>
-          <button onclick="addDrink(200)"  class="btn btn-ghost btn-sm">+200mL</button>
-          <button onclick="addDrink(350)"  class="btn btn-ghost btn-sm">+350mL<span style="font-size:9px;color:var(--text3);display:block;">缶</span></button>
-          <button onclick="addDrink(500)"  class="btn btn-ghost btn-sm">+500mL<span style="font-size:9px;color:var(--text3);display:block;">ペットボトル</span></button>
-          <button onclick="addDrinkCustom()" class="btn btn-ghost btn-sm">直接入力</button>
-        </div>
-        <div id="water-log-list" style="margin-top:10px;"></div>
-        <button onclick="resetTodayWater()" style="font-size:11px;color:var(--text3);background:none;border:none;cursor:pointer;margin-top:6px;">🗑 今日の飲料記録をリセット</button>
       </div>
 
       <!-- 水分収支カード（透析患者向け） -->
@@ -697,7 +685,7 @@ html, body {
 
         <!-- 結果メイン表示 -->
         <div style="text-align:center;padding:14px 0 10px;border:1px solid rgba(192,132,252,0.3);border-radius:12px;background:rgba(192,132,252,0.05);margin-bottom:12px;">
-          <div style="font-size:11px;color:var(--text3);margin-bottom:4px;">水分摂取 ― 尿量 ― 不感蒸泄</div>
+          <div style="font-size:11px;color:var(--text3);margin-bottom:4px;">（食事水分 ＋ 飲物 ＋ 代謝水）― 尿量 ― 不感蒸泄</div>
           <div style="display:flex;align-items:baseline;justify-content:center;gap:4px;">
             <span id="wb-result" style="font-family:'JetBrains Mono',monospace;font-size:38px;font-weight:700;color:var(--green);">0</span>
             <span style="font-size:14px;color:var(--text2);">g</span>
@@ -717,6 +705,14 @@ html, body {
                 <span>水分摂取量</span>
               </div>
               <span id="wb-intake" style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--accent);">0 mL</span>
+            </div>
+            <!-- 代謝水 -->
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <div style="display:flex;align-items:center;gap:6px;">
+                <span style="width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;flex-shrink:0;"></span>
+                <span>＋ 代謝水</span>
+              </div>
+              <span id="wb-metabolic" style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--green);">0 mL</span>
             </div>
             <!-- 尿量 -->
             <div style="display:flex;justify-content:space-between;align-items:center;">
@@ -742,6 +738,8 @@ html, body {
 
         <!-- 透析目安 -->
         <div style="font-size:10px;color:var(--text3);margin-top:8px;line-height:1.7;">
+          ※ 体重増加 ＝（食事水分 ＋ 飲物 ＋ 代謝水）― 尿量 ― 不感蒸泄（全腎協ガイドライン準拠）<br>
+          ※ 代謝水 ≒ 摂取カロリー × 0.12 mL/kcal（食事記録がない場合は体重 × 2.5 mL/kg で推定）<br>
           ※ 不感蒸泄 ＝ 体重 × 15 mL/kg/日（皮膚蒸散＋呼気）。水分1mL ≒ 1g として体重換算。<br>
           ※ 透析患者の体重増加目安は<strong style="color:var(--text2);">ドライウェイト（DW）比</strong>で個人差があります。一般的な指標は中1日 &lt;3%DW、週末 &lt;5%DW。必ず主治医の指示に従ってください。
         </div>
@@ -1789,9 +1787,33 @@ function calcAutoTargets() {
   // リン (mg): タンパク質×15 が目安
   const phosphorus = Math.round(protein * 15 / 50) * 50;
 
-  // 水分 (mL): 透析は厳しく制限
-  const waterMap = { ckd1:1800, ckd2:1500, ckd3:1200, ckd4:500, ckdx:1500 };
-  const water = waterMap[stage];
+  // 水分 (mL): 全腎協ガイドラインに基づく計算
+  // 参考: https://www.zjk.or.jp/kidney-disease/water-salt-intake/5_5358a3bdbd475/
+  // 透析期（ckd4）: 体重増加目安 中1日<DW×3%、中2日<DW×5% → 飲水量 = DW×3% + 尿量 - 食事水分(推定600mL)
+  //   尿量が不明の場合は透析患者平均500mLを想定
+  //   不感蒸泄（約体重×15mL/日）を差し引いた分が飲水許容量
+  // CKD前期〜後期: 尿量が保たれているため1日尿量+500mL程度が目安
+  let water;
+  if (stage === 'ckd4') {
+    // 透析期: DW = 体重（透析後）≒ 現在の体重を使用
+    // 中1日透析を想定: DW × 3% の体重増加許容 → 水分収支
+    // 飲水目安 = DW×0.03×1000(mL相当) + 尿量(推定500) - 不感蒸泄(体重×15)
+    const insensibleLoss = Math.round(weight * 15); // 不感蒸泄
+    const estimatedUrine = 500; // 透析患者の平均的尿量
+    const dwGain3pct = Math.round(weight * 0.03 * 1000); // DW比3%の体重増加 → 水分量(mL)
+    water = Math.max(500, Math.round((dwGain3pct + estimatedUrine - insensibleLoss) / 50) * 50);
+  } else if (stage === 'ckd3') {
+    // 後期(G4-5): 尿量低下あり、尿量+500mL 〜 1000mL目安
+    water = 1000;
+  } else if (stage === 'ckd2') {
+    // 中期(G3): 1000〜1500mL
+    water = 1200;
+  } else if (stage === 'ckd1') {
+    // 前期(G1-2): 尿量保たれている、制限は緩め 1500〜2000mL
+    water = 1500;
+  } else {
+    water = 1500; // 不明
+  }
 
   // 塩分: CKDは3g以上6g未満
   const salt = stage === 'ckd4' ? 6 : 6;
@@ -1876,8 +1898,8 @@ function getWaterBreakdownForDate(dateString) {
   try {
     const all = JSON.parse(localStorage.getItem(WATER_KEY) || '[]');
     const dayLog = all.filter(e => new Date(e.time).toDateString() === dateString);
-    const meal  = dayLog.filter(e =>  e.auto).reduce((s, e) => s + (e.ml || 0), 0);
-    const drink = dayLog.filter(e => !e.auto).reduce((s, e) => s + (e.ml || 0), 0);
+    const meal  = dayLog.filter(e => e.auto && !e.drink).reduce((s, e) => s + (e.ml || 0), 0);
+    const drink = dayLog.filter(e => e.auto &&  e.drink).reduce((s, e) => s + (e.ml || 0), 0);
     return { meal, drink, total: meal + drink };
   } catch(e) { return { meal:0, drink:0, total:0 }; }
 }
@@ -2398,15 +2420,21 @@ async function saveMeal() {
   const saved = localSaveMeal(meal);
   dbSaveMeal(meal).catch(()=>{});
 
-  // 水分連動：食事の水分量を自動加算（食事の日付に合わせて記録）
-  const waterFromMeal = estimateWaterFromMeal(meal);
-  if (waterFromMeal > 0) {
-    try {
-      const all = JSON.parse(localStorage.getItem(WATER_KEY)||'[]');
-      all.push({ time: meal.recorded_at, ml: waterFromMeal, auto: true, source: meal.dish_name||'食事' });
+  // 水分連動：食事水分と飲物水分を分けて記録
+  const waterResult = estimateWaterFromMeal(meal);
+  try {
+    const all = JSON.parse(localStorage.getItem(WATER_KEY)||'[]');
+    if (waterResult.food > 0) {
+      all.push({ time: meal.recorded_at, ml: waterResult.food, auto: true, drink: false, source: meal.dish_name||'食事' });
+    }
+    if (waterResult.drink > 0) {
+      all.push({ time: meal.recorded_at, ml: waterResult.drink, auto: true, drink: true, source: meal.dish_name||'飲物' });
+    }
+    if (waterResult.food > 0 || waterResult.drink > 0) {
       localStorage.setItem(WATER_KEY, JSON.stringify(all));
-    } catch(e) {}
-  }
+    }
+  } catch(e) {}
+  const waterFromMeal = waterResult.total;
 
   if (saved) {
     showToast(`✅ 記録しました${waterFromMeal>0?' (水分+'+waterFromMeal+'mL)':''}`);
@@ -2820,21 +2848,37 @@ function updateWaterBalance() {
     insDetail.textContent = `体重 ${insensible.weight}kg × 15mL/kg/日`;
   }
 
-  // 水分収支計算： 摂取水分 − 尿量 − 不感蒸泄
+  // 水分収支計算（全腎協ガイドライン準拠）
+  // 体重増加 = (食事水分 + 飲物 + 代謝水) − (尿量 + 不感蒸泄)
+  // 代謝水: エネルギー代謝で生じる水 ≒ 摂取カロリー × 0.12 mL/kcal（約200〜300mL/日）
   const waterLog = getTodayWaterLog();
-  const intake    = waterLog.reduce((s, e) => s + (e.ml || 0), 0);
-  const urineRecs = getTodayHealthRecords('urine');
-  const urineTotal = urineRecs.reduce((s, r) => s + (r.vol || 0), 0);
-  const insVal    = insensible ? insensible.total : 0;
+  // 食事由来と飲物を分けて集計（auto:true, drink:false = 食事水分、auto:true, drink:true = 飲物）
+  const mealIntake  = waterLog.filter(e => e.auto && !e.drink).reduce((s, e) => s + (e.ml || 0), 0);
+  const drinkIntake = waterLog.filter(e => e.auto &&  e.drink).reduce((s, e) => s + (e.ml || 0), 0);
+  const intake      = mealIntake + drinkIntake;
 
-  // 結果（mL ≒ g）
-  const balanceG = intake - urineTotal - insVal;
+  // 代謝水: 今日のカロリー記録から推定（記録がなければ体重×2.5mL/kgの簡易値）
+  const todayMeals   = getTodayMeals ? getTodayMeals() : [];
+  const todayKcal    = todayMeals.reduce((s, m) => s + (m.calories || 0), 0);
+  const metabolicWater = todayKcal > 0
+    ? Math.round(todayKcal * 0.12)
+    : Math.round((parseFloat(state.weight) || 60) * 2.5);
+
+  const urineRecs  = getTodayHealthRecords('urine');
+  const urineTotal = urineRecs.reduce((s, r) => s + (r.vol || 0), 0);
+  const insVal     = insensible ? insensible.total : 0;
+
+  // 体重増加量（mL ≒ g）
+  const balanceG = (intake + metabolicWater) - urineTotal - insVal;
 
   // 内訳表示
   const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val.toLocaleString() + ' mL'; };
   set('wb-intake',     intake);
   set('wb-urine',      urineTotal);
   set('wb-insensible', insVal);
+  // 代謝水の表示（要素があれば）
+  const metaEl = document.getElementById('wb-metabolic');
+  if (metaEl) metaEl.textContent = metabolicWater.toLocaleString() + ' mL';
 
   // 結果メイン表示
   const resEl   = document.getElementById('wb-result');
@@ -2878,7 +2922,7 @@ function updateWaterBalance() {
 }
 
 function showWaterBalanceInfo() {
-  showToast('体重増加量 ＝ 水分摂取 − 尿量 − 不感蒸泄。増加目安はDW比3〜5%で個人差あり。主治医に確認してください。');
+  showToast('体重増加量 ＝（食事水分＋飲物＋代謝水）― 尿量 ― 不感蒸泄。増加目安はDW比3〜5%で個人差あり。主治医に確認してください。');
 }
 let _glucosePoints = [];
 
@@ -3227,8 +3271,11 @@ function estimateFoodDBWater(food) {
 //   4. 食品DB選択   → 食品名キーワード×重量で成分表から算出
 //   5. AI/テキスト入力 → カテゴリ推定（フォールバック）
 // ============================================================
+// 食事全体の水分を { food: mL, drink: mL, total: mL } で返す
+// drink = 飲物チップ由来、food = 食材・汁物・DBなど
 function estimateWaterFromMeal(meal) {
-  let water = 0;
+  let foodWater = 0;
+  let drinkWater = 0;
   const cats = meal.food_categories || {};
   const portions = cats._portions || {};
 
@@ -3238,34 +3285,37 @@ function estimateWaterFromMeal(meal) {
     (cats[group] || []).forEach(chipName => {
       const trimmed = chipName.trim();
       const mapped = FOOD_WATER_MAP[trimmed];
+      let ml = 0;
       if (mapped != null) {
-        water += mapped * ratio;
+        ml = mapped * ratio;
       } else if (group === 'drink') {
-        // MAPにない飲み物：名前から量を推定
         const mlMatch = trimmed.match(/(\d+)\s*ml/i);
-        const ml = mlMatch ? parseInt(mlMatch[1]) : 200;
-        water += ml * ratio;
+        ml = (mlMatch ? parseInt(mlMatch[1]) : 200) * ratio;
+      }
+      if (group === 'drink') {
+        drinkWater += ml;
+      } else {
+        foodWater += ml;
       }
     });
   });
 
-  // 4: 食品DBから選択した食品
+  // 4: 食品DBから選択した食品（飲物以外）
   (meal.food_db_selections || []).forEach(sel => {
-    const w = estimateFoodDBWater(sel);
-    water += w;
+    foodWater += estimateFoodDBWater(sel);
   });
 
-  // 5: 食品DBによる自動算出がない場合のフォールバック
-  // （AI推定・手入力など food_categories も food_db_selections もない食事）
-  if (water === 0 && (meal.calories || 0) > 0) {
-    // 食事ありで水分が全く計算できない場合：
-    // 日本人の平均的な食事の水分含有量は食事重量の約55〜65%
-    // カロリーから食事重量を逆算（約1kcal = 0.8〜1.2g 目安）
-    // 保守的に汁物なし固形食として200mLを最低保証
-    water = 200;
+  // 5: フォールバック（食事ありだが計算できない場合）
+  if ((foodWater + drinkWater) === 0 && (meal.calories || 0) > 0) {
+    foodWater = 200;
   }
 
-  return Math.round(water);
+  return { food: Math.round(foodWater), drink: Math.round(drinkWater), total: Math.round(foodWater + drinkWater) };
+}
+
+// 後方互換：数値だけ必要な箇所用
+function estimateWaterFromMealTotal(meal) {
+  return estimateWaterFromMeal(meal).total;
 }
 
 function recalcGlucose() {
@@ -3870,9 +3920,9 @@ function resetTodayWater() {
 
 function updateWaterCard() {
   const log = getTodayWaterLog();
-  // 食事水分（auto:true）と飲料（auto:false/未設定）を分離
-  const mealWater  = log.filter(e => e.auto).reduce((s,e) => s+(e.ml||0), 0);
-  const drinkWater = log.filter(e => !e.auto).reduce((s,e) => s+(e.ml||0), 0);
+  // 食事水分（auto:true, drink:false）と飲物（auto:true, drink:true）を分離
+  const mealWater  = log.filter(e => e.auto && !e.drink).reduce((s,e) => s+(e.ml||0), 0);
+  const drinkWater = log.filter(e => e.auto && e.drink).reduce((s,e) => s+(e.ml||0), 0);
   const total = mealWater + drinkWater;
   const target = state.targets?.water || 1500;
   const pct = Math.min(100, Math.round(total / target * 100));
