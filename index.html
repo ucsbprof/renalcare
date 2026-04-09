@@ -1029,17 +1029,23 @@ html, body {
             <input class="form-input" type="number" id="h-glucose-after" placeholder="例：145" min="40" max="600" />
           </div>
         </div>
-        <div style="margin-bottom:10px;">
-          <label class="form-label">測定タイミング</label>
-          <select class="form-input" id="h-glucose-timing">
-            <option value="before_breakfast">朝食前</option>
-            <option value="after_breakfast">朝食後2時間</option>
-            <option value="before_lunch">昼食前</option>
-            <option value="after_lunch">昼食後2時間</option>
-            <option value="before_dinner">夕食前</option>
-            <option value="after_dinner">夕食後2時間</option>
-            <option value="bedtime">就寝前</option>
-          </select>
+        <div style="display:flex;gap:10px;margin-bottom:10px;">
+          <div style="flex:2;">
+            <label class="form-label">測定タイミング</label>
+            <select class="form-input" id="h-glucose-timing">
+              <option value="before_breakfast">朝食前</option>
+              <option value="after_breakfast">朝食後2時間</option>
+              <option value="before_lunch">昼食前</option>
+              <option value="after_lunch">昼食後2時間</option>
+              <option value="before_dinner">夕食前</option>
+              <option value="after_dinner">夕食後2時間</option>
+              <option value="bedtime">就寝前</option>
+            </select>
+          </div>
+          <div style="flex:1;">
+            <label class="form-label">時刻</label>
+            <input class="form-input" type="time" id="h-glucose-time" />
+          </div>
         </div>
         <button class="btn btn-primary btn-full" onclick="saveHealthRecord('glucose')">✓ 血糖値を記録</button>
         <div id="h-glucose-today" style="margin-top:10px;"></div>
@@ -1083,16 +1089,20 @@ html, body {
             <input class="form-input" type="number" id="h-urine-vol" placeholder="例：200" min="0" max="1000" />
           </div>
           <div style="flex:1;">
-            <label class="form-label">色・状態</label>
-            <select class="form-input" id="h-urine-color">
-              <option value="clear">透明〜淡黄色（正常）</option>
-              <option value="yellow">黄色（正常）</option>
-              <option value="dark">濃い黄色（水分不足）</option>
-              <option value="orange">オレンジ・茶色（要注意）</option>
-              <option value="red">赤・ピンク（要受診）</option>
-              <option value="foam">泡立ち（タンパク尿の可能性）</option>
-            </select>
+            <label class="form-label">時刻</label>
+            <input class="form-input" type="time" id="h-urine-time" />
           </div>
+        </div>
+        <div style="margin-bottom:10px;">
+          <label class="form-label">色・状態</label>
+          <select class="form-input" id="h-urine-color">
+            <option value="clear">透明〜淡黄色（正常）</option>
+            <option value="yellow">黄色（正常）</option>
+            <option value="dark">濃い黄色（水分不足）</option>
+            <option value="orange">オレンジ・茶色（要注意）</option>
+            <option value="red">赤・ピンク（要受診）</option>
+            <option value="foam">泡立ち（タンパク尿の可能性）</option>
+          </select>
         </div>
         <button class="btn btn-primary btn-full" onclick="saveHealthRecord('urine')">✓ 尿量を記録</button>
         <div id="h-urine-today" style="margin-top:10px;font-size:13px;color:var(--text2);"></div>
@@ -1188,6 +1198,11 @@ html, body {
             <div class="med-time-header"><span class="med-time-icon">🌛</span><span class="med-time-label">就寝前</span><span class="med-time-badge" id="badge-bedtime"></span></div>
             <div class="med-time-list" id="list-bedtime"></div>
           </div>
+          <!-- 症状時のみ（頓服）ブロック -->
+          <div class="med-time-block" id="med-block-prn">
+            <div class="med-time-header"><span class="med-time-icon">🆘</span><span class="med-time-label" style="color:var(--amber);">症状がある時のみ（頓服）</span><span class="med-time-badge" id="badge-prn"></span></div>
+            <div class="med-time-list" id="list-prn"></div>
+          </div>
           <div id="med-no-meds" style="text-align:center;padding:40px 20px;color:var(--text3);">
             <div style="font-size:40px;margin-bottom:10px;">💊</div>
             <div>まだ薬が登録されていません</div>
@@ -1236,7 +1251,9 @@ html, body {
       <div class="settings-section">
         <div class="settings-title">連携</div>
         <div class="setting-row"><div class="setting-icon">🏥</div><div class="setting-text"><div class="setting-name">医療機関と連携する</div><div class="setting-desc">主治医がデータを確認できます</div></div><div class="setting-arrow">›</div></div>
-        <div class="setting-row"><div class="setting-icon">📤</div><div class="setting-text"><div class="setting-name">データをエクスポート</div><div class="setting-desc">PDF形式で出力</div></div><div class="setting-arrow">›</div></div>
+        <div class="setting-row" onclick="exportAllData()" style="cursor:pointer;"><div class="setting-icon">📤</div><div class="setting-text"><div class="setting-name">データをエクスポート（JSON）</div><div class="setting-desc">全データをファイルに保存・Safari↔PWA間の移行に使用</div></div><div class="setting-arrow">›</div></div>
+        <div class="setting-row" onclick="document.getElementById('import-file-input').click()" style="cursor:pointer;"><div class="setting-icon">📥</div><div class="setting-text"><div class="setting-name">データをインポート（JSON）</div><div class="setting-desc">エクスポートしたファイルから復元</div></div><div class="setting-arrow">›</div></div>
+        <input type="file" id="import-file-input" accept=".json" style="display:none;" onchange="importAllData(event)" />
       </div>
       <div style="height:20px;"></div>
     </div>
@@ -1613,6 +1630,26 @@ const state = { userType:'t2d', userName:'', age:'', gender:'male', height:'', w
 
 // ===== INIT =====
 document.addEventListener('DOMContentLoaded', () => {
+  // PWAスタンドアロンモードでデータが空の場合、Safari からのインポートを促す
+  const isStandalone = window.navigator.standalone === true ||
+    window.matchMedia('(display-mode: standalone)').matches;
+  if (isStandalone && !localStorage.getItem('renalcare_active_uid')) {
+    // データが空のPWA起動 → インポート案内バナーを表示
+    setTimeout(() => {
+      const banner = document.createElement('div');
+      banner.id = 'pwa-import-banner';
+      banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#1c2f4a;border-bottom:2px solid #4fc3f7;padding:14px 16px;display:flex;flex-direction:column;gap:10px;box-shadow:0 4px 20px rgba(0,0,0,0.5);';
+      banner.innerHTML = `
+        <div style="font-size:13px;color:#e2eaf6;font-weight:600;">📲 Safariのデータを引き継ぐには</div>
+        <div style="font-size:12px;color:#8ba5c8;line-height:1.6;">まずSafariでアプリを開き、設定 →「データをエクスポート（JSON）」でファイルを保存してください。その後、下のボタンからインポートできます。</div>
+        <div style="display:flex;gap:8px;">
+          <button onclick="document.getElementById('import-file-input').click()" style="flex:1;padding:10px;background:#4fc3f7;color:#0d1420;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">📥 データをインポート</button>
+          <button onclick="document.getElementById('pwa-import-banner').remove()" style="padding:10px 14px;background:#16243a;color:#8ba5c8;border:1px solid #1e3354;border-radius:8px;font-size:12px;cursor:pointer;">閉じる</button>
+        </div>`;
+      document.body.appendChild(banner);
+    }, 600);
+  }
+
   const profile = getActiveProfile();
   if (profile) {
     loadProfile(profile);
@@ -2126,7 +2163,10 @@ function updateNutritionPreview() {
 
 function getSelectedFoodCats() {
   const result = {};
-  ['main','protein','sub','soup','drink'].forEach(cat => { result[cat] = [...document.querySelectorAll(`.food-cat-chip[data-cat="${cat}"].${FOOD_CAT_CLASS[cat]}`)].map(c => c.textContent); });
+  ['main','protein','sub','soup','drink'].forEach(cat => { result[cat] = [...document.querySelectorAll(`.food-cat-chip[data-cat="${cat}"].${FOOD_CAT_CLASS[cat]}`)].map(c => c.textContent.trim()); });
+  // 各グループの倍率も保存
+  result._portions = {};
+  ['main','protein','sub','soup','drink'].forEach(group => { result._portions[group] = getGroupPortion(group); });
   return result;
 }
 
@@ -2369,12 +2409,24 @@ function saveHealthRecord(type) {
     const before = parseInt(document.getElementById('h-glucose-before')?.value)||null;
     const after  = parseInt(document.getElementById('h-glucose-after')?.value)||null;
     const timing = document.getElementById('h-glucose-timing')?.value||'';
+    const glucoseTimeVal = document.getElementById('h-glucose-time')?.value;
     if (!before && !after) { showToast('血糖値を入力してください'); return; }
-    record = { ...record, before, after, timing };
+    // 時刻入力があれば今日の日付＋指定時刻、なければ現在時刻
+    let glucoseTime = now;
+    if (glucoseTimeVal) {
+      const d = new Date();
+      const [h, m] = glucoseTimeVal.split(':').map(Number);
+      d.setHours(h, m, 0, 0);
+      glucoseTime = d.toISOString();
+    }
+    record = { ...record, id: 'glucose_'+Date.now(), time: glucoseTime, before, after, timing };
     // 食前血糖値をグラフの基準値として保存
     if (before) saveGlucoseLog(0, before);
     document.getElementById('h-glucose-before').value = '';
     document.getElementById('h-glucose-after').value = '';
+    // 時刻欄を現在時刻にリセット
+    const gtEl = document.getElementById('h-glucose-time');
+    if (gtEl) { const nd=new Date(); gtEl.value=`${String(nd.getHours()).padStart(2,'0')}:${String(nd.getMinutes()).padStart(2,'0')}`; }
   } else if (type === 'bp') {
     const sys   = parseInt(document.getElementById('h-bp-sys')?.value)||null;
     const dia   = parseInt(document.getElementById('h-bp-dia')?.value)||null;
@@ -2388,9 +2440,21 @@ function saveHealthRecord(type) {
   } else if (type === 'urine') {
     const vol   = parseInt(document.getElementById('h-urine-vol')?.value)||null;
     const color = document.getElementById('h-urine-color')?.value||'';
+    const timeVal = document.getElementById('h-urine-time')?.value;
     if (!vol) { showToast('尿量を入力してください'); return; }
-    record = { ...record, id: 'urine_'+Date.now(), vol, color };
+    // 時刻入力があれば今日の日付＋指定時刻、なければ現在時刻
+    let recordTime = now;
+    if (timeVal) {
+      const d = new Date();
+      const [h, m] = timeVal.split(':').map(Number);
+      d.setHours(h, m, 0, 0);
+      recordTime = d.toISOString();
+    }
+    record = { ...record, id: 'urine_'+Date.now(), time: recordTime, vol, color };
     document.getElementById('h-urine-vol').value = '';
+    // 時刻欄を現在時刻にリセット
+    const urineTimeEl = document.getElementById('h-urine-time');
+    if (urineTimeEl) { const nd=new Date(); urineTimeEl.value=`${String(nd.getHours()).padStart(2,'0')}:${String(nd.getMinutes()).padStart(2,'0')}`; }
   } else if (type === 'exercise') {
     const exType = document.getElementById('h-exercise-type')?.value||'walk';
     const min    = parseInt(document.getElementById('h-exercise-min')?.value)||null;
@@ -2419,7 +2483,7 @@ function getTodayHealthRecords(type) {
   } catch(e) { return []; }
 }
 
-function editUrineRecord(id, currentVol, currentColor) {
+function editUrineRecord(id, currentVol, currentColor, currentTime) {
   const newVol = parseInt(prompt('尿量を修正してください（mL）', currentVol));
   if (isNaN(newVol) || newVol <= 0) return;
   const colorLabel = { clear:'透明〜淡黄色（正常）', yellow:'黄色（正常）', dark:'濃い黄色（水分不足）', orange:'オレンジ・茶色（要注意）', red:'赤・ピンク（要受診）', foam:'泡立ち（タンパク尿の可能性）' };
@@ -2428,10 +2492,22 @@ function editUrineRecord(id, currentVol, currentColor) {
   const promptMsg = '色・状態を選んでください:\n' + colorKeys.map((k,i) => `${i+1}. ${colorNames[i]}`).join('\n');
   const choice = parseInt(prompt(promptMsg, colorKeys.indexOf(currentColor)+1));
   const newColor = (choice >= 1 && choice <= colorKeys.length) ? colorKeys[choice-1] : currentColor;
+  // 時刻の編集
+  const currentTs = currentTime ? (() => { const d=new Date(currentTime); return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; })() : '';
+  const newTimeStr = prompt('時刻を修正してください（HH:MM）', currentTs);
+  let newTime = currentTime;
+  if (newTimeStr && /^\d{1,2}:\d{2}$/.test(newTimeStr.trim())) {
+    const [h, m] = newTimeStr.trim().split(':').map(Number);
+    if (h >= 0 && h < 24 && m >= 0 && m < 60) {
+      const d = new Date(currentTime || Date.now());
+      d.setHours(h, m, 0, 0);
+      newTime = d.toISOString();
+    }
+  }
   try {
     const all = JSON.parse(localStorage.getItem(HEALTH_KEY)||'[]');
     const idx = all.findIndex(r => r.id === id);
-    if (idx !== -1) { all[idx].vol = newVol; all[idx].color = newColor; localStorage.setItem(HEALTH_KEY, JSON.stringify(all)); showToast('✅ 尿量を修正しました'); renderHealthPage(); }
+    if (idx !== -1) { all[idx].vol = newVol; all[idx].color = newColor; all[idx].time = newTime; localStorage.setItem(HEALTH_KEY, JSON.stringify(all)); showToast('✅ 尿量を修正しました'); renderHealthPage(); }
   } catch(e) { showToast('⚠️ 修正できませんでした'); }
 }
 
@@ -2445,6 +2521,14 @@ function deleteUrineRecord(id) {
 }
 
 function renderHealthPage() {
+  // 各時刻欄を現在時刻で初期化
+  ['h-glucose-time', 'h-urine-time'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el && !el.value) {
+      const nd = new Date();
+      el.value = `${String(nd.getHours()).padStart(2,'0')}:${String(nd.getMinutes()).padStart(2,'0')}`;
+    }
+  });
   // 血糖値
   const glucoseRecs = getTodayHealthRecords('glucose');
   const glucoseEl = document.getElementById('h-glucose-today');
@@ -2504,7 +2588,7 @@ function renderHealthPage() {
               <span id="urine-vol-display-${r.id||idx}" style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--accent);">${r.vol}mL</span>
               <span style="font-size:11px;color:var(--text3);margin-left:6px;">${colorIcon[r.color]||'🟡'} ${colorLabel[r.color]||''}</span>
             </div>
-            <button onclick="editUrineRecord('${r.id||idx}', ${r.vol}, '${r.color}')" style="background:none;border:1px solid var(--border2);border-radius:6px;padding:3px 8px;font-size:11px;color:var(--text2);cursor:pointer;">編集</button>
+            <button onclick="editUrineRecord('${r.id||idx}', ${r.vol}, '${r.color}', '${r.time}')" style="background:none;border:1px solid var(--border2);border-radius:6px;padding:3px 8px;font-size:11px;color:var(--text2);cursor:pointer;">編集</button>
             <button onclick="deleteUrineRecord('${r.id||idx}')" style="background:none;border:1px solid rgba(248,113,113,0.3);border-radius:6px;padding:3px 8px;font-size:11px;color:var(--red);cursor:pointer;">削除</button>
           </div>`;
         }).join('');
@@ -2840,9 +2924,20 @@ function estimateFoodDBWater(food) {
 function estimateWaterFromMeal(meal) {
   let water = 0;
   const cats = meal.food_categories || {};
-  // チップ選択から推定
-  [...(cats.soup||[]), ...(cats.drink||[]), ...(cats.main||[])].forEach(name => {
-    water += FOOD_WATER_MAP[name] || 0;
+  const portions = cats._portions || {};
+  // チップ選択から推定（倍率を考慮）
+  ['soup','drink','main'].forEach(group => {
+    const ratio = portions[group] != null ? portions[group] : 1.0;
+    (cats[group] || []).forEach(name => {
+      const trimmed = name.trim();
+      const mapped = FOOD_WATER_MAP[trimmed];
+      if (mapped != null) {
+        water += mapped * ratio;
+      } else if (group === 'drink') {
+        // MAPにない飲み物はデフォルト150mLとして計上
+        water += 150 * ratio;
+      }
+    });
   });
   // 食品DB選択から推定（food_db_selectionsがある場合）
   (meal.food_db_selections || []).forEach(sel => {
@@ -3869,7 +3964,7 @@ function _makeBulkCardHTML(idx, data) {
     <!-- カードボディ -->
     <div id="bulk-card-body-${idx}" style="padding:12px 14px;display:${open?'block':'none'};">
       <div class="form-row">
-        <label class="form-label">💊 薬の名前 <span style="color:var(--red);">*</span></label>
+        <label class="form-label">💊 薬の名前</label>
         <input class="form-input" type="text" id="bulk-name-${idx}" placeholder="例：フォシーガ錠10mg" value="${d.name||''}"
           oninput="updateBulkCardLabel(${idx})" />
       </div>
@@ -3878,9 +3973,19 @@ function _makeBulkCardHTML(idx, data) {
         <input class="form-input" type="text" id="bulk-form-${idx}" placeholder="例：錠剤・10mg" value="${d.form||''}" />
       </div>
       <div class="form-row">
-        <label class="form-label" style="margin-bottom:8px;">🕐 服用タイミング・量</label>
-        <div style="display:flex;flex-direction:column;gap:6px;">
-          ${_timingRowsHTML(idx, d.timings, d.timingDoses)}
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;">
+          <input type="checkbox" id="bulk-prn-${idx}" ${d.prn?'checked':''} onchange="togglePrnMode(${idx},'bulk')"
+            style="width:16px;height:16px;accent-color:var(--amber);cursor:pointer;" />
+          <span style="font-size:13px;font-weight:600;color:var(--amber);">🆘 症状がある時のみ服用（頓服）</span>
+        </label>
+        <div style="font-size:11px;color:var(--text3);margin-top:4px;margin-left:24px;">チェックすると服用タイミングは不要になります</div>
+      </div>
+      <div id="bulk-timing-area-${idx}" style="display:${d.prn?'none':'block'};">
+        <div class="form-row">
+          <label class="form-label" style="margin-bottom:8px;">🕐 服用タイミング・量 <span style="color:var(--text3);font-size:11px;">（任意）</span></label>
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            ${_timingRowsHTML(idx, d.timings, d.timingDoses)}
+          </div>
         </div>
       </div>
       <div class="form-row">
@@ -3964,7 +4069,7 @@ function showAddMedModal(presetHospitalId) {
 // 一括保存
 function saveMedicines_bulk() {
   const hospitalId = document.getElementById('med-hospital-select').value;
-  if (!hospitalId || hospitalId === '__new__') { showToast('医療機関を選択してください'); return; }
+  if (hospitalId === '__new__') { showToast('医療機関を選択してください'); return; }
   const hospitals = loadHospitals();
   const hosp = hospitals.find(h => h.id === hospitalId);
   const meds = loadMedicines();
@@ -3976,6 +4081,7 @@ function saveMedicines_bulk() {
     const idx = card.dataset.idx;
     const name = (document.getElementById(`bulk-name-${idx}`)?.value||'').trim();
     if (!name) { errCount++; return; }
+    const isPrn = document.getElementById(`bulk-prn-${idx}`)?.checked || false;
     const timings = [];
     const timingDoses = {};
     card.querySelectorAll('.med-timing-chip.selected').forEach(chip => {
@@ -3985,7 +4091,7 @@ function saveMedicines_bulk() {
       const inp = row ? row.querySelector('.med-timing-dose input') : null;
       timingDoses[t] = inp ? inp.value.trim() || '1錠' : '1錠';
     });
-    if (timings.length === 0) { errCount++; return; }
+    // 頓服でもタイミング未選択でもOK（名前だけで登録可）
     const colorOpt = card.querySelector('.med-color-opt.active');
     const color = colorOpt ? colorOpt.dataset.color : (card.dataset.color || '#4fc3f7');
     const entry = {
@@ -3996,9 +4102,10 @@ function saveMedicines_bulk() {
       form:       document.getElementById(`bulk-form-${idx}`)?.value.trim() || '',
       note:       document.getElementById(`bulk-note-${idx}`)?.value.trim() || '',
       howToTake:  document.getElementById(`bulk-how-${idx}`)?.value || '',
-      doseAmount: timingDoses[timings[0]] || '1錠',
+      doseAmount: timingDoses[timings[0]] || '',
       timings,
       timingDoses,
+      prn: isPrn,
       color,
       createdAt: new Date().toISOString()
     };
@@ -4007,7 +4114,7 @@ function saveMedicines_bulk() {
   });
 
   if (savedCount === 0) {
-    showToast(errCount > 0 ? '薬の名前とタイミングを入力してください' : '薬が入力されていません');
+    showToast(errCount > 0 ? '薬の名前を入力してください' : '薬が入力されていません');
     return;
   }
   saveMedicines(meds);
@@ -4050,9 +4157,19 @@ function showEditMedModal(id) {
       <input class="form-input" type="text" id="med-form" value="${med.form||''}" placeholder="例：錠剤・10mg" />
     </div>
     <div class="form-row">
-      <label class="form-label" style="margin-bottom:8px;">🕐 服用タイミング・量</label>
-      <div style="display:flex;flex-direction:column;gap:6px;" id="med-timing-rows">
-        ${_timingRowsHTML('edit', med.timings, med.timingDoses)}
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;">
+        <input type="checkbox" id="med-prn" ${med.prn?'checked':''} onchange="togglePrnMode('edit','edit')"
+          style="width:16px;height:16px;accent-color:var(--amber);cursor:pointer;" />
+        <span style="font-size:13px;font-weight:600;color:var(--amber);">🆘 症状がある時のみ服用（頓服）</span>
+      </label>
+      <div style="font-size:11px;color:var(--text3);margin-top:4px;margin-left:24px;">チェックすると服用タイミングは不要になります</div>
+    </div>
+    <div id="med-timing-area-edit" style="display:${med.prn?'none':'block'};">
+      <div class="form-row">
+        <label class="form-label" style="margin-bottom:8px;">🕐 服用タイミング・量 <span style="color:var(--text3);font-size:11px;">（任意）</span></label>
+        <div style="display:flex;flex-direction:column;gap:6px;" id="med-timing-rows">
+          ${_timingRowsHTML('edit', med.timings, med.timingDoses)}
+        </div>
       </div>
     </div>
     <div class="form-row">
@@ -4088,8 +4205,9 @@ function saveMedicine() {
   if (!name) { showToast('薬の名前を入力してください'); return; }
   const selEl = document.getElementById('med-hospital-select-edit');
   const hospitalId = selEl ? selEl.value : '';
-  if (!hospitalId || hospitalId === '__new__') { showToast('医療機関を選択してください'); return; }
+  if (hospitalId === '__new__') { showToast('医療機関を選択してください'); return; }
 
+  const isPrn = document.getElementById('med-prn')?.checked || false;
   const timings = [];
   const timingDoses = {};
   document.querySelectorAll('#med-timing-rows .med-timing-chip.selected').forEach(chip => {
@@ -4099,7 +4217,6 @@ function saveMedicine() {
     const inp = row ? row.querySelector('.med-timing-dose input') : null;
     timingDoses[t] = inp ? inp.value.trim() || '1錠' : '1錠';
   });
-  if (timings.length === 0) { showToast('服用タイミングを1つ以上選んでください'); return; }
 
   const hospitals = loadHospitals();
   const hosp = hospitals.find(h => h.id === hospitalId);
@@ -4112,9 +4229,10 @@ function saveMedicine() {
     form:       (document.getElementById('med-form')?.value||'').trim(),
     note:       (document.getElementById('med-note')?.value||'').trim(),
     howToTake:  document.getElementById('med-how-to-take')?.value || '',
-    doseAmount: timingDoses[timings[0]] || '1錠',
+    doseAmount: timingDoses[timings[0]] || '',
     timings,
     timingDoses,
+    prn:        isPrn,
     color:      _medColor,
     createdAt:  meds.find(m=>m.id===id)?.createdAt || new Date().toISOString()
   };
@@ -4198,6 +4316,52 @@ function renderMedicineLog() {
         </div>`;
     }).join('');
   });
+
+  // 頓服薬（prn:true）を症状時セクションに表示
+  const prnMeds = meds.filter(m => m.prn);
+  const prnBlock = document.getElementById('med-block-prn');
+  const prnList  = document.getElementById('list-prn');
+  if (prnBlock && prnList) {
+    if (prnMeds.length === 0) {
+      prnBlock.classList.remove('has-meds');
+    } else {
+      anyMed = true;
+      prnBlock.classList.add('has-meds');
+      const takenCount = prnMeds.filter(m => getMedStatus(m.id, dateStr, 'prn') === 'taken').length;
+      const badge = document.getElementById('badge-prn');
+      if (badge) {
+        if (takenCount === prnMeds.length) { badge.textContent='✓ 服用済み'; badge.style.cssText='background:var(--green-dim);color:var(--green);border:1px solid var(--green);font-size:11px;padding:2px 8px;border-radius:10px;'; }
+        else if (takenCount > 0)           { badge.textContent=`${takenCount}/${prnMeds.length}`; badge.style.cssText='background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber);font-size:11px;padding:2px 8px;border-radius:10px;'; }
+        else                               { badge.textContent=''; badge.style.cssText=''; }
+      }
+      prnList.innerHTML = prnMeds.map(med => {
+        const status = getMedStatus(med.id, dateStr, 'prn');
+        const takenCls   = status === 'taken'   ? 'taken'   : '';
+        const skippedCls = status === 'skipped' ? 'skipped' : '';
+        const howLabel = { water:'水で服用', food:'食べ物と一緒', chew:'噛んで服用', dissolve:'口で溶かす', sublingual:'舌下', other:'その他' };
+        const howText = med.howToTake ? howLabel[med.howToTake] || '' : '';
+        return `
+          <div class="med-card" style="border-color:${med.color||'var(--border)'}33;">
+            <div class="med-icon" style="background:${med.color||'#4fc3f7'}22;color:${med.color||'#4fc3f7'}">💊</div>
+            <div class="med-info">
+              <div class="med-name">${med.name}${med.form?'<span style="font-size:11px;color:var(--text3);margin-left:5px;">'+med.form+'</span>':''}</div>
+              <div class="med-hospital">${med.hospital||'—'}</div>
+              <div class="med-dose">${med.doseAmount||''}${howText?' · '+howText:''}${med.note?' · '+med.note:''}</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0;">
+              <div class="med-status-btn ${takenCls}" onclick="toggleMedBtn('${med.id}','${dateStr}','prn','taken')">
+                <div class="med-status-icon">${status==='taken'?'✅':'🆘'}</div>
+                <div class="med-status-text">${status==='taken'?'服用済み':'服用した'}</div>
+              </div>
+              <div class="med-status-btn ${skippedCls}" onclick="toggleMedBtn('${med.id}','${dateStr}','prn','skipped')">
+                <div class="med-status-icon">${status==='skipped'?'❌':'—'}</div>
+                <div class="med-status-text" style="${status==='skipped'?'':'color:var(--text3)'}">${status==='skipped'?'スキップ':'スキップ'}</div>
+              </div>
+            </div>
+          </div>`;
+      }).join('');
+    }
+  }
 
   const noMedsEl = document.getElementById('med-no-meds');
   if (noMedsEl) noMedsEl.style.display = anyMed ? 'none' : 'block';
@@ -4292,6 +4456,85 @@ async function loadNutritionDB() {
   }
   NUTRITION_LOADING = false;
   return NUTRITION_DB;
+}
+
+
+// ============================================================
+// 頓服モード切り替え
+// ============================================================
+function togglePrnMode(idx, mode) {
+  const isPrn = mode === 'edit'
+    ? document.getElementById('med-prn')?.checked
+    : document.getElementById(`bulk-prn-${idx}`)?.checked;
+  const areaId = mode === 'edit' ? 'med-timing-area-edit' : `bulk-timing-area-${idx}`;
+  const area = document.getElementById(areaId);
+  if (area) area.style.display = isPrn ? 'none' : 'block';
+}
+// ============================================================
+// データ エクスポート / インポート（Safari ↔ PWA 同期対応）
+// ============================================================
+const ALL_STORAGE_KEYS = [
+  'renalcare_uid',
+  'renalcare_profiles',
+  'renalcare_active_uid',
+  'renalcare_meals',
+  'renalcare_health',
+  'renalcare_water',
+  'renalcare_glucose_log',
+  'renalcare_medicines',
+  'renalcare_med_log',
+  'renalcare_hospitals',
+];
+
+function exportAllData() {
+  try {
+    const data = { version: 1, exportedAt: new Date().toISOString(), store: {} };
+    ALL_STORAGE_KEYS.forEach(key => {
+      const val = localStorage.getItem(key);
+      if (val !== null) data.store[key] = val;
+    });
+    // 写真データも含める
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith('renalcare_photo_')) data.store[k] = localStorage.getItem(k);
+    }
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    const d    = new Date();
+    a.href     = url;
+    a.download = `renalcare_backup_${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('📤 エクスポートしました');
+  } catch(e) {
+    showToast('⚠️ エクスポートに失敗しました');
+  }
+}
+
+function importAllData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.store || typeof data.store !== 'object') throw new Error('invalid format');
+      if (!confirm(`${file.name} のデータをインポートします。\n現在のデータは上書きされます。\nよろしいですか？`)) return;
+      Object.entries(data.store).forEach(([key, val]) => {
+        try { localStorage.setItem(key, val); } catch(e2) {}
+      });
+      showToast('📥 インポートしました。再読み込みします…');
+      setTimeout(() => location.reload(), 1200);
+    } catch(e) {
+      showToast('⚠️ インポートに失敗しました。ファイルを確認してください');
+    }
+  };
+  reader.readAsText(file);
+  // input をリセットして同じファイルを再選択できるように
+  event.target.value = '';
 }
 </script>
 </body>
