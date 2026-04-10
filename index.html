@@ -1619,8 +1619,29 @@ const state = { userType:'t2d', userName:'', age:'', gender:'male', height:'', w
   targets:{ calories:1800, protein:40, potassium:2000, phosphorus:700, water:1500, salt:6 },
   diabetesMode:true, obStep:1, obType:null, ckdStage:'ckdx', targetMode:'auto', uid:'' };
 
+// ストレージキー（saveMealなど早期参照のためstateの直後に定義）
+const WATER_KEY   = 'renalcare_water';
+const HEALTH_KEY  = 'renalcare_health';
+const MED_KEY     = 'renalcare_medicines';
+const MED_LOG_KEY = 'renalcare_med_log';
+
 // ===== INIT =====
 document.addEventListener('DOMContentLoaded', () => {
+  // 旧バージョンで WATER_KEY が undefined だった場合のデータ移行
+  try {
+    const badWater = localStorage.getItem('undefined');
+    if (badWater) {
+      const parsed = JSON.parse(badWater);
+      if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].ml != null) {
+        const existing = JSON.parse(localStorage.getItem(WATER_KEY) || '[]');
+        const merged = [...existing, ...parsed.filter(n => !existing.some(e => e.time === n.time && e.ml === n.ml))];
+        localStorage.setItem(WATER_KEY, JSON.stringify(merged));
+        localStorage.removeItem('undefined');
+        console.log('[Migration] undefinedキーの水分データを renalcare_water に移行しました:', parsed.length, '件');
+      }
+    }
+  } catch(e) {}
+
   // PWAスタンドアロンモードでデータが空の場合、Safari からのインポートを促す
   const isStandalone = window.navigator.standalone === true ||
     window.matchMedia('(display-mode: standalone)').matches;
@@ -2451,6 +2472,7 @@ async function saveMeal() {
 
   // 水分連動：食事水分と飲物水分を分けて記録
   const waterResult = estimateWaterFromMeal(meal);
+  console.log('[saveMeal] estimateWaterFromMeal result:', waterResult, '| food_categories:', meal.food_categories);
   try {
     const all = JSON.parse(localStorage.getItem(WATER_KEY)||'[]');
     if (waterResult.food > 0) {
@@ -2461,8 +2483,11 @@ async function saveMeal() {
     }
     if (waterResult.food > 0 || waterResult.drink > 0) {
       localStorage.setItem(WATER_KEY, JSON.stringify(all));
+      console.log('[saveMeal] water log saved. total entries today:', all.filter(e => new Date(e.time).toDateString() === new Date().toDateString()).length);
+    } else {
+      console.log('[saveMeal] waterResult is 0 — nothing written to water log');
     }
-  } catch(e) {}
+  } catch(e) { console.error('[saveMeal] water log error:', e); }
   const waterFromMeal = waterResult.total;
 
   if (saved) {
@@ -2614,7 +2639,7 @@ function navTo(page) {
 }
 
 // ===== 健康記録 =====
-const HEALTH_KEY = 'renalcare_health';
+// HEALTH_KEY はstateの直後（上部）で定義済み
 
 function saveHealthRecord(type) {
   const now = new Date().toISOString();
@@ -2887,7 +2912,9 @@ function updateWaterBalance() {
   const intake      = mealIntake + drinkIntake;
 
   // 代謝水: 今日のカロリー記録から推定（記録がなければ体重×2.5mL/kgの簡易値）
-  const todayMeals   = getTodayMeals ? getTodayMeals() : [];
+  const todayStr = new Date().toDateString();
+  const allMeals = localLoadMeals ? localLoadMeals() : [];
+  const todayMeals = allMeals.filter(m => new Date(m.recorded_at).toDateString() === todayStr);
   const todayKcal    = todayMeals.reduce((s, m) => s + (m.calories || 0), 0);
   const metabolicWater = todayKcal > 0
     ? Math.round(todayKcal * 0.12)
@@ -2899,6 +2926,8 @@ function updateWaterBalance() {
 
   // 体重増加量（mL ≒ g）
   const balanceG = (intake + metabolicWater) - urineTotal - insVal;
+
+  console.log('[WaterBalance] waterLog:', waterLog.length, 'entries | mealIntake:', mealIntake, 'drinkIntake:', drinkIntake, 'intake:', intake, '| todayKcal:', todayKcal, 'metabolicWater:', metabolicWater, '| urine:', urineTotal, 'ins:', insVal, '| balanceG:', balanceG);
 
   // 内訳表示
   const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val.toLocaleString() + ' mL'; };
@@ -3330,7 +3359,8 @@ function estimateWaterFromMeal(meal) {
   });
 
   // 4: 食品DBから選択した食品（飲み物カテゴリはdrinkWater、それ以外はfoodWater）
-  (meal.food_db_selections || []).forEach(sel => {
+  // food_db_selections は meal.food_categories の中に格納されている
+  (cats.food_db_selections || meal.food_db_selections || []).forEach(sel => {
     const wml = estimateFoodDBWater(sel);
     if ((sel.cat || '') === '飲み物') {
       drinkWater += wml;
@@ -3340,7 +3370,9 @@ function estimateWaterFromMeal(meal) {
   });
 
   // 5: フォールバック（食事ありだが計算できない場合）
-  if ((foodWater + drinkWater) === 0 && (meal.calories || 0) > 0) {
+  // カロリーが入力されているか、料理名がデフォルト以外で入力されている場合は最低200mLを計上
+  const hasContent = (meal.calories || 0) > 0 || ((meal.dish_name || '').trim() !== '' && (meal.dish_name || '').trim() !== '記録');
+  if ((foodWater + drinkWater) === 0 && hasContent) {
     foodWater = 200;
   }
 
@@ -3894,7 +3926,7 @@ const foodDatabase = [
 ];
 
 // ===== 水分記録 =====
-const WATER_KEY = 'renalcare_water';
+// WATER_KEY はstateの直後（上部）で定義済み
 
 function getTodayWaterLog() {
   try {
@@ -4101,7 +4133,7 @@ function renderFoodResults(foods) {
   foods.forEach(f => { const cat = f.cat||'その他'; if (!grouped[cat]) grouped[cat]=[]; grouped[cat].push(f); });
   results.innerHTML = Object.entries(grouped).map(([cat, items]) => `
     <div style="padding:6px 12px;background:var(--surface2);font-size:11px;font-weight:700;color:var(--accent);letter-spacing:.05em;position:sticky;top:0;">${cat}</div>
-    ${items.map(f => `<div onclick='selectFood(${JSON.stringify({name:f.name,cal:f.cal||0,protein:f.protein||0,carb:f.carb||0,fiber:f.fiber||0,k:f.k||0,p:f.p||0}).replace(/'/g,"&#39;")})'
+    ${items.map(f => `<div onclick='selectFood(${JSON.stringify({name:f.name,cat:f.cat||'',cal:f.cal||0,protein:f.protein||0,carb:f.carb||0,fiber:f.fiber||0,k:f.k||0,p:f.p||0}).replace(/'/g,"&#39;")})'
       style="padding:11px 12px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;align-items:center;">
       <div>
         <div style="font-size:14px;font-weight:600;">${f.name}</div>
@@ -4248,8 +4280,7 @@ function showToast(msg) { const t=document.getElementById('toast'); t.textConten
 // ============================================================
 // ===== 薬管理 =====
 // ============================================================
-const MED_KEY      = 'renalcare_medicines';
-const MED_LOG_KEY  = 'renalcare_med_log';
+// MED_KEY, MED_LOG_KEY はstateの直後（上部）で定義済み
 const HOSP_KEY     = 'renalcare_hospitals';
 
 const MED_TIMING_LABEL = {
