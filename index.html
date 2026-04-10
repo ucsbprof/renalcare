@@ -1731,9 +1731,13 @@ function checkObName() {
 
 function selectCkdStage(stage) {
   state.ckdStage = stage;
-  document.querySelectorAll('[id^="oc-ckd"]').forEach(c => c.classList.remove('selected'));
-  document.getElementById('oc-'+stage)?.classList.add('selected');
-  document.getElementById('ob-btn3').disabled = false;
+  // ステップ3内の選択肢のみリセット（他のステップに干渉しない）
+  const step3 = document.getElementById('ob-step3');
+  if (step3) step3.querySelectorAll('.ob-choice').forEach(c => c.classList.remove('selected'));
+  const el = document.getElementById('oc-'+stage);
+  if (el) el.classList.add('selected');
+  const btn = document.getElementById('ob-btn3');
+  if (btn) btn.disabled = false;
 }
 
 function selectTargetMode(mode) {
@@ -1830,7 +1834,15 @@ function goObStep(n) {
     if (el) el.style.display = 'none';
   });
   const target = document.getElementById('ob-step'+n);
-  if (target) target.style.display = 'block';
+  if (target) {
+    target.style.display = 'block';
+    // iOS Safari: display:none→block 直後にタップが効かない問題の回避
+    target.querySelectorAll('.ob-choice').forEach(el => {
+      el.style.cursor = 'pointer';
+      // タッチイベントを明示的に再登録
+      el.style.webkitTapHighlightColor = 'transparent';
+    });
+  }
   state.obStep = n;
   if (n === 5) {
     const typeMap = { normal:'慢性腎不全のみ', t2d:'慢性腎不全＋2型糖尿病', t1d:'慢性腎不全＋1型糖尿病' };
