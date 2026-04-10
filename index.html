@@ -2878,9 +2878,9 @@ function updateWaterBalance() {
   // 体重増加 = (食事水分 + 飲物 + 代謝水) − (尿量 + 不感蒸泄)
   // 代謝水: エネルギー代謝で生じる水 ≒ 摂取カロリー × 0.12 mL/kcal（約200〜300mL/日）
   const waterLog = getTodayWaterLog();
-  // 食事由来と飲物を分けて集計（auto:true, drink:false = 食事水分、auto:true, drink:true = 飲物）
+  // 食事由来と飲物を分けて集計（auto:true, drink:false = 食事水分、auto:true, drink:true または auto:false = 飲物）
   const mealIntake  = waterLog.filter(e => e.auto && !e.drink).reduce((s, e) => s + (e.ml || 0), 0);
-  const drinkIntake = waterLog.filter(e => e.auto &&  e.drink).reduce((s, e) => s + (e.ml || 0), 0);
+  const drinkIntake = waterLog.filter(e => (e.auto && e.drink) || !e.auto).reduce((s, e) => s + (e.ml || 0), 0);
   const intake      = mealIntake + drinkIntake;
 
   // 代謝水: 今日のカロリー記録から推定（記録がなければ体重×2.5mL/kgの簡易値）
@@ -3946,9 +3946,9 @@ function resetTodayWater() {
 
 function updateWaterCard() {
   const log = getTodayWaterLog();
-  // 食事水分（auto:true, drink:false）と飲物（auto:true, drink:true）を分離
+  // 食事水分（auto:true, drink:false）と飲物（auto:true, drink:true または auto:false）を分離
   const mealWater  = log.filter(e => e.auto && !e.drink).reduce((s,e) => s+(e.ml||0), 0);
-  const drinkWater = log.filter(e => e.auto && e.drink).reduce((s,e) => s+(e.ml||0), 0);
+  const drinkWater = log.filter(e => (e.auto && e.drink) || !e.auto).reduce((s,e) => s+(e.ml||0), 0);
   const total = mealWater + drinkWater;
   const target = state.targets?.water || 1500;
   const pct = Math.min(100, Math.round(total / target * 100));
