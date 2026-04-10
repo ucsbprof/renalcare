@@ -1962,6 +1962,9 @@ async function renderHistory() {
       return acc;
     }, { calories:0, protein:0, potassium:0, phosphorus:0, salt:0 });
 
+    const prof = getActiveProfile();
+    const limits = prof ? { cal: prof.calories||1800, protein: prof.protein||40, potassium: prof.potassium||2000, phosphorus: prof.phosphorus||700, water: prof.water||1500 } : { cal:1800, protein:40, potassium:2000, phosphorus:700, water:1500 };
+
     // 水分量（内訳付き）
     const waterData  = getWaterBreakdownForDate(dateKey);
     const waterMl    = waterData.total;
@@ -1981,9 +1984,6 @@ async function renderHistory() {
         <span style="font-size:10px;color:${gc};background:${gc}22;padding:1px 6px;border-radius:10px;border:1px solid ${gc};">${gl}</span>
       </div>`;
     }
-
-    const prof = getActiveProfile();
-    const limits = prof ? { cal: prof.calories||1800, protein: prof.protein||40, potassium: prof.potassium||2000, phosphorus: prof.phosphorus||700, water: prof.water||1500 } : { cal:1800, protein:40, potassium:2000, phosphorus:700, water:1500 };
 
     // 栄養バー関数
     const bar = (val, max, color) => {
