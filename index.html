@@ -2373,6 +2373,8 @@ function getSelectedFoodCats() {
   // 各グループの倍率も保存
   result._portions = {};
   ['main','protein','sub','soup','drink'].forEach(group => { result._portions[group] = getGroupPortion(group); });
+  // 食品DBから追加した食品リスト（水分計算用）
+  result.food_db_selections = [..._fqSelections];
   return result;
 }
 
@@ -2400,6 +2402,7 @@ function resetRecord() {
   const glucoseEl = document.getElementById('ai-glucose-result');
   if (glucoseEl) { const div = glucoseEl.querySelector('div:not(.alert-title)'); if (div) div.textContent='炭水化物と食物繊維を入力すると自動計算されます'; }
   resetFoodCats();
+  _fqSelections = []; // 食品DB選択リストもリセット
   ['record-calories','record-protein','record-carb','record-fiber','record-potassium','record-phosphorus'].forEach(id => { const el=document.getElementById(id); if (el) delete el.dataset.manualEdit; });
   const preview = document.getElementById('nutrition-preview');
   if (preview) preview.classList.remove('visible');
@@ -3326,9 +3329,14 @@ function estimateWaterFromMeal(meal) {
     });
   });
 
-  // 4: 食品DBから選択した食品（飲物以外）
+  // 4: 食品DBから選択した食品（飲み物カテゴリはdrinkWater、それ以外はfoodWater）
   (meal.food_db_selections || []).forEach(sel => {
-    foodWater += estimateFoodDBWater(sel);
+    const wml = estimateFoodDBWater(sel);
+    if ((sel.cat || '') === '飲み物') {
+      drinkWater += wml;
+    } else {
+      foodWater += wml;
+    }
   });
 
   // 5: フォールバック（食事ありだが計算できない場合）
@@ -4108,6 +4116,7 @@ function renderFoodResults(foods) {
 let _fqFood = null;
 let _fqMultiplier = 1.0;
 let _fqBaseGram = 100; // 基準グラム数（食品名から推定）
+let _fqSelections = []; // 食品DBから追加した食品リスト（水分計算用）
 
 function extractGramFromName(name) {
   // 食品名から括弧内のグラム数を取得（例: 白飯（150g）→ 150）
@@ -4183,8 +4192,11 @@ function fqConfirm() {
   add('record-fiber',     round1(_fqFood.fiber || 0));
   add('record-potassium', round0(_fqFood.k || 0));
   add('record-phosphorus',round0(_fqFood.p || 0));
+  // 食品DB選択を一時リストに蓄積（水分計算のため）
+  const gramsNum = parseFloat(document.getElementById('fq-gram')?.value) || _fqBaseGram;
+  _fqSelections.push({ name: _fqFood.name, cat: _fqFood.cat || '', grams: gramsNum, multiplier: r });
   const nameEl = document.getElementById('record-name');
-  const grams = document.getElementById('fq-gram')?.value || _fqBaseGram;
+  const grams = gramsNum;
   if (nameEl && !nameEl.value) nameEl.value = _fqFood.name;
   recalcGlucose();
   closeModal('foodQuantityModal');
