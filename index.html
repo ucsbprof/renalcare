@@ -52,14 +52,17 @@ html, body {
 
 #s-onboarding {
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   padding: 24px;
+  padding-bottom: max(24px, env(safe-area-inset-bottom));
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   background: radial-gradient(ellipse at 30% 20%, rgba(79,195,247,0.08) 0%, transparent 60%),
               radial-gradient(ellipse at 80% 80%, rgba(192,132,252,0.06) 0%, transparent 60%),
               var(--bg);
 }
 
-.ob-logo { text-align: center; margin-bottom: 40px; }
+.ob-logo { text-align: center; margin-bottom: 20px; margin-top: 16px; }
 .ob-icon { font-size: 56px; display: block; margin-bottom: 12px; animation: float 3s ease-in-out infinite; }
 
 @keyframes float {
@@ -1613,8 +1616,8 @@ function saveActiveProfile(profile) {
 
 // ===== STATE =====
 const state = { userType:'t2d', userName:'', age:'', gender:'male', height:'', weight:'',
-  targets:{ protein:40, potassium:2000, phosphorus:700, water:1500 },
-  diabetesMode:true, obStep:1, obType:null, uid:'' };
+  targets:{ calories:1800, protein:40, potassium:2000, phosphorus:700, water:1500, salt:6 },
+  diabetesMode:true, obStep:1, obType:null, ckdStage:'ckdx', targetMode:'auto', uid:'' };
 
 // ===== INIT =====
 document.addEventListener('DOMContentLoaded', () => {
@@ -1870,39 +1873,50 @@ function goObStep(n) {
 }
 
 function finishOnboarding() {
-  const uid = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2,5);
-  state.uid = uid;
-  state.userType = state.obType || 'normal';
-  state.userName = document.getElementById('ob-name')?.value.trim() || 'ユーザー';
-  state.age = document.getElementById('ob-age')?.value || '';
-  state.gender = document.getElementById('ob-gender')?.value || 'male';
-  state.height = document.getElementById('ob-height')?.value || '';
-  state.weight = document.getElementById('ob-weight')?.value || '';
-  state.ckdStage = state.ckdStage || 'ckdx';
+  try {
+    const uid = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2,5);
+    state.uid = uid;
+    state.userType = state.obType || 'normal';
+    const nameEl = document.getElementById('ob-name');
+    state.userName = (nameEl ? nameEl.value : '').trim() || 'ユーザー';
+    state.age    = (document.getElementById('ob-age')    || {}).value || '';
+    state.gender = (document.getElementById('ob-gender') || {}).value || 'male';
+    state.height = (document.getElementById('ob-height') || {}).value || '';
+    state.weight = (document.getElementById('ob-weight') || {}).value || '';
+    state.ckdStage = state.ckdStage || 'ckdx';
 
-  if (state.targetMode === 'auto') {
-    const calc = calcAutoTargets();
-    state.targets.calories  = calc.calories;
-    state.targets.protein   = calc.protein;
-    state.targets.potassium = calc.potassium;
-    state.targets.phosphorus= calc.phosphorus;
-    state.targets.water     = calc.water;
-    state.targets.salt      = calc.salt;
-  } else {
-    state.targets.calories  = parseInt(document.getElementById('ob-calories')?.value)||1800;
-    state.targets.protein   = parseInt(document.getElementById('ob-protein')?.value)||40;
-    state.targets.potassium = parseInt(document.getElementById('ob-potassium')?.value)||2000;
-    state.targets.phosphorus= parseInt(document.getElementById('ob-phosphorus')?.value)||700;
-    state.targets.water     = parseInt(document.getElementById('ob-water')?.value)||1500;
-    state.targets.salt      = parseInt(document.getElementById('ob-salt')?.value)||6;
+    if (!state.targets) state.targets = {};
+
+    if (state.targetMode === 'auto') {
+      const calc = calcAutoTargets();
+      state.targets.calories   = calc.calories   || 1800;
+      state.targets.protein    = calc.protein    || 40;
+      state.targets.potassium  = calc.potassium  || 2000;
+      state.targets.phosphorus = calc.phosphorus || 700;
+      state.targets.water      = calc.water      || 1500;
+      state.targets.salt       = calc.salt       || 6;
+    } else {
+      state.targets.calories   = parseInt((document.getElementById('ob-calories')  ||{}).value) || 1800;
+      state.targets.protein    = parseInt((document.getElementById('ob-protein')   ||{}).value) || 40;
+      state.targets.potassium  = parseInt((document.getElementById('ob-potassium') ||{}).value) || 2000;
+      state.targets.phosphorus = parseInt((document.getElementById('ob-phosphorus')||{}).value) || 700;
+      state.targets.water      = parseInt((document.getElementById('ob-water')     ||{}).value) || 1500;
+      state.targets.salt       = parseInt((document.getElementById('ob-salt')      ||{}).value) || 6;
+    }
+    state.diabetesMode = state.userType !== 'normal';
+
+    try { saveActiveProfile({ ...state }); setActiveUid(uid); } catch(e2) { console.warn('保存エラー:', e2); }
+
+    applyStateToUI();
+    showScreen('s-app');
+    navTo('home');
+    showToast('ようこそ、' + state.userName + 'さん！');
+  } catch(e) {
+    console.error('finishOnboarding エラー:', e);
+    showScreen('s-app');
+    navTo('home');
+    showToast('アプリを開始します');
   }
-  state.diabetesMode = state.userType !== 'normal';
-  saveActiveProfile({ ...state });
-  setActiveUid(uid);
-  applyStateToUI();
-  showScreen('s-app');
-  navTo('home');
-  showToast(`✓ ようこそ、${state.userName}さん！`);
 }
 
 // 指定日(DateString)の水分内訳を取得 { meal, drink, total }
