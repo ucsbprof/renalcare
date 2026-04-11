@@ -1913,16 +1913,79 @@ function renderUserSwitcher() {
   const profiles = getAllProfiles();
   const el = document.getElementById('user-switcher-list');
   if (!el) return;
-  el.innerHTML = profiles.map(p => `
-    <div style="display:flex;align-items:center;gap:12px;padding:12px;background:${p.uid===state.uid?'var(--accent-glow)':'var(--surface2)'};border:1.5px solid ${p.uid===state.uid?'var(--accent)':'var(--border)'};border-radius:var(--rs);margin-bottom:8px;cursor:pointer;" onclick="switchUser('${p.uid}')">
-      <div style="font-size:24px;">${p.gender==='female'?'👩':'👨'}</div>
-      <div style="flex:1;">
+  el.innerHTML = profiles.map(p => {
+    const isActive = p.uid === state.uid;
+    const canDelete = !isActive; // 使用中は削除不可
+    return `
+    <div style="display:flex;align-items:center;gap:10px;padding:12px;background:${isActive?'var(--accent-glow)':'var(--surface2)'};border:1.5px solid ${isActive?'var(--accent)':'var(--border)'};border-radius:var(--rs);margin-bottom:8px;">
+      <div style="font-size:24px;flex-shrink:0;cursor:pointer;" onclick="switchUser('${p.uid}')">${p.gender==='female'?'👩':'👨'}</div>
+      <div style="flex:1;min-width:0;cursor:pointer;" onclick="switchUser('${p.uid}')">
         <div style="font-size:14px;font-weight:600;">${p.userName}</div>
         <div style="font-size:11px;color:var(--text3);">${p.age||'—'}歳 / ${p.weight||'—'}kg / ${p.height||'—'}cm</div>
+        ${isActive ? '<div style="font-size:11px;color:var(--accent);font-weight:700;margin-top:2px;">使用中</div>' : '<div style="font-size:11px;color:var(--text3);margin-top:2px;">タップして切替</div>'}
       </div>
-      ${p.uid===state.uid?'<div style="font-size:11px;color:var(--accent);font-weight:700;">使用中</div>':'<div style="font-size:11px;color:var(--text3);">切替</div>'}
-    </div>
-  `).join('') + `<button class="btn btn-outline btn-full" style="margin-top:4px;" onclick="addNewUser()">＋ 新しいユーザーを追加</button>`;
+      ${canDelete ? `<button onclick="event.stopPropagation();confirmDeleteUser('${p.uid}','${p.userName.replace(/'/g,'\\\'')}') " style="flex-shrink:0;padding:6px 10px;background:var(--red-dim);color:var(--red);border:1px solid var(--red);border-radius:8px;font-size:12px;cursor:pointer;">🗑 削除</button>` : '<div style="width:52px;flex-shrink:0;"></div>'}
+    </div>`;
+  }).join('') + `<button class="btn btn-outline btn-full" style="margin-top:4px;" onclick="addNewUser()">＋ 新しいユーザーを追加</button>`;
+}
+
+function confirmDeleteUser(uid, name) {
+  // 確認ダイアログ
+  const profiles = getAllProfiles();
+  if (profiles.length <= 1) {
+    showToast('⚠ 最後のユーザーは削除できません');
+    return;
+  }
+  if (uid === state.uid) {
+    showToast('⚠ 使用中のユーザーは削除できません');
+    return;
+  }
+  if (!confirm(`「${name}」とその全データを削除しますか？\n\n・食事記録\n・水分記録\n・健康記録\n・薬・病院情報\n\nこの操作は取り消せません。`)) return;
+  deleteUserAndData(uid);
+}
+
+function deleteUserAndData(uid) {
+  try {
+    const profiles = getAllProfiles();
+    const isOnlyUser = profiles.length === 1;
+
+    // 1. 食事記録：user_id が一致するものを削除
+    try {
+      const meals = JSON.parse(localStorage.getItem('renalcare_meals') || '[]');
+      const targetMeals = meals.filter(m => m.user_id === uid);
+      const remaining   = meals.filter(m => m.user_id !== uid);
+      // 写真データも削除
+      targetMeals.forEach(m => {
+        try { localStorage.removeItem('renalcare_photo_' + m.id); } catch(e2) {}
+      });
+      localStorage.setItem('renalcare_meals', JSON.stringify(remaining));
+    } catch(e) {}
+
+    // 2. グローバルキーのデータ削除
+    // 水分・健康・薬・病院などはユーザーID紐付きでないため、
+    // 削除対象ユーザーが「唯一のユーザー」だった場合、全グローバルデータを削除する
+    if (isOnlyUser || confirm('水分記録・健康記録・薬・病院情報も削除しますか？\n\n「キャンセル」を押すと食事記録のみ削除します。')) {
+      const globalKeys = [
+        'renalcare_water',
+        'renalcare_health',
+        'renalcare_glucose_log',
+        'renalcare_medicines',
+        'renalcare_med_log',
+        'renalcare_hospitals',
+      ];
+      globalKeys.forEach(k => { try { localStorage.removeItem(k); } catch(e2) {} });
+    }
+
+    // 3. プロファイルから削除
+    const newProfiles = profiles.filter(p => p.uid !== uid);
+    saveAllProfiles(newProfiles);
+
+    showToast('🗑 ユーザーを削除しました');
+    renderUserSwitcher();
+  } catch(e) {
+    showToast('⚠ 削除中にエラーが発生しました');
+    console.error('deleteUserAndData error:', e);
+  }
 }
 
 function switchUser(uid) {
