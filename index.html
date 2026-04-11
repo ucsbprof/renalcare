@@ -1155,49 +1155,93 @@ html, body {
       <div id="med-panel-timeline">
         <div class="card" style="padding:12px 14px;margin-bottom:10px;">
           <div style="display:flex;align-items:center;gap:10px;">
-            <label class="form-label" style="margin:0;white-space:nowrap;">📅 記録する日付</label>
+            <label class="form-label" style="margin:0;white-space:nowrap;">📅 日付</label>
             <input class="form-input" type="date" id="med-record-date" style="flex:1;" oninput="renderMedicineLog()" />
             <button class="btn btn-ghost btn-sm" onclick="setMedDateToday()">今日</button>
           </div>
         </div>
-        <div id="med-timeline-area">
-          <div class="med-time-block" id="med-block-before_breakfast">
+
+        <!-- ① 毎日の薬 -->
+        <div id="med-section-daily" style="display:none;margin-bottom:16px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+            <div style="font-size:13px;font-weight:700;color:var(--accent);">💊 毎日の薬</div>
+            <div id="badge-daily" style="font-size:11px;padding:2px 8px;border-radius:10px;"></div>
+          </div>
+          <div id="med-block-before_breakfast" class="med-time-block">
             <div class="med-time-header"><span class="med-time-icon">🌅</span><span class="med-time-label">朝食前</span><span class="med-time-badge" id="badge-before_breakfast"></span></div>
             <div class="med-time-list" id="list-before_breakfast"></div>
           </div>
-          <div class="med-time-block" id="med-block-after_breakfast">
+          <div id="med-block-after_breakfast" class="med-time-block">
             <div class="med-time-header"><span class="med-time-icon">🌅</span><span class="med-time-label">朝食後</span><span class="med-time-badge" id="badge-after_breakfast"></span></div>
             <div class="med-time-list" id="list-after_breakfast"></div>
           </div>
-          <div class="med-time-block" id="med-block-before_lunch">
+          <div id="med-block-before_lunch" class="med-time-block">
             <div class="med-time-header"><span class="med-time-icon">☀️</span><span class="med-time-label">昼食前</span><span class="med-time-badge" id="badge-before_lunch"></span></div>
             <div class="med-time-list" id="list-before_lunch"></div>
           </div>
-          <div class="med-time-block" id="med-block-after_lunch">
+          <div id="med-block-after_lunch" class="med-time-block">
             <div class="med-time-header"><span class="med-time-icon">☀️</span><span class="med-time-label">昼食後</span><span class="med-time-badge" id="badge-after_lunch"></span></div>
             <div class="med-time-list" id="list-after_lunch"></div>
           </div>
-          <div class="med-time-block" id="med-block-before_dinner">
+          <div id="med-block-before_dinner" class="med-time-block">
             <div class="med-time-header"><span class="med-time-icon">🌙</span><span class="med-time-label">夕食前</span><span class="med-time-badge" id="badge-before_dinner"></span></div>
             <div class="med-time-list" id="list-before_dinner"></div>
           </div>
-          <div class="med-time-block" id="med-block-after_dinner">
+          <div id="med-block-after_dinner" class="med-time-block">
             <div class="med-time-header"><span class="med-time-icon">🌙</span><span class="med-time-label">夕食後</span><span class="med-time-badge" id="badge-after_dinner"></span></div>
             <div class="med-time-list" id="list-after_dinner"></div>
           </div>
-          <div class="med-time-block" id="med-block-bedtime">
+          <div id="med-block-bedtime" class="med-time-block">
             <div class="med-time-header"><span class="med-time-icon">🌛</span><span class="med-time-label">就寝前</span><span class="med-time-badge" id="badge-bedtime"></span></div>
             <div class="med-time-list" id="list-bedtime"></div>
           </div>
-          <!-- 症状時のみ（頓服）ブロック -->
-          <div class="med-time-block" id="med-block-prn">
-            <div class="med-time-header"><span class="med-time-icon">🆘</span><span class="med-time-label" style="color:var(--amber);">症状がある時のみ（頓服）</span><span class="med-time-badge" id="badge-prn"></span></div>
-            <div class="med-time-list" id="list-prn"></div>
+        </div>
+
+        <!-- ② 定期薬（週1・月1など） -->
+        <div id="med-section-periodic" style="display:none;margin-bottom:16px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+            <div style="font-size:13px;font-weight:700;color:var(--purple);">📅 定期薬（週1・月1など）</div>
           </div>
-          <div id="med-no-meds" style="text-align:center;padding:40px 20px;color:var(--text3);">
-            <div style="font-size:40px;margin-bottom:10px;">💊</div>
-            <div>まだ薬が登録されていません</div>
-            <div style="font-size:12px;margin-top:6px;">「医療機関・処方薬」タブから登録してください</div>
+          <div id="list-periodic"></div>
+        </div>
+
+        <!-- ③ 頓服 -->
+        <div id="med-section-prn" style="display:none;margin-bottom:16px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+            <div style="font-size:13px;font-weight:700;color:var(--amber);">🆘 頓服・症状時のみ</div>
+            <div style="font-size:11px;color:var(--text3);">必要なときだけ服用</div>
+          </div>
+          <div id="list-prn"></div>
+        </div>
+
+        <div id="med-no-meds" style="text-align:center;padding:40px 20px;color:var(--text3);">
+          <div style="font-size:40px;margin-bottom:10px;">💊</div>
+          <div>まだ薬が登録されていません</div>
+          <div style="font-size:12px;margin-top:6px;">「医療機関・処方薬」タブから登録してください</div>
+        </div>
+
+        <!-- 頓服 使用ログモーダル -->
+        <div class="modal-bg" id="prnLogModal" onclick="closeModal('prnLogModal')">
+          <div class="modal" onclick="event.stopPropagation()" style="max-height:85vh;overflow-y:auto;">
+            <div class="modal-handle"></div>
+            <div class="modal-title" id="prnLogModal-title">頓服の使用記録</div>
+            <input type="hidden" id="prnLog-medId" />
+            <div style="margin-top:12px;">
+              <div class="form-row">
+                <label class="form-label">🕐 使用した日時</label>
+                <input class="form-input" type="datetime-local" id="prnLog-datetime" />
+              </div>
+              <div class="form-row">
+                <label class="form-label">💊 使用量・回数</label>
+                <input class="form-input" type="text" id="prnLog-amount" placeholder="例：1錠、2回、5mg" />
+              </div>
+              <div class="form-row">
+                <label class="form-label">📝 症状・メモ</label>
+                <input class="form-input" type="text" id="prnLog-memo" placeholder="例：頭痛、吐き気、痛み" />
+              </div>
+            </div>
+            <button class="btn btn-primary btn-full" style="margin-top:12px;" onclick="savePrnLog()">✓ 使用を記録</button>
+            <button class="btn btn-ghost btn-full" style="margin-top:8px;" onclick="closeModal('prnLogModal')">キャンセル</button>
           </div>
         </div>
       </div>
@@ -4965,14 +5009,30 @@ function _makeBulkCardHTML(idx, data) {
         <input class="form-input" type="text" id="bulk-form-${idx}" placeholder="例：錠剤・10mg" value="${d.form||''}" />
       </div>
       <div class="form-row">
-        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;">
-          <input type="checkbox" id="bulk-prn-${idx}" ${d.prn?'checked':''} onchange="togglePrnMode(${idx},'bulk')"
-            style="width:16px;height:16px;accent-color:var(--amber);cursor:pointer;" />
-          <span style="font-size:13px;font-weight:600;color:var(--amber);">🆘 症状がある時のみ服用（頓服）</span>
-        </label>
-        <div style="font-size:11px;color:var(--text3);margin-top:4px;margin-left:24px;">チェックすると服用タイミングは不要になります</div>
+        <label class="form-label">🔄 服用頻度</label>
+        <select class="form-input" id="bulk-freq-${idx}" onchange="onBulkFreqChange(${idx})">
+          <option value="daily"   ${(!d.frequency||d.frequency==='daily')?'selected':''}>毎日</option>
+          <option value="weekly"  ${d.frequency==='weekly'?'selected':''}>週1回（曜日指定）</option>
+          <option value="monthly" ${d.frequency==='monthly'?'selected':''}>月1回（日付指定）</option>
+          <option value="prn"     ${(d.prn||d.frequency==='prn')?'selected':''}>頓服（症状がある時のみ）</option>
+        </select>
       </div>
-      <div id="bulk-timing-area-${idx}" style="display:${d.prn?'none':'block'};">
+      <!-- 週1：曜日選択 -->
+      <div id="bulk-weekly-area-${idx}" style="display:${d.frequency==='weekly'?'block':'none'};" class="form-row">
+        <label class="form-label">📅 服用曜日</label>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;">
+          ${['月','火','水','木','金','土','日'].map((d2,i)=>`<div class="med-timing-chip${(d.weekdays||[]).includes(i)?' selected':''}" data-wd="${i}" onclick="toggleWeekday(this,'${idx}')" style="min-width:36px;text-align:center;">${d2}</div>`).join('')}
+        </div>
+      </div>
+      <!-- 月1：日付選択 -->
+      <div id="bulk-monthly-area-${idx}" style="display:${d.frequency==='monthly'?'block':'none'};" class="form-row">
+        <label class="form-label">📅 服用日（毎月）</label>
+        <select class="form-input" id="bulk-monthday-${idx}">
+          <option value="">-- 選択 --</option>
+          ${Array.from({length:28},(_,i)=>`<option value="${i+1}" ${d.monthDay===i+1?'selected':''}>${i+1}日</option>`).join('')}
+        </select>
+      </div>
+      <div id="bulk-timing-area-${idx}" style="display:${(d.prn||d.frequency==='prn')?'none':'block'};">
         <div class="form-row">
           <label class="form-label" style="margin-bottom:8px;">🕐 服用タイミング・量 <span style="color:var(--text3);font-size:11px;">（任意）</span></label>
           <div style="display:flex;flex-direction:column;gap:6px;">
@@ -5086,6 +5146,16 @@ function saveMedicines_bulk() {
     // 頓服でもタイミング未選択でもOK（名前だけで登録可）
     const colorOpt = card.querySelector('.med-color-opt.active');
     const color = colorOpt ? colorOpt.dataset.color : (card.dataset.color || '#4fc3f7');
+    const freqEl   = document.getElementById(`bulk-freq-${idx}`);
+    const freq     = freqEl ? freqEl.value : 'daily';
+    const isPrn2   = freq === 'prn';
+    // 週1：選択された曜日インデックス
+    const weekdays = freq === 'weekly'
+      ? [...(document.querySelectorAll(`#bulk-weekly-area-${idx} .med-timing-chip.selected`))]
+          .map(c => parseInt(c.dataset.wd)).filter(n => !isNaN(n))
+      : [];
+    const monthDayEl = document.getElementById(`bulk-monthday-${idx}`);
+    const monthDay   = freq === 'monthly' ? parseInt(monthDayEl?.value||'0')||null : null;
     const entry = {
       id:         'med_' + Date.now() + '_' + Math.random().toString(36).substr(2,4),
       name,
@@ -5097,7 +5167,10 @@ function saveMedicines_bulk() {
       doseAmount: timingDoses[timings[0]] || '',
       timings,
       timingDoses,
-      prn: isPrn,
+      prn:       isPrn2,
+      frequency: freq,
+      weekdays,
+      monthDay,
       color,
       createdAt: new Date().toISOString()
     };
@@ -5149,14 +5222,28 @@ function showEditMedModal(id) {
       <input class="form-input" type="text" id="med-form" value="${med.form||''}" placeholder="例：錠剤・10mg" />
     </div>
     <div class="form-row">
-      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;">
-        <input type="checkbox" id="med-prn" ${med.prn?'checked':''} onchange="togglePrnMode('edit','edit')"
-          style="width:16px;height:16px;accent-color:var(--amber);cursor:pointer;" />
-        <span style="font-size:13px;font-weight:600;color:var(--amber);">🆘 症状がある時のみ服用（頓服）</span>
-      </label>
-      <div style="font-size:11px;color:var(--text3);margin-top:4px;margin-left:24px;">チェックすると服用タイミングは不要になります</div>
+      <label class="form-label">🔄 服用頻度</label>
+      <select class="form-input" id="med-frequency" onchange="onEditFreqChange()">
+        <option value="daily"   ${(!med.frequency||med.frequency==='daily')?'selected':''}>毎日</option>
+        <option value="weekly"  ${med.frequency==='weekly'?'selected':''}>週1回（曜日指定）</option>
+        <option value="monthly" ${med.frequency==='monthly'?'selected':''}>月1回（日付指定）</option>
+        <option value="prn"     ${(med.prn||med.frequency==='prn')?'selected':''}>頓服（症状がある時のみ）</option>
+      </select>
     </div>
-    <div id="med-timing-area-edit" style="display:${med.prn?'none':'block'};">
+    <div id="edit-weekly-area" style="display:${med.frequency==='weekly'?'block':'none'};" class="form-row">
+      <label class="form-label">📅 服用曜日</label>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;">
+        ${['月','火','水','木','金','土','日'].map((dn,i)=>`<div class="med-timing-chip${(med.weekdays||[]).includes(i)?' selected':''}" data-wd="${i}" onclick="toggleWeekdayEdit(this)" style="min-width:36px;text-align:center;">${dn}</div>`).join('')}
+      </div>
+    </div>
+    <div id="edit-monthly-area" style="display:${med.frequency==='monthly'?'block':'none'};" class="form-row">
+      <label class="form-label">📅 服用日（毎月）</label>
+      <select class="form-input" id="med-monthday">
+        <option value="">-- 選択 --</option>
+        ${Array.from({length:28},(_,i)=>`<option value="${i+1}" ${med.monthDay===i+1?'selected':''}>${i+1}日</option>`).join('')}
+      </select>
+    </div>
+    <div id="med-timing-area-edit" style="display:${(med.prn||med.frequency==='prn')?'none':'block'};">
       <div class="form-row">
         <label class="form-label" style="margin-bottom:8px;">🕐 服用タイミング・量 <span style="color:var(--text3);font-size:11px;">（任意）</span></label>
         <div style="display:flex;flex-direction:column;gap:6px;" id="med-timing-rows">
@@ -5213,6 +5300,15 @@ function saveMedicine() {
   const hospitals = loadHospitals();
   const hosp = hospitals.find(h => h.id === hospitalId);
   const meds = loadMedicines();
+  const freq2    = document.getElementById('med-frequency')?.value || 'daily';
+  const isPrn2e  = freq2 === 'prn';
+  const weekdays2 = freq2 === 'weekly'
+    ? [...document.querySelectorAll('#edit-weekly-area .med-timing-chip.selected')]
+        .map(c => parseInt(c.dataset.wd)).filter(n => !isNaN(n))
+    : [];
+  const monthDay2 = freq2 === 'monthly'
+    ? parseInt(document.getElementById('med-monthday')?.value||'0')||null
+    : null;
   const entry = {
     id:         id,
     name,
@@ -5224,9 +5320,12 @@ function saveMedicine() {
     doseAmount: timingDoses[timings[0]] || '',
     timings,
     timingDoses,
-    prn:        isPrn,
-    color:      _medColor,
-    createdAt:  meds.find(m=>m.id===id)?.createdAt || new Date().toISOString()
+    prn:       isPrn2e,
+    frequency: freq2,
+    weekdays:  weekdays2,
+    monthDay:  monthDay2,
+    color:     _medColor,
+    createdAt: meds.find(m=>m.id===id)?.createdAt || new Date().toISOString()
   };
   const idx = meds.findIndex(m => m.id === id);
   if (idx !== -1) meds[idx] = entry; else meds.push(entry);
@@ -5255,104 +5354,229 @@ function setMedDateToday() {
   if (el) { el.value = new Date().toISOString().slice(0,10); renderMedicineLog(); }
 }
 
+// ── 頓服ログ（localStorage） ──
+const PRN_LOG_KEY = 'renalcare_prn_log';
+function loadPrnLog() { try { return JSON.parse(localStorage.getItem(PRN_LOG_KEY)||'[]'); } catch(e) { return []; } }
+function savePrnLog_store(log) { try { localStorage.setItem(PRN_LOG_KEY, JSON.stringify(log)); } catch(e) {} }
+
+// 頓服記録モーダルを開く
+function openPrnLogModal(medId, medName) {
+  document.getElementById('prnLog-medId').value = medId;
+  document.getElementById('prnLogModal-title').textContent = `🆘 ${medName}`;
+  const now = new Date();
+  document.getElementById('prnLog-datetime').value =
+    new Date(now.getTime() - now.getTimezoneOffset()*60000).toISOString().slice(0,16);
+  document.getElementById('prnLog-amount').value = '';
+  document.getElementById('prnLog-memo').value   = '';
+  document.getElementById('prnLogModal').classList.add('open');
+}
+
+function savePrnLog() {
+  const medId = document.getElementById('prnLog-medId').value;
+  const dtVal  = document.getElementById('prnLog-datetime').value;
+  const amount = document.getElementById('prnLog-amount').value.trim();
+  const memo   = document.getElementById('prnLog-memo').value.trim();
+  if (!dtVal) { showToast('日時を入力してください'); return; }
+  const log = loadPrnLog();
+  log.unshift({ id:'prn_'+Date.now(), medId, datetime: new Date(dtVal).toISOString(), amount, memo, recordedAt: new Date().toISOString() });
+  savePrnLog_store(log);
+  showToast('✅ 使用を記録しました');
+  closeModal('prnLogModal');
+  renderMedicineLog();
+}
+
+function deletePrnLogEntry(id) {
+  if (!confirm('この使用記録を削除しますか？')) return;
+  savePrnLog_store(loadPrnLog().filter(e => e.id !== id));
+  showToast('🗑 削除しました');
+  renderMedicineLog();
+}
+
+// 今日が定期薬の服用日かどうか
+function isPeriodicDueToday(med, dateStr) {
+  const d = new Date(dateStr + 'T00:00:00');
+  const freq = med.frequency || (med.prn ? 'prn' : 'daily');
+  if (freq === 'weekly') {
+    // 0=日,1=月,...6=土 → weekdays は月=0,...日=6 に変換して保存
+    const jsDay = d.getDay(); // 0=日
+    const myDay = jsDay === 0 ? 6 : jsDay - 1; // 月=0,...日=6
+    return (med.weekdays||[]).includes(myDay);
+  }
+  if (freq === 'monthly') {
+    return med.monthDay === d.getDate();
+  }
+  return false;
+}
+
 function renderMedicineLog() {
-  const dateEl = document.getElementById('med-record-date');
+  const dateEl  = document.getElementById('med-record-date');
   const dateStr = dateEl ? dateEl.value : new Date().toISOString().slice(0,10);
-  const meds = loadMedicines();
-  const timings = ['before_breakfast','after_breakfast','before_lunch','after_lunch','before_dinner','after_dinner','bedtime'];
+  const meds    = loadMedicines();
+  const howLabel = { water:'水で服用', food:'食べ物と一緒', chew:'噛んで服用', dissolve:'口で溶かす', sublingual:'舌下', other:'その他' };
+  const WEEKDAY_NAMES = ['月','火','水','木','金','土','日'];
   let anyMed = false;
 
-  timings.forEach(timing => {
-    const block   = document.getElementById('med-block-' + timing);
-    const listEl  = document.getElementById('list-' + timing);
-    const badgeEl = document.getElementById('badge-' + timing);
-    if (!block || !listEl) return;
-    const medsForTiming = meds.filter(m => (m.timings||[]).includes(timing));
-    if (medsForTiming.length === 0) { block.classList.remove('has-meds'); return; }
+  // ── ① 毎日の薬 ──────────────────────────────────
+  const dailyMeds = meds.filter(m => !m.prn && (m.frequency === 'daily' || !m.frequency || m.frequency === ''));
+  const sectionDaily = document.getElementById('med-section-daily');
+  const timings = ['before_breakfast','after_breakfast','before_lunch','after_lunch','before_dinner','after_dinner','bedtime'];
+  if (sectionDaily) sectionDaily.style.display = dailyMeds.length > 0 ? '' : 'none';
+  if (dailyMeds.length > 0) {
     anyMed = true;
-    block.classList.add('has-meds');
-
-    const takenCount = medsForTiming.filter(m => getMedStatus(m.id, dateStr, timing) === 'taken').length;
-    const total = medsForTiming.length;
-    if (badgeEl) {
-      if (takenCount === total) { badgeEl.textContent='✓ すべて服用済み'; badgeEl.style.cssText='background:var(--green-dim);color:var(--green);border:1px solid var(--green);font-size:11px;padding:2px 8px;border-radius:10px;'; }
-      else if (takenCount > 0) { badgeEl.textContent=`${takenCount}/${total}`; badgeEl.style.cssText='background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber);font-size:11px;padding:2px 8px;border-radius:10px;'; }
-      else                     { badgeEl.textContent=`0/${total}`; badgeEl.style.cssText='background:var(--surface2);color:var(--text3);border:1px solid var(--border2);font-size:11px;padding:2px 8px;border-radius:10px;'; }
-    }
-
-    listEl.innerHTML = medsForTiming.map(med => {
-      const status = getMedStatus(med.id, dateStr, timing);
-      const dose = (med.timingDoses && med.timingDoses[timing]) || med.doseAmount || '1錠';
-      const takenCls   = status === 'taken'   ? 'taken'   : '';
-      const skippedCls = status === 'skipped' ? 'skipped' : '';
-      const howLabel = { water:'水で服用', food:'食べ物と一緒', chew:'噛んで服用', dissolve:'口で溶かす', sublingual:'舌下', other:'その他' };
-      const howText = med.howToTake ? howLabel[med.howToTake] || '' : '';
-      return `
-        <div class="med-card" style="border-color:${med.color||'var(--border)'}33;">
+    let dailyTaken = 0, dailyTotal = 0;
+    timings.forEach(timing => {
+      const block   = document.getElementById('med-block-' + timing);
+      const listEl  = document.getElementById('list-' + timing);
+      const badgeEl = document.getElementById('badge-' + timing);
+      if (!block || !listEl) return;
+      const medsForTiming = dailyMeds.filter(m => (m.timings||[]).includes(timing));
+      if (medsForTiming.length === 0) { block.classList.remove('has-meds'); return; }
+      block.classList.add('has-meds');
+      const takenCount = medsForTiming.filter(m => getMedStatus(m.id, dateStr, timing) === 'taken').length;
+      dailyTaken += takenCount; dailyTotal += medsForTiming.length;
+      if (badgeEl) {
+        if (takenCount === medsForTiming.length) { badgeEl.textContent='✓ 完了'; badgeEl.style.cssText='background:var(--green-dim);color:var(--green);border:1px solid var(--green);font-size:11px;padding:2px 8px;border-radius:10px;'; }
+        else if (takenCount > 0)                 { badgeEl.textContent=`${takenCount}/${medsForTiming.length}`; badgeEl.style.cssText='background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber);font-size:11px;padding:2px 8px;border-radius:10px;'; }
+        else                                     { badgeEl.textContent=`未服用`; badgeEl.style.cssText='background:var(--surface2);color:var(--text3);border:1px solid var(--border2);font-size:11px;padding:2px 8px;border-radius:10px;'; }
+      }
+      listEl.innerHTML = medsForTiming.map(med => {
+        const status     = getMedStatus(med.id, dateStr, timing);
+        const dose       = (med.timingDoses && med.timingDoses[timing]) || med.doseAmount || '1錠';
+        const howText    = med.howToTake ? howLabel[med.howToTake] || '' : '';
+        const isTaken    = status === 'taken';
+        const isSkipped  = status === 'skipped';
+        return `<div class="med-card" style="border-color:${med.color||'var(--border)'}44;${isTaken?'opacity:0.7;':''}">
           <div class="med-icon" style="background:${med.color||'#4fc3f7'}22;color:${med.color||'#4fc3f7'}">💊</div>
           <div class="med-info">
             <div class="med-name">${med.name}${med.form?'<span style="font-size:11px;color:var(--text3);margin-left:5px;">'+med.form+'</span>':''}</div>
-            <div class="med-hospital">${med.hospital||'—'}</div>
-            <div class="med-dose">${dose}${howText?' · '+howText:''}${med.note?' · '+med.note:''}</div>
+            <div class="med-hospital">${med.hospital||''}</div>
+            <div class="med-dose">${dose}${howText?' · '+howText:''}${med.note?'<br><span style="color:var(--amber);font-size:11px;">⚠ '+med.note+'</span>':''}</div>
           </div>
           <div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0;">
-            <div class="med-status-btn ${takenCls}" onclick="toggleMedBtn('${med.id}','${dateStr}','${timing}','taken')">
-              <div class="med-status-icon">${status==='taken'?'✅':'⬜'}</div>
-              <div class="med-status-text">${status==='taken'?'服用済み':'服用する'}</div>
+            <div class="med-status-btn ${isTaken?'taken':''}" onclick="toggleMedBtn('${med.id}','${dateStr}','${timing}','taken')"
+              style="background:${isTaken?'var(--green-dim)':'var(--surface2)'};border-color:${isTaken?'var(--green)':'var(--border2)'};">
+              <div class="med-status-icon">${isTaken?'✅':'⬜'}</div>
+              <div class="med-status-text" style="color:${isTaken?'var(--green)':'var(--text3)'};">${isTaken?'服用済み':'飲んだ'}</div>
             </div>
-            <div class="med-status-btn ${skippedCls}" onclick="toggleMedBtn('${med.id}','${dateStr}','${timing}','skipped')">
-              <div class="med-status-icon">${status==='skipped'?'❌':'—'}</div>
-              <div class="med-status-text" style="${status==='skipped'?'':'color:var(--text3)'}">${status==='skipped'?'未服用':'スキップ'}</div>
+            <div class="med-status-btn ${isSkipped?'skipped':''}" onclick="toggleMedBtn('${med.id}','${dateStr}','${timing}','skipped')"
+              style="background:${isSkipped?'var(--red-dim)':'var(--surface2)'};border-color:${isSkipped?'var(--red)':'var(--border2)'};">
+              <div class="med-status-icon">${isSkipped?'❌':'✕'}</div>
+              <div class="med-status-text" style="color:${isSkipped?'var(--red)':'var(--text3)'};">${isSkipped?'飲まなかった':'飲まない'}</div>
             </div>
           </div>
         </div>`;
-    }).join('');
-  });
-
-  // 頓服薬（prn:true）を症状時セクションに表示
-  const prnMeds = meds.filter(m => m.prn);
-  const prnBlock = document.getElementById('med-block-prn');
-  const prnList  = document.getElementById('list-prn');
-  if (prnBlock && prnList) {
-    if (prnMeds.length === 0) {
-      prnBlock.classList.remove('has-meds');
-    } else {
-      anyMed = true;
-      prnBlock.classList.add('has-meds');
-      const takenCount = prnMeds.filter(m => getMedStatus(m.id, dateStr, 'prn') === 'taken').length;
-      const badge = document.getElementById('badge-prn');
-      if (badge) {
-        if (takenCount === prnMeds.length) { badge.textContent='✓ 服用済み'; badge.style.cssText='background:var(--green-dim);color:var(--green);border:1px solid var(--green);font-size:11px;padding:2px 8px;border-radius:10px;'; }
-        else if (takenCount > 0)           { badge.textContent=`${takenCount}/${prnMeds.length}`; badge.style.cssText='background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber);font-size:11px;padding:2px 8px;border-radius:10px;'; }
-        else                               { badge.textContent=''; badge.style.cssText=''; }
-      }
-      prnList.innerHTML = prnMeds.map(med => {
-        const status = getMedStatus(med.id, dateStr, 'prn');
-        const takenCls   = status === 'taken'   ? 'taken'   : '';
-        const skippedCls = status === 'skipped' ? 'skipped' : '';
-        const howLabel = { water:'水で服用', food:'食べ物と一緒', chew:'噛んで服用', dissolve:'口で溶かす', sublingual:'舌下', other:'その他' };
-        const howText = med.howToTake ? howLabel[med.howToTake] || '' : '';
-        return `
-          <div class="med-card" style="border-color:${med.color||'var(--border)'}33;">
-            <div class="med-icon" style="background:${med.color||'#4fc3f7'}22;color:${med.color||'#4fc3f7'}">💊</div>
-            <div class="med-info">
-              <div class="med-name">${med.name}${med.form?'<span style="font-size:11px;color:var(--text3);margin-left:5px;">'+med.form+'</span>':''}</div>
-              <div class="med-hospital">${med.hospital||'—'}</div>
-              <div class="med-dose">${med.doseAmount||''}${howText?' · '+howText:''}${med.note?' · '+med.note:''}</div>
-            </div>
-            <div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0;">
-              <div class="med-status-btn ${takenCls}" onclick="toggleMedBtn('${med.id}','${dateStr}','prn','taken')">
-                <div class="med-status-icon">${status==='taken'?'✅':'🆘'}</div>
-                <div class="med-status-text">${status==='taken'?'服用済み':'服用した'}</div>
-              </div>
-              <div class="med-status-btn ${skippedCls}" onclick="toggleMedBtn('${med.id}','${dateStr}','prn','skipped')">
-                <div class="med-status-icon">${status==='skipped'?'❌':'—'}</div>
-                <div class="med-status-text" style="${status==='skipped'?'':'color:var(--text3)'}">${status==='skipped'?'スキップ':'スキップ'}</div>
-              </div>
-            </div>
-          </div>`;
       }).join('');
+    });
+    // セクションバッジ
+    const bdg = document.getElementById('badge-daily');
+    if (bdg) {
+      if (dailyTotal === 0) { bdg.textContent=''; }
+      else if (dailyTaken === dailyTotal) { bdg.textContent='✓ 全完了'; bdg.style.cssText='background:var(--green-dim);color:var(--green);border:1px solid var(--green);font-size:11px;padding:2px 8px;border-radius:10px;'; }
+      else { bdg.textContent=`${dailyTaken}/${dailyTotal}`; bdg.style.cssText='background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber);font-size:11px;padding:2px 8px;border-radius:10px;'; }
     }
+  }
+
+  // ── ② 定期薬（週1・月1） ──────────────────────────
+  const periodicMeds = meds.filter(m => !m.prn && (m.frequency === 'weekly' || m.frequency === 'monthly'));
+  const sectionPeriodic = document.getElementById('med-section-periodic');
+  const listPeriodic    = document.getElementById('list-periodic');
+  if (sectionPeriodic) sectionPeriodic.style.display = periodicMeds.length > 0 ? '' : 'none';
+  if (periodicMeds.length > 0 && listPeriodic) {
+    anyMed = true;
+    listPeriodic.innerHTML = periodicMeds.map(med => {
+      const freq      = med.frequency;
+      const isDue     = isPeriodicDueToday(med, dateStr);
+      const status    = getMedStatus(med.id, dateStr, 'periodic');
+      const isTaken   = status === 'taken';
+      const isSkipped = status === 'skipped';
+      const howText   = med.howToTake ? howLabel[med.howToTake] || '' : '';
+      const dose      = med.doseAmount || '1錠';
+
+      // スケジュール説明
+      let scheduleDesc = '';
+      if (freq === 'weekly') {
+        const days = (med.weekdays||[]).map(i => WEEKDAY_NAMES[i]).join('・');
+        scheduleDesc = `毎週 ${days||'—'}曜日`;
+      } else if (freq === 'monthly') {
+        scheduleDesc = med.monthDay ? `毎月 ${med.monthDay}日` : '毎月（日付未設定）';
+      }
+
+      const dueLabel = isDue
+        ? '<span style="font-size:11px;background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber);padding:2px 8px;border-radius:10px;font-weight:600;">📅 今日が服用日</span>'
+        : '<span style="font-size:11px;color:var(--text3);">今日は服用日ではありません</span>';
+
+      return `<div class="med-card" style="border-color:${med.color||'var(--border)'}44;${!isDue&&!isTaken?'opacity:0.6;':''}">
+        <div class="med-icon" style="background:${med.color||'#c084fc'}22;color:${med.color||'#c084fc'}">💊</div>
+        <div class="med-info" style="flex:1;min-width:0;">
+          <div class="med-name">${med.name}${med.form?'<span style="font-size:11px;color:var(--text3);margin-left:5px;">'+med.form+'</span>':''}</div>
+          <div class="med-hospital">${med.hospital||''}</div>
+          <div style="font-size:11px;color:var(--purple);margin-top:2px;">🔄 ${scheduleDesc}</div>
+          <div style="margin-top:5px;">${dueLabel}</div>
+          <div class="med-dose" style="margin-top:3px;">${dose}${howText?' · '+howText:''}${med.note?'<br><span style="color:var(--amber);font-size:11px;">⚠ '+med.note+'</span>':''}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0;">
+          <div class="med-status-btn ${isTaken?'taken':''}" onclick="toggleMedBtn('${med.id}','${dateStr}','periodic','taken')"
+            style="background:${isTaken?'var(--green-dim)':'var(--surface2)'};border-color:${isTaken?'var(--green)':'var(--border2)'};">
+            <div class="med-status-icon">${isTaken?'✅':'⬜'}</div>
+            <div class="med-status-text" style="color:${isTaken?'var(--green)':'var(--text3)'};">${isTaken?'服用済み':'飲んだ'}</div>
+          </div>
+          <div class="med-status-btn ${isSkipped?'skipped':''}" onclick="toggleMedBtn('${med.id}','${dateStr}','periodic','skipped')"
+            style="background:${isSkipped?'var(--red-dim)':'var(--surface2)'};border-color:${isSkipped?'var(--red)':'var(--border2)'};">
+            <div class="med-status-icon">${isSkipped?'❌':'✕'}</div>
+            <div class="med-status-text" style="color:${isSkipped?'var(--red)':'var(--text3)'};">${isSkipped?'飲まなかった':'飲まない'}</div>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // ── ③ 頓服 ──────────────────────────────────────
+  const prnMeds     = meds.filter(m => m.prn || m.frequency === 'prn');
+  const sectionPrn  = document.getElementById('med-section-prn');
+  const listPrn     = document.getElementById('list-prn');
+  if (sectionPrn) sectionPrn.style.display = prnMeds.length > 0 ? '' : 'none';
+  if (prnMeds.length > 0 && listPrn) {
+    anyMed = true;
+    const allPrnLog = loadPrnLog();
+    listPrn.innerHTML = prnMeds.map(med => {
+      const howText = med.howToTake ? howLabel[med.howToTake] || '' : '';
+      const dose    = med.doseAmount || '';
+      // この薬のこの日の使用記録
+      const todayLogs = allPrnLog.filter(e => e.medId === med.id &&
+        new Date(e.datetime).toDateString() === new Date(dateStr + 'T00:00:00').toDateString());
+
+      const logHtml = todayLogs.length > 0
+        ? `<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);">
+            <div style="font-size:11px;color:var(--text3);margin-bottom:4px;">本日の使用履歴</div>
+            ${todayLogs.map(e => {
+              const t = new Date(e.datetime);
+              const ts = `${t.getHours()}:${String(t.getMinutes()).padStart(2,'0')}`;
+              return `<div style="display:flex;align-items:center;gap:8px;font-size:12px;padding:4px 0;">
+                <span style="color:var(--amber);font-weight:600;min-width:40px;">${ts}</span>
+                ${e.amount?`<span style="background:var(--surface2);padding:1px 8px;border-radius:10px;">${e.amount}</span>`:''}
+                ${e.memo?`<span style="color:var(--text2);">${e.memo}</span>`:''}
+                <button onclick="deletePrnLogEntry('${e.id}')" style="margin-left:auto;background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;padding:0 2px;">×</button>
+              </div>`;
+            }).join('')}
+          </div>`
+        : `<div style="font-size:11px;color:var(--text3);margin-top:6px;">本日の使用記録なし</div>`;
+
+      return `<div class="card" style="border-color:${med.color||'var(--border)'}44;margin-bottom:8px;padding:12px;">
+        <div style="display:flex;align-items:flex-start;gap:10px;">
+          <div class="med-icon" style="background:${med.color||'#fcd34d'}22;color:${med.color||'#fcd34d'};flex-shrink:0;">🆘</div>
+          <div style="flex:1;min-width:0;">
+            <div class="med-name">${med.name}${med.form?'<span style="font-size:11px;color:var(--text3);margin-left:5px;">'+med.form+'</span>':''}</div>
+            <div class="med-hospital" style="margin-top:2px;">${med.hospital||''}</div>
+            <div class="med-dose" style="margin-top:2px;">${dose}${howText?' · '+howText:''}${med.note?'<br><span style="color:var(--amber);font-size:11px;">⚠ '+med.note+'</span>':''}</div>
+            ${logHtml}
+          </div>
+          <button onclick="openPrnLogModal('${med.id}','${med.name.replace(/'/g,"\'")}')"
+            style="flex-shrink:0;padding:8px 12px;background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">
+            + 使用した
+          </button>
+        </div>
+      </div>`;
+    }).join('');
   }
 
   const noMedsEl = document.getElementById('med-no-meds');
@@ -5462,6 +5686,39 @@ function togglePrnMode(idx, mode) {
   const area = document.getElementById(areaId);
   if (area) area.style.display = isPrn ? 'none' : 'block';
 }
+
+// 頻度変更時のUI切り替え（bulkカード）
+function onBulkFreqChange(idx) {
+  const freq = document.getElementById(`bulk-freq-${idx}`)?.value || 'daily';
+  const timingArea  = document.getElementById(`bulk-timing-area-${idx}`);
+  const weeklyArea  = document.getElementById(`bulk-weekly-area-${idx}`);
+  const monthlyArea = document.getElementById(`bulk-monthly-area-${idx}`);
+  if (timingArea)  timingArea.style.display  = freq === 'prn' ? 'none' : 'block';
+  if (weeklyArea)  weeklyArea.style.display  = freq === 'weekly'  ? 'block' : 'none';
+  if (monthlyArea) monthlyArea.style.display = freq === 'monthly' ? 'block' : 'none';
+}
+
+// 頻度変更時のUI切り替え（編集フォーム）
+function onEditFreqChange() {
+  const freq = document.getElementById('med-frequency')?.value || 'daily';
+  const timingArea  = document.getElementById('med-timing-area-edit');
+  const weeklyArea  = document.getElementById('edit-weekly-area');
+  const monthlyArea = document.getElementById('edit-monthly-area');
+  if (timingArea)  timingArea.style.display  = freq === 'prn' ? 'none' : 'block';
+  if (weeklyArea)  weeklyArea.style.display  = freq === 'weekly'  ? 'block' : 'none';
+  if (monthlyArea) monthlyArea.style.display = freq === 'monthly' ? 'block' : 'none';
+}
+
+// 曜日トグル（bulkカード）
+function toggleWeekday(el, idx) {
+  el.classList.toggle('selected');
+}
+
+// 曜日トグル（編集フォーム）
+function toggleWeekdayEdit(el) {
+  el.classList.toggle('selected');
+}
+
 // ============================================================
 // データ エクスポート / インポート（Safari ↔ PWA 同期対応）
 // ============================================================
@@ -5476,6 +5733,7 @@ const ALL_STORAGE_KEYS = [
   'renalcare_medicines',
   'renalcare_med_log',
   'renalcare_hospitals',
+  'renalcare_prn_log',
 ];
 
 function exportAllData() {
