@@ -2829,7 +2829,7 @@ async function saveMeal() {
   } else {
     showToast('⚠️ 保存に失敗しました');
   }
-  resetRecord(); navTo('home'); updateHomeSummary(); updateHba1cCard(); updateWaterCard();
+  resetRecord(); navTo('home'); updateHomeSummary(); updateHba1cCard(); updateWaterCard(); updateWaterBalance();
 }
 
 function localSaveMeal(meal) {
@@ -2970,6 +2970,7 @@ function navTo(page) {
   if (page==='health')   renderHealthPage();
   if (page==='record')   initRecordDate();
   if (page==='medicine') { setMedDateToday(); renderMedicineLog(); }
+  if (page==='water' || page==='home') { updateWaterCard(); updateWaterBalance(); }
 }
 
 // ===== 健康記録 =====
@@ -3599,6 +3600,14 @@ const FOOD_WATER_CONTENT = {
   // ===== 海藻 =====
   'わかめ':     89, 'めかぶ':       92, 'もずく':       97,
   '海苔':        20, 'ひじき':       89,
+
+  // ===== 飲み物（水分率%）=====
+  'お茶':       99, '緑茶':         99, '麦茶':         99, 'ほうじ茶':    99,
+  'コーヒー':   99, '紅茶':         99, 'コーラ':       90, '炭酸水':      99,
+  'ジュース':   88, 'スポーツドリンク': 94, 'ビール':    92, '日本酒':      80,
+  '焼酎':       72, 'ワイン':       88, 'ノンアルコールビール': 98,
+  '野菜ジュース': 90, 'トマトジュース': 93, 'りんごジュース': 88,
+  'オレンジジュース': 87, '缶コーヒー': 95,
 };
 
 // チップ名→水分量MAP（従来のFOOD_WATER_MAPを拡張）
@@ -3627,28 +3636,50 @@ function estimateFoodDBWater(food) {
   if (!food) return 0;
   const cat  = food.cat  || '';
   const name = food.name || '';
+  // fqConfirmで保存された実際のgrams（ユーザーが変更した量）を優先
+  const actualGrams      = (food.grams != null) ? food.grams : null;
+  const actualMultiplier = (food.multiplier != null) ? food.multiplier : 1.0;
 
-  // 飲み物・汁物カテゴリは記録されたml量から直接推定
+  // 飲み物カテゴリ：実際のgrams=ml量として扱い水分率を掛ける
   if (cat === '飲み物') {
-    // 名前から量を抽出: 例「牛乳（200ml）」→ 200mL × 88%
-    const mlMatch = name.match(/(\d+)\s*ml/i);
-    const ml = mlMatch ? parseInt(mlMatch[1]) : 200;
-    const rate = estimateWaterRateFromName(name) || 90;
+    let ml;
+    if (actualGrams != null) {
+      ml = actualGrams; // fqConfirmで保存されたgrams = 実際のml量
+    } else {
+      const mlMatch = name.match(/(\d+)\s*ml/i);
+      ml = (mlMatch ? parseInt(mlMatch[1]) : 200) * actualMultiplier;
+    }
+    // 括弧を除いたクリーンな名前で水分率を検索（例：「牛乳（200ml）」→「牛乳」）
+    const cleanName = name.replace(/[（(][^）)]*[）)]/g, '').trim();
+    const rate = estimateWaterRateFromName(cleanName) || estimateWaterRateFromName(name) || 90;
     return Math.round(ml * rate / 100);
   }
+
+  // 汁物カテゴリ
   if (cat === '汁物') {
-    const mlMatch = name.match(/(\d+)\s*ml/i);
-    const ml = mlMatch ? parseInt(mlMatch[1]) : 180;
-    return Math.round(ml * 0.95); // 汁物は95%水分
+    let ml;
+    if (actualGrams != null) {
+      ml = actualGrams;
+    } else {
+      const mlMatch = name.match(/(\d+)\s*ml/i);
+      ml = (mlMatch ? parseInt(mlMatch[1]) : 180) * actualMultiplier;
+    }
+    return Math.round(ml * 0.95);
   }
 
-  // 重量を名前から抽出: 例「鶏むね肉・焼き（100g）」→ 100g
-  const gMatch = name.match(/[（(](?:約)?(\d+(?:\.\d+)?)\s*g[）)]/);
-  if (!gMatch) return 0;
-  const grams = parseFloat(gMatch[1]);
+  // 固形食：実際のgramsを優先、なければ名前から抽出して倍率を掛ける
+  let grams;
+  if (actualGrams != null) {
+    grams = actualGrams;
+  } else {
+    const gMatch = name.match(/[（(](?:約)?(\d+(?:\.\d+)?)\s*g[）)]/);
+    if (!gMatch) return 0;
+    grams = parseFloat(gMatch[1]) * actualMultiplier;
+  }
 
-  // 水分含有率を取得
-  const rate = estimateWaterRateFromName(name);
+  // 括弧を除いたクリーンな名前で水分率を検索
+  const cleanName = name.replace(/[（(][^）)]*[）)]/g, '').trim();
+  const rate = estimateWaterRateFromName(cleanName) || estimateWaterRateFromName(name);
   if (rate === 0) return 0;
 
   return Math.round(grams * rate / 100);
@@ -4279,7 +4310,7 @@ function addDrink(ml) {
     all.push({ id: 'drink_'+Date.now(), time: new Date().toISOString(), ml, auto: false });
     localStorage.setItem(WATER_KEY, JSON.stringify(all));
   } catch(e) {}
-  updateWaterCard();
+  updateWaterCard(); updateWaterBalance();
   showToast(`💧 ${ml}mL 追加しました`);
 }
 
@@ -4294,7 +4325,7 @@ function editDrinkRecord(id, currentMl) {
   try {
     const all = JSON.parse(localStorage.getItem(WATER_KEY) || '[]');
     const idx = all.findIndex(e => e.id === id);
-    if (idx !== -1) { all[idx].ml = newMl; localStorage.setItem(WATER_KEY, JSON.stringify(all)); showToast('✅ 修正しました'); updateWaterCard(); }
+    if (idx !== -1) { all[idx].ml = newMl; localStorage.setItem(WATER_KEY, JSON.stringify(all)); showToast('✅ 修正しました'); updateWaterCard(); updateWaterBalance(); }
   } catch(e) {}
 }
 
@@ -4303,7 +4334,7 @@ function deleteDrinkRecord(id) {
   try {
     const all = JSON.parse(localStorage.getItem(WATER_KEY) || '[]');
     localStorage.setItem(WATER_KEY, JSON.stringify(all.filter(e => e.id !== id)));
-    showToast('🗑 削除しました'); updateWaterCard();
+    showToast('🗑 削除しました'); updateWaterCard(); updateWaterBalance();
   } catch(e) {}
 }
 
@@ -4315,7 +4346,7 @@ function resetTodayWater() {
     // auto=trueの食事水分は残し、手動追加の飲料のみ削除
     localStorage.setItem(WATER_KEY, JSON.stringify(all.filter(e => !(new Date(e.time).toDateString() === today && !e.auto))));
   } catch(e) {}
-  updateWaterCard();
+  updateWaterCard(); updateWaterBalance();
 }
 
 function updateWaterCard() {
