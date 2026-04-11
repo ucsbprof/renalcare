@@ -1520,13 +1520,169 @@ html, body {
         </select>
       </div>
       <div class="form-row"><label class="form-label">日時</label><input class="form-input" type="datetime-local" id="edit-datetime" /></div>
+
+      <!-- 食品カテゴリ -->
+      <div style="margin:14px 0 4px;">
+        <div style="font-size:11px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px;">🍽 食品の内容</div>
+
+        <div class="food-cat-section">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;">
+            <div class="food-cat-label lbl-main" style="margin-bottom:0;">🍚 主食</div>
+            <div style="display:flex;align-items:center;gap:4px;">
+              <span style="font-size:11px;color:var(--text3);">量:</span>
+              <input type="number" class="portion-gram-input" id="edit-gram-main" data-editgroup="main" value="1.0" min="0" max="5" step="0.5" oninput="updateEditGroupGram('main')" style="width:58px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:3px 6px;color:var(--text);font-size:13px;text-align:center;" />
+              <span style="font-size:11px;color:var(--text3);">倍</span>
+            </div>
+          </div>
+          <div class="chips" style="margin-bottom:0;" id="edit-chips-main">
+            <div class="food-cat-chip" data-editcat="main" onclick="toggleEditFoodCat(this)">白米（茶碗1杯）</div>
+            <div class="food-cat-chip" data-editcat="main" onclick="toggleEditFoodCat(this)">玄米（茶碗1杯）</div>
+            <div class="food-cat-chip" data-editcat="main" onclick="toggleEditFoodCat(this)">もち（1個）</div>
+            <div class="food-cat-chip" data-editcat="main" onclick="toggleEditFoodCat(this)">おかゆ（1杯）</div>
+            <div class="food-cat-chip" data-editcat="main" onclick="toggleEditFoodCat(this)">食パン（1枚）</div>
+            <div class="food-cat-chip" data-editcat="main" onclick="toggleEditFoodCat(this)">うどん（1玉）</div>
+            <div class="food-cat-chip" data-editcat="main" onclick="toggleEditFoodCat(this)">そば（1玉）</div>
+            <div class="food-cat-chip" data-editcat="main" onclick="toggleEditFoodCat(this)">ラーメン（1玉）</div>
+            <div class="food-cat-chip" data-editcat="main" onclick="toggleEditFoodCat(this)">焼きそば（1人前）</div>
+            <div class="food-cat-chip" data-editcat="main" onclick="toggleEditFoodCat(this)">スパゲッティ（1人前）</div>
+            <div class="food-cat-chip" data-editcat="main" onclick="toggleEditFoodCat(this)">春雨スープ（1人前）</div>
+            <div class="food-cat-chip" data-editcat="main" onclick="toggleEditFoodCat(this)">低タンパクご飯（1杯）</div>
+          </div>
+        </div>
+        <div class="food-cat-divider"></div>
+
+        <div class="food-cat-section">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;">
+            <div class="food-cat-label lbl-protein" style="margin-bottom:0;">🥩 メイン食材</div>
+            <div style="display:flex;align-items:center;gap:4px;">
+              <span style="font-size:11px;color:var(--text3);">量:</span>
+              <input type="number" class="portion-gram-input" id="edit-gram-protein" data-editgroup="protein" value="1.0" min="0" max="5" step="0.5" oninput="updateEditGroupGram('protein')" style="width:58px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:3px 6px;color:var(--text);font-size:13px;text-align:center;" />
+              <span style="font-size:11px;color:var(--text3);">倍</span>
+            </div>
+          </div>
+          <div class="chips" style="margin-bottom:0;" id="edit-chips-protein">
+            <div class="food-cat-chip" data-editcat="protein" onclick="toggleEditFoodCat(this)">鶏むね肉（100g）</div>
+            <div class="food-cat-chip" data-editcat="protein" onclick="toggleEditFoodCat(this)">鶏もも肉（100g）</div>
+            <div class="food-cat-chip" data-editcat="protein" onclick="toggleEditFoodCat(this)">豚肉（100g）</div>
+            <div class="food-cat-chip" data-editcat="protein" onclick="toggleEditFoodCat(this)">牛肉（100g）</div>
+            <div class="food-cat-chip" data-editcat="protein" onclick="toggleEditFoodCat(this)">鮭（1切れ）</div>
+            <div class="food-cat-chip" data-editcat="protein" onclick="toggleEditFoodCat(this)">鯖（1切れ）</div>
+            <div class="food-cat-chip" data-editcat="protein" onclick="toggleEditFoodCat(this)">マグロ刺身（5切れ）</div>
+            <div class="food-cat-chip" data-editcat="protein" onclick="toggleEditFoodCat(this)">サーモン刺身（5切れ）</div>
+            <div class="food-cat-chip" data-editcat="protein" onclick="toggleEditFoodCat(this)">タイ刺身（5切れ）</div>
+            <div class="food-cat-chip" data-editcat="protein" onclick="toggleEditFoodCat(this)">ハマチ刺身（5切れ）</div>
+            <div class="food-cat-chip" data-editcat="protein" onclick="toggleEditFoodCat(this)">ホタテ刺身（3粒）</div>
+            <div class="food-cat-chip" data-editcat="protein" onclick="toggleEditFoodCat(this)">甘エビ刺身（5尾）</div>
+            <div class="food-cat-chip" data-editcat="protein" onclick="toggleEditFoodCat(this)">生ウニ（大さじ2）</div>
+            <div class="food-cat-chip" data-editcat="protein" onclick="toggleEditFoodCat(this)">いくら（大さじ1）</div>
+            <div class="food-cat-chip" data-editcat="protein" onclick="toggleEditFoodCat(this)">卵（1個）</div>
+            <div class="food-cat-chip" data-editcat="protein" onclick="toggleEditFoodCat(this)">豆腐（半丁）</div>
+            <div class="food-cat-chip" data-editcat="protein" onclick="toggleEditFoodCat(this)">納豆（1パック）</div>
+          </div>
+        </div>
+        <div class="food-cat-divider"></div>
+
+        <div class="food-cat-section">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;">
+            <div class="food-cat-label lbl-sub" style="margin-bottom:0;">🥦 サブ食材</div>
+            <div style="display:flex;align-items:center;gap:4px;">
+              <span style="font-size:11px;color:var(--text3);">量:</span>
+              <input type="number" class="portion-gram-input" id="edit-gram-sub" data-editgroup="sub" value="1.0" min="0" max="5" step="0.5" oninput="updateEditGroupGram('sub')" style="width:58px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:3px 6px;color:var(--text);font-size:13px;text-align:center;" />
+              <span style="font-size:11px;color:var(--text3);">倍</span>
+            </div>
+          </div>
+          <div class="chips" style="margin-bottom:0;" id="edit-chips-sub">
+            <div class="food-cat-chip" data-editcat="sub" onclick="toggleEditFoodCat(this)">ほうれん草（小鉢）</div>
+            <div class="food-cat-chip" data-editcat="sub" onclick="toggleEditFoodCat(this)">小松菜（小鉢）</div>
+            <div class="food-cat-chip" data-editcat="sub" onclick="toggleEditFoodCat(this)">ブロッコリー（小鉢）</div>
+            <div class="food-cat-chip" data-editcat="sub" onclick="toggleEditFoodCat(this)">キャベツ（小鉢）</div>
+            <div class="food-cat-chip" data-editcat="sub" onclick="toggleEditFoodCat(this)">にんじん（小鉢）</div>
+            <div class="food-cat-chip" data-editcat="sub" onclick="toggleEditFoodCat(this)">大根（小鉢）</div>
+            <div class="food-cat-chip" data-editcat="sub" onclick="toggleEditFoodCat(this)">きゅうり（小鉢）</div>
+            <div class="food-cat-chip" data-editcat="sub" onclick="toggleEditFoodCat(this)">トマト（小鉢）</div>
+            <div class="food-cat-chip" data-editcat="sub" onclick="toggleEditFoodCat(this)">レタス（小鉢）</div>
+            <div class="food-cat-chip" data-editcat="sub" onclick="toggleEditFoodCat(this)">なす（小鉢）</div>
+            <div class="food-cat-chip" data-editcat="sub" onclick="toggleEditFoodCat(this)">しらたき（100g）</div>
+            <div class="food-cat-chip" data-editcat="sub" onclick="toggleEditFoodCat(this)">もやし（小鉢）</div>
+            <div class="food-cat-chip" data-editcat="sub" onclick="toggleEditFoodCat(this)">白菜（小鉢）</div>
+          </div>
+        </div>
+        <div class="food-cat-divider"></div>
+
+        <div class="food-cat-section">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;">
+            <div class="food-cat-label lbl-soup" style="margin-bottom:0;">🍵 汁物・デザート</div>
+            <div style="display:flex;align-items:center;gap:4px;">
+              <span style="font-size:11px;color:var(--text3);">量:</span>
+              <input type="number" class="portion-gram-input" id="edit-gram-soup" data-editgroup="soup" value="1.0" min="0" max="5" step="0.5" oninput="updateEditGroupGram('soup')" style="width:58px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:3px 6px;color:var(--text);font-size:13px;text-align:center;" />
+              <span style="font-size:11px;color:var(--text3);">倍</span>
+            </div>
+          </div>
+          <div class="chips" style="margin-bottom:0;" id="edit-chips-soup">
+            <div class="food-cat-chip" data-editcat="soup" onclick="toggleEditFoodCat(this)">味噌汁（1杯）</div>
+            <div class="food-cat-chip" data-editcat="soup" onclick="toggleEditFoodCat(this)">すまし汁（1杯）</div>
+            <div class="food-cat-chip" data-editcat="soup" onclick="toggleEditFoodCat(this)">コンソメスープ（1杯）</div>
+            <div class="food-cat-chip" data-editcat="soup" onclick="toggleEditFoodCat(this)">みかん（1個）</div>
+            <div class="food-cat-chip" data-editcat="soup" onclick="toggleEditFoodCat(this)">りんご（半個）</div>
+            <div class="food-cat-chip" data-editcat="soup" onclick="toggleEditFoodCat(this)">バナナ（1本）</div>
+            <div class="food-cat-chip" data-editcat="soup" onclick="toggleEditFoodCat(this)">いちご（5粒）</div>
+            <div class="food-cat-chip" data-editcat="soup" onclick="toggleEditFoodCat(this)">ヨーカン（1切れ）</div>
+            <div class="food-cat-chip" data-editcat="soup" onclick="toggleEditFoodCat(this)">大福もち（1個）</div>
+            <div class="food-cat-chip" data-editcat="soup" onclick="toggleEditFoodCat(this)">アイスクリーム（1個）</div>
+            <div class="food-cat-chip" data-editcat="soup" onclick="toggleEditFoodCat(this)">プリン（1個）</div>
+            <div class="food-cat-chip" data-editcat="soup" onclick="toggleEditFoodCat(this)">せんべい（2枚）</div>
+          </div>
+        </div>
+        <div class="food-cat-divider"></div>
+
+        <div class="food-cat-section">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;">
+            <div class="food-cat-label" style="margin-bottom:0;color:var(--accent);">💧 飲物類</div>
+            <div style="display:flex;align-items:center;gap:4px;">
+              <span style="font-size:11px;color:var(--text3);">量:</span>
+              <input type="number" class="portion-gram-input" id="edit-gram-drink" data-editgroup="drink" value="1.0" min="0" max="5" step="0.5" oninput="updateEditGroupGram('drink')" style="width:58px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:3px 6px;color:var(--text);font-size:13px;text-align:center;" />
+              <span style="font-size:11px;color:var(--text3);">倍</span>
+            </div>
+          </div>
+          <div class="chips" style="margin-bottom:0;" id="edit-chips-drink">
+            <div class="food-cat-chip" data-editcat="drink" onclick="toggleEditFoodCat(this)">水・お茶（200ml）</div>
+            <div class="food-cat-chip" data-editcat="drink" onclick="toggleEditFoodCat(this)">コーヒー・紅茶（200ml）</div>
+            <div class="food-cat-chip" data-editcat="drink" onclick="toggleEditFoodCat(this)">牛乳（200ml）</div>
+            <div class="food-cat-chip" data-editcat="drink" onclick="toggleEditFoodCat(this)">豆乳（200ml）</div>
+            <div class="food-cat-chip" data-editcat="drink" onclick="toggleEditFoodCat(this)">ジュース（200ml）</div>
+            <div class="food-cat-chip" data-editcat="drink" onclick="toggleEditFoodCat(this)">スポーツドリンク（500ml）</div>
+            <div class="food-cat-chip" data-editcat="drink" onclick="toggleEditFoodCat(this)">ビール（350ml）</div>
+            <div class="food-cat-chip" data-editcat="drink" onclick="toggleEditFoodCat(this)">ノンアルビール（350ml）</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 栄養プレビュー（編集用） -->
+      <div class="nutrition-preview" id="edit-nutrition-preview">
+        <div class="nutrition-preview-title">概算栄養成分（自動計算）</div>
+        <div class="nutrition-preview-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:6px;">
+          <div class="nutrition-preview-item"><div class="nutrition-preview-val" style="color:var(--green);" id="edit-prev-kcal">—</div><div class="nutrition-preview-key">kcal</div></div>
+          <div class="nutrition-preview-item"><div class="nutrition-preview-val" style="color:var(--accent);" id="edit-prev-protein">—</div><div class="nutrition-preview-key">タンパク質g</div></div>
+          <div class="nutrition-preview-item"><div class="nutrition-preview-val" style="color:var(--text2);" id="edit-prev-carb">—</div><div class="nutrition-preview-key">炭水化物g</div></div>
+        </div>
+        <div class="nutrition-preview-grid" style="grid-template-columns:repeat(3,1fr);">
+          <div class="nutrition-preview-item"><div class="nutrition-preview-val" style="color:var(--text2);" id="edit-prev-fiber">—</div><div class="nutrition-preview-key">食物繊維g</div></div>
+          <div class="nutrition-preview-item"><div class="nutrition-preview-val" style="color:var(--amber);" id="edit-prev-k">—</div><div class="nutrition-preview-key">カリウムmg</div></div>
+          <div class="nutrition-preview-item"><div class="nutrition-preview-val" style="color:var(--red);" id="edit-prev-p">—</div><div class="nutrition-preview-key">リンmg</div></div>
+        </div>
+        <div style="font-size:10px;color:var(--text3);margin-top:6px;text-align:right;">※ 概算値。栄養成分欄に自動反映されます</div>
+      </div>
+
+      <!-- 栄養成分入力 -->
+      <div style="font-size:11px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin:14px 0 8px;">📊 栄養成分（手動修正可）</div>
       <div class="form-grid">
-        <div class="form-row"><label class="form-label">カロリー (kcal)</label><input class="form-input" type="number" id="edit-calories" /></div>
-        <div class="form-row"><label class="form-label">タンパク質 (g)</label><input class="form-input" type="number" id="edit-protein" /></div>
-        <div class="form-row"><label class="form-label">炭水化物 (g)</label><input class="form-input" type="number" id="edit-carb" /></div>
-        <div class="form-row"><label class="form-label">食物繊維 (g)</label><input class="form-input" type="number" id="edit-fiber" /></div>
-        <div class="form-row"><label class="form-label">カリウム (mg)</label><input class="form-input" type="number" id="edit-potassium" /></div>
-        <div class="form-row"><label class="form-label">リン (mg)</label><input class="form-input" type="number" id="edit-phosphorus" /></div>
+        <div class="form-row"><label class="form-label">カロリー (kcal)</label><input class="form-input" type="number" id="edit-calories" oninput="this.dataset.manualEdit='1'" /></div>
+        <div class="form-row"><label class="form-label">タンパク質 (g)</label><input class="form-input" type="number" id="edit-protein" oninput="this.dataset.manualEdit='1'" /></div>
+        <div class="form-row"><label class="form-label">炭水化物 (g)</label><input class="form-input" type="number" id="edit-carb" oninput="this.dataset.manualEdit='1'" /></div>
+        <div class="form-row"><label class="form-label">食物繊維 (g)</label><input class="form-input" type="number" id="edit-fiber" oninput="this.dataset.manualEdit='1'" /></div>
+        <div class="form-row"><label class="form-label">カリウム (mg)</label><input class="form-input" type="number" id="edit-potassium" oninput="this.dataset.manualEdit='1'" /></div>
+        <div class="form-row"><label class="form-label">リン (mg)</label><input class="form-input" type="number" id="edit-phosphorus" oninput="this.dataset.manualEdit='1'" /></div>
+        <div class="form-row"><label class="form-label">塩分 (g)</label><input class="form-input" type="number" id="edit-salt" step="0.1" oninput="this.dataset.manualEdit='1'" /></div>
       </div>
     </div>
     <button class="btn btn-primary btn-full" style="margin-top:16px;" onclick="saveEditMeal()">✓ 更新する</button>
@@ -1662,7 +1818,53 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 600);
   }
 
-  const profile = getActiveProfile();
+  // ── ログイン判定 ──────────────────────────────────
+  // 優先① renalcare_active_uid + renalcare_profiles が揃っている（正規登録済み）
+  let profile = getActiveProfile();
+
+  // 優先② active_uid はないが profiles が1件以上ある（リロードでactive_uidだけ消えた等）
+  if (!profile) {
+    const allProfiles = getAllProfiles();
+    if (allProfiles.length > 0) {
+      profile = allProfiles[0];
+      setActiveUid(profile.uid);   // active_uid を復元
+    }
+  }
+
+  // 優先③ 旧形式：renalcare_uid + state がフラットに保存されている場合をマイグレーション
+  if (!profile) {
+    const legacyUid = localStorage.getItem('renalcare_uid');
+    const legacyName = localStorage.getItem('renalcare_userName');
+    const legacyMeals = localStorage.getItem('renalcare_meals');
+    // 食事記録か名前が残っていれば旧ユーザーとみなす
+    if (legacyUid && (legacyName || legacyMeals)) {
+      const migratedProfile = {
+        uid: legacyUid,
+        userName: legacyName || 'ユーザー',
+        userType: localStorage.getItem('renalcare_userType') || 'normal',
+        age: localStorage.getItem('renalcare_age') || '',
+        gender: localStorage.getItem('renalcare_gender') || 'male',
+        height: localStorage.getItem('renalcare_height') || '',
+        weight: localStorage.getItem('renalcare_weight') || '',
+        diabetesMode: localStorage.getItem('renalcare_diabetesMode') === 'true',
+        ckdStage: localStorage.getItem('renalcare_ckdStage') || 'ckdx',
+        targetMode: 'manual',
+        targets: {
+          calories:   parseInt(localStorage.getItem('renalcare_t_calories'))  || 1800,
+          protein:    parseInt(localStorage.getItem('renalcare_t_protein'))   || 40,
+          potassium:  parseInt(localStorage.getItem('renalcare_t_potassium')) || 2000,
+          phosphorus: parseInt(localStorage.getItem('renalcare_t_phosphorus'))|| 700,
+          water:      parseInt(localStorage.getItem('renalcare_t_water'))     || 1500,
+          salt:       parseInt(localStorage.getItem('renalcare_t_salt'))      || 6,
+        }
+      };
+      saveActiveProfile(migratedProfile);
+      setActiveUid(legacyUid);
+      profile = migratedProfile;
+      console.log('[Migration] 旧形式ユーザーをプロファイルに移行しました:', legacyUid);
+    }
+  }
+
   if (profile) {
     loadProfile(profile);
     updateHomeDate();
@@ -1926,7 +2128,11 @@ function finishOnboarding() {
     }
     state.diabetesMode = state.userType !== 'normal';
 
-    try { saveActiveProfile({ ...state }); setActiveUid(uid); } catch(e2) { console.warn('保存エラー:', e2); }
+    try {
+      saveActiveProfile({ ...state });
+      setActiveUid(uid);
+      localStorage.setItem('renalcare_uid', uid); // 旧形式との互換性も維持
+    } catch(e2) { console.warn('保存エラー:', e2); }
 
     applyStateToUI();
     showScreen('s-app');
@@ -2110,6 +2316,15 @@ async function renderHistory() {
       ${dayMeals.sort((a,b) => new Date(a.recorded_at)-new Date(b.recorded_at)).map(m => {
         const timeStr = `${new Date(m.recorded_at).getHours()}:${String(new Date(m.recorded_at).getMinutes()).padStart(2,'0')}`;
         const mealJson = JSON.stringify(m).replace(/"/g,'&quot;');
+        // 食品カテゴリの内容をチップ表示
+        const cats = m.food_categories || {};
+        const catColors = { main:'var(--accent)', protein:'var(--green)', sub:'var(--purple)', soup:'var(--amber)', drink:'var(--accent)' };
+        const catEmoji  = { main:'🍚', protein:'🥩', sub:'🥦', soup:'🍵', drink:'💧' };
+        const allChips = ['main','protein','sub','soup','drink'].flatMap(group => {
+          const items = cats[group] || [];
+          return items.map(name => `<span style="font-size:10px;padding:2px 7px;border-radius:14px;background:${catColors[group]}18;color:${catColors[group]};border:1px solid ${catColors[group]}33;white-space:nowrap;">${catEmoji[group]} ${name}</span>`);
+        });
+        const chipsHtml = allChips.length ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:7px;">${allChips.join('')}</div>` : '';
         return `<div class="card" style="margin-bottom:6px;">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
             <div style="flex:1;min-width:0;">
@@ -2123,7 +2338,9 @@ async function renderHistory() {
                 <span style="font-size:12px;color:var(--accent);">P: ${Math.round((m.protein||0)*10)/10}g</span>
                 <span style="font-size:12px;color:var(--amber);">K: ${Math.round(m.potassium||0)}mg</span>
                 <span style="font-size:12px;color:var(--red);">リン: ${Math.round(m.phosphorus||0)}mg</span>
+                ${m.salt ? `<span style="font-size:12px;color:var(--purple);">塩: ${m.salt}g</span>` : ''}
               </div>
+              ${chipsHtml}
             </div>
           </div>
           <!-- 編集・削除ボタン（常時表示） -->
@@ -2157,7 +2374,35 @@ function showMealDetail(meal) {
     { label:'食物繊維',   val:`${meal.fiber||0} g`,                      color:'var(--text2)' },
     { label:'カリウム',   val:`${meal.potassium||0} mg`,                  color:'var(--amber)' },
     { label:'リン',       val:`${meal.phosphorus||0} mg`,                 color:'var(--red)' },
+    { label:'塩分',       val:`${meal.salt||0} g`,                        color:'var(--purple)' },
   ];
+
+  // 食品カテゴリの表示
+  const cats = meal.food_categories || {};
+  const catLabels = { main:'🍚 主食', protein:'🥩 メイン', sub:'🥦 サブ', soup:'🍵 汁物', drink:'💧 飲物' };
+  const catColors = { main:'var(--accent)', protein:'var(--green)', sub:'var(--purple)', soup:'var(--amber)', drink:'var(--accent)' };
+  const catChipClass = { main:'sel-main', protein:'sel-protein', sub:'sel-sub', soup:'sel-soup', drink:'sel-drink' };
+  let foodCatHtml = '';
+  const groups = ['main','protein','sub','soup','drink'];
+  const hasCats = groups.some(g => (cats[g]||[]).length > 0);
+  if (hasCats) {
+    foodCatHtml = `<div style="background:var(--surface2);border-radius:12px;padding:14px;margin-bottom:4px;">
+      <div style="font-size:11px;color:var(--text3);margin-bottom:10px;letter-spacing:1px;">食品の内容</div>`;
+    groups.forEach(group => {
+      const items = cats[group] || [];
+      if (!items.length) return;
+      const portion = cats._portions?.[group];
+      foodCatHtml += `<div style="margin-bottom:8px;">
+        <span style="font-size:11px;color:${catColors[group]};font-weight:600;">${catLabels[group]}</span>
+        ${portion !== undefined && portion !== 1.0 ? `<span style="font-size:10px;color:var(--text3);margin-left:6px;">×${portion}</span>` : ''}
+        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:5px;">
+          ${items.map(name => `<span style="font-size:11px;padding:3px 9px;border-radius:20px;background:${catColors[group]}22;color:${catColors[group]};border:1px solid ${catColors[group]}44;">${name}</span>`).join('')}
+        </div>
+      </div>`;
+    });
+    foodCatHtml += `</div>`;
+  }
+
   document.getElementById('mealDetailContent').innerHTML = `
     <div style="margin-bottom:16px;">
       <div style="font-size:20px;font-weight:700;margin-bottom:4px;">${meal.dish_name||'食事'}</div>
@@ -2166,6 +2411,7 @@ function showMealDetail(meal) {
         <span style="font-size:12px;color:var(--text3);">🕐 ${dateStr}</span>
       </div>
     </div>
+    ${foodCatHtml}
     <div style="background:var(--surface2);border-radius:12px;padding:14px;margin-bottom:4px;">
       <div style="font-size:11px;color:var(--text3);margin-bottom:12px;letter-spacing:1px;">栄養成分</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
@@ -2187,6 +2433,68 @@ function editFromDetail() {
   if (window._detailMeal) openEditModal(window._detailMeal);
 }
 
+function resetEditFoodCats() {
+  document.querySelectorAll('[data-editcat]').forEach(c => {
+    const cat = c.dataset.editcat;
+    c.className = 'food-cat-chip';
+  });
+}
+
+function toggleEditFoodCat(el) {
+  const cat = el.dataset.editcat;
+  el.classList.toggle(FOOD_CAT_CLASS[cat]);
+  updateEditNutritionPreview();
+}
+
+function getEditGroupPortion(group) {
+  const el = document.getElementById('edit-gram-' + group);
+  const val = el ? parseFloat(el.value) : 1.0;
+  return isNaN(val) || val < 0 ? 0 : val;
+}
+
+function updateEditGroupGram(group) {
+  updateEditNutritionPreview();
+}
+
+function updateEditNutritionPreview() {
+  const anySelected = ['main','protein','sub','soup','drink'].some(cat =>
+    document.querySelector(`[data-editcat="${cat}"].${FOOD_CAT_CLASS[cat]}`)
+  );
+  const preview = document.getElementById('edit-nutrition-preview');
+  if (!anySelected) { if (preview) preview.classList.remove('visible'); return; }
+  let kcal=0, protein=0, carb=0, fiber=0, potassium=0, phosphorus=0;
+  ['main','protein','sub','soup','drink'].forEach(group => {
+    const ratio = getEditGroupPortion(group);
+    document.querySelectorAll(`[data-editcat="${group}"].${FOOD_CAT_CLASS[group]}`).forEach(c => {
+      const n = FOOD_CAT_NUTRITION[c.textContent.trim()];
+      if (n) { kcal+=n.kcal*ratio; protein+=n.protein*ratio; carb+=n.carb*ratio; fiber+=n.fiber*ratio; potassium+=n.potassium*ratio; phosphorus+=n.phosphorus*ratio; }
+    });
+  });
+  kcal=Math.round(kcal); protein=Math.round(protein*10)/10; carb=Math.round(carb*10)/10; fiber=Math.round(fiber*10)/10; potassium=Math.round(potassium); phosphorus=Math.round(phosphorus);
+  document.getElementById('edit-prev-kcal').textContent = kcal;
+  document.getElementById('edit-prev-protein').textContent = protein;
+  document.getElementById('edit-prev-carb').textContent = carb;
+  document.getElementById('edit-prev-fiber').textContent = fiber;
+  document.getElementById('edit-prev-k').textContent = potassium;
+  document.getElementById('edit-prev-p').textContent = phosphorus;
+  if (preview) preview.classList.add('visible');
+  const setIfNotManual = (id, val) => { const el = document.getElementById(id); if (el && !el.dataset.manualEdit) el.value = val; };
+  setIfNotManual('edit-calories', kcal); setIfNotManual('edit-protein', protein);
+  setIfNotManual('edit-carb', carb); setIfNotManual('edit-fiber', fiber);
+  setIfNotManual('edit-potassium', potassium); setIfNotManual('edit-phosphorus', phosphorus);
+}
+
+function getEditSelectedFoodCats() {
+  const result = {};
+  ['main','protein','sub','soup','drink'].forEach(cat => {
+    result[cat] = [...document.querySelectorAll(`[data-editcat="${cat}"].${FOOD_CAT_CLASS[cat]}`)].map(c => c.textContent.trim());
+  });
+  result._portions = {};
+  ['main','protein','sub','soup','drink'].forEach(group => { result._portions[group] = getEditGroupPortion(group); });
+  result.food_db_selections = [];
+  return result;
+}
+
 function openEditModal(meal) {
   if (typeof meal === 'string') { try { meal = JSON.parse(meal); } catch(e) { return; } }
   window._editingMeal = meal;
@@ -2199,8 +2507,32 @@ function openEditModal(meal) {
   document.getElementById('edit-fiber').value     = meal.fiber||0;
   document.getElementById('edit-potassium').value = meal.potassium||0;
   document.getElementById('edit-phosphorus').value= meal.phosphorus||0;
+  document.getElementById('edit-salt').value      = meal.salt||0;
   const dt = new Date(meal.recorded_at);
   document.getElementById('edit-datetime').value  = new Date(dt.getTime()-dt.getTimezoneOffset()*60000).toISOString().slice(0,16);
+
+  // 食品カテゴリと倍率を復元
+  resetEditFoodCats();
+  ['edit-calories','edit-protein','edit-carb','edit-fiber','edit-potassium','edit-phosphorus'].forEach(id => {
+    const el = document.getElementById(id); if (el) delete el.dataset.manualEdit;
+  });
+  const cats = meal.food_categories || {};
+  const portions = cats._portions || {};
+  ['main','protein','sub','soup','drink'].forEach(group => {
+    const portionEl = document.getElementById('edit-gram-' + group);
+    if (portionEl) portionEl.value = portions[group] !== undefined ? portions[group] : 1.0;
+    const selected = cats[group] || [];
+    selected.forEach(name => {
+      const chip = [...document.querySelectorAll(`[data-editcat="${group}"]`)].find(c => c.textContent.trim() === name);
+      if (chip) chip.classList.add(FOOD_CAT_CLASS[group]);
+    });
+  });
+  const preview = document.getElementById('edit-nutrition-preview');
+  if (preview) preview.classList.remove('visible');
+  // 既存カテゴリがあればプレビュー表示
+  const hasAny = ['main','protein','sub','soup','drink'].some(g => (cats[g]||[]).length > 0);
+  if (hasAny && preview) { preview.classList.add('visible'); }
+
   document.getElementById('editModal').classList.add('open');
 }
 
@@ -2208,15 +2540,17 @@ function saveEditMeal() {
   const id = document.getElementById('edit-id').value;
   const dtVal = document.getElementById('edit-datetime').value;
   const updated = {
-    dish_name:   document.getElementById('edit-name').value.trim()||'食事',
-    meal_type:   document.getElementById('edit-meal-type').value,
-    calories:    parseFloat(document.getElementById('edit-calories').value)||0,
-    protein:     parseFloat(document.getElementById('edit-protein').value)||0,
-    carb:        parseFloat(document.getElementById('edit-carb').value)||0,
-    fiber:       parseFloat(document.getElementById('edit-fiber').value)||0,
-    potassium:   parseFloat(document.getElementById('edit-potassium').value)||0,
-    phosphorus:  parseFloat(document.getElementById('edit-phosphorus').value)||0,
-    recorded_at: dtVal ? new Date(dtVal).toISOString() : (window._editingMeal?.recorded_at||new Date().toISOString())
+    dish_name:       document.getElementById('edit-name').value.trim()||'食事',
+    meal_type:       document.getElementById('edit-meal-type').value,
+    calories:        parseFloat(document.getElementById('edit-calories').value)||0,
+    protein:         parseFloat(document.getElementById('edit-protein').value)||0,
+    carb:            parseFloat(document.getElementById('edit-carb').value)||0,
+    fiber:           parseFloat(document.getElementById('edit-fiber').value)||0,
+    potassium:       parseFloat(document.getElementById('edit-potassium').value)||0,
+    phosphorus:      parseFloat(document.getElementById('edit-phosphorus').value)||0,
+    salt:            parseFloat(document.getElementById('edit-salt').value)||0,
+    food_categories: getEditSelectedFoodCats(),
+    recorded_at:     dtVal ? new Date(dtVal).toISOString() : (window._editingMeal?.recorded_at||new Date().toISOString())
   };
   if (localUpdateMeal(id, updated)) { showToast('✅ 記録を更新しました'); closeModal('editModal'); renderHistory(); updateHomeSummary(); }
   else showToast('⚠ 更新できませんでした');
