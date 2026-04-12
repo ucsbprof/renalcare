@@ -9,6 +9,7 @@
 <title>RenalCare — 腎臓病食事管理</title>
 <link rel="manifest" href="manifest.json">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Kaisei+Opti:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <style>
 :root {
   --bg: #0d1420;
@@ -181,6 +182,7 @@ html, body {
 
 .ai-result { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--r); padding: 16px; margin-bottom: 12px; animation: slideUp 0.4s ease; }
 @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes spin { to { transform: rotate(360deg); } }
 
 .food-cat-chip { background: var(--surface2); border: 1px solid var(--border2); border-radius: 20px; padding: 6px 13px; font-size: 13px; cursor: pointer; color: var(--text2); transition: all 0.15s; user-select: none; -webkit-user-select: none; }
 .food-cat-chip:active { transform: scale(0.95); }
@@ -1377,8 +1379,41 @@ body.is-premium .premium-banner { display: none !important; }
     <div class="modal-title" id="addMedModal-title">💊 薬を追加</div>
     <input type="hidden" id="med-edit-id" value="" />
 
+    <!-- ===== OCR 読み取りエリア（追加モードのみ） ===== -->
+    <div id="med-ocr-row" style="margin-top:12px;">
+      <!-- カメラ起動用 hidden input -->
+      <input type="file" id="ocr-camera-input" accept="image/*" capture="environment"
+        style="display:none;" onchange="handleOcrImage(event)" />
+      <button class="btn btn-outline btn-full" onclick="document.getElementById('ocr-camera-input').click()"
+        style="border-color:var(--purple);color:var(--purple);gap:8px;">
+        <span style="font-size:16px;">📸</span> お薬手帳を撮影して自動入力
+      </button>
+      <!-- OCR 解析中インジケーター -->
+      <div id="ocr-progress" style="display:none;margin-top:10px;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:12px 14px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+          <div style="width:18px;height:18px;border:2px solid var(--purple);border-top-color:transparent;border-radius:50%;animation:spin 0.8s linear infinite;flex-shrink:0;"></div>
+          <div style="font-size:13px;font-weight:600;color:var(--purple);">文字認識中...</div>
+        </div>
+        <div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden;">
+          <div id="ocr-progress-bar" style="height:100%;width:0%;background:var(--purple);border-radius:2px;transition:width 0.3s;"></div>
+        </div>
+        <div id="ocr-progress-label" style="font-size:11px;color:var(--text3);margin-top:4px;text-align:right;">0%</div>
+      </div>
+      <!-- OCR 結果パネル -->
+      <div id="ocr-result-panel" style="display:none;margin-top:10px;background:var(--surface2);border:1px solid rgba(192,132,252,0.3);border-radius:12px;padding:14px;">
+        <div style="font-size:12px;font-weight:600;color:var(--purple);margin-bottom:10px;">📋 認識結果 — 追加する薬を選択してください</div>
+        <div id="ocr-result-list"></div>
+        <div style="display:flex;gap:8px;margin-top:10px;">
+          <button class="btn btn-primary btn-sm" style="flex:1;background:var(--purple);border-color:var(--purple);" onclick="applyOcrResults()">✓ 選択した薬を追加</button>
+          <button class="btn btn-ghost btn-sm" style="flex:1;" onclick="dismissOcrPanel()">閉じる</button>
+        </div>
+      </div>
+    </div>
+    <!-- separator -->
+    <div style="height:1px;background:var(--border);margin:14px 0;" id="med-ocr-divider"></div>
+
     <!-- ===== 追加モード：医療機関 ===== -->
-    <div id="med-add-hosp-row" style="margin-top:12px;">
+    <div id="med-add-hosp-row" style="margin-top:0;">
       <label class="form-label">🏥 医療機関（共通）</label>
       <select class="form-input" id="med-hospital-select">
         <option value="">-- 選択してください --</option>
@@ -5168,6 +5203,235 @@ function loadMedicines() {
 }
 
 // 重複薬データをクリーンアップして保存
+
+// ============================================================
+// ===== お薬手帳 OCR 機能 =====
+// ============================================================
+
+// 認識結果の候補リスト（選択式で複数薬に対応）
+let _ocrCandidates = [];
+
+// ── 画像受け取り → Tesseract で OCR ──
+async function handleOcrImage(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+
+  // input をリセット（同じファイルを再選択できるよう）
+  event.target.value = '';
+
+  // 進捗表示
+  document.getElementById('ocr-progress').style.display = '';
+  document.getElementById('ocr-result-panel').style.display = 'none';
+  document.getElementById('ocr-progress-bar').style.width = '0%';
+  document.getElementById('ocr-progress-label').textContent = '読み込み中...';
+
+  // FileReader で画像を読み込む（Base64 は OCR 処理後すぐに解放）
+  let imageDataUrl = null;
+  try {
+    imageDataUrl = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload  = e => resolve(e.target.result);
+      reader.onerror = () => reject(new Error('画像読み込みエラー'));
+      reader.readAsDataURL(file);
+    });
+  } catch(e) {
+    document.getElementById('ocr-progress').style.display = 'none';
+    showToast('⚠ 画像の読み込みに失敗しました');
+    return;
+  }
+
+  try {
+    // Tesseract で日本語 + 英語 OCR
+    const result = await Tesseract.recognize(imageDataUrl, 'jpn+eng', {
+      logger: m => {
+        if (m.status === 'recognizing text') {
+          const pct = Math.round((m.progress || 0) * 100);
+          const bar   = document.getElementById('ocr-progress-bar');
+          const label = document.getElementById('ocr-progress-label');
+          if (bar)   bar.style.width   = pct + '%';
+          if (label) label.textContent = pct + '%';
+        }
+      }
+    });
+
+    // ── 画像データを即座に破棄（メモリから解放） ──
+    imageDataUrl = null;
+
+    const rawText = result?.data?.text || '';
+    // Tesseract result も解放
+    result.data = null;
+
+    if (!rawText.trim()) {
+      document.getElementById('ocr-progress').style.display = 'none';
+      showToast('⚠ 文字を認識できませんでした。明るい場所で再撮影してください');
+      return;
+    }
+
+    // テキストをフィルタリングして薬候補を抽出
+    _ocrCandidates = parseOcrText(rawText);
+
+    document.getElementById('ocr-progress').style.display = 'none';
+    renderOcrResults(_ocrCandidates);
+
+  } catch(e) {
+    // エラー時も画像データを確実に破棄
+    imageDataUrl = null;
+    document.getElementById('ocr-progress').style.display = 'none';
+    showToast('⚠ 文字認識に失敗しました: ' + (e.message || '不明なエラー'));
+    console.error('OCR error:', e);
+  }
+}
+
+// ── OCR テキストから薬情報をパース ──
+function parseOcrText(rawText) {
+  const lines = rawText.split(/[
+]+/).map(l => l.trim()).filter(l => l.length > 1);
+  const candidates = [];
+
+  // 薬名パターン（カタカナ2文字以上、英字+数字+単位、錠/カプセル/散/液/mg/mL等）
+  const drugNamePattern = /([ァ-ヶー]{2,}(?:錠|カプセル|散|細粒|顆粒|液|シロップ|注射|パッチ|テープ|クリーム|軟膏|点眼|点鼻)?(?:\d+(?:\.\d+)?(?:mg|μg|mL|g|単位)?)?)|([A-Za-z][A-Za-z\d\-]{2,}(?:\s*\d+(?:\.\d+)?(?:mg|μg|mL|g)?)?)/g;
+
+  // 用法パターン（1日◯回、毎食前後など）
+  const usagePattern = /(?:1日|一日)?(?:\d+)回|毎(?:食前|食後|食間|朝|昼|夕|夜|就寝前)|朝食(?:前|後)|昼食(?:前|後)|夕食(?:前|後)|就寝前|頓服|症状時/g;
+
+  // 用量パターン（1錠、2錠、0.5錠 等）
+  const dosePattern = /(?:\d+(?:\.\d+)?)\s*(?:錠|カプセル|包|mL|g|単位)/g;
+
+  let currentDrug = null;
+
+  lines.forEach(line => {
+    // 空白・記号のみの行はスキップ
+    if (/^[\s\-\=\|_　・。、]+$/.test(line)) return;
+
+    // 薬名を検出
+    const nameMatches = line.match(drugNamePattern) || [];
+    nameMatches.forEach(match => {
+      const cleaned = match.trim();
+      if (cleaned.length < 2) return;
+      // 日付・数字だけの文字列はスキップ
+      if (/^\d+[\/-]\d+/.test(cleaned)) return;
+
+      currentDrug = {
+        name: cleaned,
+        form: '',
+        usage: '',
+        dose: '',
+        frequency: 'daily',
+        rawLine: line,
+        selected: true,
+      };
+      candidates.push(currentDrug);
+    });
+
+    // 用法を直近の薬に付与
+    const usageMatches = line.match(usagePattern) || [];
+    if (usageMatches.length > 0 && currentDrug) {
+      currentDrug.usage = usageMatches.join(' / ');
+      // 頓服判定
+      if (/頓服|症状時/.test(currentDrug.usage)) {
+        currentDrug.frequency = 'prn';
+      }
+    }
+
+    // 用量を直近の薬に付与
+    const doseMatches = line.match(dosePattern) || [];
+    if (doseMatches.length > 0 && currentDrug) {
+      currentDrug.dose = doseMatches[0];
+    }
+  });
+
+  // 重複除去（同名は最初の1件のみ）
+  const seen = new Set();
+  return candidates.filter(c => {
+    const key = c.name.replace(/\s/g, '').toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+// ── 認識結果をパネルに描画 ──
+function renderOcrResults(candidates) {
+  const listEl = document.getElementById('ocr-result-list');
+  const panel  = document.getElementById('ocr-result-panel');
+  if (!listEl || !panel) return;
+
+  if (candidates.length === 0) {
+    listEl.innerHTML = '<div style="font-size:13px;color:var(--text3);text-align:center;padding:12px;">薬の名前が認識できませんでした。<br>手動で入力してください。</div>';
+    panel.style.display = '';
+    return;
+  }
+
+  listEl.innerHTML = candidates.map((c, i) => `
+    <div style="display:flex;align-items:flex-start;gap:10px;padding:10px;background:var(--surface);border-radius:10px;margin-bottom:6px;border:1.5px solid ${c.selected ? 'var(--purple)' : 'var(--border)'};cursor:pointer;transition:border-color 0.15s;"
+      onclick="toggleOcrCandidate(${i}, this)">
+      <div style="width:18px;height:18px;border-radius:4px;border:2px solid ${c.selected ? 'var(--purple)' : 'var(--border2)'};background:${c.selected ? 'var(--purple)' : 'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;font-size:12px;color:#fff;">
+        ${c.selected ? '✓' : ''}
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:14px;font-weight:600;color:var(--text);">${c.name}</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:3px;">
+          ${c.dose    ? `<span style="font-size:11px;background:var(--surface2);padding:1px 7px;border-radius:8px;color:var(--text2);">💊 ${c.dose}</span>` : ''}
+          ${c.usage   ? `<span style="font-size:11px;background:var(--surface2);padding:1px 7px;border-radius:8px;color:var(--text2);">🕐 ${c.usage}</span>` : ''}
+          ${c.frequency === 'prn' ? '<span style="font-size:11px;background:var(--amber-dim);padding:1px 7px;border-radius:8px;color:var(--amber);">頓服</span>' : ''}
+        </div>
+        <div style="font-size:10px;color:var(--text3);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">認識: ${c.rawLine}</div>
+      </div>
+    </div>`).join('');
+
+  panel.style.display = '';
+}
+
+// ── 候補のチェック切り替え ──
+function toggleOcrCandidate(idx, el) {
+  if (!_ocrCandidates[idx]) return;
+  _ocrCandidates[idx].selected = !_ocrCandidates[idx].selected;
+  // ボーダー・チェックマーク更新
+  el.style.borderColor = _ocrCandidates[idx].selected ? 'var(--purple)' : 'var(--border)';
+  const chk = el.querySelector('div');
+  if (chk) {
+    chk.style.background   = _ocrCandidates[idx].selected ? 'var(--purple)' : 'transparent';
+    chk.style.borderColor  = _ocrCandidates[idx].selected ? 'var(--purple)' : 'var(--border2)';
+    chk.textContent        = _ocrCandidates[idx].selected ? '✓' : '';
+  }
+}
+
+// ── 選択された薬を入力欄に追加 ──
+function applyOcrResults() {
+  const selected = _ocrCandidates.filter(c => c.selected);
+  if (selected.length === 0) {
+    showToast('薬が選択されていません');
+    return;
+  }
+
+  // 既存のカードを一度すべて折りたたんで新しいカードを追加
+  selected.forEach(drug => {
+    addMedCard({
+      name:      drug.name,
+      form:      drug.dose || '',
+      note:      drug.usage || '',
+      frequency: drug.frequency || 'daily',
+      prn:       drug.frequency === 'prn',
+    });
+  });
+
+  dismissOcrPanel();
+  showToast(`✅ ${selected.length}種類の薬を追加しました`);
+
+  // 薬カードリストまでスクロール
+  const list = document.getElementById('med-cards-list');
+  if (list) setTimeout(() => list.scrollIntoView({ behavior:'smooth', block:'nearest' }), 100);
+}
+
+// ── OCR パネルを閉じる ──
+function dismissOcrPanel() {
+  const panel    = document.getElementById('ocr-result-panel');
+  const progress = document.getElementById('ocr-progress');
+  if (panel)    panel.style.display    = 'none';
+  if (progress) progress.style.display = 'none';
+  _ocrCandidates = [];
+}
+
 function cleanupDuplicateMeds() {
   try {
     const all = JSON.parse(localStorage.getItem(MED_KEY)||'[]');
@@ -5524,6 +5788,12 @@ function showAddMedModal(presetHospitalId) {
   document.getElementById('med-add-save-row').style.display = 'flex';
   document.getElementById('med-edit-form').style.display   = 'none';
   document.getElementById('med-cards-list').innerHTML = '';
+  // OCR パネルをリセット
+  const ocrRow = document.getElementById('med-ocr-row');
+  const ocrDiv = document.getElementById('med-ocr-divider');
+  if (ocrRow) ocrRow.style.display = '';
+  if (ocrDiv) ocrDiv.style.display = '';
+  dismissOcrPanel();
   refreshMedHospitalSelect(presetHospitalId || '');
   // 1枚目のカードを追加
   addMedCard();
@@ -5619,6 +5889,11 @@ function showEditMedModal(id) {
   document.getElementById('med-add-more-btn').style.display = 'none';
   document.getElementById('med-add-save-row').style.display = 'none';
   document.getElementById('med-edit-form').style.display    = '';
+  // 編集モードでは OCR エリアを非表示
+  const ocrRow2 = document.getElementById('med-ocr-row');
+  const ocrDiv2 = document.getElementById('med-ocr-divider');
+  if (ocrRow2) ocrRow2.style.display = 'none';
+  if (ocrDiv2) ocrDiv2.style.display = 'none';
   document.getElementById('med-edit-delete-btn').style.display = 'block';
   document.getElementById('med-cards-list').innerHTML = '';
 
