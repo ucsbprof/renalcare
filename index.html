@@ -247,6 +247,41 @@ html, body {
 .med-time-block { display:none; }
 .med-time-block.has-meds { display:block; }
 
+/* ===== 今日の服薬チェック（ダッシュボード） ===== */
+.medcheck-slot { margin-bottom: 12px; }
+.medcheck-slot-header { display:flex; align-items:center; gap:8px; padding:6px 4px 5px; border-bottom:1px solid var(--border); margin-bottom:6px; }
+.medcheck-slot-icon { font-size:15px; }
+.medcheck-slot-label { font-size:12px; font-weight:700; color:var(--text2); flex:1; letter-spacing:.5px; }
+.medcheck-slot-badge { font-size:10px; padding:2px 7px; border-radius:10px; background:var(--surface2); color:var(--text3); border:1px solid var(--border2); }
+.medcheck-slot-badge.all-done { background:var(--green-dim); color:var(--green); border-color:var(--green); }
+.medcheck-row { display:flex; align-items:center; gap:10px; padding:9px 10px; background:var(--surface); border:1.5px solid var(--border); border-radius:var(--rs); margin-bottom:6px; transition:all .2s; }
+.medcheck-row.taken { background:rgba(74,222,128,0.06); border-color:rgba(74,222,128,0.3); opacity:.7; }
+.medcheck-row.skipped { background:rgba(248,113,113,0.05); border-color:rgba(248,113,113,0.25); opacity:.65; }
+.medcheck-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+.medcheck-info { flex:1; min-width:0; }
+.medcheck-name { font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.medcheck-row.taken .medcheck-name { text-decoration:line-through; color:var(--text3); }
+.medcheck-row.skipped .medcheck-name { text-decoration:line-through; color:var(--text3); }
+.medcheck-dose { font-size:11px; color:var(--text3); margin-top:1px; }
+.medcheck-time { font-size:10px; color:var(--green); margin-top:1px; }
+.medcheck-row.skipped .medcheck-time { color:var(--red); }
+.medcheck-btn-group { display:flex; gap:5px; flex-shrink:0; }
+.medcheck-btn { display:flex; flex-direction:column; align-items:center; gap:1px; padding:5px 8px; border-radius:7px; border:1.5px solid var(--border2); background:var(--surface2); cursor:pointer; transition:all .2s; min-width:44px; }
+.medcheck-btn:active { transform:scale(.93); }
+.medcheck-btn.btn-take { }
+.medcheck-btn.btn-take.active { background:var(--green-dim); border-color:var(--green); }
+.medcheck-btn.btn-skip { }
+.medcheck-btn.btn-skip.active { background:var(--red-dim); border-color:var(--red); }
+.medcheck-btn-icon { font-size:16px; line-height:1; }
+.medcheck-btn-label { font-size:9px; font-weight:600; color:var(--text3); }
+.medcheck-btn.btn-take.active .medcheck-btn-label { color:var(--green); }
+.medcheck-btn.btn-skip.active .medcheck-btn-label { color:var(--red); }
+.medcheck-progress-wrap { height:6px; background:var(--surface2); border-radius:3px; margin:10px 0 6px; overflow:hidden; }
+.medcheck-progress-fill { height:100%; border-radius:3px; background:var(--green); transition:width .5s cubic-bezier(.4,0,.2,1); }
+/* スケジュール編集モーダル */
+.sch-slot-row { display:flex; align-items:center; gap:8px; padding:8px 0; border-bottom:1px solid var(--border); }
+.sch-slot-row:last-child { border-bottom:none; }
+
 .nutrition-preview { background: var(--surface2); border-radius: var(--rs); padding: 10px 12px; margin-top: 10px; display: none; }
 .nutrition-preview.visible { display: block; }
 .nutrition-preview-title { font-size: 11px; color: var(--text3); margin-bottom: 6px; font-weight: 600; letter-spacing: 0.04em; }
@@ -642,7 +677,25 @@ body.is-premium .premium-banner { display: none !important; }
         <div style="font-size:10px;color:var(--text3);margin-top:8px;line-height:1.6;">※ Nathan式（国際標準）による概算値です。実際の血液検査とは差異があります。医師の検査結果と必ず照合してください。</div>
       </div>
 
-      <div class="card">
+      <!-- 今日の服薬状況カード -->
+      <div class="card" id="home-medcheck-card" style="border-color:rgba(79,195,247,0.25);display:none;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+          <div class="card-title" style="margin-bottom:0;">💊 今日の服薬状況</div>
+          <div style="display:flex;gap:6px;">
+            <button class="btn btn-ghost btn-sm" onclick="showMedScheduleModal()" style="font-size:11px;padding:4px 8px;">⚙️ 編集</button>
+            <div id="home-medcheck-summary" style="font-size:12px;color:var(--text2);padding:4px 8px;background:var(--surface2);border-radius:8px;"></div>
+          </div>
+        </div>
+        <div class="medcheck-progress-wrap">
+          <div class="medcheck-progress-fill" id="home-medcheck-prog" style="width:0%;"></div>
+        </div>
+        <div id="home-medcheck-list"></div>
+        <div id="home-medcheck-empty" style="text-align:center;padding:16px;color:var(--text3);font-size:13px;display:none;">
+          本日の服薬予定はありません<br><span style="font-size:11px;">「薬管理」タブから薬を登録してください</span>
+        </div>
+      </div>
+
+            <div class="card">
         <div class="card-title">今日の食事</div>
         <div id="home-meals">
           <div class="meal-item"><div class="meal-emoji">🍚</div><div class="meal-info"><div class="meal-name">朝食 — お粥・卵焼き・味噌汁</div><div class="meal-time">07:32</div><div class="meal-tags"><div class="tag tag-green">低タンパク</div></div></div><div class="meal-kcal">380<div class="meal-kcal-unit">kcal</div></div></div>
@@ -2030,7 +2083,9 @@ const state = { userType:'t2d', userName:'', age:'', gender:'male', height:'', w
 const WATER_KEY   = 'renalcare_water';
 const HEALTH_KEY  = 'renalcare_health';
 const MED_KEY     = 'renalcare_medicines';
-const MED_LOG_KEY = 'renalcare_med_log';
+const MED_LOG_KEY     = 'renalcare_med_log';
+const MEDCHECK_KEY    = 'renalcare_medcheck_log';   // {date: "YYYY-MM-DD", entries: [{medId, slotKey, status:"taken"|"skipped", time}]}
+const MED_SCHEDULE_KEY= 'renalcare_med_schedule';   // {medId: [slotKey, ...]} overrides
 
 // ===== INIT =====
 document.addEventListener('DOMContentLoaded', () => {
@@ -2138,6 +2193,7 @@ document.addEventListener('DOMContentLoaded', () => {
     navTo('home');
     initRecordDate();
     renderLinkedClinicsSettings();
+    renderHomeMedcheck();
     // プレミアム状態を適用
     checkPremiumExpiry();
     applyPremiumUI();
@@ -5285,7 +5341,8 @@ async function handleOcrImage(event) {
 // ── OCR テキストから薬情報をパース ──
 function parseOcrText(rawText) {
   const lines = rawText.split(/[
-]+/).map(l => l.trim()).filter(l => l.length > 1);
+
+]+/).map(l => l.trim()).filter(l => l.length > 1);
   const candidates = [];
 
   // 薬名パターン（カタカナ2文字以上、英字+数字+単位、錠/カプセル/散/液/mg/mL等）
@@ -5480,6 +5537,7 @@ function setMedStatus(medId, dateStr, timing, status) {
   }
   saveMedLog(log);
   renderMedicineLog();
+  renderHomeMedcheck();
 }
 
 function getMedStatus(medId, dateStr, timing) {
@@ -5872,6 +5930,7 @@ function saveMedicines_bulk() {
   showToast(msg);
   renderMedicineLog();
   renderHospitalsPanel();
+  renderHomeMedcheck();
 }
 
 // ============================================================
@@ -6021,6 +6080,7 @@ function saveMedicine() {
   showToast('✅ 更新しました');
   renderMedicineLog();
   renderHospitalsPanel();
+  renderHomeMedcheck();
 }
 
 function deleteMedicine() {
@@ -6033,6 +6093,7 @@ function deleteMedicine() {
   showToast('🗑 削除しました');
   renderMedicineLog();
   renderHospitalsPanel();
+  renderHomeMedcheck();
 }
 
 // ----- UI: ページレンダリング -----
@@ -6421,6 +6482,8 @@ const ALL_STORAGE_KEYS = [
   'renalcare_med_log',
   'renalcare_hospitals',
   'renalcare_prn_log',
+  'renalcare_medcheck_log',
+  'renalcare_med_schedule',
   'renalcare_clinic_links',
   'renalcare_premium',
 ];
@@ -6972,6 +7035,280 @@ function checkPremiumExpiry() {
   }
 }
 
+// ============================================================
+// ===== 服薬チェック機能 =====
+// ============================================================
+
+// ----- ストレージ -----
+function loadMedcheckLog() {
+  try { return JSON.parse(localStorage.getItem(MEDCHECK_KEY) || '[]'); } catch(e) { return []; }
+}
+function saveMedcheckLog(log) {
+  try { localStorage.setItem(MEDCHECK_KEY, JSON.stringify(log)); } catch(e) {}
+}
+function loadMedScheduleOverrides() {
+  try { return JSON.parse(localStorage.getItem(MED_SCHEDULE_KEY) || '{}'); } catch(e) { return {}; }
+}
+function saveMedScheduleOverrides(obj) {
+  try { localStorage.setItem(MED_SCHEDULE_KEY, JSON.stringify(obj)); } catch(e) {}
+}
+
+// ----- 今日の日付キー -----
+function todayKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+// ----- スロット定義 -----
+const MEDCHECK_SLOTS = [
+  { key: 'before_breakfast', label: '朝食前',  icon: '🌅' },
+  { key: 'after_breakfast',  label: '朝食後',  icon: '🌅' },
+  { key: 'before_lunch',     label: '昼食前',  icon: '☀️' },
+  { key: 'after_lunch',      label: '昼食後',  icon: '☀️' },
+  { key: 'before_dinner',    label: '夕食前',  icon: '🌙' },
+  { key: 'after_dinner',     label: '夕食後',  icon: '🌙' },
+  { key: 'bedtime',          label: '就寝前',  icon: '🌛' },
+];
+
+// ----- 薬のスロットを解析して返す -----
+function getMedSlots(med) {
+  // スケジュール上書きがあればそちらを使用
+  const overrides = loadMedScheduleOverrides();
+  if (overrides[med.id] && overrides[med.id].length > 0) return overrides[med.id];
+  // 薬に紐付いたタイミングがあれば使用
+  if (med.timings && med.timings.length > 0) return med.timings;
+  // 用法テキストから自動判定
+  const usage = (med.usage || '').toLowerCase();
+  if (/朝食前|before_breakfast/.test(usage)) return ['before_breakfast'];
+  if (/朝食後|after_breakfast/.test(usage)) return ['after_breakfast'];
+  if (/昼食前/.test(usage)) return ['before_lunch'];
+  if (/昼食後/.test(usage)) return ['after_lunch'];
+  if (/夕食前/.test(usage)) return ['before_dinner'];
+  if (/夕食後|after_dinner/.test(usage)) return ['after_dinner'];
+  if (/就寝前|bedtime/.test(usage)) return ['bedtime'];
+  if (/1日3回|三回/.test(usage)) return ['after_breakfast', 'after_lunch', 'after_dinner'];
+  if (/1日2回|二回/.test(usage)) return ['after_breakfast', 'after_dinner'];
+  // デフォルト：朝食後
+  return ['after_breakfast'];
+}
+
+// ----- 今日の服薬スケジュールを生成 -----
+function buildTodaySchedule() {
+  const meds = loadMedicines().filter(m => {
+    if (m.prn || m.frequency === 'prn') return false;
+    // 週1の場合：今日の曜日が一致するか
+    if (m.frequency === 'weekly') {
+      const dow = new Date().getDay(); // 0=Sun
+      const dowMon = dow === 0 ? 6 : dow - 1; // 0=Mon
+      return (m.weekdays || []).includes(dowMon);
+    }
+    // 月1の場合：今日の日付が一致するか
+    if (m.frequency === 'monthly') {
+      return m.monthDay === new Date().getDate();
+    }
+    return true;
+  });
+
+  const schedule = {}; // slotKey → [{med, dose}]
+  meds.forEach(med => {
+    const slots = getMedSlots(med);
+    slots.forEach(slotKey => {
+      if (!schedule[slotKey]) schedule[slotKey] = [];
+      const dose = (med.timingDoses && med.timingDoses[slotKey]) || med.doseAmount || '1錠';
+      schedule[slotKey].push({ med, dose });
+    });
+  });
+  return schedule;
+}
+
+// ----- チェックログから今日のエントリを取得 -----
+function getTodayMedcheckEntries() {
+  const key = todayKey();
+  const log = loadMedcheckLog();
+  const dayLog = log.find(d => d.date === key);
+  return dayLog ? dayLog.entries : [];
+}
+
+// ----- チェック状態を保存 -----
+function setMedcheckStatus(medId, slotKey, status) {
+  const key = todayKey();
+  const log = loadMedcheckLog();
+  let dayLog = log.find(d => d.date === key);
+  if (!dayLog) { dayLog = { date: key, entries: [] }; log.push(dayLog); }
+
+  const existing = dayLog.entries.find(e => e.medId === medId && e.slotKey === slotKey);
+  const timeStr = new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+
+  if (existing) {
+    if (existing.status === status) {
+      // 同じボタンを再押しでキャンセル
+      existing.status = 'pending';
+      existing.time = null;
+    } else {
+      existing.status = status;
+      existing.time = timeStr;
+    }
+  } else {
+    dayLog.entries.push({ medId, slotKey, status, time: timeStr });
+  }
+
+  saveMedcheckLog(log);
+  renderHomeMedcheck();
+}
+
+// ----- ダッシュボードに服薬チェックを描画 -----
+function renderHomeMedcheck() {
+  const card    = document.getElementById('home-medcheck-card');
+  const listEl  = document.getElementById('home-medcheck-list');
+  const emptyEl = document.getElementById('home-medcheck-empty');
+  const progEl  = document.getElementById('home-medcheck-prog');
+  const sumEl   = document.getElementById('home-medcheck-summary');
+  if (!card || !listEl) return;
+
+  const schedule = buildTodaySchedule();
+  const entries  = getTodayMedcheckEntries();
+  const totalSlotMeds = Object.values(schedule).reduce((s, arr) => s + arr.length, 0);
+
+  if (totalSlotMeds === 0) {
+    card.style.display = '';
+    listEl.innerHTML = '';
+    if (emptyEl) emptyEl.style.display = 'block';
+    if (progEl) progEl.style.width = '0%';
+    if (sumEl) sumEl.textContent = '';
+    return;
+  }
+
+  card.style.display = '';
+  if (emptyEl) emptyEl.style.display = 'none';
+
+  let takenCount = 0;
+  let totalCount = 0;
+  let html = '';
+
+  MEDCHECK_SLOTS.forEach(slot => {
+    const items = schedule[slot.key];
+    if (!items || items.length === 0) return;
+
+    const slotTaken  = items.filter(({med}) => {
+      const e = entries.find(e => e.medId === med.id && e.slotKey === slot.key);
+      return e && e.status === 'taken';
+    }).length;
+    const slotTotal  = items.length;
+    const allDone    = slotTaken === slotTotal;
+    totalCount += slotTotal;
+    takenCount += slotTaken;
+
+    html += `<div class="medcheck-slot">
+      <div class="medcheck-slot-header">
+        <span class="medcheck-slot-icon">${slot.icon}</span>
+        <span class="medcheck-slot-label">${slot.label}</span>
+        <span class="medcheck-slot-badge${allDone ? ' all-done' : ''}">${slotTaken}/${slotTotal}</span>
+      </div>
+      <div class="med-time-list">`;
+
+    items.forEach(({ med, dose }) => {
+      const entry  = entries.find(e => e.medId === med.id && e.slotKey === slot.key);
+      const status = entry ? entry.status : 'pending';
+      const timeStr = entry && entry.time ? entry.time : '';
+      const color  = med.color || '#4fc3f7';
+
+      html += `<div class="medcheck-row ${status}" id="mcrow-${med.id}-${slot.key}">
+        <div class="medcheck-dot" style="background:${color};"></div>
+        <div class="medcheck-info">
+          <div class="medcheck-name">${med.name}${med.form ? '<span style="font-size:10px;color:var(--text3);margin-left:4px;">' + med.form + '</span>' : ''}</div>
+          <div class="medcheck-dose">${dose}${med.howToTake === 'water' ? ' · 水で服用' : ''}</div>
+          ${timeStr ? `<div class="medcheck-time">${status === 'taken' ? '✓ ' : '✗ '}${timeStr}</div>` : ''}
+        </div>
+        <div class="medcheck-btn-group">
+          <div class="medcheck-btn btn-take${status === 'taken' ? ' active' : ''}" onclick="setMedcheckStatus('${med.id}','${slot.key}','taken')">
+            <span class="medcheck-btn-icon">✅</span>
+            <span class="medcheck-btn-label">飲んだ</span>
+          </div>
+          <div class="medcheck-btn btn-skip${status === 'skipped' ? ' active' : ''}" onclick="setMedcheckStatus('${med.id}','${slot.key}','skipped')">
+            <span class="medcheck-btn-icon">⏭</span>
+            <span class="medcheck-btn-label">スキップ</span>
+          </div>
+        </div>
+      </div>`;
+    });
+
+    html += `</div></div>`;
+  });
+
+  listEl.innerHTML = html;
+
+  // プログレスバー
+  const pct = totalCount > 0 ? Math.round((takenCount / totalCount) * 100) : 0;
+  if (progEl) progEl.style.width = pct + '%';
+  if (sumEl) {
+    if (pct === 100) {
+      sumEl.textContent = '🎉 すべて完了！';
+      sumEl.style.color = 'var(--green)';
+    } else {
+      sumEl.textContent = `${takenCount}/${totalCount} 完了`;
+      sumEl.style.color = 'var(--text2)';
+    }
+  }
+}
+
+// ----- スケジュール編集モーダル -----
+function showMedScheduleModal() {
+  const meds      = loadMedicines().filter(m => !m.prn && m.frequency !== 'prn');
+  const overrides = loadMedScheduleOverrides();
+  const listEl    = document.getElementById('med-schedule-list');
+  if (!listEl) return;
+
+  if (meds.length === 0) {
+    listEl.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text3);">登録された薬がありません</div>';
+  } else {
+    listEl.innerHTML = meds.map(med => {
+      const currentSlots = getMedSlots(med);
+      return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:12px;margin-bottom:10px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+          <div style="width:10px;height:10px;border-radius:50%;background:${med.color||'#4fc3f7'};flex-shrink:0;"></div>
+          <div style="font-size:14px;font-weight:600;">${med.name}</div>
+          ${med.form ? `<div style="font-size:11px;color:var(--text3);">${med.form}</div>` : ''}
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:8px;">服用タイミングを選択（複数可）</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;" id="sch-chips-${med.id}">
+          ${MEDCHECK_SLOTS.map(slot => `
+            <div class="med-timing-chip${currentSlots.includes(slot.key) ? ' selected' : ''}"
+              data-slot="${slot.key}" data-medid="${med.id}"
+              onclick="toggleSchChip(this)">
+              ${slot.icon} ${slot.label}
+            </div>`).join('')}
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  document.getElementById('medScheduleModal').classList.add('open');
+}
+
+function toggleSchChip(el) {
+  el.classList.toggle('selected');
+}
+
+function saveMedScheduleEdits() {
+  const meds      = loadMedicines().filter(m => !m.prn && m.frequency !== 'prn');
+  const overrides = loadMedScheduleOverrides();
+
+  meds.forEach(med => {
+    const chips = document.querySelectorAll(`#sch-chips-${med.id} .med-timing-chip.selected`);
+    const slots = [...chips].map(c => c.dataset.slot).filter(Boolean);
+    if (slots.length > 0) {
+      overrides[med.id] = slots;
+    } else {
+      delete overrides[med.id];
+    }
+  });
+
+  saveMedScheduleOverrides(overrides);
+  showToast('✅ スケジュールを保存しました');
+  renderHomeMedcheck();
+}
+
+
 function exportAllData() {
   try {
     const data = { version: 1, exportedAt: new Date().toISOString(), store: {} };
@@ -7022,6 +7359,22 @@ function importAllData(event) {
   // input をリセットして同じファイルを再選択できるように
   event.target.value = '';
 }
+<!-- ===== 服薬スケジュール編集モーダル ===== -->
+<div class="modal-bg" id="medScheduleModal" onclick="closeModal('medScheduleModal')">
+  <div class="modal" onclick="event.stopPropagation()" style="max-height:90vh;overflow-y:auto;">
+    <div class="modal-handle"></div>
+    <div class="modal-title">⚙️ 服薬スケジュール編集</div>
+    <div style="font-size:12px;color:var(--text2);margin:6px 0 14px;line-height:1.6;">各薬のタイミングを変更・追加できます。変更はすべての未来の日付に適用されます。</div>
+    <div id="med-schedule-list"></div>
+    <div style="margin-top:6px;padding-top:12px;border-top:1px solid var(--border);">
+      <div style="font-size:11px;color:var(--text3);margin-bottom:8px;">スロットに紐付いていない薬はデフォルトで「朝食後」に表示されます</div>
+    </div>
+    <button class="btn btn-primary btn-full" style="margin-top:10px;" onclick="saveMedScheduleEdits();closeModal('medScheduleModal')">✓ 変更を保存</button>
+    <button class="btn btn-ghost btn-full" style="margin-top:8px;" onclick="closeModal('medScheduleModal')">キャンセル</button>
+  </div>
+</div>
+
+
 </script>
 </body>
 </html>
