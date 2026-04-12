@@ -792,7 +792,7 @@ html, body {
           </div>
         </div>
         <div class="form-row"><label class="form-label">料理名・メモ</label><input class="form-input" type="text" id="record-name" placeholder="例：鮭定食、豆腐ハンバーグ" /></div>
-        <button class="btn btn-outline btn-full" onclick="showFoodSearchModal()" style="margin-bottom:8px;">🔍 献立・食品から栄養成分を入力</button>
+        <button class="btn btn-outline btn-full" onclick="showFoodSearchModalForRecord()" style="margin-bottom:8px;">🔍 献立・食品から栄養成分を入力</button>
         <div style="margin:14px 0 4px;">
           <div class="food-cat-section">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;">
@@ -1286,6 +1286,7 @@ html, body {
       <div class="settings-section">
         <div class="settings-title">連携</div>
         <div class="setting-row"><div class="setting-icon">🏥</div><div class="setting-text"><div class="setting-name">医療機関と連携する</div><div class="setting-desc">主治医がデータを確認できます</div></div><div class="setting-arrow">›</div></div>
+        <div class="setting-row" onclick="cleanupDuplicateMeds()" style="cursor:pointer;"><div class="setting-icon">🔧</div><div class="setting-text"><div class="setting-name">薬の重複データを修復</div><div class="setting-desc">同じ薬が重複して表示される場合はこちら</div></div><div class="setting-arrow">›</div></div>
         <div class="setting-row" onclick="exportAllData()" style="cursor:pointer;"><div class="setting-icon">📤</div><div class="setting-text"><div class="setting-name">データをエクスポート（JSON）</div><div class="setting-desc">全データをファイルに保存・Safari↔PWA間の移行に使用</div></div><div class="setting-arrow">›</div></div>
         <div class="setting-row" onclick="document.getElementById('import-file-input').click()" style="cursor:pointer;"><div class="setting-icon">📥</div><div class="setting-text"><div class="setting-name">データをインポート（JSON）</div><div class="setting-desc">エクスポートしたファイルから復元</div></div><div class="setting-arrow">›</div></div>
         <input type="file" id="import-file-input" accept=".json" style="display:none;" onchange="importAllData(event)" />
@@ -1717,6 +1718,11 @@ html, body {
         <div style="font-size:10px;color:var(--text3);margin-top:6px;text-align:right;">※ 概算値。栄養成分欄に自動反映されます</div>
       </div>
 
+      <!-- 食品DB検索ボタン（編集モーダル用） -->
+      <button class="btn btn-outline btn-full" onclick="showFoodSearchModalForEdit()" style="margin:12px 0 6px;">🔍 食品を検索して栄養成分を追加</button>
+      <!-- 編集モーダル用 追加済み食品リスト -->
+      <div id="edit-fq-added-list" style="margin-bottom:6px;"></div>
+
       <!-- 栄養成分入力 -->
       <div style="font-size:11px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin:14px 0 8px;">📊 栄養成分（手動修正可）</div>
       <div class="form-grid">
@@ -1910,6 +1916,16 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   if (profile) {
+    // 起動時に薬の重複データをサイレントクリーンアップ
+    try {
+      const allMeds = JSON.parse(localStorage.getItem(MED_KEY)||'[]');
+      const seen = new Set();
+      const cleaned = allMeds.filter(m => { if (!m.id||seen.has(m.id)) return false; seen.add(m.id); return true; });
+      if (cleaned.length < allMeds.length) {
+        localStorage.setItem(MED_KEY, JSON.stringify(cleaned));
+        console.log(`[startup] 薬の重複データ ${allMeds.length - cleaned.length}件を自動削除しました`);
+      }
+    } catch(e) {}
     loadProfile(profile);
     updateHomeDate();
     renderMenuGrid();
@@ -2605,6 +2621,10 @@ function getEditSelectedFoodCats() {
 function openEditModal(meal) {
   if (typeof meal === 'string') { try { meal = JSON.parse(meal); } catch(e) { return; } }
   window._editingMeal = meal;
+  // 編集モーダルを開くたびにリセット
+  _editFqSelections = [];
+  _fqCallerMode = 'record'; // デフォルトに戻す
+  renderEditFqList();
   document.getElementById('edit-id').value        = meal.id||'';
   document.getElementById('edit-name').value      = meal.dish_name||'';
   document.getElementById('edit-meal-type').value = meal.meal_type||'breakfast';
@@ -2646,6 +2666,14 @@ function openEditModal(meal) {
 function saveEditMeal() {
   const id = document.getElementById('edit-id').value;
   const dtVal = document.getElementById('edit-datetime').value;
+  // 編集モーダル用の食品DBリストを food_categories に統合
+  const editCats = getEditSelectedFoodCats();
+  // 既存の food_db_selections と今回追加分をマージ
+  const existingFqSels = (window._editingMeal?.food_categories?.food_db_selections) || [];
+  editCats.food_db_selections = [
+    ...existingFqSels,
+    ..._editFqSelections.map(s => ({ name: s.name, cat: s.cat, grams: s.grams, multiplier: s.multiplier }))
+  ];
   const updated = {
     dish_name:       document.getElementById('edit-name').value.trim()||'食事',
     meal_type:       document.getElementById('edit-meal-type').value,
@@ -2656,10 +2684,16 @@ function saveEditMeal() {
     potassium:       parseFloat(document.getElementById('edit-potassium').value)||0,
     phosphorus:      parseFloat(document.getElementById('edit-phosphorus').value)||0,
     salt:            parseFloat(document.getElementById('edit-salt').value)||0,
-    food_categories: getEditSelectedFoodCats(),
+    food_categories: editCats,
     recorded_at:     dtVal ? new Date(dtVal).toISOString() : (window._editingMeal?.recorded_at||new Date().toISOString())
   };
-  if (localUpdateMeal(id, updated)) { showToast('✅ 記録を更新しました'); closeModal('editModal'); renderHistory(); updateHomeSummary(); }
+  if (localUpdateMeal(id, updated)) {
+    _editFqSelections = [];
+    showToast('✅ 記録を更新しました');
+    closeModal('editModal');
+    renderHistory();
+    updateHomeSummary();
+  }
   else showToast('⚠ 更新できませんでした');
 }
 
@@ -4684,27 +4718,102 @@ function fqUpdatePreview() {
   document.getElementById('fq-p').textContent       = round0(_fqFood.p || 0);
 }
 
+// 食品検索がどのモーダルから呼ばれたかを管理
+let _fqCallerMode = 'record'; // 'record' or 'edit'
+let _editFqSelections = []; // 編集モーダル用の食品DBリスト
+
+// 編集モーダル用：食品検索を開く
+function showFoodSearchModalForEdit() {
+  _fqCallerMode = 'edit';
+  showFoodSearchModal();
+}
+
+// 記録ページ用：元の呼び出し
+function showFoodSearchModalForRecord() {
+  _fqCallerMode = 'record';
+  showFoodSearchModal();
+}
+
+// 編集モーダルの追加済み食品リストを再描画
+function renderEditFqList() {
+  const el = document.getElementById('edit-fq-added-list');
+  if (!el) return;
+  if (_editFqSelections.length === 0) { el.innerHTML = ''; return; }
+  el.innerHTML = '<div style="font-size:11px;color:var(--text3);margin-bottom:4px;">追加した食品</div>' +
+    _editFqSelections.map((s, i) => `
+      <div style="display:flex;align-items:center;gap:8px;font-size:12px;padding:4px 8px;background:var(--surface2);border-radius:6px;margin-bottom:3px;">
+        <span style="flex:1;">${s.name}（${s.grams}g）</span>
+        <button onclick="removeEditFqItem(${i})" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:15px;padding:0 2px;">×</button>
+      </div>`).join('');
+}
+
+// 編集モーダルから食品を削除して栄養値を引き算
+function removeEditFqItem(idx) {
+  const sel = _editFqSelections[idx];
+  if (!sel) return;
+  const r = sel.multiplier || 1;
+  const round1 = v => Math.round(v * 10) / 10;
+  const sub = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.value = Math.max(0, Math.round(((parseFloat(el.value)||0) - val) * 10) / 10);
+  };
+  sub('edit-calories',  Math.round((sel.cal||0) * r));
+  sub('edit-protein',   round1((sel.protein||0) * r));
+  sub('edit-carb',      round1((sel.carb||0) * r));
+  sub('edit-fiber',     round1((sel.fiber||0) * r));
+  sub('edit-potassium', Math.round((sel.k||0) * r));
+  sub('edit-phosphorus',Math.round((sel.p||0) * r));
+  _editFqSelections.splice(idx, 1);
+  renderEditFqList();
+  showToast('削除しました');
+}
+
 function fqConfirm() {
   if (!_fqFood) return;
   const r = _fqMultiplier;
   const round1 = v => Math.round(v * r * 10) / 10;
   const round0 = v => Math.round(v * r);
-  const add = (id, val) => { const el = document.getElementById(id); if (el) el.value = Math.round(((parseFloat(el.value)||0) + val) * 10) / 10; };
-  add('record-calories',  round0(_fqFood.cal || 0));
-  add('record-protein',   round1(_fqFood.protein || 0));
-  add('record-carb',      round1(_fqFood.carb || 0));
-  add('record-fiber',     round1(_fqFood.fiber || 0));
-  add('record-potassium', round0(_fqFood.k || 0));
-  add('record-phosphorus',round0(_fqFood.p || 0));
-  // 食品DB選択を一時リストに蓄積（水分計算のため）
   const gramsNum = parseFloat(document.getElementById('fq-gram')?.value) || _fqBaseGram;
-  _fqSelections.push({ name: _fqFood.name, cat: _fqFood.cat || '', grams: gramsNum, multiplier: r });
-  const nameEl = document.getElementById('record-name');
-  const grams = gramsNum;
-  if (nameEl && !nameEl.value) nameEl.value = _fqFood.name;
-  recalcGlucose();
-  closeModal('foodQuantityModal');
-  showToast(`✓ ${_fqFood.name}（${grams}g）を追加しました`);
+
+  if (_fqCallerMode === 'edit') {
+    // 編集モーダルの edit-* フィールドに加算
+    const add = (id, val) => { const el = document.getElementById(id); if (el) { delete el.dataset.manualEdit; el.value = Math.round(((parseFloat(el.value)||0) + val) * 10) / 10; } };
+    add('edit-calories',  round0(_fqFood.cal || 0));
+    add('edit-protein',   round1(_fqFood.protein || 0));
+    add('edit-carb',      round1(_fqFood.carb || 0));
+    add('edit-fiber',     round1(_fqFood.fiber || 0));
+    add('edit-potassium', round0(_fqFood.k || 0));
+    add('edit-phosphorus',round0(_fqFood.p || 0));
+    // 料理名が空なら食品名を入れる
+    const nameEl = document.getElementById('edit-name');
+    if (nameEl && !nameEl.value) nameEl.value = _fqFood.name;
+    // 追加済みリストに積む（×ボタンで削除できるよう栄養値も保持）
+    _editFqSelections.push({
+      name: _fqFood.name, cat: _fqFood.cat || '', grams: gramsNum, multiplier: r,
+      cal: _fqFood.cal||0, protein: _fqFood.protein||0, carb: _fqFood.carb||0,
+      fiber: _fqFood.fiber||0, k: _fqFood.k||0, p: _fqFood.p||0
+    });
+    renderEditFqList();
+    // 編集モーダルのチップ由来プレビューも更新
+    updateEditNutritionPreview();
+    closeModal('foodQuantityModal');
+    showToast(`✓ ${_fqFood.name}（${gramsNum}g）を追加しました`);
+  } else {
+    // 記録ページの record-* フィールドに加算（従来通り）
+    const add = (id, val) => { const el = document.getElementById(id); if (el) el.value = Math.round(((parseFloat(el.value)||0) + val) * 10) / 10; };
+    add('record-calories',  round0(_fqFood.cal || 0));
+    add('record-protein',   round1(_fqFood.protein || 0));
+    add('record-carb',      round1(_fqFood.carb || 0));
+    add('record-fiber',     round1(_fqFood.fiber || 0));
+    add('record-potassium', round0(_fqFood.k || 0));
+    add('record-phosphorus',round0(_fqFood.p || 0));
+    _fqSelections.push({ name: _fqFood.name, cat: _fqFood.cat || '', grams: gramsNum, multiplier: r });
+    const nameEl = document.getElementById('record-name');
+    if (nameEl && !nameEl.value) nameEl.value = _fqFood.name;
+    recalcGlucose();
+    closeModal('foodQuantityModal');
+    showToast(`✓ ${_fqFood.name}（${gramsNum}g）を追加しました`);
+  }
 }
 
 // ===== 献立データ =====
@@ -4778,7 +4887,42 @@ function saveHospitals(list) {
 
 // ----- 薬マスター CRUD -----
 function loadMedicines() {
-  try { return JSON.parse(localStorage.getItem(MED_KEY)||'[]'); } catch(e) { return []; }
+  try {
+    const all = JSON.parse(localStorage.getItem(MED_KEY)||'[]');
+    // 重複IDを除去（同一IDは最初の1件のみ残す）
+    const seen = new Set();
+    return all.filter(m => {
+      if (!m.id || seen.has(m.id)) return false;
+      seen.add(m.id);
+      return true;
+    });
+  } catch(e) { return []; }
+}
+
+// 重複薬データをクリーンアップして保存
+function cleanupDuplicateMeds() {
+  try {
+    const all = JSON.parse(localStorage.getItem(MED_KEY)||'[]');
+    const seen = new Set();
+    const cleaned = all.filter(m => {
+      if (!m.id || seen.has(m.id)) return false;
+      seen.add(m.id);
+      return true;
+    });
+    const removed = all.length - cleaned.length;
+    saveMedicines(cleaned);
+    if (removed > 0) {
+      showToast(`✅ 重複データ ${removed}件を削除しました`);
+      renderMedicineLog();
+      renderHospitalsPanel();
+    } else {
+      showToast('重複データはありませんでした');
+    }
+    return removed;
+  } catch(e) {
+    showToast('⚠ クリーンアップ中にエラーが発生しました');
+    return 0;
+  }
 }
 function saveMedicines(list) {
   try { localStorage.setItem(MED_KEY, JSON.stringify(list)); } catch(e) {}
