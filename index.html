@@ -5340,9 +5340,7 @@ async function handleOcrImage(event) {
 
 // ── OCR テキストから薬情報をパース ──
 function parseOcrText(rawText) {
-  const lines = rawText.split(/[
-
-]+/).map(l => l.trim()).filter(l => l.length > 1);
+  const lines = rawText.split(/[\n\r]+/).map(l => l.trim()).filter(l => l.length > 1);
   const candidates = [];
 
   // 薬名パターン（カタカナ2文字以上、英字+数字+単位、錠/カプセル/散/液/mg/mL等）
