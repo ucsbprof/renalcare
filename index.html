@@ -796,7 +796,11 @@ body.is-premium .premium-banner { display: none !important; }
           </div>
         </div>
         <div class="form-row"><label class="form-label">料理名・メモ</label><input class="form-input" type="text" id="record-name" placeholder="例：鮭定食、豆腐ハンバーグ" /></div>
-        <button class="btn btn-outline btn-full" onclick="showFoodSearchModalForRecord()" style="margin-bottom:8px;">🔍 献立・食品から栄養成分を入力</button>
+        <button class="btn btn-outline btn-full" onclick="showFoodSearchModalForRecord()" style="margin-bottom:8px;">🔍 献立・食品から栄養成分を追加</button>
+
+        <!-- 食品DB追加済みリスト（検索で追加した食品が表示される） -->
+        <div id="record-fq-added-list" style="margin-bottom:6px;"></div>
+
         <div style="margin:14px 0 4px;">
           <div class="food-cat-section">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;">
@@ -942,19 +946,31 @@ body.is-premium .premium-banner { display: none !important; }
             <div class="nutrition-preview-item"><div class="nutrition-preview-val" style="color:var(--amber);" id="prev-k">—</div><div class="nutrition-preview-key">カリウムmg</div></div>
             <div class="nutrition-preview-item"><div class="nutrition-preview-val" style="color:var(--red);" id="prev-p">—</div><div class="nutrition-preview-key">リンmg</div></div>
           </div>
-          <div style="font-size:10px;color:var(--text3);margin-top:6px;text-align:right;">※ 概算値。栄養成分欄に自動入力されます</div>
+          <div style="font-size:10px;color:var(--text3);margin-top:6px;text-align:right;">※ チップ選択の概算値。食品DB追加分は下の栄養成分欄に反映されます</div>
         </div>
         <input type="hidden" id="record-meal-type" value="breakfast" />
       </div>
-      <div class="card">
-        <div class="card-title">栄養成分（わかる範囲で入力）</div>
+      <div class="card" id="record-nutrition-card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <div class="card-title" style="margin-bottom:0;">📊 栄養成分合計</div>
+          <div id="record-nutrition-hint" style="font-size:11px;color:var(--text3);">食品追加・チップ選択で自動入力</div>
+        </div>
+        <!-- 簡易サマリーバー（追加食品がある場合に表示） -->
+        <div id="record-nutr-summary" style="display:none;background:var(--surface2);border-radius:8px;padding:8px 12px;margin-bottom:10px;">
+          <div style="display:flex;justify-content:space-around;text-align:center;">
+            <div><div style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;color:var(--green);" id="sum-kcal">0</div><div style="font-size:10px;color:var(--text3);">kcal</div></div>
+            <div><div style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;color:var(--accent);" id="sum-protein">0</div><div style="font-size:10px;color:var(--text3);">P(g)</div></div>
+            <div><div style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;color:var(--amber);" id="sum-k">0</div><div style="font-size:10px;color:var(--text3);">K(mg)</div></div>
+            <div><div style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;color:var(--red);" id="sum-p">0</div><div style="font-size:10px;color:var(--text3);">リン(mg)</div></div>
+          </div>
+        </div>
         <div class="form-grid">
-          <div class="form-row"><label class="form-label">カロリー (kcal)</label><input class="form-input" type="number" id="record-calories" placeholder="0" oninput="this.dataset.manualEdit='1'" /></div>
-          <div class="form-row"><label class="form-label">タンパク質 (g)</label><input class="form-input" type="number" id="record-protein" placeholder="0" oninput="this.dataset.manualEdit='1'" /></div>
-          <div class="form-row"><label class="form-label">炭水化物 (g)</label><input class="form-input" type="number" id="record-carb" placeholder="0" oninput="this.dataset.manualEdit='1';recalcGlucose()" /></div>
-          <div class="form-row"><label class="form-label">食物繊維 (g)</label><input class="form-input" type="number" id="record-fiber" placeholder="0" oninput="this.dataset.manualEdit='1';recalcGlucose()" /></div>
-          <div class="form-row"><label class="form-label">カリウム (mg)</label><input class="form-input" type="number" id="record-potassium" placeholder="0" oninput="this.dataset.manualEdit='1'" /></div>
-          <div class="form-row"><label class="form-label">リン (mg)</label><input class="form-input" type="number" id="record-phosphorus" placeholder="0" oninput="this.dataset.manualEdit='1'" /></div>
+          <div class="form-row"><label class="form-label">カロリー (kcal)</label><input class="form-input" type="number" id="record-calories" placeholder="0" oninput="this.dataset.manualEdit='1';updateRecordNutrSummary()" /></div>
+          <div class="form-row"><label class="form-label">タンパク質 (g)</label><input class="form-input" type="number" id="record-protein" placeholder="0" oninput="this.dataset.manualEdit='1';updateRecordNutrSummary()" /></div>
+          <div class="form-row"><label class="form-label">炭水化物 (g)</label><input class="form-input" type="number" id="record-carb" placeholder="0" oninput="this.dataset.manualEdit='1';recalcGlucose();updateRecordNutrSummary()" /></div>
+          <div class="form-row"><label class="form-label">食物繊維 (g)</label><input class="form-input" type="number" id="record-fiber" placeholder="0" oninput="this.dataset.manualEdit='1';recalcGlucose();updateRecordNutrSummary()" /></div>
+          <div class="form-row"><label class="form-label">カリウム (mg)</label><input class="form-input" type="number" id="record-potassium" placeholder="0" oninput="this.dataset.manualEdit='1';updateRecordNutrSummary()" /></div>
+          <div class="form-row"><label class="form-label">リン (mg)</label><input class="form-input" type="number" id="record-phosphorus" placeholder="0" oninput="this.dataset.manualEdit='1';updateRecordNutrSummary()" /></div>
         </div>
         <!-- 推定最大血糖値 -->
         <div id="peak-glucose-row" style="display:none;margin-top:6px;padding:10px 12px;background:var(--amber-dim);border:1px solid rgba(252,211,77,0.3);border-radius:var(--rs);">
@@ -3018,6 +3034,7 @@ function updateNutritionPreview() {
   setIfNotManual('record-carb', carb); setIfNotManual('record-fiber', fiber);
   setIfNotManual('record-potassium', potassium); setIfNotManual('record-phosphorus', phosphorus);
   recalcGlucose();
+  updateRecordNutrSummary(); // サマリーバーも更新
 }
 
 function getSelectedFoodCats() {
@@ -3056,6 +3073,7 @@ function resetRecord() {
   if (glucoseEl) { const div = glucoseEl.querySelector('div:not(.alert-title)'); if (div) div.textContent='炭水化物と食物繊維を入力すると自動計算されます'; }
   resetFoodCats();
   _fqSelections = []; // 食品DB選択リストもリセット
+  renderRecordFqList(); // 追加済みリスト表示もクリア
   ['record-calories','record-protein','record-carb','record-fiber','record-potassium','record-phosphorus'].forEach(id => { const el=document.getElementById(id); if (el) delete el.dataset.manualEdit; });
   const preview = document.getElementById('nutrition-preview');
   if (preview) preview.classList.remove('visible');
@@ -4956,7 +4974,7 @@ function fqConfirm() {
     closeModal('foodQuantityModal');
     showToast(`✓ ${_fqFood.name}（${gramsNum}g）を追加しました`);
   } else {
-    // 記録ページの record-* フィールドに加算（従来通り）
+    // 記録ページの record-* フィールドに加算
     const add = (id, val) => { const el = document.getElementById(id); if (el) el.value = Math.round(((parseFloat(el.value)||0) + val) * 10) / 10; };
     add('record-calories',  round0(_fqFood.cal || 0));
     add('record-protein',   round1(_fqFood.protein || 0));
@@ -4964,13 +4982,106 @@ function fqConfirm() {
     add('record-fiber',     round1(_fqFood.fiber || 0));
     add('record-potassium', round0(_fqFood.k || 0));
     add('record-phosphorus',round0(_fqFood.p || 0));
-    _fqSelections.push({ name: _fqFood.name, cat: _fqFood.cat || '', grams: gramsNum, multiplier: r });
+    // 追加済みリストに積む（×ボタンで削除できるよう栄養値も保持）
+    _fqSelections.push({
+      name: _fqFood.name, cat: _fqFood.cat || '', grams: gramsNum, multiplier: r,
+      cal: _fqFood.cal||0, protein: _fqFood.protein||0, carb: _fqFood.carb||0,
+      fiber: _fqFood.fiber||0, k: _fqFood.k||0, p: _fqFood.p||0
+    });
+    // 料理名が空なら食品名を入れる
     const nameEl = document.getElementById('record-name');
     if (nameEl && !nameEl.value) nameEl.value = _fqFood.name;
     recalcGlucose();
+    renderRecordFqList(); // 追加済みリストを再描画
     closeModal('foodQuantityModal');
     showToast(`✓ ${_fqFood.name}（${gramsNum}g）を追加しました`);
   }
+}
+
+// 記録ページの追加済み食品リストを描画
+
+// 記録ページの栄養成分サマリーバーを更新
+function updateRecordNutrSummary() {
+  const kcal    = parseFloat(document.getElementById('record-calories')?.value)  || 0;
+  const protein = parseFloat(document.getElementById('record-protein')?.value)   || 0;
+  const k       = parseFloat(document.getElementById('record-potassium')?.value) || 0;
+  const p       = parseFloat(document.getElementById('record-phosphorus')?.value)|| 0;
+
+  const summaryEl = document.getElementById('record-nutr-summary');
+  if (summaryEl) summaryEl.style.display = (kcal > 0 || protein > 0 || k > 0 || p > 0) ? '' : 'none';
+
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  set('sum-kcal',    Math.round(kcal));
+  set('sum-protein', Math.round(protein * 10) / 10);
+  set('sum-k',       Math.round(k));
+  set('sum-p',       Math.round(p));
+}
+
+function renderRecordFqList() {
+  const el = document.getElementById('record-fq-added-list');
+  if (!el) return;
+  if (_fqSelections.length === 0) { el.innerHTML = ''; return; }
+
+  // 追加食品の栄養合計
+  const totals = _fqSelections.reduce((acc, s) => {
+    const r = s.multiplier || 1;
+    acc.cal     += Math.round((s.cal     || 0) * r);
+    acc.protein += Math.round((s.protein || 0) * r * 10) / 10;
+    acc.k       += Math.round((s.k       || 0) * r);
+    acc.p       += Math.round((s.p       || 0) * r);
+    return acc;
+  }, { cal:0, protein:0, k:0, p:0 });
+
+  updateRecordNutrSummary(); // 栄養成分サマリーバーも更新
+  el.innerHTML = `
+    <div style="background:var(--surface2);border:1px solid var(--border2);border-radius:12px;padding:12px;margin-bottom:8px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <div style="font-size:12px;font-weight:600;color:var(--accent);">🛒 追加した食品（${_fqSelections.length}件）</div>
+        <div style="display:flex;gap:8px;font-size:11px;">
+          <span style="color:var(--green);">🔥${totals.cal}kcal</span>
+          <span style="color:var(--accent);">P:${totals.protein}g</span>
+          <span style="color:var(--amber);">K:${totals.k}mg</span>
+          <span style="color:var(--red);">P:${totals.p}mg</span>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        ${_fqSelections.map((s, i) => {
+          const r = s.multiplier || 1;
+          const kcal = Math.round((s.cal||0)*r);
+          const prot = Math.round((s.protein||0)*r*10)/10;
+          return `<div style="display:flex;align-items:center;gap:8px;padding:6px 8px;background:var(--surface);border-radius:8px;">
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${s.name}</div>
+              <div style="font-size:11px;color:var(--text3);margin-top:1px;">${s.grams}g &nbsp;·&nbsp; ${kcal}kcal &nbsp;·&nbsp; タンパク質 ${prot}g</div>
+            </div>
+            <button onclick="removeRecordFqItem(${i})"
+              style="flex-shrink:0;background:none;border:none;color:var(--text3);cursor:pointer;font-size:17px;padding:0 4px;line-height:1;">×</button>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+}
+
+// 記録ページから食品を削除して栄養値を引き算
+function removeRecordFqItem(idx) {
+  const sel = _fqSelections[idx];
+  if (!sel) return;
+  const r = sel.multiplier || 1;
+  const round1 = v => Math.round(v * 10) / 10;
+  const sub = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.value = Math.max(0, Math.round(((parseFloat(el.value)||0) - val) * 10) / 10);
+  };
+  sub('record-calories',  Math.round((sel.cal||0) * r));
+  sub('record-protein',   round1((sel.protein||0) * r));
+  sub('record-carb',      round1((sel.carb||0) * r));
+  sub('record-fiber',     round1((sel.fiber||0) * r));
+  sub('record-potassium', Math.round((sel.k||0) * r));
+  sub('record-phosphorus',Math.round((sel.p||0) * r));
+  _fqSelections.splice(idx, 1);
+  renderRecordFqList();
+  recalcGlucose();
+  showToast('削除しました');
 }
 
 // ===== 献立データ =====
