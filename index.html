@@ -433,6 +433,10 @@ body.is-premium .premium-banner { display: none !important; }
 .food-tab { flex-shrink:0; padding:5px 12px; border-radius:20px; font-size:12px; border:1.5px solid var(--border2); color:var(--text2); cursor:pointer; transition:all 0.15s; white-space:nowrap; }
 .food-tab.active { border-color:var(--accent); color:var(--accent); background:var(--accent-glow); }
 #foodCatTabs::-webkit-scrollbar { display:none; }
+/* ===== マイ食品OCR ===== */
+#myFoodModal .form-input:focus { border-color: var(--purple); box-shadow: 0 0 0 2px rgba(192,132,252,0.12); }
+#myfood-ocr-result-banner { animation: slideUp 0.3s ease; }
+
 </style>
 </head>
 <body>
@@ -1709,11 +1713,17 @@ body.is-premium .premium-banner { display: none !important; }
       <div class="food-tab" data-cat="漬物・発酵食品"    onclick="setFoodTab(this,'漬物・発酵食品')">🥒 漬物・キムチ</div>
       <div class="food-tab" data-cat="調味料"            onclick="setFoodTab(this,'調味料')">🧂 調味料</div>
       <div class="food-tab" data-cat="低タンパク献立"    onclick="setFoodTab(this,'低タンパク献立')">💊 低タンパク</div>
+      <div class="food-tab" data-cat="マイ食品"          onclick="setFoodTab(this,'マイ食品')">⭐ マイ食品</div>
     </div>
     <div id="foodSearchResults" style="max-height:320px;overflow-y:auto;"></div>
     <div style="padding:12px;border-top:1px solid var(--border);margin-top:4px;">
-      <div style="font-size:12px;color:var(--text3);margin-bottom:8px;">探している料理が見つかりませんか？</div>
-      <button class="btn btn-ghost btn-full" onclick="showFoodRequestForm()" style="font-size:13px;">📝 この料理の追加をリクエストする</button>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:6px;">探している料理が見つかりませんか？</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <button class="btn btn-primary btn-full" onclick="showMyFoodModal()" style="font-size:13px;background:linear-gradient(135deg,rgba(79,195,247,0.9),rgba(2,136,209,0.9));font-weight:700;">
+          📸 マイ食品を登録（OCRスキャン対応）
+        </button>
+        <button class="btn btn-ghost btn-full" onclick="showFoodRequestForm()" style="font-size:12px;">📝 この料理の追加をリクエストする</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1779,6 +1789,167 @@ body.is-premium .premium-banner { display: none !important; }
     <div class="form-row"><label class="form-label">料理名</label><input class="form-input" type="text" id="requestFoodName" placeholder="例：豚の角煮、茶碗蒸し..." /></div>
     <button class="btn btn-primary btn-full" style="margin-top:12px;" onclick="submitFoodRequest()">リクエストを送る</button>
     <button class="btn btn-ghost btn-full" onclick="closeModal('foodRequestModal')">キャンセル</button>
+  </div>
+</div>
+
+<!-- ===== マイ食品登録モーダル（OCR対応） ===== -->
+<div class="modal-bg" id="myFoodModal" onclick="closeModal('myFoodModal')">
+  <div class="modal" onclick="event.stopPropagation()" style="max-height:92vh;overflow-y:auto;">
+    <div class="modal-handle"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+      <div class="modal-title" style="margin-bottom:0;" id="myFoodModal-title">📦 マイ食品を登録</div>
+      <button onclick="showMyFoodListModal()" style="background:none;border:none;color:var(--accent);font-size:12px;cursor:pointer;padding:4px 8px;border-radius:6px;border:1px solid var(--border2);">📋 登録済み一覧</button>
+    </div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:14px;line-height:1.6;">パッケージの栄養成分表示を撮影するか、手動で入力してください。</div>
+
+    <!-- OCRスキャンエリア -->
+    <div style="margin-bottom:14px;">
+      <input type="file" id="myFoodOcrInput" accept="image/*" capture="environment" style="display:none;" onchange="handleMyFoodOcr(event)" />
+      <button class="btn btn-full" onclick="document.getElementById('myFoodOcrInput').click()"
+        style="background:linear-gradient(135deg,rgba(192,132,252,0.2),rgba(79,195,247,0.15));border:1.5px solid rgba(192,132,252,0.5);color:var(--purple);font-size:14px;font-weight:700;padding:14px;border-radius:var(--r);display:flex;align-items:center;justify-content:center;gap:10px;">
+        <span style="font-size:22px;">📸</span>
+        <div style="text-align:left;">
+          <div>栄養成分をスキャン</div>
+          <div style="font-size:11px;font-weight:400;color:var(--text2);margin-top:1px;">カメラで撮影 → 自動入力</div>
+        </div>
+      </button>
+
+      <!-- OCR進捗 -->
+      <div id="myfood-ocr-progress" style="display:none;margin-top:10px;">
+        <div style="font-size:12px;color:var(--text2);margin-bottom:6px;">
+          <span id="myfood-ocr-label">読み取り中...</span>
+        </div>
+        <div style="height:5px;background:var(--surface2);border-radius:3px;overflow:hidden;">
+          <div id="myfood-ocr-bar" style="height:100%;background:linear-gradient(90deg,var(--purple),var(--accent));border-radius:3px;width:0%;transition:width .3s;"></div>
+        </div>
+      </div>
+
+      <!-- OCR結果バナー -->
+      <div id="myfood-ocr-result-banner" style="display:none;margin-top:8px;padding:8px 12px;background:var(--green-dim);border:1px solid rgba(74,222,128,0.3);border-radius:var(--rs);font-size:12px;color:var(--green);"></div>
+    </div>
+
+    <div style="height:1px;background:var(--border);margin-bottom:14px;"></div>
+
+    <!-- 食品情報入力フォーム -->
+    <input type="hidden" id="myfood-edit-id" />
+    <div class="form-row">
+      <label class="form-label">🍽 食品名 <span style="color:var(--red);">*</span></label>
+      <input class="form-input" type="text" id="myfood-name" placeholder="例：ブランパン（1個・40g）" />
+    </div>
+    <div class="form-row">
+      <label class="form-label">🏷 カテゴリー</label>
+      <select class="form-input" id="myfood-cat">
+        <option value="マイ食品">マイ食品（デフォルト）</option>
+        <option value="パン類">パン類</option>
+        <option value="米類">米類</option>
+        <option value="麺類">麺類</option>
+        <option value="肉類">肉類</option>
+        <option value="魚介類">魚介類</option>
+        <option value="野菜類">野菜類</option>
+        <option value="乳製品">乳製品</option>
+        <option value="菓子・デザート">菓子・デザート</option>
+        <option value="飲み物">飲み物</option>
+        <option value="調味料">調味料</option>
+        <option value="その他">その他</option>
+      </select>
+    </div>
+
+    <!-- 栄養成分グリッド -->
+    <div style="background:var(--surface2);border-radius:var(--r);padding:14px;margin-bottom:12px;">
+      <div style="font-size:11px;color:var(--accent);font-weight:700;letter-spacing:.08em;margin-bottom:12px;">📊 栄養成分（100gあたり、または1食分）</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div>
+          <label class="form-label" style="display:flex;align-items:center;gap:4px;">
+            <span style="width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;"></span>エネルギー
+          </label>
+          <div style="display:flex;align-items:center;gap:5px;">
+            <input class="form-input" type="number" id="myfood-cal" placeholder="0" min="0" style="text-align:right;" />
+            <span style="font-size:11px;color:var(--text3);flex-shrink:0;">kcal</span>
+          </div>
+        </div>
+        <div>
+          <label class="form-label" style="display:flex;align-items:center;gap:4px;">
+            <span style="width:8px;height:8px;border-radius:50%;background:var(--accent);display:inline-block;"></span>たんぱく質
+          </label>
+          <div style="display:flex;align-items:center;gap:5px;">
+            <input class="form-input" type="number" id="myfood-protein" placeholder="0.0" min="0" step="0.1" style="text-align:right;" />
+            <span style="font-size:11px;color:var(--text3);flex-shrink:0;">g</span>
+          </div>
+        </div>
+        <div>
+          <label class="form-label" style="display:flex;align-items:center;gap:4px;">
+            <span style="width:8px;height:8px;border-radius:50%;background:var(--text2);display:inline-block;"></span>脂質
+          </label>
+          <div style="display:flex;align-items:center;gap:5px;">
+            <input class="form-input" type="number" id="myfood-fat" placeholder="0.0" min="0" step="0.1" style="text-align:right;" />
+            <span style="font-size:11px;color:var(--text3);flex-shrink:0;">g</span>
+          </div>
+        </div>
+        <div>
+          <label class="form-label" style="display:flex;align-items:center;gap:4px;">
+            <span style="width:8px;height:8px;border-radius:50%;background:var(--text2);display:inline-block;"></span>炭水化物
+          </label>
+          <div style="display:flex;align-items:center;gap:5px;">
+            <input class="form-input" type="number" id="myfood-carb" placeholder="0.0" min="0" step="0.1" style="text-align:right;" />
+            <span style="font-size:11px;color:var(--text3);flex-shrink:0;">g</span>
+          </div>
+        </div>
+        <div>
+          <label class="form-label" style="display:flex;align-items:center;gap:4px;">
+            <span style="width:8px;height:8px;border-radius:50%;background:var(--amber);display:inline-block;"></span>カリウム
+          </label>
+          <div style="display:flex;align-items:center;gap:5px;">
+            <input class="form-input" type="number" id="myfood-k" placeholder="0" min="0" style="text-align:right;" />
+            <span style="font-size:11px;color:var(--text3);flex-shrink:0;">mg</span>
+          </div>
+        </div>
+        <div>
+          <label class="form-label" style="display:flex;align-items:center;gap:4px;">
+            <span style="width:8px;height:8px;border-radius:50%;background:var(--red);display:inline-block;"></span>リン
+          </label>
+          <div style="display:flex;align-items:center;gap:5px;">
+            <input class="form-input" type="number" id="myfood-p" placeholder="0" min="0" style="text-align:right;" />
+            <span style="font-size:11px;color:var(--text3);flex-shrink:0;">mg</span>
+          </div>
+        </div>
+        <div>
+          <label class="form-label" style="display:flex;align-items:center;gap:4px;">
+            <span style="width:8px;height:8px;border-radius:50%;background:var(--text3);display:inline-block;"></span>食物繊維
+          </label>
+          <div style="display:flex;align-items:center;gap:5px;">
+            <input class="form-input" type="number" id="myfood-fiber" placeholder="0.0" min="0" step="0.1" style="text-align:right;" />
+            <span style="font-size:11px;color:var(--text3);flex-shrink:0;">g</span>
+          </div>
+        </div>
+        <div>
+          <label class="form-label" style="display:flex;align-items:center;gap:4px;">
+            <span style="width:8px;height:8px;border-radius:50%;background:var(--text3);display:inline-block;"></span>食塩相当量
+          </label>
+          <div style="display:flex;align-items:center;gap:5px;">
+            <input class="form-input" type="number" id="myfood-salt" placeholder="0.0" min="0" step="0.1" style="text-align:right;" />
+            <span style="font-size:11px;color:var(--text3);flex-shrink:0;">g</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-top:4px;">
+      <button class="btn btn-primary" style="flex:1;" onclick="saveMyFood()">✓ 保存する</button>
+      <button class="btn btn-ghost" style="flex:1;" onclick="closeModal('myFoodModal')">キャンセル</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== マイ食品一覧モーダル ===== -->
+<div class="modal-bg" id="myFoodListModal" onclick="closeModal('myFoodListModal')">
+  <div class="modal" onclick="event.stopPropagation()" style="max-height:90vh;overflow-y:auto;">
+    <div class="modal-handle"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+      <div class="modal-title" style="margin-bottom:0;">📋 マイ食品一覧</div>
+      <button class="btn btn-primary btn-sm" onclick="showMyFoodModal()">＋ 新規登録</button>
+    </div>
+    <div id="myFoodListContent"></div>
+    <button class="btn btn-ghost btn-full" style="margin-top:10px;" onclick="closeModal('myFoodListModal')">閉じる</button>
   </div>
 </div>
 
@@ -2194,6 +2365,8 @@ document.addEventListener('DOMContentLoaded', () => {
     initRecordDate();
     renderLinkedClinicsSettings();
     renderHomeMedcheck();
+    // マイ食品をfoodDatabaseに反映
+    (function(){ const mf=loadMyFoods(); if(mf.length>0){ foodDatabase.unshift(...mf); } })();
     // プレミアム状態を適用
     checkPremiumExpiry();
     applyPremiumUI();
@@ -6482,6 +6655,7 @@ const ALL_STORAGE_KEYS = [
   'renalcare_prn_log',
   'renalcare_medcheck_log',
   'renalcare_med_schedule',
+  'renalcare_my_foods',
   'renalcare_clinic_links',
   'renalcare_premium',
 ];
@@ -7304,6 +7478,358 @@ function saveMedScheduleEdits() {
   saveMedScheduleOverrides(overrides);
   showToast('✅ スケジュールを保存しました');
   renderHomeMedcheck();
+}
+
+
+// ============================================================
+// ===== マイ食品 (food_db) 機能 =====
+// ============================================================
+
+const MY_FOOD_KEY = 'renalcare_my_foods';
+
+function loadMyFoods() {
+  try { return JSON.parse(localStorage.getItem(MY_FOOD_KEY) || '[]'); } catch(e) { return []; }
+}
+function saveMyFoods(list) {
+  try { localStorage.setItem(MY_FOOD_KEY, JSON.stringify(list)); } catch(e) {}
+}
+
+// ---- モーダルを開く（新規 or 編集）----
+function showMyFoodModal(editId) {
+  closeModal('myFoodListModal');
+  closeModal('foodSearchModal');
+
+  const titleEl = document.getElementById('myFoodModal-title');
+  const editIdEl = document.getElementById('myfood-edit-id');
+  if (!titleEl || !editIdEl) return;
+
+  // フォームリセット
+  ['myfood-name','myfood-cal','myfood-protein','myfood-fat','myfood-carb',
+   'myfood-k','myfood-p','myfood-fiber','myfood-salt'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  const catEl = document.getElementById('myfood-cat');
+  if (catEl) catEl.value = 'マイ食品';
+
+  // OCR状態リセット
+  const prog = document.getElementById('myfood-ocr-progress');
+  const banner = document.getElementById('myfood-ocr-result-banner');
+  const ocrInput = document.getElementById('myFoodOcrInput');
+  if (prog) prog.style.display = 'none';
+  if (banner) banner.style.display = 'none';
+  if (ocrInput) ocrInput.value = '';
+
+  if (editId) {
+    const foods = loadMyFoods();
+    const food = foods.find(f => f.id === editId);
+    if (food) {
+      titleEl.textContent = '✏️ マイ食品を編集';
+      editIdEl.value = editId;
+      const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val ?? ''; };
+      set('myfood-name', food.name);
+      set('myfood-cal', food.cal);
+      set('myfood-protein', food.protein);
+      set('myfood-fat', food.fat);
+      set('myfood-carb', food.carb);
+      set('myfood-k', food.k);
+      set('myfood-p', food.p);
+      set('myfood-fiber', food.fiber);
+      set('myfood-salt', food.salt);
+      if (catEl) catEl.value = food.cat || 'マイ食品';
+    }
+  } else {
+    titleEl.textContent = '📦 マイ食品を登録';
+    editIdEl.value = '';
+  }
+
+  document.getElementById('myFoodModal').classList.add('open');
+}
+
+// ---- 保存 ----
+function saveMyFood() {
+  const name = document.getElementById('myfood-name')?.value.trim();
+  if (!name) { showToast('⚠ 食品名を入力してください'); return; }
+
+  const get = (id, isFloat) => {
+    const v = document.getElementById(id)?.value;
+    const n = isFloat ? parseFloat(v) : parseInt(v);
+    return isNaN(n) ? 0 : n;
+  };
+
+  const editId = document.getElementById('myfood-edit-id')?.value;
+  const cat = document.getElementById('myfood-cat')?.value || 'マイ食品';
+
+  const entry = {
+    id:      editId || ('myfood_' + Date.now() + '_' + Math.random().toString(36).substr(2,4)),
+    name,
+    cat,
+    cal:     get('myfood-cal', false),
+    protein: get('myfood-protein', true),
+    fat:     get('myfood-fat', true),
+    carb:    get('myfood-carb', true),
+    fiber:   get('myfood-fiber', true),
+    k:       get('myfood-k', false),
+    p:       get('myfood-p', false),
+    salt:    get('myfood-salt', true),
+    custom:  true,
+    savedAt: new Date().toISOString(),
+  };
+
+  const foods = loadMyFoods();
+  if (editId) {
+    const idx = foods.findIndex(f => f.id === editId);
+    if (idx !== -1) foods[idx] = entry; else foods.push(entry);
+    showToast('✅ 更新しました');
+  } else {
+    foods.push(entry);
+    showToast('✅ マイ食品に登録しました');
+  }
+  saveMyFoods(foods);
+  closeModal('myFoodModal');
+}
+
+// ---- 削除 ----
+function deleteMyFood(id) {
+  if (!confirm('このマイ食品を削除しますか？')) return;
+  const foods = loadMyFoods().filter(f => f.id !== id);
+  saveMyFoods(foods);
+  showToast('🗑 削除しました');
+  renderMyFoodList();
+}
+
+// ---- 一覧モーダル ----
+function showMyFoodListModal() {
+  renderMyFoodList();
+  document.getElementById('myFoodListModal').classList.add('open');
+}
+
+function renderMyFoodList() {
+  const el = document.getElementById('myFoodListContent');
+  if (!el) return;
+  const foods = loadMyFoods();
+  if (foods.length === 0) {
+    el.innerHTML = '<div style="text-align:center;padding:32px;color:var(--text3);">登録済みのマイ食品はありません</div>';
+    return;
+  }
+  el.innerHTML = foods.slice().reverse().map(f => `
+    <div style="display:flex;align-items:flex-start;gap:10px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);margin-bottom:8px;">
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:14px;font-weight:600;">${f.name}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px;">${f.cat}</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:4px;display:flex;flex-wrap:wrap;gap:6px;">
+          <span style="color:var(--green);">${f.cal}kcal</span>
+          <span>P ${f.protein}g</span>
+          <span>脂 ${f.fat}g</span>
+          <span>炭 ${f.carb}g</span>
+          <span style="color:var(--amber);">K ${f.k}mg</span>
+          <span style="color:var(--red);">リン ${f.p}mg</span>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;">
+        <button onclick="showMyFoodModal('${f.id}')" class="btn btn-ghost btn-sm" style="font-size:11px;">✏️ 編集</button>
+        <button onclick="deleteMyFood('${f.id}')" class="btn btn-sm" style="font-size:11px;background:var(--red-dim);color:var(--red);border:1px solid var(--red);">🗑</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ---- foodDatabase 検索にマイ食品を混ぜ込む ----
+// 既存 searchFoodDB を拡張（オリジナルをラップ）
+const _originalSearchFoodDB = searchFoodDB;
+function searchFoodDB(query) {
+  // マイ食品を一時的に foodDatabase の先頭にマージして検索
+  const myFoods = loadMyFoods();
+  if (myFoods.length > 0) {
+    // すでにマージ済みか確認
+    const alreadyIn = foodDatabase.some(f => f.custom === true);
+    if (!alreadyIn) {
+      foodDatabase.unshift(...myFoods);
+    } else {
+      // マイ食品を最新に更新
+      const withoutCustom = foodDatabase.filter(f => !f.custom);
+      foodDatabase.length = 0;
+      foodDatabase.push(...myFoods, ...withoutCustom);
+    }
+  }
+  _originalSearchFoodDB(query);
+}
+
+// ---- OCR: 栄養成分表示スキャン ----
+async function handleMyFoodOcr(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  event.target.value = '';  // reset
+
+  const progEl  = document.getElementById('myfood-ocr-progress');
+  const barEl   = document.getElementById('myfood-ocr-bar');
+  const labelEl = document.getElementById('myfood-ocr-label');
+  const banner  = document.getElementById('myfood-ocr-result-banner');
+  if (progEl) progEl.style.display = '';
+  if (banner) banner.style.display = 'none';
+  if (barEl) barEl.style.width = '0%';
+  if (labelEl) labelEl.textContent = '画像を読み込んでいます...';
+
+  let imageDataUrl = null;
+  try {
+    imageDataUrl = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = e => resolve(e.target.result);
+      reader.onerror = () => reject(new Error('読み込みエラー'));
+      reader.readAsDataURL(file);
+    });
+  } catch(e) {
+    if (progEl) progEl.style.display = 'none';
+    showToast('⚠ 画像の読み込みに失敗しました');
+    return;
+  }
+
+  try {
+    if (labelEl) labelEl.textContent = 'テキストを認識中...';
+    const result = await Tesseract.recognize(imageDataUrl, 'jpn+eng', {
+      logger: m => {
+        if (m.status === 'recognizing text') {
+          const pct = Math.round((m.progress || 0) * 100);
+          if (barEl) barEl.style.width = pct + '%';
+          if (labelEl) labelEl.textContent = `認識中... ${pct}%`;
+        }
+      }
+    });
+
+    // ★ 画像データを即座に破棄（容量節約）
+    imageDataUrl = null;
+
+    const text = result?.data?.text || '';
+    result.data = null;
+
+    if (!text.trim()) {
+      if (progEl) progEl.style.display = 'none';
+      showToast('⚠ 文字を認識できませんでした。明るい場所で再撮影してください');
+      return;
+    }
+
+    const parsed = parseNutritionLabel(text);
+    applyParsedNutrition(parsed);
+
+    if (progEl) progEl.style.display = 'none';
+
+    // 結果バナー表示
+    const filled = Object.values(parsed).filter(v => v !== null).length;
+    if (banner) {
+      banner.style.display = '';
+      banner.textContent = filled > 0
+        ? `✅ ${filled}項目を自動入力しました。数値をご確認ください。`
+        : '⚠ 栄養成分の数値を検出できませんでした。手動で入力してください。';
+      if (filled === 0) {
+        banner.style.background = 'var(--amber-dim)';
+        banner.style.borderColor = 'rgba(252,211,77,0.3)';
+        banner.style.color = 'var(--amber)';
+      } else {
+        banner.style.background = 'var(--green-dim)';
+        banner.style.borderColor = 'rgba(74,222,128,0.3)';
+        banner.style.color = 'var(--green)';
+      }
+    }
+
+  } catch(e) {
+    imageDataUrl = null;
+    if (progEl) progEl.style.display = 'none';
+    showToast('⚠ 文字認識に失敗しました: ' + (e.message || '不明なエラー'));
+    console.error('MyFood OCR error:', e);
+  }
+}
+
+// ---- 栄養成分ラベルのテキストをパース ----
+function parseNutritionLabel(text) {
+  const result = {
+    cal: null, protein: null, fat: null, carb: null,
+    fiber: null, k: null, p: null, salt: null
+  };
+
+  // 数値にマッチするヘルパー（整数 or 小数）
+  const numRe = '(\\d+(?:[.,]\\d+)?)';
+
+  // パターン定義: [フィールド名, 正規表現パターン配列]
+  const patterns = [
+    // エネルギー: "エネルギー 123kcal" / "熱量 123kcal" / "カロリー 123"
+    ['cal', [
+      /(?:エネルギー|熱量|カロリー)[^\d]*(\d+(?:[.,]\d+)?)\s*[kk][cC][aA][lL]/,
+      /(\d+(?:[.,]\d+)?)\s*[kk][cC][aA][lL]/,
+      /(\d+(?:[.,]\d+)?)\s*キロカロリー/,
+    ]],
+    // たんぱく質
+    ['protein', [
+      /(?:たんぱく質|タンパク質|蛋白質|protein)[^\d]*(\d+(?:[.,]\d+)?)\s*g/i,
+      /(?:たん白質)[^\d]*(\d+(?:[.,]\d+)?)\s*g/i,
+    ]],
+    // 脂質
+    ['fat', [
+      /(?:脂質|脂肪|fat)[^\d]*(\d+(?:[.,]\d+)?)\s*g/i,
+    ]],
+    // 炭水化物
+    ['carb', [
+      /(?:炭水化物|糖質|carbohydrate)[^\d]*(\d+(?:[.,]\d+)?)\s*g/i,
+    ]],
+    // 食物繊維
+    ['fiber', [
+      /(?:食物繊維|dietary\s*fiber)[^\d]*(\d+(?:[.,]\d+)?)\s*g/i,
+    ]],
+    // カリウム
+    ['k', [
+      /(?:カリウム|potassium)[^\d]*(\d+(?:[.,]\d+)?)\s*m[gG]/i,
+    ]],
+    // リン
+    ['p', [
+      /(?:リン|phosphorus)[^\d]*(\d+(?:[.,]\d+)?)\s*m[gG]/i,
+    ]],
+    // 食塩相当量
+    ['salt', [
+      /(?:食塩相当量|ナトリウム換算|塩分)[^\d]*(\d+(?:[.,]\d+)?)\s*g/i,
+      /(?:sodium|Na)[^\d]*(\d+(?:[.,]\d+)?)\s*m[gG]/i,
+    ]],
+  ];
+
+  // 改行を統一
+  const normalizedText = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+
+  for (const [field, reList] of patterns) {
+    for (const re of reList) {
+      const m = normalizedText.match(re);
+      if (m) {
+        let val = parseFloat(m[1].replace(',', '.'));
+        // ナトリウム(mg)→食塩相当量(g)換算
+        if (field === 'salt' && re.source.includes('sodium|Na') && val > 10) {
+          val = Math.round(val * 2.54 / 100) / 10;
+        }
+        if (!isNaN(val)) {
+          result[field] = val;
+          break;
+        }
+      }
+    }
+  }
+
+  return result;
+}
+
+// ---- パース結果をフォームにセット ----
+function applyParsedNutrition(parsed) {
+  const mapping = {
+    cal:     'myfood-cal',
+    protein: 'myfood-protein',
+    fat:     'myfood-fat',
+    carb:    'myfood-carb',
+    fiber:   'myfood-fiber',
+    k:       'myfood-k',
+    p:       'myfood-p',
+    salt:    'myfood-salt',
+  };
+  for (const [key, id] of Object.entries(mapping)) {
+    if (parsed[key] !== null) {
+      const el = document.getElementById(id);
+      if (el) el.value = parsed[key];
+    }
+  }
 }
 
 
