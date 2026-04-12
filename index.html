@@ -338,6 +338,10 @@ html, body {
 
 .ad-banner { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--rs); padding: 10px 14px; margin-top: 8px; display: flex; align-items: center; justify-content: space-between; }
 .ad-label { font-size: 9px; color: var(--text3); }
+/* プレミアム時に広告を非表示 */
+body.is-premium .ad-banner { display: none !important; }
+body.is-premium .premium-banner { display: none !important; }
+.premium-active-badge { display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:3px 10px;border-radius:20px;background:linear-gradient(135deg,rgba(192,132,252,0.2),rgba(79,195,247,0.2));border:1px solid rgba(192,132,252,0.5);color:var(--purple);font-weight:600; }
 .ad-text { font-size: 12px; color: var(--text2); }
 .ad-x { font-size: 12px; color: var(--text3); cursor: pointer; padding: 4px; }
 
@@ -1259,10 +1263,22 @@ html, body {
     <!-- SETTINGS -->
     <div class="page" id="page-settings">
       <div class="page-title-row"><div><div class="page-title">設定</div><div class="page-sub">プロフィール・目標値</div></div></div>
-      <div class="premium-banner" onclick="showPremiumModal()">
+      <!-- プレミアム未加入時のみ表示 -->
+      <div class="premium-banner" id="premium-upgrade-banner" onclick="showPremiumModal()">
         <div class="premium-icon">✨</div>
         <div class="premium-text"><div class="ptitle">プレミアムにアップグレード</div><div class="psub">広告非表示・全機能解放 — ¥580/月〜</div></div>
         <div style="color:var(--purple);font-size:18px;">›</div>
+      </div>
+      <!-- プレミアム加入済み時のみ表示 -->
+      <div id="premium-active-banner" style="display:none;padding:12px 14px;background:linear-gradient(135deg,rgba(192,132,252,0.15),rgba(79,195,247,0.15));border:1px solid rgba(192,132,252,0.4);border-radius:var(--r);margin-bottom:12px;cursor:pointer;" onclick="showPremiumModal()">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="font-size:24px;">✨</div>
+          <div style="flex:1;">
+            <div style="font-size:14px;font-weight:600;color:var(--purple);">プレミアム会員</div>
+            <div style="font-size:12px;color:var(--text2);margin-top:2px;" id="settings-premium-expire">有効期限: —</div>
+          </div>
+          <div class="premium-active-badge">有効中</div>
+        </div>
       </div>
       <div class="settings-section">
         <div class="settings-title">プロフィール</div>
@@ -1483,15 +1499,79 @@ html, body {
 </div>
 
 <div class="modal-bg" id="premiumModal" onclick="closeModal('premiumModal')">
-  <div class="modal" onclick="event.stopPropagation()">
+  <div class="modal" onclick="event.stopPropagation()" style="max-height:92vh;overflow-y:auto;">
     <div class="modal-handle"></div>
-    <div style="font-size:36px;text-align:center;margin-bottom:12px;">✨</div>
-    <div class="modal-title" style="text-align:center;">プレミアムプラン</div>
-    <div class="modal-sub" style="text-align:center;">広告なし・全機能アンロック</div>
-    <div class="plan-row selected"><div class="plan-icon">👤</div><div class="plan-info"><div class="plan-name">患者向けプラン</div><div class="plan-desc">広告非表示・データエクスポート</div></div><div class="plan-price">¥580<span style="font-size:11px;color:var(--text3)">/月</span></div></div>
-    <div class="plan-row"><div class="plan-icon">🏥</div><div class="plan-info"><div class="plan-name">医療機関向けプラン</div><div class="plan-desc">患者リアルタイム管理（最大50名）</div></div><div class="plan-price">¥9,800<span style="font-size:11px;color:var(--text3)">/月</span></div></div>
-    <button class="btn btn-primary btn-full" style="margin-top:16px;" onclick="closeModal('premiumModal')">プランを選んで登録 →</button>
-    <button class="btn btn-ghost btn-full" style="margin-top:8px;" onclick="closeModal('premiumModal')">あとで</button>
+
+    <!-- ── 未加入ビュー ── -->
+    <div id="premium-upgrade-view">
+      <div style="text-align:center;padding:8px 0 4px;">
+        <div style="font-size:40px;margin-bottom:8px;">✨</div>
+        <div class="modal-title" style="text-align:center;">プレミアムプラン</div>
+        <div style="font-size:13px;color:var(--text2);margin-top:6px;">広告なし・全機能アンロック</div>
+      </div>
+
+      <!-- 特典リスト -->
+      <div style="background:var(--surface2);border-radius:12px;padding:14px;margin:14px 0;">
+        <div style="font-size:11px;color:var(--text3);letter-spacing:1px;margin-bottom:10px;">プレミアムの特典</div>
+        ${['🚫 広告を完全に非表示', '📊 食事データの詳細分析', '📤 データエクスポート（CSV・PDF）', '🔔 服薬リマインダー通知', '🏥 医療機関との連携', '💾 データのクラウドバックアップ'].map(f=>`<div style="display:flex;align-items:center;gap:8px;padding:6px 0;font-size:13px;border-bottom:1px solid var(--border);"><span style="color:var(--green);">✓</span>${f}</div>`).join('')}
+      </div>
+
+      <!-- プラン選択 -->
+      <div style="font-size:11px;color:var(--text3);margin-bottom:8px;">プランを選択</div>
+      <div id="plan-monthly" onclick="selectPlan('monthly')" style="display:flex;align-items:center;gap:12px;padding:14px;background:var(--accent-glow);border:2px solid var(--accent);border-radius:12px;cursor:pointer;margin-bottom:8px;">
+        <div style="flex:1;">
+          <div style="font-size:14px;font-weight:700;">月払いプラン</div>
+          <div style="font-size:12px;color:var(--text2);margin-top:2px;">いつでもキャンセル可能</div>
+        </div>
+        <div style="text-align:right;"><div style="font-size:22px;font-weight:700;color:var(--accent);">¥580</div><div style="font-size:11px;color:var(--text3);">/月</div></div>
+        <div id="plan-monthly-check" style="font-size:18px;color:var(--accent);">✓</div>
+      </div>
+      <div id="plan-yearly" onclick="selectPlan('yearly')" style="display:flex;align-items:center;gap:12px;padding:14px;background:var(--surface2);border:2px solid var(--border2);border-radius:12px;cursor:pointer;margin-bottom:14px;position:relative;">
+        <div style="position:absolute;top:-8px;right:12px;background:var(--amber);color:#000;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">2ヶ月分お得</div>
+        <div style="flex:1;">
+          <div style="font-size:14px;font-weight:700;">年払いプラン</div>
+          <div style="font-size:12px;color:var(--text2);margin-top:2px;">月々¥483に相当</div>
+        </div>
+        <div style="text-align:right;"><div style="font-size:22px;font-weight:700;color:var(--amber);">¥5,800</div><div style="font-size:11px;color:var(--text3);">/年</div></div>
+        <div id="plan-yearly-check" style="font-size:18px;color:var(--text3);">○</div>
+      </div>
+
+      <button class="btn btn-primary btn-full" onclick="startCheckout()" style="font-size:15px;padding:15px;">
+        💳 決済に進む →
+      </button>
+
+      <!-- 招待コード -->
+      <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
+        <div style="font-size:12px;color:var(--text3);text-align:center;margin-bottom:8px;">招待コード・特別コードをお持ちの方</div>
+        <div style="display:flex;gap:8px;">
+          <input class="form-input" type="text" id="invite-code-input"
+            placeholder="招待コードを入力" style="flex:1;text-transform:uppercase;letter-spacing:1px;"
+            oninput="this.value=this.value.toUpperCase()" />
+          <button class="btn btn-outline btn-sm" onclick="applyInviteCode()" style="white-space:nowrap;">適用</button>
+        </div>
+        <div id="invite-code-result" style="margin-top:6px;font-size:12px;"></div>
+      </div>
+
+      <button class="btn btn-ghost btn-full" style="margin-top:10px;" onclick="closeModal('premiumModal')">あとで</button>
+    </div>
+
+    <!-- ── 加入済みビュー ── -->
+    <div id="premium-active-view" style="display:none;">
+      <div style="text-align:center;padding:16px 0;">
+        <div style="font-size:48px;margin-bottom:10px;">✨</div>
+        <div class="modal-title" style="text-align:center;color:var(--purple);">プレミアム会員</div>
+        <div style="font-size:13px;color:var(--text2);margin-top:6px;" id="premium-expire-label">有効期限: —</div>
+      </div>
+      <div style="background:var(--surface2);border-radius:12px;padding:14px;margin:14px 0;text-align:center;">
+        <div style="font-size:13px;color:var(--text2);">🎉 すべての広告が非表示になっています</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:6px;" id="premium-plan-label">—</div>
+      </div>
+      <div style="font-size:12px;color:var(--text3);text-align:center;line-height:1.8;margin-bottom:14px;">
+        次の請求日に支払いが行われない場合、<br>自動的にキャンセルされ広告が再表示されます。
+      </div>
+      <button class="btn btn-outline btn-full" onclick="managePremium()">サブスクリプションを管理 →</button>
+      <button class="btn btn-ghost btn-full" style="margin-top:8px;" onclick="closeModal('premiumModal')">閉じる</button>
+    </div>
   </div>
 </div>
 
@@ -2007,6 +2087,12 @@ document.addEventListener('DOMContentLoaded', () => {
     navTo('home');
     initRecordDate();
     renderLinkedClinicsSettings();
+    // プレミアム状態を適用
+    checkPremiumExpiry();
+    applyPremiumUI();
+    handleCheckoutReturn();
+    // 1時間ごとに期限チェック
+    setInterval(checkPremiumExpiry, 60 * 60 * 1000);
   } else {
     updateHomeDate();
     renderMenuGrid();
@@ -5950,6 +6036,7 @@ const ALL_STORAGE_KEYS = [
   'renalcare_hospitals',
   'renalcare_prn_log',
   'renalcare_clinic_links',
+  'renalcare_premium',
 ];
 
 
@@ -6184,6 +6271,319 @@ function renderClinicLinkedList() {
         解除
       </button>
     </div>`).join('');
+}
+
+
+// ============================================================
+// ===== プレミアム・サブスクリプション管理 =====
+// ============================================================
+const PREMIUM_KEY = 'renalcare_premium';
+
+// Stripe の設定（本番環境では実際のキーに変更）
+const STRIPE_PUBLISHABLE_KEY = 'pk_live_XXXXXXXXXXXXXXXXXXXXXXXX'; // ← 本番キーに変更
+const STRIPE_PRICE_MONTHLY   = 'price_monthly_580jpy';             // ← Stripeダッシュボードで作成したPriceID
+const STRIPE_PRICE_YEARLY    = 'price_yearly_5800jpy';             // ← Stripeダッシュボードで作成したPriceID
+
+// 招待コード・管理者コード（ハッシュで管理）
+// 実運用ではサーバー側で検証するが、ここではシンプルなローカル検証
+const VALID_INVITE_CODES = {
+  // 招待コード（期限付きプレミアム1ヶ月）
+  'RENALCARE2024':  { type:'invite', months:1,  label:'招待コード（1ヶ月）' },
+  'WELCOME2025':    { type:'invite', months:3,  label:'ウェルカムコード（3ヶ月）' },
+  'HOSPITAL2025':   { type:'invite', months:12, label:'医療機関提携コード（1年）' },
+  // 管理者コード（無期限プレミアム）
+  'RC_ADMIN_2025':  { type:'admin',  months:0,  label:'管理者コード（無期限）' },
+  'MASTER_UNLOCK':  { type:'admin',  months:0,  label:'マスターコード（無期限）' },
+};
+
+// ── プレミアム状態の読み込み ──
+function loadPremiumState() {
+  try { return JSON.parse(localStorage.getItem(PREMIUM_KEY) || 'null'); } catch(e) { return null; }
+}
+function savePremiumState(state) {
+  try { localStorage.setItem(PREMIUM_KEY, JSON.stringify(state)); } catch(e) {}
+}
+
+// ── プレミアム有効かどうかを判定 ──
+function isPremiumActive() {
+  const p = loadPremiumState();
+  if (!p) return false;
+  if (p.type === 'admin') return true; // 無期限
+  if (!p.expiresAt) return false;
+  return new Date(p.expiresAt) > new Date();
+}
+
+// ── 広告・UIの表示を更新 ──
+function applyPremiumUI() {
+  const active = isPremiumActive();
+  const p = loadPremiumState();
+
+  // body クラスで広告を一括非表示
+  if (active) {
+    document.body.classList.add('is-premium');
+  } else {
+    document.body.classList.remove('is-premium');
+  }
+
+  // 設定ページのバナー切り替え
+  const upgradeBanner = document.getElementById('premium-upgrade-banner');
+  const activeBanner  = document.getElementById('premium-active-banner');
+  const expireLabel   = document.getElementById('settings-premium-expire');
+  if (upgradeBanner) upgradeBanner.style.display = active ? 'none' : '';
+  if (activeBanner)  activeBanner.style.display  = active ? '' : 'none';
+  if (expireLabel && p) {
+    if (p.type === 'admin') {
+      expireLabel.textContent = '無期限（' + (p.label||'特別コード') + '）';
+    } else if (p.expiresAt) {
+      const d = new Date(p.expiresAt);
+      expireLabel.textContent = `有効期限: ${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`;
+    }
+  }
+}
+
+// ── プレミアムモーダルを開く ──
+function showPremiumModal() {
+  const active = isPremiumActive();
+  const p = loadPremiumState();
+
+  document.getElementById('premium-upgrade-view').style.display = active ? 'none' : '';
+  document.getElementById('premium-active-view').style.display  = active ? '' : 'none';
+
+  if (active && p) {
+    const expEl  = document.getElementById('premium-expire-label');
+    const planEl = document.getElementById('premium-plan-label');
+    if (expEl) {
+      if (p.type === 'admin') {
+        expEl.textContent = '無期限（' + (p.label||'特別コード') + '）';
+      } else if (p.expiresAt) {
+        const d = new Date(p.expiresAt);
+        expEl.textContent = `有効期限: ${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`;
+      }
+    }
+    if (planEl) {
+      const planNames = { monthly:'月払いプラン（¥580/月）', yearly:'年払いプラン（¥5,800/年）', invite:'招待コード', admin:'特別コード' };
+      planEl.textContent = planNames[p.planType || p.type] || '';
+    }
+  }
+
+  // コード入力欄リセット
+  const inp = document.getElementById('invite-code-input');
+  const res = document.getElementById('invite-code-result');
+  if (inp) inp.value = '';
+  if (res) res.innerHTML = '';
+
+  document.getElementById('premiumModal').classList.add('open');
+}
+
+// ── プラン選択 ──
+let _selectedPlan = 'monthly';
+function selectPlan(plan) {
+  _selectedPlan = plan;
+  const mBox = document.getElementById('plan-monthly');
+  const yBox = document.getElementById('plan-yearly');
+  const mChk = document.getElementById('plan-monthly-check');
+  const yChk = document.getElementById('plan-yearly-check');
+  if (plan === 'monthly') {
+    if (mBox) { mBox.style.background='var(--accent-glow)'; mBox.style.borderColor='var(--accent)'; }
+    if (yBox) { yBox.style.background='var(--surface2)'; yBox.style.borderColor='var(--border2)'; }
+    if (mChk) { mChk.textContent='✓'; mChk.style.color='var(--accent)'; }
+    if (yChk) { yChk.textContent='○'; yChk.style.color='var(--text3)'; }
+  } else {
+    if (yBox) { yBox.style.background='rgba(252,211,77,0.1)'; yBox.style.borderColor='var(--amber)'; }
+    if (mBox) { mBox.style.background='var(--surface2)'; mBox.style.borderColor='var(--border2)'; }
+    if (yChk) { yChk.textContent='✓'; yChk.style.color='var(--amber)'; }
+    if (mChk) { mChk.textContent='○'; mChk.style.color='var(--text3)'; }
+  }
+}
+
+// ── Stripe Checkout を開始 ──
+async function startCheckout() {
+  const priceId = _selectedPlan === 'yearly' ? STRIPE_PRICE_YEARLY : STRIPE_PRICE_MONTHLY;
+  const userId  = state.uid || getUserId();
+
+  showToast('💳 決済ページに移動しています...');
+
+  // Supabase Edge Function 経由でStripeセッションを作成
+  try {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/create-checkout-session`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${SUPABASE_KEY}`
+      },
+      body: JSON.stringify({
+        price_id:    priceId,
+        user_id:     userId,
+        user_name:   state.userName || '',
+        plan:        _selectedPlan,
+        success_url: window.location.href + '?premium=success&plan=' + _selectedPlan,
+        cancel_url:  window.location.href + '?premium=cancel'
+      })
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url; // Stripe Checkoutページへリダイレクト
+        return;
+      }
+    }
+  } catch(e) {
+    console.log('Stripe session creation failed:', e);
+  }
+
+  // ── フォールバック：Stripe Checkout を直接開く（Edge Function未設定時） ──
+  // 本番環境ではEdge Functionを設定してください
+  showToast('⚠ 決済サーバーに接続できませんでした。管理者にお問い合わせください。');
+}
+
+// ── URLパラメーターから決済結果を処理 ──
+function handleCheckoutReturn() {
+  const params = new URLSearchParams(window.location.search);
+  const premiumStatus = params.get('premium');
+  const plan = params.get('plan');
+
+  if (premiumStatus === 'success') {
+    // 支払い成功 → プレミアムを有効化
+    const months = plan === 'yearly' ? 12 : 1;
+    activatePremium('stripe', plan === 'yearly' ? 'yearly' : 'monthly', months);
+    // URLパラメーターを削除
+    window.history.replaceState({}, '', window.location.pathname);
+    setTimeout(() => {
+      showToast('🎉 プレミアム会員になりました！広告が非表示になりました');
+    }, 500);
+  } else if (premiumStatus === 'cancel') {
+    window.history.replaceState({}, '', window.location.pathname);
+    showToast('決済がキャンセルされました');
+  }
+}
+
+// ── プレミアムを有効化 ──
+function activatePremium(type, planType, months) {
+  const now = new Date();
+  let expiresAt = null;
+  if (months > 0) {
+    expiresAt = new Date(now);
+    expiresAt.setMonth(expiresAt.getMonth() + months);
+    expiresAt = expiresAt.toISOString();
+  }
+  const premiumState = {
+    type,       // 'stripe' | 'invite' | 'admin'
+    planType,   // 'monthly' | 'yearly' | 'invite' | 'admin'
+    months,
+    expiresAt,
+    activatedAt: now.toISOString(),
+    userId: state.uid || getUserId()
+  };
+  savePremiumState(premiumState);
+
+  // Supabase にも保存（サーバー側での検証用）
+  fetch(`${SUPABASE_URL}/rest/v1/premium_subscriptions`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${SUPABASE_KEY}`,
+      'Prefer': 'return=minimal'
+    },
+    body: JSON.stringify({
+      user_id:      state.uid || getUserId(),
+      plan_type:    planType,
+      activated_at: now.toISOString(),
+      expires_at:   expiresAt,
+      source:       type
+    })
+  }).catch(() => {});
+
+  applyPremiumUI();
+}
+
+// ── 招待コード・管理者コードを適用 ──
+function applyInviteCode() {
+  const code = (document.getElementById('invite-code-input')?.value || '').trim().toUpperCase();
+  const resultEl = document.getElementById('invite-code-result');
+  if (!code) { showToast('コードを入力してください'); return; }
+
+  const codeData = VALID_INVITE_CODES[code];
+  if (!codeData) {
+    if (resultEl) resultEl.innerHTML = '<span style="color:var(--red);">❌ 無効なコードです</span>';
+    showToast('⚠ 無効なコードです');
+    return;
+  }
+
+  // すでにプレミアム済みかチェック
+  const current = loadPremiumState();
+  if (current && current.type === 'admin') {
+    if (resultEl) resultEl.innerHTML = '<span style="color:var(--green);">✅ すでに無期限プレミアムが有効です</span>';
+    return;
+  }
+
+  const label = codeData.label;
+  const type  = codeData.type === 'admin' ? 'admin' : 'invite';
+  activatePremium(type, type, codeData.months);
+
+  // コードをSupabaseに記録
+  fetch(`${SUPABASE_URL}/rest/v1/invite_code_uses`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${SUPABASE_KEY}`,
+      'Prefer': 'return=minimal'
+    },
+    body: JSON.stringify({
+      user_id:    state.uid || getUserId(),
+      code,
+      used_at:    new Date().toISOString()
+    })
+  }).catch(() => {});
+
+  if (resultEl) {
+    resultEl.innerHTML = `<span style="color:var(--green);">✅ ${label} が適用されました！</span>`;
+  }
+  const msg = codeData.months === 0
+    ? `🎉 無期限プレミアムが有効になりました！`
+    : `🎉 ${label} プレミアムが有効になりました！`;
+  showToast(msg);
+
+  // モーダルを閉じて加入済みビューへ
+  setTimeout(() => {
+    document.getElementById('premium-upgrade-view').style.display = 'none';
+    document.getElementById('premium-active-view').style.display  = '';
+    showPremiumModal(); // 加入済みビューを再描画
+  }, 1200);
+}
+
+// ── サブスクリプション管理（Stripeポータル） ──
+async function managePremium() {
+  const userId = state.uid || getUserId();
+  showToast('管理ページに移動しています...');
+  try {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/create-portal-session`, {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'Authorization':`Bearer ${SUPABASE_KEY}` },
+      body: JSON.stringify({ user_id: userId, return_url: window.location.href })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.url) { window.location.href = data.url; return; }
+    }
+  } catch(e) {}
+  showToast('⚠ 管理ページへの接続に失敗しました');
+}
+
+// ── 定期的に有効期限をチェック（起動時 + 1時間ごと） ──
+function checkPremiumExpiry() {
+  const p = loadPremiumState();
+  if (!p) return;
+  if (p.type === 'admin') return; // 無期限は不要
+
+  if (p.expiresAt && new Date(p.expiresAt) <= new Date()) {
+    // 期限切れ → 広告を復活
+    savePremiumState(null);
+    applyPremiumUI();
+    showToast('⚠ プレミアムの有効期限が切れました。広告が再表示されています。');
+  }
 }
 
 function exportAllData() {
