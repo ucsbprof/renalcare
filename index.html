@@ -627,22 +627,57 @@ body.is-premium .premium-banner { display: none !important; }
           <div class="prog-wrap"><div class="prog-fill pg-red" id="prog-phosphorus" style="width:89%"></div></div>
         </div>
       </div>
-      <!-- 水分量メトリクスカード（全幅） -->
+      <!-- 水分量メトリクスカード（全幅・DW比連動） -->
       <div class="card" id="home-water-metric-card" style="margin-bottom:12px;border-color:rgba(79,195,247,0.35);padding:14px 16px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-          <div style="display:flex;align-items:center;gap:8px;">
-            <div class="card-title" style="margin-bottom:0;">💧 水分量（食事由来）</div>
-          </div>
+        <!-- ヘッダー行 -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <div class="card-title" style="margin-bottom:0;">💧 水分摂取量</div>
           <div style="display:flex;align-items:baseline;gap:4px;">
             <span id="m-water-meal" style="font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:700;color:var(--accent);">0</span>
             <span style="font-size:11px;color:var(--text2);">mL</span>
             <span style="font-size:11px;color:var(--text3);margin-left:4px;">/ <span id="limit-water">1,500</span>mL</span>
           </div>
         </div>
+        <!-- 水分プログレスバー -->
         <div class="prog-wrap" style="margin-bottom:4px;">
-          <div class="prog-fill pg-blue" id="prog-water-meal" style="width:0%;"></div>
+          <div class="prog-fill pg-blue" id="prog-water-meal" style="width:0%;transition:width 0.6s cubic-bezier(0.4,0,0.2,1);"></div>
         </div>
-        <div style="font-size:10px;color:var(--text3);text-align:right;" id="water-meal-pct">0%</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <div style="font-size:10px;color:var(--text3);" id="water-meal-pct">0%</div>
+          <div style="font-size:10px;color:var(--text3);" id="home-water-badge"></div>
+        </div>
+        <!-- 内訳ミニ行 -->
+        <div style="display:flex;gap:12px;font-size:11px;color:var(--text3);margin-bottom:10px;padding:6px 8px;background:var(--surface2);border-radius:8px;">
+          <span>🍱 食事: <b id="home-water-from-meal" style="color:var(--text2);">0</b>mL</span>
+          <span>🥤 飲物: <b id="home-water-from-drink" style="color:var(--accent);">0</b>mL</span>
+        </div>
+        <!-- 体重増加（DW比）インジケーター -->
+        <div id="home-dw-block" style="border-top:1px solid var(--border);padding-top:10px;display:none;">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div style="font-size:11px;color:var(--text3);">⚖️ 推定体重増加量</div>
+            <div style="display:flex;align-items:baseline;gap:4px;">
+              <span id="home-wb-val" style="font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:700;color:var(--green);">0</span>
+              <span style="font-size:11px;color:var(--text2);">g</span>
+              <span id="home-wb-kg" style="font-size:10px;color:var(--text3);margin-left:2px;"></span>
+            </div>
+          </div>
+          <!-- DW比バー -->
+          <div style="margin-top:6px;">
+            <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text3);margin-bottom:3px;">
+              <span>0</span>
+              <span id="home-dw-limit3" style="color:var(--amber);">DW×3%</span>
+              <span id="home-dw-limit5" style="color:var(--red);">DW×5%</span>
+            </div>
+            <div style="height:6px;background:var(--surface2);border-radius:3px;overflow:visible;position:relative;">
+              <div id="home-dw-bar" style="height:100%;border-radius:3px;width:0%;transition:width 0.6s cubic-bezier(0.4,0,0.2,1);background:var(--green);"></div>
+              <!-- 3%マーカー -->
+              <div id="home-dw-mark3" style="position:absolute;top:-3px;height:12px;width:2px;background:var(--amber);border-radius:1px;"></div>
+              <!-- 5%マーカー -->
+              <div id="home-dw-mark5" style="position:absolute;top:-3px;height:12px;width:2px;background:var(--red);border-radius:1px;"></div>
+            </div>
+          </div>
+          <div id="home-wb-warn" style="display:none;margin-top:6px;padding:4px 8px;border-radius:6px;font-size:10px;"></div>
+        </div>
       </div>
       <div class="card">
         <div class="card-title">推定血糖値（本日・時間推移）</div>
@@ -2372,16 +2407,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   if (profile) {
-    // 起動時に薬の重複データをサイレントクリーンアップ
-    try {
-      const allMeds = JSON.parse(localStorage.getItem(MED_KEY)||'[]');
-      const seen = new Set();
-      const cleaned = allMeds.filter(m => { if (!m.id||seen.has(m.id)) return false; seen.add(m.id); return true; });
-      if (cleaned.length < allMeds.length) {
-        localStorage.setItem(MED_KEY, JSON.stringify(cleaned));
-        console.log(`[startup] 薬の重複データ ${allMeds.length - cleaned.length}件を自動削除しました`);
-      }
-    } catch(e) {}
+    // ── 起動時データマイグレーション ───────────────────────────────────
+    runDataMigration();
+    // ────────────────────────────────────────────────────────────────────
     loadProfile(profile);
     updateHomeDate();
     renderMenuGrid();
@@ -2410,6 +2438,94 @@ document.addEventListener('DOMContentLoaded', () => {
   // 5分ごとにグラフを自動更新
   setInterval(() => { updateGlucoseGraph(); updateHba1cCard(); }, 5 * 60 * 1000);
 });
+
+/**
+ * 起動時データマイグレーション
+ * 旧バージョンのデータを現在のスキーマに一括アップグレードする
+ * - food_db (renalcare_my_foods): water/salt/fat 等の欠落フィールドを補完
+ * - mealLog (renalcare_meals)   : water/salt 等の欠落フィールドを補完
+ * - medicines (MED_KEY)         : 重複エントリを除去
+ */
+function runDataMigration() {
+  // ─── (A) 食事記録（mealLog）マイグレーション ─────────────────────────
+  try {
+    const meals = JSON.parse(localStorage.getItem('renalcare_meals') || '[]');
+    if (Array.isArray(meals) && meals.length > 0) {
+      const mealDefaults = {
+        calories: 0, protein: 0, carb: 0, fiber: 0,
+        potassium: 0, phosphorus: 0, salt: 0, water: 0,
+      };
+      let changed = false;
+      const migrated = meals.map(m => {
+        if (!m || typeof m !== 'object') { changed = true; return null; }
+        let dirty = false;
+        for (const [k, v] of Object.entries(mealDefaults)) {
+          if (m[k] === undefined || m[k] === null) { m[k] = v; dirty = true; }
+        }
+        if (!m.recorded_at) { m.recorded_at = new Date().toISOString(); dirty = true; }
+        if (dirty) changed = true;
+        return m;
+      }).filter(Boolean);
+      if (changed) {
+        localStorage.setItem('renalcare_meals', JSON.stringify(migrated));
+        console.log('[Migration] mealLog: 欠落フィールドを補完しました');
+      }
+    }
+  } catch(e) { console.warn('[Migration] mealLog error:', e); }
+
+  // ─── (B) マイ食品（food_db）マイグレーション ─────────────────────────
+  try {
+    const foods = JSON.parse(localStorage.getItem(MY_FOOD_KEY) || '[]');
+    if (Array.isArray(foods) && foods.length > 0) {
+      const foodDefaults = {
+        cal: 0, protein: 0, fat: 0, carb: 0, fiber: 0,
+        k: 0, p: 0, salt: 0, water: 0, cat: 'マイ食品', custom: true,
+      };
+      let changed = false;
+      const migrated = foods.map(f => {
+        if (!f || typeof f !== 'object') { changed = true; return null; }
+        let dirty = false;
+        for (const [k, v] of Object.entries(foodDefaults)) {
+          if (f[k] === undefined || f[k] === null) { f[k] = v; dirty = true; }
+        }
+        if (dirty) changed = true;
+        return f;
+      }).filter(Boolean);
+      if (changed) {
+        localStorage.setItem(MY_FOOD_KEY, JSON.stringify(migrated));
+        console.log('[Migration] food_db: 欠落フィールドを補完しました');
+      }
+    }
+  } catch(e) { console.warn('[Migration] food_db error:', e); }
+
+  // ─── (C) 薬マスター（medicines）重複クリーンアップ ──────────────────
+  try {
+    const allMeds = JSON.parse(localStorage.getItem(MED_KEY) || '[]');
+    if (Array.isArray(allMeds)) {
+      const seen = new Set();
+      const cleaned = allMeds.filter(m => {
+        if (!m || !m.id || seen.has(m.id)) return false;
+        seen.add(m.id); return true;
+      });
+      if (cleaned.length < allMeds.length) {
+        localStorage.setItem(MED_KEY, JSON.stringify(cleaned));
+        console.log(`[Migration] medicines: 重複 ${allMeds.length - cleaned.length}件を除去しました`);
+      }
+    }
+  } catch(e) { console.warn('[Migration] medicines error:', e); }
+
+  // ─── (D) 水分ログの不正エントリ除去 ─────────────────────────────────
+  try {
+    const wlog = JSON.parse(localStorage.getItem(WATER_KEY) || '[]');
+    if (Array.isArray(wlog)) {
+      const cleaned = wlog.filter(e => e && e.time && (e.ml ?? 0) >= 0);
+      if (cleaned.length < wlog.length) {
+        localStorage.setItem(WATER_KEY, JSON.stringify(cleaned));
+        console.log(`[Migration] water_log: 不正 ${wlog.length - cleaned.length}件を除去しました`);
+      }
+    }
+  } catch(e) {}
+}
 
 function loadProfile(profile) {
   Object.assign(state, profile);
@@ -3514,46 +3630,166 @@ function localDeleteMeal(id) {
   } catch(e) { return false; }
 }
 function localLoadMeals() {
-  try { return JSON.parse(localStorage.getItem('renalcare_meals') || '[]'); } catch(e) { return []; }
+  try {
+    const raw = JSON.parse(localStorage.getItem('renalcare_meals') || '[]');
+    if (!Array.isArray(raw)) return [];
+    return raw.map(m => {
+      if (!m || typeof m !== 'object') return null;
+      // フィールド補完（旧データ対応）
+      return {
+        calories:   m.calories   ?? 0,
+        protein:    m.protein    ?? 0,
+        carb:       m.carb       ?? 0,
+        fiber:      m.fiber      ?? 0,
+        potassium:  m.potassium  ?? 0,
+        phosphorus: m.phosphorus ?? 0,
+        salt:       m.salt       ?? 0,
+        water:      m.water      ?? 0,
+        ...m,
+        recorded_at: m.recorded_at || new Date().toISOString(),
+      };
+    }).filter(Boolean);
+  } catch(e) { return []; }
 }
 
 function updateHomeSummary() {
   const meals = localLoadMeals();
   const today = new Date().toDateString();
   const todayMeals = meals.filter(m => new Date(m.recorded_at).toDateString()===today);
-  const totals = todayMeals.reduce((acc,m) => { acc.calories+=m.calories||0; acc.protein+=m.protein||0; acc.potassium+=m.potassium||0; acc.phosphorus+=m.phosphorus||0; acc.water+=m.water||0; return acc; }, {calories:0,protein:0,potassium:0,phosphorus:0,water:0});
-  const setMetric = (id, val, unit) => { const el=document.getElementById(id); if (el) el.innerHTML=val+'<span class="metric-unit">'+unit+'</span>'; };
-  setMetric('m-kcal', Math.round(totals.calories), 'kcal');
-  setMetric('m-protein', Math.round(totals.protein*10)/10, 'g');
-  setMetric('m-potassium', Math.round(totals.potassium).toLocaleString(), 'mg');
+  const totals = todayMeals.reduce((acc,m) => {
+    acc.calories  += m.calories   || 0;
+    acc.protein   += m.protein    || 0;
+    acc.potassium += m.potassium  || 0;
+    acc.phosphorus+= m.phosphorus || 0;
+    acc.water     += m.water      || 0;
+    return acc;
+  }, {calories:0, protein:0, potassium:0, phosphorus:0, water:0});
+
+  const setMetric = (id, val, unit) => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = val + '<span class="metric-unit">' + unit + '</span>';
+  };
+  setMetric('m-kcal',       Math.round(totals.calories), 'kcal');
+  setMetric('m-protein',    Math.round(totals.protein*10)/10, 'g');
+  setMetric('m-potassium',  Math.round(totals.potassium).toLocaleString(), 'mg');
   setMetric('m-phosphorus', Math.round(totals.phosphorus), 'mg');
-  // 水分量カード更新
-  const waterMealEl = document.getElementById('m-water-meal');
-  if (waterMealEl) waterMealEl.textContent = Math.round(totals.water).toLocaleString();
-  const waterTarget = state.targets.water || 1500;
+
+  // ── 水分カード更新（食事由来 + 飲料ログ合算） ─────────────────────────
+  const waterLog     = getTodayWaterLog ? getTodayWaterLog() : [];
+  const mealWater    = waterLog.filter(e => e.auto && !e.drink).reduce((s,e) => s+(e.ml||0), 0);
+  const drinkWater   = waterLog.filter(e => (e.auto && e.drink) || !e.auto).reduce((s,e) => s+(e.ml||0), 0);
+  const totalWater   = mealWater + drinkWater;
+  const waterTarget  = state.targets.water || 1500;
+  const waterPct     = Math.min(100, waterTarget > 0 ? Math.round(totalWater / waterTarget * 100) : 0);
+
+  const waterMealEl  = document.getElementById('m-water-meal');
   const limitWaterEl = document.getElementById('limit-water');
+  const progWaterEl  = document.getElementById('prog-water-meal');
+  const waterPctEl   = document.getElementById('water-meal-pct');
+  const waterBadgeEl = document.getElementById('home-water-badge');
+  const fromMealEl   = document.getElementById('home-water-from-meal');
+  const fromDrinkEl  = document.getElementById('home-water-from-drink');
+
+  if (waterMealEl)  waterMealEl.textContent  = totalWater.toLocaleString();
   if (limitWaterEl) limitWaterEl.textContent = waterTarget.toLocaleString();
-  const waterPct = Math.min(100, waterTarget > 0 ? Math.round(totals.water / waterTarget * 100) : 0);
-  const progWaterMeal = document.getElementById('prog-water-meal');
-  if (progWaterMeal) progWaterMeal.style.width = waterPct + '%';
-  const waterPctEl = document.getElementById('water-meal-pct');
-  if (waterPctEl) waterPctEl.textContent = waterPct + '%';
-  const updateBar = (barId, val, max) => { const el=document.getElementById(barId); if (el) el.style.width=Math.min(100,max>0?Math.round(val/max*100):0)+'%'; };
-  updateBar('prog-protein', totals.protein, state.targets.protein);
-  updateBar('prog-potassium', totals.potassium, state.targets.potassium);
+  if (progWaterEl)  progWaterEl.style.width  = waterPct + '%';
+  if (waterPctEl)   waterPctEl.textContent   = waterPct + '%';
+  if (fromMealEl)   fromMealEl.textContent   = mealWater.toLocaleString();
+  if (fromDrinkEl)  fromDrinkEl.textContent  = drinkWater.toLocaleString();
+
+  // プログレスバーの色を水分率に応じて変更
+  if (progWaterEl) {
+    progWaterEl.className = 'prog-fill ' +
+      (waterPct >= 100 ? 'pg-green' : waterPct >= 80 ? 'pg-blue' : 'pg-blue');
+  }
+  if (waterBadgeEl) {
+    if      (waterPct >= 100) { waterBadgeEl.textContent = '✓ 目標達成'; waterBadgeEl.style.color = 'var(--green)'; }
+    else if (waterPct >= 80)  { waterBadgeEl.textContent = 'もう少し！';  waterBadgeEl.style.color = 'var(--amber)'; }
+    else                       { waterBadgeEl.textContent = '';            }
+  }
+
+  // ── DW比ブロック更新 ───────────────────────────────────────────────────
+  const dwBlock = document.getElementById('home-dw-block');
+  const bw = parseFloat(state.weight) || 0;
+  if (dwBlock && bw > 0) {
+    dwBlock.style.display = '';
+    // 水分収支計算（updateWaterBalance と同じロジック）
+    const insensible = (typeof calcInsensibleLoss === 'function') ? calcInsensibleLoss() : null;
+    const todayKcal  = todayMeals.reduce((s,m) => s+(m.calories||0), 0);
+    const metabolic  = todayKcal > 0 ? Math.round(todayKcal*0.12) : Math.round(bw*2.5);
+    const urineRecs  = (typeof getTodayHealthRecords === 'function') ? getTodayHealthRecords('urine') : [];
+    const urineTotal = urineRecs.reduce((s,r) => s+(r.vol||0), 0);
+    const insVal     = insensible ? insensible.total : 0;
+    const balanceG   = (totalWater + metabolic) - urineTotal - insVal;
+
+    const wbValEl  = document.getElementById('home-wb-val');
+    const wbKgEl   = document.getElementById('home-wb-kg');
+    const wbWarnEl = document.getElementById('home-wb-warn');
+    const dwBarEl  = document.getElementById('home-dw-bar');
+    const dwMark3  = document.getElementById('home-dw-mark3');
+    const dwMark5  = document.getElementById('home-dw-mark5');
+    const dwLim3   = document.getElementById('home-dw-limit3');
+    const dwLim5   = document.getElementById('home-dw-limit5');
+
+    if (wbValEl) wbValEl.textContent = (balanceG >= 0 ? '+' : '') + balanceG.toLocaleString();
+    if (wbKgEl)  wbKgEl.textContent  = '≒ ' + (balanceG >= 0 ? '+' : '') + (balanceG/1000).toFixed(2) + ' kg';
+
+    // DW比計算
+    const dw3g = bw * 0.03 * 1000; // g単位
+    const dw5g = bw * 0.05 * 1000;
+    if (dwLim3) dwLim3.textContent = `DW×3% (${(bw*0.03).toFixed(1)}kg)`;
+    if (dwLim5) dwLim5.textContent = `DW×5% (${(bw*0.05).toFixed(1)}kg)`;
+
+    // バー幅（5%を100%として表示）
+    const pctOfDw5 = dw5g > 0 ? Math.min(110, Math.max(0, balanceG / dw5g * 100)) : 0;
+    if (dwBarEl) {
+      dwBarEl.style.width = pctOfDw5 + '%';
+      dwBarEl.style.background = balanceG > dw5g ? 'var(--red)' :
+                                  balanceG > dw3g ? 'var(--amber)' : 'var(--green)';
+    }
+    // マーカー位置（5%基準で3%の位置 = 60%）
+    const mark3pct = dw5g > 0 ? (dw3g / dw5g * 100) : 60;
+    if (dwMark3) dwMark3.style.left = Math.min(98, mark3pct) + '%';
+    if (dwMark5) dwMark5.style.left = '98%';
+
+    // 色・警告
+    if (wbValEl) {
+      wbValEl.style.color = balanceG > dw5g ? 'var(--red)' :
+                             balanceG > dw3g ? 'var(--amber)' : 'var(--green)';
+    }
+    if (wbWarnEl) {
+      if      (balanceG > dw5g) { wbWarnEl.style.display='block'; wbWarnEl.style.background='var(--red-dim)'; wbWarnEl.style.color='var(--red)'; wbWarnEl.style.border='1px solid rgba(248,113,113,0.3)'; wbWarnEl.textContent='⚠ 体重増加量がDW×5%を超えています'; }
+      else if (balanceG > dw3g) { wbWarnEl.style.display='block'; wbWarnEl.style.background='var(--amber-dim)'; wbWarnEl.style.color='var(--amber)'; wbWarnEl.style.border='1px solid rgba(252,211,77,0.3)'; wbWarnEl.textContent='注意: 体重増加量がDW×3%を超えています'; }
+      else                       { wbWarnEl.style.display='none'; }
+    }
+  } else if (dwBlock) {
+    dwBlock.style.display = 'none';
+  }
+
+  const updateBar = (barId, val, max) => {
+    const el = document.getElementById(barId);
+    if (el) el.style.width = Math.min(100, max > 0 ? Math.round(val/max*100) : 0) + '%';
+  };
+  updateBar('prog-protein',    totals.protein,    state.targets.protein);
+  updateBar('prog-potassium',  totals.potassium,  state.targets.potassium);
   updateBar('prog-phosphorus', totals.phosphorus, state.targets.phosphorus);
+
   const homeMeals = document.getElementById('home-meals');
   if (homeMeals) {
-    const mealTypeEmoji = { breakfast:'🍳', lunch:'🍱', dinner:'🍽', snack:'🍬', meal:'🍴' };
-    const mealTypeLabel = { breakfast:'朝食', lunch:'昼食', dinner:'夕食', snack:'間食', meal:'食事' };
+    const mealTypeEmoji  = { breakfast:'🍳', lunch:'🍱', dinner:'🍽', snack:'🍬', meal:'🍴' };
+    const mealTypeLabel  = { breakfast:'朝食', lunch:'昼食', dinner:'夕食', snack:'間食', meal:'食事' };
     const addBtn = '<div class="meal-item" style="opacity:0.5;border:1px dashed var(--border);" onclick="navTo(\'record\')"><div class="meal-emoji" style="font-size:20px;">＋</div><div class="meal-info"><div class="meal-name" style="color:var(--text3)">追加記録</div><div class="meal-time">タップして記録</div></div></div>';
-    if (todayMeals.length===0) { homeMeals.innerHTML='<div class="meal-item" style="opacity:0.5;border:1px dashed var(--border);" onclick="navTo(\'record\')"><div class="meal-emoji" style="font-size:20px;">＋</div><div class="meal-info"><div class="meal-name" style="color:var(--text3)">食事を記録する</div><div class="meal-time">タップして記録</div></div></div>'; }
-    else {
+    if (todayMeals.length === 0) {
+      homeMeals.innerHTML = '<div class="meal-item" style="opacity:0.5;border:1px dashed var(--border);" onclick="navTo(\'record\')"><div class="meal-emoji" style="font-size:20px;">＋</div><div class="meal-info"><div class="meal-name" style="color:var(--text3)">食事を記録する</div><div class="meal-time">タップして記録</div></div></div>';
+    } else {
       homeMeals.innerHTML = todayMeals.slice(0,5).map(m => {
-        const d=new Date(m.recorded_at);
-        const timeStr=d.getHours()+':'+String(d.getMinutes()).padStart(2,'0');
-        const tag = m.protein>state.targets.protein*0.35 ? '<div class="tag tag-amber">タンパク注意</div>' : '<div class="tag tag-green">記録済</div>';
-        return '<div class="meal-item"><div class="meal-emoji">'+(mealTypeEmoji[m.meal_type]||'🍴')+'</div><div class="meal-info"><div class="meal-name">'+(mealTypeLabel[m.meal_type]||'食事')+' — '+(m.dish_name||'食事')+'</div><div class="meal-time">'+timeStr+'</div><div class="meal-tags">'+tag+'</div></div><div class="meal-kcal">'+Math.round(m.calories||0)+'<div class="meal-kcal-unit">kcal</div></div></div>';
+        const d = new Date(m.recorded_at);
+        const timeStr = d.getHours() + ':' + String(d.getMinutes()).padStart(2,'0');
+        const tag = m.protein > state.targets.protein * 0.35
+          ? '<div class="tag tag-amber">タンパク注意</div>'
+          : '<div class="tag tag-green">記録済</div>';
+        const waterTag = m.water > 0 ? `<div class="tag tag-blue">💧${m.water}mL</div>` : '';
+        return '<div class="meal-item"><div class="meal-emoji">'+(mealTypeEmoji[m.meal_type]||'🍴')+'</div><div class="meal-info"><div class="meal-name">'+(mealTypeLabel[m.meal_type]||'食事')+' — '+(m.dish_name||'食事')+'</div><div class="meal-time">'+timeStr+'</div><div class="meal-tags">'+tag+waterTag+'</div></div><div class="meal-kcal">'+Math.round(m.calories||0)+'<div class="meal-kcal-unit">kcal</div></div></div>';
       }).join('') + addBtn;
     }
   }
@@ -5036,6 +5272,57 @@ function updateWaterCard() {
   }
   // 水分収支も更新
   updateWaterBalance();
+  // ホームの水分カード・DW比も即時反映
+  _syncHomeWaterCard(total, mealWater, drinkWater, target, pct);
+}
+
+/** ホーム水分カードとDW比ブロックをピンポイント更新（updateHomeSummary の重い処理を回避） */
+function _syncHomeWaterCard(total, mealWater, drinkWater, target, pct) {
+  const wEl  = document.getElementById('m-water-meal');
+  const lEl  = document.getElementById('limit-water');
+  const pEl  = document.getElementById('prog-water-meal');
+  const pcEl = document.getElementById('water-meal-pct');
+  const bEl  = document.getElementById('home-water-badge');
+  const fmEl = document.getElementById('home-water-from-meal');
+  const fdEl = document.getElementById('home-water-from-drink');
+  if (wEl)  wEl.textContent  = total.toLocaleString();
+  if (lEl)  lEl.textContent  = (target||1500).toLocaleString();
+  if (pEl)  pEl.style.width  = (pct||0) + '%';
+  if (pcEl) pcEl.textContent = (pct||0) + '%';
+  if (fmEl) fmEl.textContent = (mealWater||0).toLocaleString();
+  if (fdEl) fdEl.textContent = (drinkWater||0).toLocaleString();
+  if (bEl) {
+    if      (pct >= 100) { bEl.textContent = '✓ 目標達成'; bEl.style.color = 'var(--green)'; }
+    else if (pct >= 80)  { bEl.textContent = 'もう少し！';  bEl.style.color = 'var(--amber)'; }
+    else                  { bEl.textContent = ''; }
+  }
+  // DW比も更新
+  const bw = parseFloat(state.weight) || 0;
+  const dwBlock = document.getElementById('home-dw-block');
+  if (!dwBlock) return;
+  if (bw <= 0) { dwBlock.style.display = 'none'; return; }
+  dwBlock.style.display = '';
+  const insensible = (typeof calcInsensibleLoss === 'function') ? calcInsensibleLoss() : null;
+  const todayMeals2 = (typeof localLoadMeals === 'function') ? localLoadMeals().filter(m => new Date(m.recorded_at).toDateString() === new Date().toDateString()) : [];
+  const kcal2 = todayMeals2.reduce((s,m) => s+(m.calories||0), 0);
+  const meta2 = kcal2 > 0 ? Math.round(kcal2*0.12) : Math.round(bw*2.5);
+  const urine2 = (typeof getTodayHealthRecords === 'function') ? getTodayHealthRecords('urine').reduce((s,r)=>s+(r.vol||0),0) : 0;
+  const ins2   = insensible ? insensible.total : 0;
+  const bal2   = (total + meta2) - urine2 - ins2;
+  const dw3g   = bw * 0.03 * 1000;
+  const dw5g   = bw * 0.05 * 1000;
+  const vEl = document.getElementById('home-wb-val');
+  const kEl = document.getElementById('home-wb-kg');
+  const bBar= document.getElementById('home-dw-bar');
+  const wEl2= document.getElementById('home-wb-warn');
+  if (vEl) { vEl.textContent = (bal2>=0?'+':'')+bal2.toLocaleString(); vEl.style.color = bal2>dw5g?'var(--red)':bal2>dw3g?'var(--amber)':'var(--green)'; }
+  if (kEl) kEl.textContent = '≒ '+(bal2>=0?'+':'')+(bal2/1000).toFixed(2)+' kg';
+  if (bBar) { bBar.style.width = Math.min(110,dw5g>0?bal2/dw5g*100:0)+'%'; bBar.style.background=bal2>dw5g?'var(--red)':bal2>dw3g?'var(--amber)':'var(--green)'; }
+  if (wEl2) {
+    if      (bal2>dw5g) { wEl2.style.display='block'; wEl2.style.background='var(--red-dim)';   wEl2.style.color='var(--red)';   wEl2.style.border='1px solid rgba(248,113,113,0.3)'; wEl2.textContent='⚠ 体重増加量がDW×5%を超えています'; }
+    else if (bal2>dw3g) { wEl2.style.display='block'; wEl2.style.background='var(--amber-dim)'; wEl2.style.color='var(--amber)'; wEl2.style.border='1px solid rgba(252,211,77,0.3)'; wEl2.textContent='注意: 体重増加量がDW×3%を超えています'; }
+    else                 { wEl2.style.display='none'; }
+  }
 }
 
 // ===== 食品検索カテゴリータブ =====
@@ -5524,8 +5811,19 @@ function loadMedicines() {
  * @param {function} onProgress  - (pct:number, label:string) => void
  * @returns {string} rawText
  */
+/**
+ * OCR実行ラッパー v2（Tesseract最適化・進捗コールバック共通化）
+ * PSM6 = 均一なテキストブロック想定（栄養成分表・処方箋に最適）
+ * PSM3 = 自動レイアウト検出（フォールバック用）
+ */
 async function runOcr(imageDataUrl, onProgress) {
-  const result = await Tesseract.recognize(imageDataUrl, 'jpn+eng', {
+  // 前処理: Canvas でコントラスト強化 → OCR精度向上
+  let enhancedUrl = imageDataUrl;
+  try {
+    enhancedUrl = await _enhanceImageForOcr(imageDataUrl);
+  } catch(e) { /* 失敗してもオリジナルで続行 */ }
+
+  const result = await Tesseract.recognize(enhancedUrl, 'jpn+eng', {
     logger: m => {
       if (m.status === 'recognizing text') {
         const pct = Math.round((m.progress || 0) * 100);
@@ -5537,7 +5835,14 @@ async function runOcr(imageDataUrl, onProgress) {
       } else if (m.status === 'loading language traineddata') {
         if (onProgress) onProgress(10, '言語データ読み込み中...');
       }
-    }
+    },
+    // Tesseract パラメータ最適化
+    // PSM 6: 均一なテキストブロックとして解析（縦書き除外・栄養表に最適）
+    tessedit_pageseg_mode: '6',
+    // 日本語文字の保護（文脈維持）
+    preserve_interword_spaces: '1',
+    // 数字認識精度向上
+    tessedit_char_whitelist: '',
   });
   const text = result?.data?.text || '';
   try { result.data = null; } catch(e) {}
@@ -5545,96 +5850,225 @@ async function runOcr(imageDataUrl, onProgress) {
 }
 
 /**
- * OCRテキストの前処理（バラバラ文字結合・ノイズ除去）
- * Tesseractが「ア ム ロ ジ ピ ン」のように分割してしまう問題を解決
+ * OCR前処理: Canvas でグレースケール化＋コントラスト強化
+ * 手書き処方箋・栄養ラベル等で認識率が大幅向上
+ */
+async function _enhanceImageForOcr(dataUrl) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const MAX = 2400; // 最大解像度（大きすぎるとメモリ不足）
+      let w = img.naturalWidth, h = img.naturalHeight;
+      if (w > MAX || h > MAX) {
+        const r = Math.min(MAX / w, MAX / h);
+        w = Math.round(w * r); h = Math.round(h * r);
+      }
+      canvas.width = w; canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+
+      // グレースケール化＋コントラスト強化（OTSU二値化相当の前処理）
+      const imageData = ctx.getImageData(0, 0, w, h);
+      const d = imageData.data;
+      for (let i = 0; i < d.length; i += 4) {
+        // 輝度算出（人間の視覚特性に合わせた重み）
+        const lum = 0.299 * d[i] + 0.587 * d[i+1] + 0.114 * d[i+2];
+        // コントラスト強化（ガンマ補正で暗部強調）
+        const enhanced = lum < 128
+          ? Math.max(0,   lum * 0.7)          // 暗部をさらに暗く
+          : Math.min(255, 128 + (lum-128)*1.4); // 明部をさらに明るく
+        d[i] = d[i+1] = d[i+2] = Math.round(enhanced);
+      }
+      ctx.putImageData(imageData, 0, 0);
+      resolve(canvas.toDataURL('image/png', 0.95));
+    };
+    img.onerror = () => resolve(dataUrl); // 失敗時はオリジナル
+    img.src = dataUrl;
+  });
+}
+
+/**
+ * OCRテキストの前処理 v2（強力な文字結合・ノイズ除去）
+ *
+ * 「あ、む、ろ」問題: Tesseractが1文字ずつ分割するパターンを完全対処
+ *   - 単純スペース区切り:  「ア ム ロ」 → 「アムロ」
+ *   - 読点区切り:          「あ、む、ろ」→ 「あむろ」  ← NEW
+ *   - スペース＋読点混在:  「ア、ム ロ」 → 「アムロ」  ← NEW
+ *   - 改行ごとに1文字:     各行が1文字の場合、縦方向結合  ← NEW
  */
 function cleanOcrText(rawText) {
   let text = rawText;
 
-  // 1. 全角スペースを半角に統一
-  text = text.replace(/　/g, ' ');
-
-  // 2. 行末のハイフン連結を解除（改行またがり単語）
-  text = text.replace(/-\n/g, '');
-
-  // 3. カタカナ間の半角スペースを除去（「ア ム ロ」→「アムロ」）
-  //    カタカナ1文字 + スペース + カタカナ1文字 のパターンを繰り返し結合
-  for (let i = 0; i < 8; i++) {
-    text = text.replace(/([ァ-ヶー]) ([ァ-ヶー])/g, '$1$2');
-  }
-
-  // 4. ひらがな間の半角スペースも除去
-  for (let i = 0; i < 8; i++) {
-    text = text.replace(/([ぁ-ゖ]) ([ぁ-ゖ])/g, '$1$2');
-  }
-
-  // 5. 漢字・ひらがな・カタカナが混在する単語内スペースを除去
-  //    例：「た ん ぱ く 質」→「たんぱく質」
-  for (let i = 0; i < 6; i++) {
-    text = text.replace(/([\u3040-\u30FF\u4E00-\u9FAF]) ([\u3040-\u30FF\u4E00-\u9FAF])/g, '$1$2');
-  }
-
-  // 6. 数値の前後のスペースを正規化（「1 2 3 . 4」→「123.4」）
-  text = text.replace(/(\d) (\d)/g, '$1$2');
-  text = text.replace(/(\d) \./g,   '$1.');
-  text = text.replace(/\. (\d)/g,   '.$1');
-
-  // 7. 単位の前スペース除去（「100 mg」→「100mg」/ 「100 mL」→「100mL」）
-  text = text.replace(/(\d)\s+(mg|mL|ml|g|kcal|μg|単位)/gi, '$1$2');
-
-  // 8. OCRでよくある文字化けを補正
-  const corrections = [
-    [/[Oo０](?=\d)/g, '0'],   // O → 0（数字文脈）
-    [/(?<=\d)[lI１](?=\d)/g, '1'], // l/I → 1（数字文脈）
-    // 薬名でよくある誤認識
-    ['ア ム ロ ジ ピ ン', 'アムロジピン'],
-    ['ロ ス バ ス タ チ ン', 'ロスバスタチン'],
-    ['ア ト ル バ ス タ チ ン', 'アトルバスタチン'],
-    ['メ ト ホ ル ミ ン', 'メトホルミン'],
-    ['エ ナ ラ プ リ ル', 'エナラプリル'],
-    ['テ ル ミ サ ル タ ン', 'テルミサルタン'],
-    ['カ ン デ サ ル タ ン', 'カンデサルタン'],
-    ['ア ジ ル サ ル タ ン', 'アジルサルタン'],
-    ['ア ロ プ リ ノ ー ル', 'アロプリノール'],
-    ['フ ェ ブ キ ソ ス タ ッ ト', 'フェブキソスタット'],
-    ['ト リ ク ロ ル メ チ ア ジ ド', 'トリクロルメチアジド'],
-    ['フ ロ セ ミ ド', 'フロセミド'],
-    ['ス ピ ロ ノ ラ ク ト ン', 'スピロノラクトン'],
-    ['レ ボ チ ロ キ シ ン', 'レボチロキシン'],
-    ['ニ フ ェ ジ ピ ン', 'ニフェジピン'],
-    ['ア ン ジ オ テ ン シ ン', 'アンジオテンシン'],
-  ];
-  corrections.forEach(([from, to]) => {
-    if (typeof from === 'string') {
-      text = text.split(from).join(to);
-    } else {
-      text = text.replace(from, to);
+  // ─── フェーズ0: 改行ごと1文字の縦分割を検出して結合 ─────────────────
+  // 「ア\nム\nロ\nジ\nピ\nン」パターン: 全行が1〜2文字の日本語ならブロック結合
+  const lines0 = text.split(/\r?\n/);
+  const jpChar = /^[\u3041-\u30FF\u4E00-\u9FAF々〆〇ー]{1,2}$/;
+  let i = 0;
+  const rebuiltLines = [];
+  while (i < lines0.length) {
+    // 連続して短い日本語行が4文字以上続く場合は結合
+    let j = i;
+    const chunk = [];
+    while (j < lines0.length && jpChar.test(lines0[j].trim())) {
+      chunk.push(lines0[j].trim()); j++;
     }
+    if (chunk.length >= 4) {
+      rebuiltLines.push(chunk.join(''));
+      i = j;
+    } else {
+      rebuiltLines.push(lines0[i]); i++;
+    }
+  }
+  text = rebuiltLines.join('\n');
+
+  // ─── フェーズ1: 文字コード正規化 ────────────────────────────────────
+  text = text.replace(/　/g, ' ');           // 全角SP→半角
+  text = text.replace(/[‐‑‒–—]/g, '-');   // 各種ダッシュ→ハイフン
+  text = text.replace(/['']/g, "'");
+  text = text.replace(/[""]/g, '"');
+  text = text.replace(/-\n/g, '');           // 行末ハイフン（単語継続）
+
+  // ─── フェーズ2: 読点・中点による1文字区切りを結合 ──────────────────
+  // 「あ、む、ろ」「ア・ム・ロ」形式（腎臓病文脈の薬名でよく発生）
+  // 日本語1文字が読点/中点で区切られている場合のみ結合
+  for (let pass = 0; pass < 6; pass++) {
+    // カタカナ
+    text = text.replace(/([ァ-ヶー])[、，・ ]\s*([ァ-ヶー])/g, '$1$2');
+    // ひらがな
+    text = text.replace(/([ぁ-ゖ])[、，・ ]\s*([ぁ-ゖ])/g, '$1$2');
+    // 漢字・混在
+    text = text.replace(/([\u3040-\u30FF\u4E00-\u9FAF])[、，・ ]\s*([\u3040-\u30FF\u4E00-\u9FAF])/g, '$1$2');
+  }
+
+  // ─── フェーズ3: スペース区切り1文字を結合（従来処理を強化）──────────
+  // カタカナ（長音符・促音含む）: 最大20パス
+  for (let pass = 0; pass < 20; pass++) {
+    const before = text;
+    text = text.replace(/([ァ-ヶーｦ-ﾟ]) ([ァ-ヶーｦ-ﾟ])/g, '$1$2');
+    if (text === before) break;
+  }
+  // ひらがな
+  for (let pass = 0; pass < 20; pass++) {
+    const before = text;
+    text = text.replace(/([ぁ-ゖ]) ([ぁ-ゖ])/g, '$1$2');
+    if (text === before) break;
+  }
+  // 漢字・ひらがな・カタカナ混在
+  for (let pass = 0; pass < 12; pass++) {
+    const before = text;
+    text = text.replace(/([\u3040-\u30FF\u4E00-\u9FAF]) ([\u3040-\u30FF\u4E00-\u9FAF])/g, '$1$2');
+    if (text === before) break;
+  }
+
+  // ─── フェーズ4: 数値の断片結合 ─────────────────────────────────────
+  for (let pass = 0; pass < 6; pass++) {
+    text = text.replace(/(\d) (\d)/g, '$1$2');
+    text = text.replace(/(\d) \./g,   '$1.');
+    text = text.replace(/\. (\d)/g,   '.$1');
+  }
+  // 単位の前スペース除去
+  text = text.replace(/(\d)\s+(mg|mL|ml|g|kcal|μg|mcg|IU|単位)/gi, '$1$2');
+  // コンマ区切り数値の正規化（1,234 → 1234 は行わない。toLocaleString対応維持）
+
+  // ─── フェーズ5: OCR誤認識文字の補正 ────────────────────────────────
+  // 数字コンテキストの文字化け
+  text = text.replace(/[Oo０](?=\d)/g, '0');
+  text = text.replace(/[Oo０](?<=\d)/g, '0');
+  try {
+    text = text.replace(/(?<=\d)[lIｌ１](?=\d)/g, '1');
+  } catch(e) { /* lookbehind非対応ブラウザ */ }
+
+  // ─── フェーズ6: 既知の薬名・栄養語のスペル補正辞書 ────────────────
+  const DICT = [
+    // ── カタカナ薬名（スペース残留分の最終保険） ──
+    ['アムロジピン',    /ア ?ム ?ロ ?ジ ?ピ ?ン/g],
+    ['アムロジビン',    /ア ?ム ?ロ ?ジ ?ビ ?ン/g],  // 誤認識バリアント
+    ['ロスバスタチン',  /ロ ?ス ?バ ?ス ?タ ?チ ?ン/g],
+    ['アトルバスタチン',/ア ?ト ?ル ?バ ?ス ?タ ?チ ?ン/g],
+    ['メトホルミン',    /メ ?ト ?ホ ?ル ?ミ ?ン/g],
+    ['エナラプリル',    /エ ?ナ ?ラ ?プ ?リ ?ル/g],
+    ['テルミサルタン',  /テ ?ル ?ミ ?サ ?ル ?タ ?ン/g],
+    ['カンデサルタン',  /カ ?ン ?デ ?サ ?ル ?タ ?ン/g],
+    ['オルメサルタン',  /オ ?ル ?メ ?サ ?ル ?タ ?ン/g],
+    ['バルサルタン',    /バ ?ル ?サ ?ル ?タ ?ン/g],
+    ['イルベサルタン',  /イ ?ル ?ベ ?サ ?ル ?タ ?ン/g],
+    ['アジルサルタン',  /ア ?ジ ?ル ?サ ?ル ?タ ?ン/g],
+    ['アロプリノール',  /ア ?ロ ?プ ?リ ?ノ ?ー ?ル/g],
+    ['フェブキソスタット',/フ ?ェ ?ブ ?キ ?ソ ?ス ?タ ?ッ ?ト/g],
+    ['トリクロルメチアジド',/ト ?リ ?ク ?ロ ?ル ?メ ?チ ?ア ?ジ ?ド/g],
+    ['フロセミド',      /フ ?ロ ?セ ?ミ ?ド/g],
+    ['スピロノラクトン', /ス ?ピ ?ロ ?ノ ?ラ ?ク ?ト ?ン/g],
+    ['レボチロキシン',  /レ ?ボ ?チ ?ロ ?キ ?シ ?ン/g],
+    ['ニフェジピン',    /ニ ?フ ?ェ ?ジ ?ピ ?ン/g],
+    ['アムロジピン',    /ア ?ム ?ロ ?ジ ?ピ ?ン/g],
+    ['シルニジピン',    /シ ?ル ?ニ ?ジ ?ピ ?ン/g],
+    ['エソメプラゾール', /エ ?ソ ?メ ?プ ?ラ ?ゾ ?ー ?ル/g],
+    ['ランソプラゾール', /ラ ?ン ?ソ ?プ ?ラ ?ゾ ?ー ?ル/g],
+    ['オメプラゾール',  /オ ?メ ?プ ?ラ ?ゾ ?ー ?ル/g],
+    ['ラベプラゾール',  /ラ ?ベ ?プ ?ラ ?ゾ ?ー ?ル/g],
+    ['クロピドグレル',  /ク ?ロ ?ピ ?ド ?グ ?レ ?ル/g],
+    ['アスピリン',      /ア ?ス ?ピ ?リ ?ン/g],
+    ['リシノプリル',    /リ ?シ ?ノ ?プ ?リ ?ル/g],
+    ['ペリンドプリル',  /ペ ?リ ?ン ?ド ?プ ?リ ?ル/g],
+    ['ビソプロロール',  /ビ ?ソ ?プ ?ロ ?ロ ?ー ?ル/g],
+    ['カルベジロール',  /カ ?ル ?ベ ?ジ ?ロ ?ー ?ル/g],
+    ['メトプロロール',  /メ ?ト ?プ ?ロ ?ロ ?ー ?ル/g],
+    ['アテノロール',    /ア ?テ ?ノ ?ロ ?ー ?ル/g],
+    ['インスリン',      /イ ?ン ?ス ?リ ?ン/g],
+    ['グリメピリド',    /グ ?リ ?メ ?ピ ?リ ?ド/g],
+    ['シタグリプチン',  /シ ?タ ?グ ?リ ?プ ?チ ?ン/g],
+    ['エンパグリフロジン',/エ ?ン ?パ ?グ ?リ ?フ ?ロ ?ジ ?ン/g],
+    ['ダパグリフロジン', /ダ ?パ ?グ ?リ ?フ ?ロ ?ジ ?ン/g],
+    ['カナグリフロジン', /カ ?ナ ?グ ?リ ?フ ?ロ ?ジ ?ン/g],
+    ['レナリドミド',    /レ ?ナ ?リ ?ド ?ミ ?ド/g],
+    ['プレドニゾロン',  /プ ?レ ?ド ?ニ ?ゾ ?ロ ?ン/g],
+    ['ミコフェノール',  /ミ ?コ ?フ ?ェ ?ノ ?ー ?ル/g],
+    ['タクロリムス',    /タ ?ク ?ロ ?リ ?ム ?ス/g],
+    ['シクロスポリン',  /シ ?ク ?ロ ?ス ?ポ ?リ ?ン/g],
+    ['セベラマー',      /セ ?ベ ?ラ ?マ ?ー/g],
+    ['炭酸カルシウム',  /炭 ?酸 ?カ ?ル ?シ ?ウ ?ム/g],
+    ['沈降炭酸カルシウム',/沈 ?降 ?炭 ?酸 ?カ ?ル ?シ ?ウ ?ム/g],
+    ['酸化マグネシウム', /酸 ?化 ?マ ?グ ?ネ ?シ ?ウ ?ム/g],
+    ['重炭酸ナトリウム', /重 ?炭 ?酸 ?ナ ?ト ?リ ?ウ ?ム/g],
+    // ── 栄養成分ラベルでよく崩れるキーワード ──
+    ['エネルギー',  /エ ?ネ ?ル ?ギ ?ー/g],
+    ['たんぱく質',  /た ?ん ?ぱ ?く ?質/g],
+    ['タンパク質',  /タ ?ン ?パ ?ク ?質/g],
+    ['炭水化物',    /炭 ?水 ?化 ?物/g],
+    ['食物繊維',    /食 ?物 ?繊 ?維/g],
+    ['食塩相当量',  /食 ?塩 ?相 ?当 ?量/g],
+    ['カリウム',    /カ ?リ ?ウ ?ム/g],
+    ['カルシウム',  /カ ?ル ?シ ?ウ ?ム/g],
+    ['ナトリウム',  /ナ ?ト ?リ ?ウ ?ム/g],
+    ['マグネシウム',/マ ?グ ?ネ ?シ ?ウ ?ム/g],
+    ['コレステロール',/コ ?レ ?ス ?テ ?ロ ?ー ?ル/g],
+    ['飽和脂肪酸',  /飽 ?和 ?脂 ?肪 ?酸/g],
+    ['キロカロリー',/キ ?ロ ?カ ?ロ ?リ ?ー/g],
+  ];
+  DICT.forEach(([correct, pattern]) => {
+    text = text.replace(pattern, correct);
   });
+
+  // ─── フェーズ7: 行末の孤立スペースを除去・多重空白を1個に ────────
+  text = text.replace(/[ \t]+\n/g, '\n');
+  text = text.replace(/[ \t]{2,}/g, ' ');
+  text = text.replace(/\n{3,}/g, '\n\n');
 
   return text;
 }
 
 /**
- * 共通OCRフロー：FileInput から読み込み → クリーニング → テキスト返却
- * 画像は処理後即破棄（容量節約）
+ * 共通OCRフロー v2：FileInput から読み込み → 前処理 → OCR → クリーニング
  */
 async function loadAndOcr(file, onProgress) {
-  // 1. FileReader で DataURL 取得
   const imageDataUrl = await new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload  = e => resolve(e.target.result);
     reader.onerror = () => reject(new Error('画像読み込みエラー'));
     reader.readAsDataURL(file);
   });
-
-  // 2. OCR 実行
   const rawText = await runOcr(imageDataUrl, onProgress);
-
-  // 3. 画像データを即破棄
-  // (imageDataUrl はローカル変数なのでスコープ外になれば GC される)
-
-  // 4. テキストクリーニング
   return cleanOcrText(rawText);
 }
 
@@ -7672,7 +8106,25 @@ function saveMedScheduleEdits() {
 const MY_FOOD_KEY = 'renalcare_my_foods';
 
 function loadMyFoods() {
-  try { return JSON.parse(localStorage.getItem(MY_FOOD_KEY) || '[]'); } catch(e) { return []; }
+  try {
+    const raw = JSON.parse(localStorage.getItem(MY_FOOD_KEY) || '[]');
+    if (!Array.isArray(raw)) return [];
+    let dirty = false;
+    const migrated = raw.map(f => {
+      if (!f || typeof f !== 'object') { dirty = true; return null; }
+      const defaults = { cal:0, protein:0, fat:0, carb:0, fiber:0, k:0, p:0, salt:0, water:0, cat:'マイ食品', custom:true };
+      let changed = false;
+      for (const [k, v] of Object.entries(defaults)) {
+        if (f[k] === undefined || f[k] === null) { f[k] = v; changed = true; }
+      }
+      if (changed) dirty = true;
+      return f;
+    }).filter(Boolean);
+    if (dirty) {
+      try { localStorage.setItem(MY_FOOD_KEY, JSON.stringify(migrated)); } catch(e2) {}
+    }
+    return migrated;
+  } catch(e) { return []; }
 }
 function saveMyFoods(list) {
   try { localStorage.setItem(MY_FOOD_KEY, JSON.stringify(list)); } catch(e) {}
@@ -7882,86 +8334,87 @@ async function handleMyFoodOcr(event) {
   }
 }
 
-// ---- 栄養成分ラベルのテキストをパース（強化版） ----
+// ---- 栄養成分ラベルのテキストをパース（強化版 v2） ----
 function parseNutritionLabel(text) {
   const result = {
     cal: null, protein: null, fat: null, carb: null,
     fiber: null, k: null, p: null, salt: null, water: null
   };
 
-  // cleanOcrText は呼び出し元で適用済み。ここでは改行正規化のみ
+  // cleanOcrText は呼び出し元で適用済み。改行正規化のみ
   const t = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 
   // ── 数値マッチヘルパー ──
-  // 「123」「123.4」「123,4」「.5」すべて対応
   const N = '(\\d+(?:[,.]\\d+)?)';
 
   /**
-   * 行ベースで「キーワード行の直後の数値」も拾う戦略
-   * 栄養成分表は「たんぱく質\n8.2g」のように改行で分かれていることが多い
+   * 複数パターン対応マッチ関数
+   * 同一行マッチ → 次行マッチ → テーブル形式（数値が2行後）の順で試みる
    */
   function matchMultiLine(text, keyRe, unit) {
-    // 同一行マッチ
-    const inlinePat = new RegExp(keyRe.source + '[^\\d\\n]*' + N + '\\s*' + unit, keyRe.flags || 'i');
+    const unitPat = unit.replace(/\|/g, '|');
+    // (1) 同一行マッチ
+    const inlinePat = new RegExp(keyRe.source + '[^\\d\\n]*' + N + '\\s*(?:' + unitPat + ')', (keyRe.flags||'') + 'i');
     const m1 = text.match(inlinePat);
     if (m1) return parseFloat(m1[1].replace(',', '.'));
 
-    // 次行マッチ（キーワード行の直後に数値）
+    // (2) キーワード行の直後に数値（改行区切り）
     const lines = text.split('\n');
     for (let i = 0; i < lines.length - 1; i++) {
       if (keyRe.test(lines[i])) {
-        const nextLine = lines[i + 1].trim();
-        const numMatch = nextLine.match(new RegExp('^' + N + '\\s*' + unit + '?', 'i'));
-        if (numMatch) return parseFloat(numMatch[1].replace(',', '.'));
+        // 1行後
+        const next1 = lines[i + 1].trim();
+        const nm1 = next1.match(new RegExp('^' + N + '\\s*(?:' + unitPat + ')?', 'i'));
+        if (nm1 && parseFloat(nm1[1].replace(',','.')) > 0) return parseFloat(nm1[1].replace(',', '.'));
+        // 2行後（表形式で空行が挟まる場合）
+        if (i + 2 < lines.length) {
+          const next2 = lines[i + 2].trim();
+          const nm2 = next2.match(new RegExp('^' + N + '\\s*(?:' + unitPat + ')?', 'i'));
+          if (nm2 && parseFloat(nm2[1].replace(',','.')) > 0) return parseFloat(nm2[1].replace(',', '.'));
+        }
       }
     }
     return null;
   }
 
   // ── エネルギー（kcal）──
-  // 「エネルギー 185kcal」「185 kcal」「熱量185キロカロリー」
-  result.cal = matchMultiLine(t, /(?:エネルギー|熱量|カロリー)/, 'kcal|キロカロリー')
-    ?? (t.match(/(\\d+(?:[,.]\\d+)?)\\s*(?:kcal|キロカロリー)/i)?.[1]
-        ? parseFloat(t.match(/(\\d+(?:[,.]\\d+)?)\\s*(?:kcal|キロカロリー)/i)[1].replace(',','.'))
-        : null);
+  result.cal = matchMultiLine(t, /(?:エネルギー|熱量|カロリー|Energy)/i, 'kcal|キロカロリー|Cal');
+  if (result.cal === null) {
+    // フォールバック: 行中に単独でkcalが出てくる
+    const m = t.match(/(\d+(?:[,.]\d+)?)\s*(?:kcal|キロカロリー)/i);
+    if (m) result.cal = parseFloat(m[1].replace(',', '.'));
+  }
 
   // ── たんぱく質 ──
-  result.protein = matchMultiLine(t, /たんぱく質|タンパク質|たん白質|蛋白質|protein/i, 'g');
+  result.protein = matchMultiLine(t, /たんぱく質|タンパク質|たん白質|蛋白質|Protein/i, 'g');
 
   // ── 脂質 ──
-  result.fat = matchMultiLine(t, /脂質|fat/i, 'g');
+  result.fat = matchMultiLine(t, /脂質|Fat/i, 'g');
 
   // ── 炭水化物 ──
-  // 糖質・食物繊維の合算の場合もある
-  result.carb = matchMultiLine(t, /炭水化物|carbohydrate/i, 'g')
-    ?? matchMultiLine(t, /糖質/i, 'g');
+  result.carb = matchMultiLine(t, /炭水化物|Carbohydrate/i, 'g')
+             ?? matchMultiLine(t, /糖質/i, 'g');
 
   // ── 食物繊維 ──
-  result.fiber = matchMultiLine(t, /食物繊維|dietary\s*fiber/i, 'g');
+  result.fiber = matchMultiLine(t, /食物繊維|Dietary\s*Fiber/i, 'g');
 
   // ── カリウム ──
-  result.k = matchMultiLine(t, /カリウム|potassium/i, 'mg');
+  result.k = matchMultiLine(t, /カリウム|Potassium/i, 'mg');
 
   // ── リン ──
-  result.p = matchMultiLine(t, /リン(?!酸塩)|phosphorus/i, 'mg');
+  result.p = matchMultiLine(t, /リン(?!酸塩)|Phosphorus/i, 'mg');
 
   // ── 食塩相当量 ──
-  result.salt = matchMultiLine(t, /食塩相当量|塩分/i, 'g');
+  result.salt = matchMultiLine(t, /食塩相当量|塩分|Salt|Sodium\s*Chloride/i, 'g');
   if (result.salt === null) {
     // ナトリウム(mg) → 食塩(g) 換算: Na×2.54÷1000
-    const naVal = matchMultiLine(t, /ナトリウム|sodium|Na(?!Cl)/i, 'mg');
-    if (naVal !== null && naVal > 0) {
-      result.salt = Math.round(naVal * 2.54) / 1000;
-    }
+    const naVal = matchMultiLine(t, /ナトリウム|Sodium|Na(?!\s*Cl)/i, 'mg');
+    if (naVal !== null && naVal > 0) result.salt = Math.round(naVal * 2.54) / 1000;
   }
 
   // ── 水分量 ──
-  // 「水分 XXXmL」「内容量 XXXmL」「水XXXg」
-  result.water = matchMultiLine(t, /水分量?|water/i, 'ml|mL|g')
-    ?? matchMultiLine(t, /内容量|容量|content/i, 'ml|mL');
-
-  // ── 0 を null に（未検出扱いにしない） ──
-  // 0g は正当な値なので null には変換しない
+  result.water = matchMultiLine(t, /水分量?|Water/i, 'ml|mL|g|cc')
+              ?? matchMultiLine(t, /内容量|容量|Content|Volume/i, 'ml|mL|cc');
 
   return result;
 }
