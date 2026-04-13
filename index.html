@@ -2324,6 +2324,9 @@ const MED_SCHEDULE_KEY= 'renalcare_med_schedule';   // {medId: [slotKey, ...]} o
 
 // ===== INIT =====
 document.addEventListener('DOMContentLoaded', () => {
+  // 薬データ: stock / daysSupply / prescDate フィールドのマイグレーション
+  migrateMedStock();
+
   // 旧バージョンで WATER_KEY が undefined だった場合のデータ移行
   try {
     const badWater = localStorage.getItem('undefined');
@@ -5836,12 +5839,13 @@ async function runOcr(imageDataUrl, onProgress) {
         if (onProgress) onProgress(10, '言語データ読み込み中...');
       }
     },
-    // Tesseract パラメータ最適化
-    // PSM 6: 均一なテキストブロックとして解析（縦書き除外・栄養表に最適）
-    tessedit_pageseg_mode: '6',
-    // 日本語文字の保護（文脈維持）
+    // PSM 11: スパーステキスト（OSD不要）— お薬手帳シールのような
+    //         小ラベル・断片的テキストに最適。文字をできるだけ多く拾う。
+    // PSM 6 (均一ブロック) は栄養ラベルに向いているが
+    // 処方ラベルは複数行・複数列のため PSM 11 が有利
+    tessedit_pageseg_mode: '11',
+    // 日本語文字の文脈維持（単語間スペースを保持してから cleanOcrText で除去）
     preserve_interword_spaces: '1',
-    // 数字認識精度向上
     tessedit_char_whitelist: '',
   });
   const text = result?.data?.text || '';
@@ -6114,12 +6118,45 @@ async function handleOcrImage(event) {
   }
 }
 
-// ── OCRテキストから薬情報をパース（強化版） ──
+// ── OCRテキストから薬情報をパース（強化版 v3: 処方日数・処方日対応） ──
 function parseOcrText(rawText) {
   // cleanOcrText は共通エンジンで適用済みだが、行分割前に再度整形
   const lines = rawText.split(/[\n\r]+/).map(l => l.trim()).filter(l => l.length > 1);
   const candidates = [];
 
+  // ── シール全体から処方日・処方日数をまず抽出 ──────────────────────────
+  const fullText = lines.join('\n');
+
+  // 処方日（調剤日）: 「令和X年X月X日」「R5.10.1」「2024/10/1」「2024年10月1日」
+  let globalPrescDate = null;
+  const datePatterns = [
+    /(?:令和|R)\s*(\d{1,2})\s*[年\.]\s*(\d{1,2})\s*[月\.]\s*(\d{1,2})\s*日?/,
+    /(?:平成|H)\s*(\d{1,2})\s*[年\.]\s*(\d{1,2})\s*[月\.]\s*(\d{1,2})\s*日?/,
+    /(\d{4})[\/\-年](\d{1,2})[\/\-月](\d{1,2})日?/,
+    /(\d{2})[\/\-](\d{1,2})[\/\-](\d{1,2})/,
+  ];
+  for (const pat of datePatterns) {
+    const m = fullText.match(pat);
+    if (m) {
+      try {
+        let y = parseInt(m[1]), mo = parseInt(m[2]), d = parseInt(m[3]);
+        if (pat.source.startsWith('(?:令和|R)')) y = 2018 + y;  // 令和元年=2019
+        else if (pat.source.startsWith('(?:平成|H)')) y = 1988 + y;
+        else if (y < 100) y = 2000 + y;
+        if (y >= 2000 && y <= 2099 && mo >= 1 && mo <= 12 && d >= 1 && d <= 31) {
+          globalPrescDate = `${y}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        }
+      } catch(e2) {}
+      break;
+    }
+  }
+
+  // 処方日数「○○日分」「××日間」をシール全体から抽出
+  let globalDaysSupply = null;
+  const daysM = fullText.match(/(\d+)\s*日(?:分|間)/);
+  if (daysM) globalDaysSupply = parseInt(daysM[1]);
+
+  // ── 薬名・用法・用量パターン ────────────────────────────────────────
   // 薬名パターン（カタカナ3文字以上に拡張・剤形サフィックス対応強化）
   const drugNamePattern = /([ァ-ヶー]{3,}(?:錠|カプセル|カプ|散|細粒|顆粒|液|シロップ|注射|パッチ|テープ|クリーム|軟膏|点眼|点鼻|吸入)?(?:\d+(?:\.\d+)?(?:mg|μg|mL|g|単位)?)?)|([A-Za-z][A-Za-z\d\-]{2,}(?:\s*\d+(?:\.\d+)?(?:mg|μg|mL|g)?)?)/g;
 
@@ -6136,11 +6173,21 @@ function parseOcrText(rawText) {
     /^.{1,1}$/,
   ];
 
+  // 病院名・日付・管理番号行を判定して薬名行から除外
+  function isNonDrugLine(line) {
+    if (/(?:病院|医院|クリニック|薬局|調剤|内科|外科|整形|皮膚科|眼科|耳鼻科|泌尿器|循環器|腎臓)/.test(line)) return true;
+    if (/(?:年|月|日|H\d|R\d|\d{4}\/|\d{2}\/\d{2})/.test(line) && line.length < 20) return true;
+    if (/(?:患者|氏名|生年|保険|番号|受付|診察|担当|医師|先生)/.test(line)) return true;
+    if (/^\d[\d\s\-\/\.]+$/.test(line)) return true;
+    return false;
+  }
+
   let currentDrug = null;
 
   lines.forEach(line => {
     if (/^[\s\-\=\|_　・。、※＊★●▼▶◆]+$/.test(line)) return;
     if (line.length < 2) return;
+    if (isNonDrugLine(line)) return; // 病院名・日付行をスキップ
 
     const nameMatches = line.match(drugNamePattern) || [];
     nameMatches.forEach(match => {
@@ -6158,6 +6205,8 @@ function parseOcrText(rawText) {
         form: '',
         usage: '',
         dose: '',
+        daysSupply: globalDaysSupply,  // ← 処方日数
+        prescDate:  globalPrescDate,   // ← 処方日
         frequency: 'daily',
         rawLine: line,
         selected: true,
@@ -6177,6 +6226,12 @@ function parseOcrText(rawText) {
     if (doseMatches.length > 0 && currentDrug) {
       currentDrug.dose = doseMatches[0];
     }
+
+    // 行内処方日数（薬名行ごとの「○日分」を上書き）
+    const lineDaysM = line.match(/(\d+)\s*日(?:分|間)/);
+    if (lineDaysM && currentDrug) {
+      currentDrug.daysSupply = parseInt(lineDaysM[1]);
+    }
   });
 
   // 重複除去・信頼度でソート
@@ -6190,8 +6245,8 @@ function parseOcrText(rawText) {
     })
     // 用法・用量あり → 上位表示
     .sort((a, b) => {
-      const scoreA = (a.usage ? 2 : 0) + (a.dose ? 1 : 0);
-      const scoreB = (b.usage ? 2 : 0) + (b.dose ? 1 : 0);
+      const scoreA = (a.usage ? 2 : 0) + (a.dose ? 1 : 0) + (a.daysSupply ? 1 : 0);
+      const scoreB = (b.usage ? 2 : 0) + (b.dose ? 1 : 0) + (b.daysSupply ? 1 : 0);
       return scoreB - scoreA;
     });
 }
@@ -6217,8 +6272,10 @@ function renderOcrResults(candidates) {
       <div style="flex:1;min-width:0;">
         <div style="font-size:14px;font-weight:600;color:var(--text);">${c.name}</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:3px;">
-          ${c.dose    ? `<span style="font-size:11px;background:var(--surface2);padding:1px 7px;border-radius:8px;color:var(--text2);">💊 ${c.dose}</span>` : ''}
-          ${c.usage   ? `<span style="font-size:11px;background:var(--surface2);padding:1px 7px;border-radius:8px;color:var(--text2);">🕐 ${c.usage}</span>` : ''}
+          ${c.dose       ? `<span style="font-size:11px;background:var(--surface2);padding:1px 7px;border-radius:8px;color:var(--text2);">💊 ${c.dose}</span>` : ''}
+          ${c.usage      ? `<span style="font-size:11px;background:var(--surface2);padding:1px 7px;border-radius:8px;color:var(--text2);">🕐 ${c.usage}</span>` : ''}
+          ${c.daysSupply ? `<span style="font-size:11px;background:rgba(79,195,247,0.12);padding:1px 7px;border-radius:8px;color:var(--accent);">📦 ${c.daysSupply}日分</span>` : ''}
+          ${c.prescDate  ? `<span style="font-size:11px;background:var(--surface2);padding:1px 7px;border-radius:8px;color:var(--text3);">📅 ${c.prescDate}</span>` : ''}
           ${c.frequency === 'prn' ? '<span style="font-size:11px;background:var(--amber-dim);padding:1px 7px;border-radius:8px;color:var(--amber);">頓服</span>' : ''}
         </div>
         <div style="font-size:10px;color:var(--text3);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">認識: ${c.rawLine}</div>
@@ -6253,11 +6310,14 @@ function applyOcrResults() {
   // 既存のカードを一度すべて折りたたんで新しいカードを追加
   selected.forEach(drug => {
     addMedCard({
-      name:      drug.name,
-      form:      drug.dose || '',
-      note:      drug.usage || '',
-      frequency: drug.frequency || 'daily',
-      prn:       drug.frequency === 'prn',
+      name:       drug.name,
+      form:       drug.dose || '',
+      note:       drug.usage || '',
+      frequency:  drug.frequency || 'daily',
+      prn:        drug.frequency === 'prn',
+      daysSupply: drug.daysSupply || '',
+      prescDate:  drug.prescDate  || '',
+      stock:      drug.daysSupply ? String(drug.daysSupply) : '',
     });
   });
 
@@ -6579,6 +6639,20 @@ function _makeBulkCardHTML(idx, data) {
         <label class="form-label">⚠️ 注意事項・服用メモ</label>
         <input class="form-input" type="text" id="bulk-note-${idx}" placeholder="例：グレープフルーツ不可" value="${d.note||''}" />
       </div>
+      <!-- ===== 残薬ストック管理 ===== -->
+      <div class="form-row">
+        <label class="form-label">📦 処方日数（〇日分）</label>
+        <input class="form-input" type="number" min="0" id="bulk-days-${idx}" placeholder="例：28" value="${d.daysSupply||''}"
+          oninput="syncStockFromDays(${idx})" />
+      </div>
+      <div class="form-row">
+        <label class="form-label">💊 現在の残薬数（錠/日分）</label>
+        <input class="form-input" type="number" min="0" id="bulk-stock-${idx}" placeholder="例：28" value="${d.stock||''}" />
+      </div>
+      <div class="form-row">
+        <label class="form-label">📅 処方日</label>
+        <input class="form-input" type="date" id="bulk-prescdate-${idx}" value="${d.prescDate||''}" />
+      </div>
       <div class="form-row">
         <label class="form-label">🎨 カラー</label>
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:2px;">
@@ -6618,6 +6692,14 @@ function addMedCard(data) {
   const div = document.createElement('div');
   div.innerHTML = _makeBulkCardHTML(idx, data);
   list.appendChild(div.firstChild);
+}
+
+function syncStockFromDays(idx) {
+  const daysEl  = document.getElementById(`bulk-days-${idx}`);
+  const stockEl = document.getElementById(`bulk-stock-${idx}`);
+  if (daysEl && stockEl && !stockEl.value) {
+    stockEl.value = daysEl.value;
+  }
 }
 
 function removeBulkCard(idx) {
@@ -6701,6 +6783,9 @@ function saveMedicines_bulk() {
       weekdays,
       monthDay,
       color,
+      daysSupply: parseInt(document.getElementById(`bulk-days-${idx}`)?.value||'0')||null,
+      stock:      parseInt(document.getElementById(`bulk-stock-${idx}`)?.value||'0')||0,
+      prescDate:  document.getElementById(`bulk-prescdate-${idx}`)?.value || null,
       createdAt: new Date().toISOString()
     };
     meds.push(entry);
@@ -6802,6 +6887,19 @@ function showEditMedModal(id) {
       <label class="form-label">⚠️ 注意事項・服用メモ</label>
       <input class="form-input" type="text" id="med-note" value="${med.note||''}" placeholder="例：グレープフルーツ不可" />
     </div>
+    <!-- ===== 残薬ストック管理 ===== -->
+    <div class="form-row">
+      <label class="form-label">📦 処方日数（〇日分）</label>
+      <input class="form-input" type="number" min="0" id="med-days-supply" placeholder="例：28" value="${med.daysSupply||''}" />
+    </div>
+    <div class="form-row">
+      <label class="form-label">💊 現在の残薬数（錠/日分）</label>
+      <input class="form-input" type="number" min="0" id="med-stock" placeholder="例：28" value="${typeof med.stock==='number'?med.stock:''}" />
+    </div>
+    <div class="form-row">
+      <label class="form-label">📅 処方日</label>
+      <input class="form-input" type="date" id="med-presc-date" value="${med.prescDate||''}" />
+    </div>
     <div class="form-row">
       <label class="form-label">🎨 カラー</label>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:2px;" id="med-color-picker">
@@ -6844,6 +6942,7 @@ function saveMedicine() {
   const monthDay2 = freq2 === 'monthly'
     ? parseInt(document.getElementById('med-monthday')?.value||'0')||null
     : null;
+  const existingMed = meds.find(m=>m.id===id);
   const entry = {
     id:         id,
     name,
@@ -6860,7 +6959,10 @@ function saveMedicine() {
     weekdays:  weekdays2,
     monthDay:  monthDay2,
     color:     _medColor,
-    createdAt: meds.find(m=>m.id===id)?.createdAt || new Date().toISOString()
+    daysSupply: parseInt(document.getElementById('med-days-supply')?.value||'0')||null,
+    stock:      parseInt(document.getElementById('med-stock')?.value||'0')||0,
+    prescDate:  document.getElementById('med-presc-date')?.value || null,
+    createdAt: existingMed?.createdAt || new Date().toISOString()
   };
   const idx = meds.findIndex(m => m.id === id);
   if (idx !== -1) meds[idx] = entry; else meds.push(entry);
@@ -7121,6 +7223,63 @@ function renderMedicineLog() {
 }
 
 // ----- 医療機関パネル -----
+
+// ============================================================
+// ===== 残薬ストック可視化 ヘルパー =====
+// ============================================================
+
+/**
+ * 残薬バッジ HTML を生成する
+ * stock が設定されていない場合は空文字を返す
+ */
+function _stockBadgeHTML(med) {
+  if (typeof med.stock !== 'number' && !med.stock) return '';
+  const stock = typeof med.stock === 'number' ? med.stock : parseInt(med.stock)||0;
+
+  let dosePerTake = 1;
+  const doseAmt = med.doseAmount || (med.timingDoses ? Object.values(med.timingDoses)[0] : '') || '';
+  const doseNum = parseFloat(doseAmt);
+  if (doseNum > 0) dosePerTake = doseNum;
+
+  const timingsCount = (med.timings || []).length || 1;
+  const dosePerDay = dosePerTake * timingsCount;
+  const daysLeft = dosePerDay > 0 ? Math.floor(stock / dosePerDay) : stock;
+
+  let color, bg, icon;
+  if (daysLeft <= 0) {
+    color = 'var(--red)'; bg = 'var(--red-dim)'; icon = '🚨';
+  } else if (daysLeft <= 3) {
+    color = 'var(--red)'; bg = 'var(--red-dim)'; icon = '⚠️';
+  } else if (daysLeft <= 7) {
+    color = 'var(--amber)'; bg = 'var(--amber-dim)'; icon = '📉';
+  } else {
+    color = 'var(--green)'; bg = 'var(--green-dim)'; icon = '📦';
+  }
+
+  const daysText = daysLeft <= 0 ? '残薬なし' : `あと約${daysLeft}日分`;
+  return `<div style="display:inline-flex;align-items:center;gap:4px;margin-top:3px;padding:2px 8px;border-radius:10px;background:${bg};border:1px solid ${color};font-size:11px;color:${color};font-weight:600;">
+    ${icon} ${daysText}（残${stock}）
+  </div>`;
+}
+
+/**
+ * 起動時マイグレーション: 既存薬データに stock:0 / daysSupply / prescDate を付与
+ */
+function migrateMedStock() {
+  try {
+    const meds = loadMedicines();
+    let changed = false;
+    meds.forEach(m => {
+      if (typeof m.stock     === 'undefined') { m.stock     = 0;    changed = true; }
+      if (typeof m.daysSupply === 'undefined') { m.daysSupply = null; changed = true; }
+      if (typeof m.prescDate  === 'undefined') { m.prescDate  = null; changed = true; }
+    });
+    if (changed) saveMedicines(meds);
+  } catch(e) {}
+}
+
+// ============================================================
+
 function renderHospitalsPanel() {
   const area = document.getElementById('med-hospitals-area');
   if (!area) return;
@@ -7152,6 +7311,7 @@ function renderHospitalsPanel() {
               <div style="font-size:13px;font-weight:600;">${med.name}${med.form?'<span style="font-size:11px;color:var(--text3);margin-left:4px;">'+med.form+'</span>':''}</div>
               <div style="font-size:11px;color:var(--text2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${timingStr}</div>
               ${med.note ? `<div style="font-size:11px;color:var(--text3);margin-top:1px;">⚠️ ${med.note}</div>` : ''}
+              ${_stockBadgeHTML(med)}
             </div>
             <div style="font-size:11px;color:var(--text3);flex-shrink:0;">編集 ›</div>
           </div>`;
@@ -7929,21 +8089,50 @@ function setMedcheckStatus(medId, slotKey, status) {
   const existing = dayLog.entries.find(e => e.medId === medId && e.slotKey === slotKey);
   const timeStr = new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
 
+  let wasAlreadyTaken = existing && existing.status === 'taken';
+  let becomingTaken   = status === 'taken';
+  let becomingCancel  = existing && existing.status === status; // 再押しでキャンセル
+
   if (existing) {
     if (existing.status === status) {
       // 同じボタンを再押しでキャンセル
       existing.status = 'pending';
       existing.time = null;
+      // 「服用済み」→キャンセルの場合はストックを戻す
+      if (status === 'taken') _adjustStock(medId, +1);
     } else {
+      // 「未→服用済み」へ変化する場合のみマイナス
+      const prevTaken = existing.status === 'taken';
       existing.status = status;
       existing.time = timeStr;
+      if (!prevTaken && status === 'taken') _adjustStock(medId, -1);
+      if (prevTaken  && status !== 'taken') _adjustStock(medId, +1);
     }
   } else {
     dayLog.entries.push({ medId, slotKey, status, time: timeStr });
+    if (status === 'taken') _adjustStock(medId, -1);
   }
 
   saveMedcheckLog(log);
   renderHomeMedcheck();
+}
+
+/**
+ * 薬のストックを delta 分増減する（+1 で戻し、-1 で服用）
+ * stock は 0 未満にはしない
+ */
+function _adjustStock(medId, delta) {
+  const meds = loadMedicines();
+  const idx  = meds.findIndex(m => m.id === medId);
+  if (idx === -1) return;
+  const med = meds[idx];
+  if (typeof med.stock !== 'number') med.stock = 0;
+  med.stock = Math.max(0, med.stock + delta);
+  saveMedicines(meds);
+  // 病院パネルを再描画して残薬数を最新化
+  if (document.getElementById('med-panel-hospitals')?.style.display !== 'none') {
+    renderHospitalsPanel();
+  }
 }
 
 // ----- ダッシュボードに服薬チェックを描画 -----
@@ -8008,6 +8197,7 @@ function renderHomeMedcheck() {
           <div class="medcheck-name">${med.name}${med.form ? '<span style="font-size:10px;color:var(--text3);margin-left:4px;">' + med.form + '</span>' : ''}</div>
           <div class="medcheck-dose">${dose}${med.howToTake === 'water' ? ' · 水で服用' : ''}</div>
           ${timeStr ? `<div class="medcheck-time">${status === 'taken' ? '✓ ' : '✗ '}${timeStr}</div>` : ''}
+          ${_stockBadgeHTML(med)}
         </div>
         <div class="medcheck-btn-group">
           <div class="medcheck-btn btn-take${status === 'taken' ? ' active' : ''}" onclick="setMedcheckStatus('${med.id}','${slot.key}','taken')">
