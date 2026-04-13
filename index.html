@@ -627,6 +627,23 @@ body.is-premium .premium-banner { display: none !important; }
           <div class="prog-wrap"><div class="prog-fill pg-red" id="prog-phosphorus" style="width:89%"></div></div>
         </div>
       </div>
+      <!-- 水分量メトリクスカード（全幅） -->
+      <div class="card" id="home-water-metric-card" style="margin-bottom:12px;border-color:rgba(79,195,247,0.35);padding:14px 16px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="card-title" style="margin-bottom:0;">💧 水分量（食事由来）</div>
+          </div>
+          <div style="display:flex;align-items:baseline;gap:4px;">
+            <span id="m-water-meal" style="font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:700;color:var(--accent);">0</span>
+            <span style="font-size:11px;color:var(--text2);">mL</span>
+            <span style="font-size:11px;color:var(--text3);margin-left:4px;">/ <span id="limit-water">1,500</span>mL</span>
+          </div>
+        </div>
+        <div class="prog-wrap" style="margin-bottom:4px;">
+          <div class="prog-fill pg-blue" id="prog-water-meal" style="width:0%;"></div>
+        </div>
+        <div style="font-size:10px;color:var(--text3);text-align:right;" id="water-meal-pct">0%</div>
+      </div>
       <div class="card">
         <div class="card-title">推定血糖値（本日・時間推移）</div>
         <div class="glucose-big">
@@ -1021,6 +1038,7 @@ body.is-premium .premium-banner { display: none !important; }
             <div><div style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;color:var(--accent);" id="sum-protein">0</div><div style="font-size:10px;color:var(--text3);">P(g)</div></div>
             <div><div style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;color:var(--amber);" id="sum-k">0</div><div style="font-size:10px;color:var(--text3);">K(mg)</div></div>
             <div><div style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;color:var(--red);" id="sum-p">0</div><div style="font-size:10px;color:var(--text3);">リン(mg)</div></div>
+            <div><div style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;color:var(--accent);" id="sum-water">0</div><div style="font-size:10px;color:var(--text3);">💧水分(mL)</div></div>
           </div>
         </div>
         <div class="form-grid">
@@ -1030,6 +1048,7 @@ body.is-premium .premium-banner { display: none !important; }
           <div class="form-row"><label class="form-label">食物繊維 (g)</label><input class="form-input" type="number" id="record-fiber" placeholder="0" oninput="this.dataset.manualEdit='1';recalcGlucose();updateRecordNutrSummary()" /></div>
           <div class="form-row"><label class="form-label">カリウム (mg)</label><input class="form-input" type="number" id="record-potassium" placeholder="0" oninput="this.dataset.manualEdit='1';updateRecordNutrSummary()" /></div>
           <div class="form-row"><label class="form-label">リン (mg)</label><input class="form-input" type="number" id="record-phosphorus" placeholder="0" oninput="this.dataset.manualEdit='1';updateRecordNutrSummary()" /></div>
+          <div class="form-row" style="grid-column:1/-1;"><label class="form-label" style="display:flex;align-items:center;gap:5px;"><span style="width:8px;height:8px;border-radius:50%;background:var(--accent);display:inline-block;"></span>💧 水分量 (mL) <span style="font-size:10px;color:var(--text3);margin-left:2px;">食品・飲み物の水分含有量</span></label><input class="form-input" type="number" id="record-water" placeholder="0" min="0" oninput="this.dataset.manualEdit='1';updateRecordNutrSummary()" /></div>
         </div>
         <!-- 推定最大血糖値 -->
         <div id="peak-glucose-row" style="display:none;margin-top:6px;padding:10px 12px;background:var(--amber-dim);border:1px solid rgba(252,211,77,0.3);border-radius:var(--rs);">
@@ -1773,6 +1792,7 @@ body.is-premium .premium-banner { display: none !important; }
         <div><div id="fq-k" style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;color:var(--amber);">—</div><div style="font-size:10px;color:var(--text3);">カリウムmg</div></div>
         <div><div id="fq-p" style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;color:var(--red);">—</div><div style="font-size:10px;color:var(--text3);">リンmg</div></div>
         <div><div id="fq-fiber" style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;color:var(--text2);">—</div><div style="font-size:10px;color:var(--text3);">食物繊維g</div></div>
+        <div><div id="fq-water" style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;color:var(--accent);">—</div><div style="font-size:10px;color:var(--text3);">💧水分mL</div></div>
       </div>
     </div>
 
@@ -1928,6 +1948,15 @@ body.is-premium .premium-banner { display: none !important; }
           <div style="display:flex;align-items:center;gap:5px;">
             <input class="form-input" type="number" id="myfood-salt" placeholder="0.0" min="0" step="0.1" style="text-align:right;" />
             <span style="font-size:11px;color:var(--text3);flex-shrink:0;">g</span>
+          </div>
+        </div>
+        <div style="grid-column:1/-1;">
+          <label class="form-label" style="display:flex;align-items:center;gap:4px;">
+            <span style="width:8px;height:8px;border-radius:50%;background:var(--accent);display:inline-block;"></span>💧 水分量
+          </label>
+          <div style="display:flex;align-items:center;gap:5px;">
+            <input class="form-input" type="number" id="myfood-water" placeholder="0" min="0" style="text-align:right;" />
+            <span style="font-size:11px;color:var(--text3);flex-shrink:0;">mL</span>
           </div>
         </div>
       </div>
@@ -2365,8 +2394,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initRecordDate();
     renderLinkedClinicsSettings();
     renderHomeMedcheck();
-    // マイ食品をfoodDatabaseに反映
-    (function(){ const mf=loadMyFoods(); if(mf.length>0){ foodDatabase.unshift(...mf); } })();
+    // マイ食品はsearchFoodDB呼び出し時に毎回反映されるため起動時ロード不要
     // プレミアム状態を適用
     checkPremiumExpiry();
     applyPremiumUI();
@@ -3297,6 +3325,7 @@ function updateNutritionPreview() {
   setIfNotManual('record-calories', kcal); setIfNotManual('record-protein', protein);
   setIfNotManual('record-carb', carb); setIfNotManual('record-fiber', fiber);
   setIfNotManual('record-potassium', potassium); setIfNotManual('record-phosphorus', phosphorus);
+  // 食品DBチップ由来の水分はchip選択では現状0（手動入力）
   recalcGlucose();
   updateRecordNutrSummary(); // サマリーバーも更新
 }
@@ -3316,7 +3345,7 @@ function resetFoodCats() { document.querySelectorAll('.food-cat-chip').forEach(c
 
 function resetRecord() {
   window._currentPhotoBase64 = null;
-  ['record-name','record-calories','record-protein','record-carb','record-fiber','record-potassium','record-phosphorus'].forEach(id => { const el = document.getElementById(id); if (el) el.value=''; });
+  ['record-name','record-calories','record-protein','record-carb','record-fiber','record-potassium','record-phosphorus','record-water'].forEach(id => { const el = document.getElementById(id); if (el) el.value=''; });
   // 日付・時刻をリセット
   const dateEl = document.getElementById('record-date');
   if (dateEl) { const d = new Date(); dateEl.value = d.toISOString().slice(0, 10); }
@@ -3338,7 +3367,7 @@ function resetRecord() {
   resetFoodCats();
   _fqSelections = []; // 食品DB選択リストもリセット
   renderRecordFqList(); // 追加済みリスト表示もクリア
-  ['record-calories','record-protein','record-carb','record-fiber','record-potassium','record-phosphorus'].forEach(id => { const el=document.getElementById(id); if (el) delete el.dataset.manualEdit; });
+  ['record-calories','record-protein','record-carb','record-fiber','record-potassium','record-phosphorus','record-water'].forEach(id => { const el=document.getElementById(id); if (el) delete el.dataset.manualEdit; });
   const preview = document.getElementById('nutrition-preview');
   if (preview) preview.classList.remove('visible');
 }
@@ -3362,6 +3391,7 @@ async function saveMeal() {
     fiber: parseFloat(document.getElementById('record-fiber')?.value)||0,
     potassium: parseFloat(document.getElementById('record-potassium')?.value)||0,
     phosphorus: parseFloat(document.getElementById('record-phosphorus')?.value)||0,
+    water: parseFloat(document.getElementById('record-water')?.value)||0,
     meal_type: document.getElementById('record-meal-type')?.value||'breakfast',
     food_categories: getSelectedFoodCats(),
     recorded_at: (() => {
@@ -3384,25 +3414,35 @@ async function saveMeal() {
   const saved = localSaveMeal(meal);
   dbSaveMeal(meal).catch(()=>{});
 
-  // 水分連動：食事水分と飲物水分を分けて記録
+  // 水分連動：①手動入力water ②食品DB由来（マイ食品water含む）③チップ推計
+  const manualWater = meal.water || 0;
   const waterResult = estimateWaterFromMeal(meal);
-  console.log('[saveMeal] estimateWaterFromMeal result:', waterResult, '| food_categories:', meal.food_categories);
+  // 食事タイプが飲み物かどうか（飲み物登録時はdrink扱いにして体重増加計算に反映）
+  const mealIsDrink = (meal.meal_type === 'drink') ||
+    ((meal.food_categories?.food_db_selections || []).every(s => (s.cat||'') === '飲み物'));
   try {
     const all = JSON.parse(localStorage.getItem(WATER_KEY)||'[]');
-    if (waterResult.food > 0) {
-      all.push({ time: meal.recorded_at, ml: waterResult.food, auto: true, drink: false, source: meal.dish_name||'食事' });
-    }
-    if (waterResult.drink > 0) {
-      all.push({ time: meal.recorded_at, ml: waterResult.drink, auto: true, drink: true, source: meal.dish_name||'飲物' });
-    }
-    if (waterResult.food > 0 || waterResult.drink > 0) {
-      localStorage.setItem(WATER_KEY, JSON.stringify(all));
-      console.log('[saveMeal] water log saved. total entries today:', all.filter(e => new Date(e.time).toDateString() === new Date().toDateString()).length);
+    if (manualWater > 0) {
+      // 手動入力：食事タイプで drink/food を自動判別
+      all.push({ time: meal.recorded_at, ml: manualWater, auto: false,
+                 drink: mealIsDrink, source: meal.dish_name||'食事' });
     } else {
-      console.log('[saveMeal] waterResult is 0 — nothing written to water log');
+      if (waterResult.food > 0) {
+        all.push({ time: meal.recorded_at, ml: waterResult.food, auto: true, drink: false, source: meal.dish_name||'食事' });
+      }
+      if (waterResult.drink > 0) {
+        all.push({ time: meal.recorded_at, ml: waterResult.drink, auto: true, drink: true, source: meal.dish_name||'飲物' });
+      }
+    }
+    const hasWater = manualWater > 0 || waterResult.food > 0 || waterResult.drink > 0;
+    if (hasWater) {
+      localStorage.setItem(WATER_KEY, JSON.stringify(all));
+      // リアルタイムで水分カード・体重増加予測を更新
+      updateWaterCard();
+      updateWaterBalance();
     }
   } catch(e) { console.error('[saveMeal] water log error:', e); }
-  const waterFromMeal = waterResult.total;
+  const waterFromMeal = manualWater || waterResult.total;
 
   if (saved) {
     showToast(`✅ 記録しました${waterFromMeal>0?' (水分+'+waterFromMeal+'mL)':''}`);
@@ -3481,12 +3521,23 @@ function updateHomeSummary() {
   const meals = localLoadMeals();
   const today = new Date().toDateString();
   const todayMeals = meals.filter(m => new Date(m.recorded_at).toDateString()===today);
-  const totals = todayMeals.reduce((acc,m) => { acc.calories+=m.calories||0; acc.protein+=m.protein||0; acc.potassium+=m.potassium||0; acc.phosphorus+=m.phosphorus||0; return acc; }, {calories:0,protein:0,potassium:0,phosphorus:0});
+  const totals = todayMeals.reduce((acc,m) => { acc.calories+=m.calories||0; acc.protein+=m.protein||0; acc.potassium+=m.potassium||0; acc.phosphorus+=m.phosphorus||0; acc.water+=m.water||0; return acc; }, {calories:0,protein:0,potassium:0,phosphorus:0,water:0});
   const setMetric = (id, val, unit) => { const el=document.getElementById(id); if (el) el.innerHTML=val+'<span class="metric-unit">'+unit+'</span>'; };
   setMetric('m-kcal', Math.round(totals.calories), 'kcal');
   setMetric('m-protein', Math.round(totals.protein*10)/10, 'g');
   setMetric('m-potassium', Math.round(totals.potassium).toLocaleString(), 'mg');
   setMetric('m-phosphorus', Math.round(totals.phosphorus), 'mg');
+  // 水分量カード更新
+  const waterMealEl = document.getElementById('m-water-meal');
+  if (waterMealEl) waterMealEl.textContent = Math.round(totals.water).toLocaleString();
+  const waterTarget = state.targets.water || 1500;
+  const limitWaterEl = document.getElementById('limit-water');
+  if (limitWaterEl) limitWaterEl.textContent = waterTarget.toLocaleString();
+  const waterPct = Math.min(100, waterTarget > 0 ? Math.round(totals.water / waterTarget * 100) : 0);
+  const progWaterMeal = document.getElementById('prog-water-meal');
+  if (progWaterMeal) progWaterMeal.style.width = waterPct + '%';
+  const waterPctEl = document.getElementById('water-meal-pct');
+  if (waterPctEl) waterPctEl.textContent = waterPct + '%';
   const updateBar = (barId, val, max) => { const el=document.getElementById(barId); if (el) el.style.width=Math.min(100,max>0?Math.round(val/max*100):0)+'%'; };
   updateBar('prog-protein', totals.protein, state.targets.protein);
   updateBar('prog-potassium', totals.potassium, state.targets.potassium);
@@ -4304,10 +4355,17 @@ function estimateWaterFromMeal(meal) {
   });
 
   // 4: 食品DBから選択した食品（飲み物カテゴリはdrinkWater、それ以外はfoodWater）
-  // food_db_selections は meal.food_categories の中に格納されている
+  // マイ食品に water フィールドが明示されている場合はそちらを優先
   (cats.food_db_selections || meal.food_db_selections || []).forEach(sel => {
-    const wml = estimateFoodDBWater(sel);
-    if ((sel.cat || '') === '飲み物') {
+    let wml;
+    if (sel.water != null && sel.water > 0) {
+      // マイ食品の水分量フィールドを倍率で換算
+      const ratio = sel.multiplier || 1.0;
+      wml = Math.round(sel.water * ratio);
+    } else {
+      wml = estimateFoodDBWater(sel);
+    }
+    if ((sel.cat || '') === '飲み物' || (sel.cat || '') === 'マイ食品飲料') {
       drinkWater += wml;
     } else {
       foodWater += wml;
@@ -5049,6 +5107,15 @@ function normalizeQuery(q) {
 function searchFoodDB(query) {
   const results = document.getElementById('foodSearchResults');
   if (!results) return;
+
+  // マイ食品を毎回最新状態でfoodDatabaseに反映（重複なし）
+  const myFoods = loadMyFoods();
+  // 既存のカスタム食品をすべて除去してから最新を先頭に追加
+  const baseOnly = foodDatabase.filter(f => !f.custom);
+  foodDatabase.length = 0;
+  if (myFoods.length > 0) foodDatabase.push(...myFoods);
+  foodDatabase.push(...baseOnly);
+
   const q = query.trim();
   let foods = foodDatabase;
   if (_currentFoodTab && _currentFoodTab !== 'all') {
@@ -5078,11 +5145,11 @@ function renderFoodResults(foods) {
   foods.forEach(f => { const cat = f.cat||'その他'; if (!grouped[cat]) grouped[cat]=[]; grouped[cat].push(f); });
   results.innerHTML = Object.entries(grouped).map(([cat, items]) => `
     <div style="padding:6px 12px;background:var(--surface2);font-size:11px;font-weight:700;color:var(--accent);letter-spacing:.05em;position:sticky;top:0;">${cat}</div>
-    ${items.map(f => `<div onclick='selectFood(${JSON.stringify({name:f.name,cat:f.cat||'',cal:f.cal||0,protein:f.protein||0,carb:f.carb||0,fiber:f.fiber||0,k:f.k||0,p:f.p||0}).replace(/'/g,"&#39;")})'
+    ${items.map(f => `<div onclick='selectFood(${JSON.stringify({name:f.name,cat:f.cat||'',cal:f.cal||0,protein:f.protein||0,carb:f.carb||0,fiber:f.fiber||0,k:f.k||0,p:f.p||0,water:f.water||0}).replace(/'/g,"&#39;")})'
       style="padding:11px 12px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;align-items:center;">
       <div>
         <div style="font-size:14px;font-weight:600;">${f.name}</div>
-        <div style="font-size:11px;color:var(--text3);margin-top:2px;">${f.cal||0}kcal・P${f.protein||0}g・K${f.k||0}mg・リン${f.p||0}mg</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px;">${f.cal||0}kcal・P${f.protein||0}g・K${f.k||0}mg・リン${f.p||0}mg${f.water?'・💧'+f.water+'mL':''}</div>
       </div>
       <div style="color:var(--accent);font-size:20px;padding-left:8px;flex-shrink:0;">＋</div>
     </div>`).join('')}
@@ -5155,6 +5222,8 @@ function fqUpdatePreview() {
   document.getElementById('fq-fiber').textContent   = round1(_fqFood.fiber || 0);
   document.getElementById('fq-k').textContent       = round0(_fqFood.k || 0);
   document.getElementById('fq-p').textContent       = round0(_fqFood.p || 0);
+  const fqWaterEl = document.getElementById('fq-water');
+  if (fqWaterEl) fqWaterEl.textContent = round0(_fqFood.water || 0);
 }
 
 // 食品検索がどのモーダルから呼ばれたかを管理
@@ -5202,6 +5271,7 @@ function removeEditFqItem(idx) {
   sub('edit-fiber',     round1((sel.fiber||0) * r));
   sub('edit-potassium', Math.round((sel.k||0) * r));
   sub('edit-phosphorus',Math.round((sel.p||0) * r));
+  sub('edit-water',     Math.round((sel.water||0) * r));
   _editFqSelections.splice(idx, 1);
   renderEditFqList();
   showToast('削除しました');
@@ -5223,6 +5293,7 @@ function fqConfirm() {
     add('edit-fiber',     round1(_fqFood.fiber || 0));
     add('edit-potassium', round0(_fqFood.k || 0));
     add('edit-phosphorus',round0(_fqFood.p || 0));
+    add('edit-water',     round0(_fqFood.water || 0));
     // 料理名が空なら食品名を入れる
     const nameEl = document.getElementById('edit-name');
     if (nameEl && !nameEl.value) nameEl.value = _fqFood.name;
@@ -5230,7 +5301,7 @@ function fqConfirm() {
     _editFqSelections.push({
       name: _fqFood.name, cat: _fqFood.cat || '', grams: gramsNum, multiplier: r,
       cal: _fqFood.cal||0, protein: _fqFood.protein||0, carb: _fqFood.carb||0,
-      fiber: _fqFood.fiber||0, k: _fqFood.k||0, p: _fqFood.p||0
+      fiber: _fqFood.fiber||0, k: _fqFood.k||0, p: _fqFood.p||0, water: _fqFood.water||0
     });
     renderEditFqList();
     // 編集モーダルのチップ由来プレビューも更新
@@ -5246,11 +5317,12 @@ function fqConfirm() {
     add('record-fiber',     round1(_fqFood.fiber || 0));
     add('record-potassium', round0(_fqFood.k || 0));
     add('record-phosphorus',round0(_fqFood.p || 0));
+    add('record-water',     round0(_fqFood.water || 0));
     // 追加済みリストに積む（×ボタンで削除できるよう栄養値も保持）
     _fqSelections.push({
       name: _fqFood.name, cat: _fqFood.cat || '', grams: gramsNum, multiplier: r,
       cal: _fqFood.cal||0, protein: _fqFood.protein||0, carb: _fqFood.carb||0,
-      fiber: _fqFood.fiber||0, k: _fqFood.k||0, p: _fqFood.p||0
+      fiber: _fqFood.fiber||0, k: _fqFood.k||0, p: _fqFood.p||0, water: _fqFood.water||0
     });
     // 料理名が空なら食品名を入れる
     const nameEl = document.getElementById('record-name');
@@ -5270,15 +5342,17 @@ function updateRecordNutrSummary() {
   const protein = parseFloat(document.getElementById('record-protein')?.value)   || 0;
   const k       = parseFloat(document.getElementById('record-potassium')?.value) || 0;
   const p       = parseFloat(document.getElementById('record-phosphorus')?.value)|| 0;
+  const water   = parseFloat(document.getElementById('record-water')?.value)     || 0;
 
   const summaryEl = document.getElementById('record-nutr-summary');
-  if (summaryEl) summaryEl.style.display = (kcal > 0 || protein > 0 || k > 0 || p > 0) ? '' : 'none';
+  if (summaryEl) summaryEl.style.display = (kcal > 0 || protein > 0 || k > 0 || p > 0 || water > 0) ? '' : 'none';
 
   const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
   set('sum-kcal',    Math.round(kcal));
   set('sum-protein', Math.round(protein * 10) / 10);
   set('sum-k',       Math.round(k));
   set('sum-p',       Math.round(p));
+  set('sum-water',   Math.round(water));
 }
 
 function renderRecordFqList() {
@@ -5342,6 +5416,7 @@ function removeRecordFqItem(idx) {
   sub('record-fiber',     round1((sel.fiber||0) * r));
   sub('record-potassium', Math.round((sel.k||0) * r));
   sub('record-phosphorus',Math.round((sel.p||0) * r));
+  sub('record-water',     Math.round((sel.water||0) * r));
   _fqSelections.splice(idx, 1);
   renderRecordFqList();
   recalcGlucose();
@@ -5438,106 +5513,211 @@ function loadMedicines() {
 // ============================================================
 
 // 認識結果の候補リスト（選択式で複数薬に対応）
+
+// ============================================================
+// ===== 共通OCRエンジン（薬・食事両用） v2 =====
+// ============================================================
+
+/**
+ * OCR実行ラッパー（Tesseract設定最適化・進捗コールバック共通化）
+ * @param {string} imageDataUrl  - FileReader で読んだ base64
+ * @param {function} onProgress  - (pct:number, label:string) => void
+ * @returns {string} rawText
+ */
+async function runOcr(imageDataUrl, onProgress) {
+  const result = await Tesseract.recognize(imageDataUrl, 'jpn+eng', {
+    logger: m => {
+      if (m.status === 'recognizing text') {
+        const pct = Math.round((m.progress || 0) * 100);
+        if (onProgress) onProgress(pct, `認識中... ${pct}%`);
+      } else if (m.status === 'loading tesseract core') {
+        if (onProgress) onProgress(0, 'エンジン読み込み中...');
+      } else if (m.status === 'initializing tesseract') {
+        if (onProgress) onProgress(5, '初期化中...');
+      } else if (m.status === 'loading language traineddata') {
+        if (onProgress) onProgress(10, '言語データ読み込み中...');
+      }
+    }
+  });
+  const text = result?.data?.text || '';
+  try { result.data = null; } catch(e) {}
+  return text;
+}
+
+/**
+ * OCRテキストの前処理（バラバラ文字結合・ノイズ除去）
+ * Tesseractが「ア ム ロ ジ ピ ン」のように分割してしまう問題を解決
+ */
+function cleanOcrText(rawText) {
+  let text = rawText;
+
+  // 1. 全角スペースを半角に統一
+  text = text.replace(/　/g, ' ');
+
+  // 2. 行末のハイフン連結を解除（改行またがり単語）
+  text = text.replace(/-\n/g, '');
+
+  // 3. カタカナ間の半角スペースを除去（「ア ム ロ」→「アムロ」）
+  //    カタカナ1文字 + スペース + カタカナ1文字 のパターンを繰り返し結合
+  for (let i = 0; i < 8; i++) {
+    text = text.replace(/([ァ-ヶー]) ([ァ-ヶー])/g, '$1$2');
+  }
+
+  // 4. ひらがな間の半角スペースも除去
+  for (let i = 0; i < 8; i++) {
+    text = text.replace(/([ぁ-ゖ]) ([ぁ-ゖ])/g, '$1$2');
+  }
+
+  // 5. 漢字・ひらがな・カタカナが混在する単語内スペースを除去
+  //    例：「た ん ぱ く 質」→「たんぱく質」
+  for (let i = 0; i < 6; i++) {
+    text = text.replace(/([\u3040-\u30FF\u4E00-\u9FAF]) ([\u3040-\u30FF\u4E00-\u9FAF])/g, '$1$2');
+  }
+
+  // 6. 数値の前後のスペースを正規化（「1 2 3 . 4」→「123.4」）
+  text = text.replace(/(\d) (\d)/g, '$1$2');
+  text = text.replace(/(\d) \./g,   '$1.');
+  text = text.replace(/\. (\d)/g,   '.$1');
+
+  // 7. 単位の前スペース除去（「100 mg」→「100mg」/ 「100 mL」→「100mL」）
+  text = text.replace(/(\d)\s+(mg|mL|ml|g|kcal|μg|単位)/gi, '$1$2');
+
+  // 8. OCRでよくある文字化けを補正
+  const corrections = [
+    [/[Oo０](?=\d)/g, '0'],   // O → 0（数字文脈）
+    [/(?<=\d)[lI１](?=\d)/g, '1'], // l/I → 1（数字文脈）
+    // 薬名でよくある誤認識
+    ['ア ム ロ ジ ピ ン', 'アムロジピン'],
+    ['ロ ス バ ス タ チ ン', 'ロスバスタチン'],
+    ['ア ト ル バ ス タ チ ン', 'アトルバスタチン'],
+    ['メ ト ホ ル ミ ン', 'メトホルミン'],
+    ['エ ナ ラ プ リ ル', 'エナラプリル'],
+    ['テ ル ミ サ ル タ ン', 'テルミサルタン'],
+    ['カ ン デ サ ル タ ン', 'カンデサルタン'],
+    ['ア ジ ル サ ル タ ン', 'アジルサルタン'],
+    ['ア ロ プ リ ノ ー ル', 'アロプリノール'],
+    ['フ ェ ブ キ ソ ス タ ッ ト', 'フェブキソスタット'],
+    ['ト リ ク ロ ル メ チ ア ジ ド', 'トリクロルメチアジド'],
+    ['フ ロ セ ミ ド', 'フロセミド'],
+    ['ス ピ ロ ノ ラ ク ト ン', 'スピロノラクトン'],
+    ['レ ボ チ ロ キ シ ン', 'レボチロキシン'],
+    ['ニ フ ェ ジ ピ ン', 'ニフェジピン'],
+    ['ア ン ジ オ テ ン シ ン', 'アンジオテンシン'],
+  ];
+  corrections.forEach(([from, to]) => {
+    if (typeof from === 'string') {
+      text = text.split(from).join(to);
+    } else {
+      text = text.replace(from, to);
+    }
+  });
+
+  return text;
+}
+
+/**
+ * 共通OCRフロー：FileInput から読み込み → クリーニング → テキスト返却
+ * 画像は処理後即破棄（容量節約）
+ */
+async function loadAndOcr(file, onProgress) {
+  // 1. FileReader で DataURL 取得
+  const imageDataUrl = await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload  = e => resolve(e.target.result);
+    reader.onerror = () => reject(new Error('画像読み込みエラー'));
+    reader.readAsDataURL(file);
+  });
+
+  // 2. OCR 実行
+  const rawText = await runOcr(imageDataUrl, onProgress);
+
+  // 3. 画像データを即破棄
+  // (imageDataUrl はローカル変数なのでスコープ外になれば GC される)
+
+  // 4. テキストクリーニング
+  return cleanOcrText(rawText);
+}
+
+// ============================================================
 let _ocrCandidates = [];
 
-// ── 画像受け取り → Tesseract で OCR ──
+// ── 薬OCR：画像受け取り → 共通エンジン → 薬パース ──
 async function handleOcrImage(event) {
   const file = event.target.files?.[0];
   if (!file) return;
-
-  // input をリセット（同じファイルを再選択できるよう）
   event.target.value = '';
 
-  // 進捗表示
-  document.getElementById('ocr-progress').style.display = '';
-  document.getElementById('ocr-result-panel').style.display = 'none';
-  document.getElementById('ocr-progress-bar').style.width = '0%';
-  document.getElementById('ocr-progress-label').textContent = '読み込み中...';
+  const barEl   = document.getElementById('ocr-progress-bar');
+  const labelEl = document.getElementById('ocr-progress-label');
+  const progEl  = document.getElementById('ocr-progress');
+  const panelEl = document.getElementById('ocr-result-panel');
 
-  // FileReader で画像を読み込む（Base64 は OCR 処理後すぐに解放）
-  let imageDataUrl = null;
-  try {
-    imageDataUrl = await new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload  = e => resolve(e.target.result);
-      reader.onerror = () => reject(new Error('画像読み込みエラー'));
-      reader.readAsDataURL(file);
-    });
-  } catch(e) {
-    document.getElementById('ocr-progress').style.display = 'none';
-    showToast('⚠ 画像の読み込みに失敗しました');
-    return;
-  }
+  if (progEl)  progEl.style.display  = '';
+  if (panelEl) panelEl.style.display = 'none';
+  if (barEl)   barEl.style.width     = '0%';
+  if (labelEl) labelEl.textContent   = '読み込み中...';
 
   try {
-    // Tesseract で日本語 + 英語 OCR
-    const result = await Tesseract.recognize(imageDataUrl, 'jpn+eng', {
-      logger: m => {
-        if (m.status === 'recognizing text') {
-          const pct = Math.round((m.progress || 0) * 100);
-          const bar   = document.getElementById('ocr-progress-bar');
-          const label = document.getElementById('ocr-progress-label');
-          if (bar)   bar.style.width   = pct + '%';
-          if (label) label.textContent = pct + '%';
-        }
-      }
+    const cleanedText = await loadAndOcr(file, (pct, label) => {
+      if (barEl)   barEl.style.width   = pct + '%';
+      if (labelEl) labelEl.textContent = label;
     });
 
-    // ── 画像データを即座に破棄（メモリから解放） ──
-    imageDataUrl = null;
-
-    const rawText = result?.data?.text || '';
-    // Tesseract result も解放
-    result.data = null;
-
-    if (!rawText.trim()) {
-      document.getElementById('ocr-progress').style.display = 'none';
+    if (!cleanedText.trim()) {
+      if (progEl) progEl.style.display = 'none';
       showToast('⚠ 文字を認識できませんでした。明るい場所で再撮影してください');
       return;
     }
 
-    // テキストをフィルタリングして薬候補を抽出
-    _ocrCandidates = parseOcrText(rawText);
-
-    document.getElementById('ocr-progress').style.display = 'none';
+    _ocrCandidates = parseOcrText(cleanedText);
+    if (progEl) progEl.style.display = 'none';
     renderOcrResults(_ocrCandidates);
 
   } catch(e) {
-    // エラー時も画像データを確実に破棄
-    imageDataUrl = null;
-    document.getElementById('ocr-progress').style.display = 'none';
+    if (progEl) progEl.style.display = 'none';
     showToast('⚠ 文字認識に失敗しました: ' + (e.message || '不明なエラー'));
     console.error('OCR error:', e);
   }
 }
 
-// ── OCR テキストから薬情報をパース ──
+// ── OCRテキストから薬情報をパース（強化版） ──
 function parseOcrText(rawText) {
+  // cleanOcrText は共通エンジンで適用済みだが、行分割前に再度整形
   const lines = rawText.split(/[\n\r]+/).map(l => l.trim()).filter(l => l.length > 1);
   const candidates = [];
 
-  // 薬名パターン（カタカナ2文字以上、英字+数字+単位、錠/カプセル/散/液/mg/mL等）
-  const drugNamePattern = /([ァ-ヶー]{2,}(?:錠|カプセル|散|細粒|顆粒|液|シロップ|注射|パッチ|テープ|クリーム|軟膏|点眼|点鼻)?(?:\d+(?:\.\d+)?(?:mg|μg|mL|g|単位)?)?)|([A-Za-z][A-Za-z\d\-]{2,}(?:\s*\d+(?:\.\d+)?(?:mg|μg|mL|g)?)?)/g;
+  // 薬名パターン（カタカナ3文字以上に拡張・剤形サフィックス対応強化）
+  const drugNamePattern = /([ァ-ヶー]{3,}(?:錠|カプセル|カプ|散|細粒|顆粒|液|シロップ|注射|パッチ|テープ|クリーム|軟膏|点眼|点鼻|吸入)?(?:\d+(?:\.\d+)?(?:mg|μg|mL|g|単位)?)?)|([A-Za-z][A-Za-z\d\-]{2,}(?:\s*\d+(?:\.\d+)?(?:mg|μg|mL|g)?)?)/g;
 
-  // 用法パターン（1日◯回、毎食前後など）
-  const usagePattern = /(?:1日|一日)?(?:\d+)回|毎(?:食前|食後|食間|朝|昼|夕|夜|就寝前)|朝食(?:前|後)|昼食(?:前|後)|夕食(?:前|後)|就寝前|頓服|症状時/g;
+  // 用法パターン
+  const usagePattern = /(?:1日|一日)?[1-9１-９]回|毎(?:食前|食後|食間|朝|昼|夕|夜|就寝前)|朝食(?:前|後)|昼食(?:前|後)|夕食(?:前|後)|就寝前|頓服|症状時|疼痛時/g;
 
-  // 用量パターン（1錠、2錠、0.5錠 等）
-  const dosePattern = /(?:\d+(?:\.\d+)?)\s*(?:錠|カプセル|包|mL|g|単位)/g;
+  // 用量パターン（0.5錠、2カプセルなど）
+  const dosePattern = /(?:\d+(?:\.\d+)?)\s*(?:錠|カプセル|包|バッグ|mL|g|単位|μg)/g;
+
+  // 薬として扱わないキーワード（誤検出防止）
+  const NON_DRUG_PATTERNS = [
+    /^(?:処方|調剤|薬局|病院|医院|クリニック|受付|患者|氏名|生年|年齢|診察|保険|番号|電話|住所|都道府|内科|外科|整形|皮膚|眼科|耳鼻)$/,
+    /^[0-9０-９\-\/\.\s]+$/,
+    /^.{1,1}$/,
+  ];
 
   let currentDrug = null;
 
   lines.forEach(line => {
-    // 空白・記号のみの行はスキップ
-    if (/^[\s\-\=\|_　・。、]+$/.test(line)) return;
+    if (/^[\s\-\=\|_　・。、※＊★●▼▶◆]+$/.test(line)) return;
+    if (line.length < 2) return;
 
-    // 薬名を検出
     const nameMatches = line.match(drugNamePattern) || [];
     nameMatches.forEach(match => {
-      const cleaned = match.trim();
-      if (cleaned.length < 2) return;
-      // 日付・数字だけの文字列はスキップ
-      if (/^\d+[\/-]\d+/.test(cleaned)) return;
+      const cleaned = match.trim().replace(/\s+/g, '');
+      if (cleaned.length < 3) return;
+      if (NON_DRUG_PATTERNS.some(p => p.test(cleaned))) return;
+      if (/^\d+[\/\-]\d+/.test(cleaned)) return;
+
+      // 既知の非薬名（一般語）除外
+      const COMMON_WORDS = ['カタログ','サービス','センター','システム','アプリ','ページ','コース','プラン','タイプ','セット','パック'];
+      if (COMMON_WORDS.some(w => cleaned === w)) return;
 
       currentDrug = {
         name: cleaned,
@@ -5551,31 +5731,35 @@ function parseOcrText(rawText) {
       candidates.push(currentDrug);
     });
 
-    // 用法を直近の薬に付与
     const usageMatches = line.match(usagePattern) || [];
     if (usageMatches.length > 0 && currentDrug) {
       currentDrug.usage = usageMatches.join(' / ');
-      // 頓服判定
-      if (/頓服|症状時/.test(currentDrug.usage)) {
+      if (/頓服|症状時|疼痛時/.test(currentDrug.usage)) {
         currentDrug.frequency = 'prn';
       }
     }
 
-    // 用量を直近の薬に付与
     const doseMatches = line.match(dosePattern) || [];
     if (doseMatches.length > 0 && currentDrug) {
       currentDrug.dose = doseMatches[0];
     }
   });
 
-  // 重複除去（同名は最初の1件のみ）
+  // 重複除去・信頼度でソート
   const seen = new Set();
-  return candidates.filter(c => {
-    const key = c.name.replace(/\s/g, '').toLowerCase();
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
+  return candidates
+    .filter(c => {
+      const key = c.name.replace(/\s/g, '').toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    // 用法・用量あり → 上位表示
+    .sort((a, b) => {
+      const scoreA = (a.usage ? 2 : 0) + (a.dose ? 1 : 0);
+      const scoreB = (b.usage ? 2 : 0) + (b.dose ? 1 : 0);
+      return scoreB - scoreA;
+    });
 }
 
 // ── 認識結果をパネルに描画 ──
@@ -7505,7 +7689,7 @@ function showMyFoodModal(editId) {
 
   // フォームリセット
   ['myfood-name','myfood-cal','myfood-protein','myfood-fat','myfood-carb',
-   'myfood-k','myfood-p','myfood-fiber','myfood-salt'].forEach(id => {
+   'myfood-k','myfood-p','myfood-fiber','myfood-salt','myfood-water'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = '';
   });
@@ -7536,6 +7720,7 @@ function showMyFoodModal(editId) {
       set('myfood-p', food.p);
       set('myfood-fiber', food.fiber);
       set('myfood-salt', food.salt);
+      set('myfood-water', food.water);
       if (catEl) catEl.value = food.cat || 'マイ食品';
     }
   } else {
@@ -7572,6 +7757,7 @@ function saveMyFood() {
     k:       get('myfood-k', false),
     p:       get('myfood-p', false),
     salt:    get('myfood-salt', true),
+    water:   get('myfood-water', false),
     custom:  true,
     savedAt: new Date().toISOString(),
   };
@@ -7624,6 +7810,7 @@ function renderMyFoodList() {
           <span>炭 ${f.carb}g</span>
           <span style="color:var(--amber);">K ${f.k}mg</span>
           <span style="color:var(--red);">リン ${f.p}mg</span>
+          ${f.water ? `<span style="color:var(--accent);">💧${f.water}mL</span>` : ''}
         </div>
       </div>
       <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;">
@@ -7634,180 +7821,147 @@ function renderMyFoodList() {
   `).join('');
 }
 
-// ---- foodDatabase 検索にマイ食品を混ぜ込む ----
-// 既存 searchFoodDB を拡張（オリジナルをラップ）
-const _originalSearchFoodDB = searchFoodDB;
-function searchFoodDB(query) {
-  // マイ食品を一時的に foodDatabase の先頭にマージして検索
-  const myFoods = loadMyFoods();
-  if (myFoods.length > 0) {
-    // すでにマージ済みか確認
-    const alreadyIn = foodDatabase.some(f => f.custom === true);
-    if (!alreadyIn) {
-      foodDatabase.unshift(...myFoods);
-    } else {
-      // マイ食品を最新に更新
-      const withoutCustom = foodDatabase.filter(f => !f.custom);
-      foodDatabase.length = 0;
-      foodDatabase.push(...myFoods, ...withoutCustom);
-    }
-  }
-  _originalSearchFoodDB(query);
-}
+// ---- マイ食品マージはsearchFoodDB内で直接処理 ----
 
 // ---- OCR: 栄養成分表示スキャン ----
+// ── 食品OCR：共通エンジン使用・栄養成分パース ──
 async function handleMyFoodOcr(event) {
   const file = event.target.files?.[0];
   if (!file) return;
-  event.target.value = '';  // reset
+  event.target.value = '';
 
   const progEl  = document.getElementById('myfood-ocr-progress');
   const barEl   = document.getElementById('myfood-ocr-bar');
   const labelEl = document.getElementById('myfood-ocr-label');
   const banner  = document.getElementById('myfood-ocr-result-banner');
+
   if (progEl) progEl.style.display = '';
   if (banner) banner.style.display = 'none';
-  if (barEl) barEl.style.width = '0%';
+  if (barEl)  barEl.style.width    = '0%';
   if (labelEl) labelEl.textContent = '画像を読み込んでいます...';
 
-  let imageDataUrl = null;
   try {
-    imageDataUrl = await new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = e => resolve(e.target.result);
-      reader.onerror = () => reject(new Error('読み込みエラー'));
-      reader.readAsDataURL(file);
-    });
-  } catch(e) {
-    if (progEl) progEl.style.display = 'none';
-    showToast('⚠ 画像の読み込みに失敗しました');
-    return;
-  }
-
-  try {
-    if (labelEl) labelEl.textContent = 'テキストを認識中...';
-    const result = await Tesseract.recognize(imageDataUrl, 'jpn+eng', {
-      logger: m => {
-        if (m.status === 'recognizing text') {
-          const pct = Math.round((m.progress || 0) * 100);
-          if (barEl) barEl.style.width = pct + '%';
-          if (labelEl) labelEl.textContent = `認識中... ${pct}%`;
-        }
-      }
+    const cleanedText = await loadAndOcr(file, (pct, label) => {
+      if (barEl)   barEl.style.width   = pct + '%';
+      if (labelEl) labelEl.textContent = label;
     });
 
-    // ★ 画像データを即座に破棄（容量節約）
-    imageDataUrl = null;
-
-    const text = result?.data?.text || '';
-    result.data = null;
-
-    if (!text.trim()) {
+    if (!cleanedText.trim()) {
       if (progEl) progEl.style.display = 'none';
       showToast('⚠ 文字を認識できませんでした。明るい場所で再撮影してください');
       return;
     }
 
-    const parsed = parseNutritionLabel(text);
+    const parsed = parseNutritionLabel(cleanedText);
     applyParsedNutrition(parsed);
 
     if (progEl) progEl.style.display = 'none';
 
-    // 結果バナー表示
     const filled = Object.values(parsed).filter(v => v !== null).length;
     if (banner) {
       banner.style.display = '';
-      banner.textContent = filled > 0
-        ? `✅ ${filled}項目を自動入力しました。数値をご確認ください。`
-        : '⚠ 栄養成分の数値を検出できませんでした。手動で入力してください。';
-      if (filled === 0) {
-        banner.style.background = 'var(--amber-dim)';
-        banner.style.borderColor = 'rgba(252,211,77,0.3)';
-        banner.style.color = 'var(--amber)';
-      } else {
-        banner.style.background = 'var(--green-dim)';
+      if (filled > 0) {
+        const labels = {cal:'エネルギー',protein:'たんぱく質',fat:'脂質',carb:'炭水化物',fiber:'食物繊維',k:'カリウム',p:'リン',salt:'食塩',water:'水分'};
+        const filledList = Object.entries(parsed).filter(([,v])=>v!==null).map(([k])=>labels[k]||k).join('・');
+        banner.textContent = `✅ ${filled}項目を自動入力：${filledList}`;
+        banner.style.background  = 'var(--green-dim)';
         banner.style.borderColor = 'rgba(74,222,128,0.3)';
-        banner.style.color = 'var(--green)';
+        banner.style.color       = 'var(--green)';
+      } else {
+        banner.textContent = '⚠ 栄養成分を検出できませんでした。手動で入力してください。';
+        banner.style.background  = 'var(--amber-dim)';
+        banner.style.borderColor = 'rgba(252,211,77,0.3)';
+        banner.style.color       = 'var(--amber)';
       }
     }
 
   } catch(e) {
-    imageDataUrl = null;
     if (progEl) progEl.style.display = 'none';
     showToast('⚠ 文字認識に失敗しました: ' + (e.message || '不明なエラー'));
     console.error('MyFood OCR error:', e);
   }
 }
 
-// ---- 栄養成分ラベルのテキストをパース ----
+// ---- 栄養成分ラベルのテキストをパース（強化版） ----
 function parseNutritionLabel(text) {
   const result = {
     cal: null, protein: null, fat: null, carb: null,
-    fiber: null, k: null, p: null, salt: null
+    fiber: null, k: null, p: null, salt: null, water: null
   };
 
-  // 数値にマッチするヘルパー（整数 or 小数）
-  const numRe = '(\\d+(?:[.,]\\d+)?)';
+  // cleanOcrText は呼び出し元で適用済み。ここでは改行正規化のみ
+  const t = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 
-  // パターン定義: [フィールド名, 正規表現パターン配列]
-  const patterns = [
-    // エネルギー: "エネルギー 123kcal" / "熱量 123kcal" / "カロリー 123"
-    ['cal', [
-      /(?:エネルギー|熱量|カロリー)[^\d]*(\d+(?:[.,]\d+)?)\s*[kk][cC][aA][lL]/,
-      /(\d+(?:[.,]\d+)?)\s*[kk][cC][aA][lL]/,
-      /(\d+(?:[.,]\d+)?)\s*キロカロリー/,
-    ]],
-    // たんぱく質
-    ['protein', [
-      /(?:たんぱく質|タンパク質|蛋白質|protein)[^\d]*(\d+(?:[.,]\d+)?)\s*g/i,
-      /(?:たん白質)[^\d]*(\d+(?:[.,]\d+)?)\s*g/i,
-    ]],
-    // 脂質
-    ['fat', [
-      /(?:脂質|脂肪|fat)[^\d]*(\d+(?:[.,]\d+)?)\s*g/i,
-    ]],
-    // 炭水化物
-    ['carb', [
-      /(?:炭水化物|糖質|carbohydrate)[^\d]*(\d+(?:[.,]\d+)?)\s*g/i,
-    ]],
-    // 食物繊維
-    ['fiber', [
-      /(?:食物繊維|dietary\s*fiber)[^\d]*(\d+(?:[.,]\d+)?)\s*g/i,
-    ]],
-    // カリウム
-    ['k', [
-      /(?:カリウム|potassium)[^\d]*(\d+(?:[.,]\d+)?)\s*m[gG]/i,
-    ]],
-    // リン
-    ['p', [
-      /(?:リン|phosphorus)[^\d]*(\d+(?:[.,]\d+)?)\s*m[gG]/i,
-    ]],
-    // 食塩相当量
-    ['salt', [
-      /(?:食塩相当量|ナトリウム換算|塩分)[^\d]*(\d+(?:[.,]\d+)?)\s*g/i,
-      /(?:sodium|Na)[^\d]*(\d+(?:[.,]\d+)?)\s*m[gG]/i,
-    ]],
-  ];
+  // ── 数値マッチヘルパー ──
+  // 「123」「123.4」「123,4」「.5」すべて対応
+  const N = '(\\d+(?:[,.]\\d+)?)';
 
-  // 改行を統一
-  const normalizedText = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  /**
+   * 行ベースで「キーワード行の直後の数値」も拾う戦略
+   * 栄養成分表は「たんぱく質\n8.2g」のように改行で分かれていることが多い
+   */
+  function matchMultiLine(text, keyRe, unit) {
+    // 同一行マッチ
+    const inlinePat = new RegExp(keyRe.source + '[^\\d\\n]*' + N + '\\s*' + unit, keyRe.flags || 'i');
+    const m1 = text.match(inlinePat);
+    if (m1) return parseFloat(m1[1].replace(',', '.'));
 
-  for (const [field, reList] of patterns) {
-    for (const re of reList) {
-      const m = normalizedText.match(re);
-      if (m) {
-        let val = parseFloat(m[1].replace(',', '.'));
-        // ナトリウム(mg)→食塩相当量(g)換算
-        if (field === 'salt' && re.source.includes('sodium|Na') && val > 10) {
-          val = Math.round(val * 2.54 / 100) / 10;
-        }
-        if (!isNaN(val)) {
-          result[field] = val;
-          break;
-        }
+    // 次行マッチ（キーワード行の直後に数値）
+    const lines = text.split('\n');
+    for (let i = 0; i < lines.length - 1; i++) {
+      if (keyRe.test(lines[i])) {
+        const nextLine = lines[i + 1].trim();
+        const numMatch = nextLine.match(new RegExp('^' + N + '\\s*' + unit + '?', 'i'));
+        if (numMatch) return parseFloat(numMatch[1].replace(',', '.'));
       }
     }
+    return null;
   }
+
+  // ── エネルギー（kcal）──
+  // 「エネルギー 185kcal」「185 kcal」「熱量185キロカロリー」
+  result.cal = matchMultiLine(t, /(?:エネルギー|熱量|カロリー)/, 'kcal|キロカロリー')
+    ?? (t.match(/(\\d+(?:[,.]\\d+)?)\\s*(?:kcal|キロカロリー)/i)?.[1]
+        ? parseFloat(t.match(/(\\d+(?:[,.]\\d+)?)\\s*(?:kcal|キロカロリー)/i)[1].replace(',','.'))
+        : null);
+
+  // ── たんぱく質 ──
+  result.protein = matchMultiLine(t, /たんぱく質|タンパク質|たん白質|蛋白質|protein/i, 'g');
+
+  // ── 脂質 ──
+  result.fat = matchMultiLine(t, /脂質|fat/i, 'g');
+
+  // ── 炭水化物 ──
+  // 糖質・食物繊維の合算の場合もある
+  result.carb = matchMultiLine(t, /炭水化物|carbohydrate/i, 'g')
+    ?? matchMultiLine(t, /糖質/i, 'g');
+
+  // ── 食物繊維 ──
+  result.fiber = matchMultiLine(t, /食物繊維|dietary\s*fiber/i, 'g');
+
+  // ── カリウム ──
+  result.k = matchMultiLine(t, /カリウム|potassium/i, 'mg');
+
+  // ── リン ──
+  result.p = matchMultiLine(t, /リン(?!酸塩)|phosphorus/i, 'mg');
+
+  // ── 食塩相当量 ──
+  result.salt = matchMultiLine(t, /食塩相当量|塩分/i, 'g');
+  if (result.salt === null) {
+    // ナトリウム(mg) → 食塩(g) 換算: Na×2.54÷1000
+    const naVal = matchMultiLine(t, /ナトリウム|sodium|Na(?!Cl)/i, 'mg');
+    if (naVal !== null && naVal > 0) {
+      result.salt = Math.round(naVal * 2.54) / 1000;
+    }
+  }
+
+  // ── 水分量 ──
+  // 「水分 XXXmL」「内容量 XXXmL」「水XXXg」
+  result.water = matchMultiLine(t, /水分量?|water/i, 'ml|mL|g')
+    ?? matchMultiLine(t, /内容量|容量|content/i, 'ml|mL');
+
+  // ── 0 を null に（未検出扱いにしない） ──
+  // 0g は正当な値なので null には変換しない
 
   return result;
 }
@@ -7823,6 +7977,7 @@ function applyParsedNutrition(parsed) {
     k:       'myfood-k',
     p:       'myfood-p',
     salt:    'myfood-salt',
+    water:   'myfood-water',
   };
   for (const [key, id] of Object.entries(mapping)) {
     if (parsed[key] !== null) {
