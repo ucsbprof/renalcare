@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0d1420">
-<title>RenalCare — 腎臓病食事管理</title>
+<title>HealthCare — 健康管理・腎臓病食事管理</title>
 <link rel="manifest" href="manifest.json">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Kaisei+Opti:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
@@ -444,14 +444,23 @@ body.is-premium .premium-banner { display: none !important; }
 <!-- ONBOARDING -->
 <div class="screen active" id="s-onboarding">
   <div class="ob-logo">
-    <span class="ob-icon">🫁</span>
-    <div class="ob-title">RenalCare</div>
-    <div class="ob-sub">腎臓病の食事管理を<br>もっとかんたんに</div>
+    <span class="ob-icon">🌿</span>
+    <div class="ob-title">HealthCare</div>
+    <div class="ob-sub">あなたの健康管理を<br>もっとかんたんに</div>
   </div>
   <div class="ob-card fade-in" id="ob-step1">
     <div class="ob-step">ステップ 1 / 4</div>
     <div class="ob-question">あなたの状態を教えてください</div>
     <div class="ob-choices">
+      <!-- ===== 健常者モード（新規追加） ===== -->
+      <div class="ob-choice" id="oc-healthy" onclick="selectObChoice('healthy')"
+        style="border-color:rgba(74,222,128,0.4);background:rgba(74,222,128,0.05);">
+        <div class="ob-choice-icon">🌿</div>
+        <div class="ob-choice-text">
+          <div class="name" style="color:var(--green);">健常者（予防・健康管理）</div>
+          <div class="desc">病気なし — 日々の健康維持・生活習慣病予防</div>
+        </div>
+      </div>
       <div class="ob-choice" id="oc-normal" onclick="selectObChoice('normal')">
         <div class="ob-choice-icon">🩺</div>
         <div class="ob-choice-text"><div class="name">慢性腎不全のみ</div><div class="desc">糖尿病なし — 糖質×1</div></div>
@@ -518,7 +527,6 @@ body.is-premium .premium-banner { display: none !important; }
     </div>
     <button class="btn btn-primary btn-full" id="ob-btn3" disabled onclick="goObStep(4)">次へ →</button>
     <div style="margin-top:10px;"><button class="btn btn-ghost btn-full" onclick="goObStep(2)">← 戻る</button></div>
-    <div class="ob-dots"><div class="ob-dot"></div><div class="ob-dot"></div><div class="ob-dot active"></div><div class="ob-dot"></div><div class="ob-dot"></div></div>
   </div>
   <div class="ob-card fade-in" id="ob-step4" style="display:none;">
     <div class="ob-step">ステップ 4 / 5</div>
@@ -551,7 +559,7 @@ body.is-premium .premium-banner { display: none !important; }
       </div>
     </div>
     <button class="btn btn-primary btn-full" id="ob-btn4" disabled onclick="goObStep(5)">次へ →</button>
-    <div style="margin-top:10px;"><button class="btn btn-ghost btn-full" onclick="goObStep(3)">← 戻る</button></div>
+    <div style="margin-top:10px;"><button class="btn btn-ghost btn-full" onclick="goObStep(state.obType==='healthy'?2:3)">← 戻る</button></div>
     <div class="ob-dots"><div class="ob-dot"></div><div class="ob-dot"></div><div class="ob-dot"></div><div class="ob-dot active"></div><div class="ob-dot"></div></div>
   </div>
   <div class="ob-card fade-in" id="ob-step5" style="display:none;">
@@ -580,7 +588,7 @@ body.is-premium .premium-banner { display: none !important; }
 <!-- MAIN APP -->
 <div class="screen" id="s-app">
   <div class="app-header">
-    <div class="header-logo">🫁 RenalCare</div>
+    <div class="header-logo" id="app-header-logo">🌿 HealthCare</div>
     <div class="header-user" onclick="showUserSwitchModal()" style="cursor:pointer;">
       <div class="header-avatar">👩</div>
       <div>
@@ -601,30 +609,46 @@ body.is-premium .premium-banner { display: none !important; }
         <div class="metric-card m-green">
           <div class="metric-glow" style="background:var(--green-dim)"></div>
           <div class="card-title">カロリー</div>
-          <div class="metric-val" id="m-kcal">1,240<span class="metric-unit">kcal</span></div>
+          <div class="metric-val" id="m-kcal">0<span class="metric-unit">kcal</span></div>
           <div class="metric-name">目標 1,800kcal</div>
-          <div class="prog-wrap"><div class="prog-fill pg-green" style="width:69%"></div></div>
+          <div class="prog-wrap"><div class="prog-fill pg-green" id="prog-calories" style="width:0%"></div></div>
         </div>
         <div class="metric-card m-blue">
           <div class="metric-glow" style="background:var(--accent-glow)"></div>
           <div class="card-title">タンパク質</div>
-          <div class="metric-val" id="m-protein">38<span class="metric-unit">g</span></div>
-          <div class="metric-name">目標 <span id="limit-protein">40</span>g以下</div>
-          <div class="prog-wrap"><div class="prog-fill pg-blue" id="prog-protein" style="width:95%"></div></div>
+          <div class="metric-val" id="m-protein">0<span class="metric-unit">g</span></div>
+          <div class="metric-name" id="label-protein">目標 <span id="limit-protein">40</span>g以下</div>
+          <div class="prog-wrap"><div class="prog-fill pg-blue" id="prog-protein" style="width:0%"></div></div>
         </div>
-        <div class="metric-card m-amber">
+        <!-- CKDモード専用 -->
+        <div class="metric-card m-amber ckd-only">
           <div class="metric-glow" style="background:var(--amber-dim)"></div>
           <div class="card-title">カリウム</div>
-          <div class="metric-val" id="m-potassium">1,820<span class="metric-unit">mg</span></div>
+          <div class="metric-val" id="m-potassium">0<span class="metric-unit">mg</span></div>
           <div class="metric-name">目標 <span id="limit-potassium">2,000</span>mg以下</div>
-          <div class="prog-wrap"><div class="prog-fill pg-amber" id="prog-potassium" style="width:91%"></div></div>
+          <div class="prog-wrap"><div class="prog-fill pg-amber" id="prog-potassium" style="width:0%"></div></div>
         </div>
-        <div class="metric-card m-red">
+        <div class="metric-card m-red ckd-only">
           <div class="metric-glow" style="background:var(--red-dim)"></div>
           <div class="card-title">リン</div>
-          <div class="metric-val" id="m-phosphorus">620<span class="metric-unit">mg</span></div>
+          <div class="metric-val" id="m-phosphorus">0<span class="metric-unit">mg</span></div>
           <div class="metric-name">目標 <span id="limit-phosphorus">700</span>mg以下</div>
-          <div class="prog-wrap"><div class="prog-fill pg-red" id="prog-phosphorus" style="width:89%"></div></div>
+          <div class="prog-wrap"><div class="prog-fill pg-red" id="prog-phosphorus" style="width:0%"></div></div>
+        </div>
+        <!-- 健常者モード専用 -->
+        <div class="metric-card m-amber healthy-only" style="display:none;">
+          <div class="metric-glow" style="background:var(--amber-dim)"></div>
+          <div class="card-title">食物繊維</div>
+          <div class="metric-val" id="m-fiber">0<span class="metric-unit">g</span></div>
+          <div class="metric-name">目標 <span id="limit-fiber">21</span>g以上</div>
+          <div class="prog-wrap"><div class="prog-fill pg-green" id="prog-fiber" style="width:0%"></div></div>
+        </div>
+        <div class="metric-card healthy-only" style="display:none;border-color:rgba(192,132,252,0.3);">
+          <div class="metric-glow" style="background:var(--purple-dim)"></div>
+          <div class="card-title" style="color:var(--purple);">塩分</div>
+          <div class="metric-val" style="color:var(--purple);" id="m-salt">0<span class="metric-unit">g</span></div>
+          <div class="metric-name">目標 <span id="limit-salt">7</span>g以下</div>
+          <div class="prog-wrap"><div class="prog-fill" id="prog-salt" style="width:0%;background:var(--purple);"></div></div>
         </div>
       </div>
       <!-- 水分量メトリクスカード（全幅・DW比連動） -->
@@ -761,10 +785,25 @@ body.is-premium .premium-banner { display: none !important; }
       </div>
       <div class="card">
         <div class="card-title">栄養管理 詳細</div>
-        <div class="nutr-row"><div class="nutr-name">カリウム</div><div class="nutr-bar"><div class="prog-wrap" style="margin:0"><div class="prog-fill pg-amber" id="nutr-bar-k" style="width:0%"></div></div></div><div class="nutr-val" style="color:var(--amber)" id="nutr-val-k">—</div><div class="nutr-max">/ <span id="nutr-max-k">2,000</span></div></div>
-        <div class="nutr-row"><div class="nutr-name">リン</div><div class="nutr-bar"><div class="prog-wrap" style="margin:0"><div class="prog-fill pg-red" id="nutr-bar-p" style="width:0%"></div></div></div><div class="nutr-val" style="color:var(--red)" id="nutr-val-p">—</div><div class="nutr-max">/ <span id="nutr-max-p">700</span></div></div>
+        <!-- CKD専用指標 -->
+        <div class="nutr-row ckd-only"><div class="nutr-name">カリウム</div><div class="nutr-bar"><div class="prog-wrap" style="margin:0"><div class="prog-fill pg-amber" id="nutr-bar-k" style="width:0%"></div></div></div><div class="nutr-val" style="color:var(--amber)" id="nutr-val-k">—</div><div class="nutr-max">/ <span id="nutr-max-k">2,000</span></div></div>
+        <div class="nutr-row ckd-only"><div class="nutr-name">リン</div><div class="nutr-bar"><div class="prog-wrap" style="margin:0"><div class="prog-fill pg-red" id="nutr-bar-p" style="width:0%"></div></div></div><div class="nutr-val" style="color:var(--red)" id="nutr-val-p">—</div><div class="nutr-max">/ <span id="nutr-max-p">700</span></div></div>
+        <!-- 共通指標 -->
         <div class="nutr-row"><div class="nutr-name">タンパク質</div><div class="nutr-bar"><div class="prog-wrap" style="margin:0"><div class="prog-fill pg-blue" id="nutr-bar-pr" style="width:0%"></div></div></div><div class="nutr-val" style="color:var(--accent)" id="nutr-val-pr">—</div><div class="nutr-max">/ <span id="nutr-max-pr">40</span>g</div></div>
+        <!-- 健常者専用指標 -->
+        <div class="nutr-row healthy-only" style="display:none;"><div class="nutr-name">食物繊維</div><div class="nutr-bar"><div class="prog-wrap" style="margin:0"><div class="prog-fill pg-green" id="nutr-bar-fiber" style="width:0%"></div></div></div><div class="nutr-val" style="color:var(--green)" id="nutr-val-fiber">—</div><div class="nutr-max">/ <span id="nutr-max-fiber">21</span>g</div></div>
+        <div class="nutr-row healthy-only" style="display:none;"><div class="nutr-name">塩分</div><div class="nutr-bar"><div class="prog-wrap" style="margin:0"><div class="prog-fill" id="nutr-bar-salt" style="width:0%;background:var(--purple);"></div></div></div><div class="nutr-val" style="color:var(--purple)" id="nutr-val-salt">—</div><div class="nutr-max">/ <span id="nutr-max-salt">7</span>g</div></div>
+        <div class="nutr-row healthy-only" style="display:none;"><div class="nutr-name">脂質</div><div class="nutr-bar"><div class="prog-wrap" style="margin:0"><div class="prog-fill pg-amber" id="nutr-bar-fat" style="width:0%"></div></div></div><div class="nutr-val" style="color:var(--amber)" id="nutr-val-fat">—</div><div class="nutr-max">/ <span id="nutr-max-fat">55</span>g</div></div>
       </div>
+      <!-- 健常者モード: 今日の予防アドバイスカード -->
+      <div class="card healthy-only" id="home-prevention-card" style="display:none;border-color:rgba(74,222,128,0.3);margin-bottom:12px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <div class="card-title" style="margin-bottom:0;color:var(--green);">🌿 今日の予防チェック</div>
+          <div id="home-prevention-score" style="font-size:12px;color:var(--green);font-weight:700;padding:3px 10px;background:var(--green-dim);border-radius:12px;border:1px solid var(--green);"></div>
+        </div>
+        <div id="home-prevention-list" style="display:flex;flex-direction:column;gap:6px;"></div>
+      </div>
+
       <!-- 水分摂取カード -->
       <div class="card" style="border-color:rgba(79,195,247,0.3);">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
@@ -1083,6 +1122,7 @@ body.is-premium .premium-banner { display: none !important; }
           <div class="form-row"><label class="form-label">食物繊維 (g)</label><input class="form-input" type="number" id="record-fiber" placeholder="0" oninput="this.dataset.manualEdit='1';recalcGlucose();updateRecordNutrSummary()" /></div>
           <div class="form-row"><label class="form-label">カリウム (mg)</label><input class="form-input" type="number" id="record-potassium" placeholder="0" oninput="this.dataset.manualEdit='1';updateRecordNutrSummary()" /></div>
           <div class="form-row"><label class="form-label">リン (mg)</label><input class="form-input" type="number" id="record-phosphorus" placeholder="0" oninput="this.dataset.manualEdit='1';updateRecordNutrSummary()" /></div>
+          <div class="form-row"><label class="form-label">🧂 塩分 (g)</label><input class="form-input" type="number" id="record-salt" placeholder="0" step="0.1" oninput="this.dataset.manualEdit='1';updateRecordNutrSummary()" /></div>
           <div class="form-row" style="grid-column:1/-1;"><label class="form-label" style="display:flex;align-items:center;gap:5px;"><span style="width:8px;height:8px;border-radius:50%;background:var(--accent);display:inline-block;"></span>💧 水分量 (mL) <span style="font-size:10px;color:var(--text3);margin-left:2px;">食品・飲み物の水分含有量</span></label><input class="form-input" type="number" id="record-water" placeholder="0" min="0" oninput="this.dataset.manualEdit='1';updateRecordNutrSummary()" /></div>
         </div>
         <!-- 推定最大血糖値 -->
@@ -1412,7 +1452,7 @@ body.is-premium .premium-banner { display: none !important; }
       <div class="settings-section">
         <div class="settings-title">プロフィール</div>
         <div class="setting-row"><div class="setting-icon">👤</div><div class="setting-text"><div class="setting-name" id="s-name-display">—</div><div class="setting-desc">名前</div></div><div class="setting-arrow">›</div></div>
-        <div class="setting-row"><div class="setting-icon">🩺</div><div class="setting-text"><div class="setting-name" id="s-type-display">—</div><div class="setting-desc">疾患タイプ</div></div><div class="setting-arrow">›</div></div>
+        <div class="setting-row"><div class="setting-icon">🩺</div><div class="setting-text"><div class="setting-name" id="s-type-display">—</div><div class="setting-desc" id="s-type-desc">健康ステータス</div></div><div class="setting-arrow">›</div></div>
         <div class="setting-row" onclick="showUserSwitchModal()" style="cursor:pointer;"><div class="setting-icon">🔄</div><div class="setting-text"><div class="setting-name">ユーザーを切り替える</div><div class="setting-desc">複数人で使う場合はこちら</div></div><div class="setting-arrow">›</div></div>
       </div>
       <div class="settings-section">
@@ -2232,12 +2272,19 @@ body.is-premium .premium-banner { display: none !important; }
 <div class="modal-bg" id="targetModal" onclick="closeModal('targetModal')">
   <div class="modal" onclick="event.stopPropagation()">
     <div class="modal-handle"></div>
-    <div class="modal-title">目標値を設定</div>
+    <div class="modal-title" id="targetModal-title">目標値を設定</div>
     <div style="margin-top:16px;">
-      <div class="form-row"><label class="form-label">タンパク質上限 (g/日)</label><input class="form-input" type="number" id="t-protein" value="40" /></div>
-      <div class="form-row"><label class="form-label">カリウム上限 (mg/日)</label><input class="form-input" type="number" id="t-potassium" value="2000" /></div>
-      <div class="form-row"><label class="form-label">リン上限 (mg/日)</label><input class="form-input" type="number" id="t-phosphorus" value="700" /></div>
-      <div class="form-row"><label class="form-label">水分上限 (ml/日)</label><input class="form-input" type="number" id="t-water" value="1500" /></div>
+      <div class="form-row"><label class="form-label">カロリー目標 (kcal/日)</label><input class="form-input" type="number" id="t-calories" value="2000" /></div>
+      <div class="form-row" id="t-row-protein-label"><label class="form-label" id="t-label-protein">タンパク質上限 (g/日)</label><input class="form-input" type="number" id="t-protein" value="40" /></div>
+      <!-- CKD専用 -->
+      <div class="form-row ckd-only" id="t-row-potassium"><label class="form-label">カリウム上限 (mg/日)</label><input class="form-input" type="number" id="t-potassium" value="2000" /></div>
+      <div class="form-row ckd-only" id="t-row-phosphorus"><label class="form-label">リン上限 (mg/日)</label><input class="form-input" type="number" id="t-phosphorus" value="700" /></div>
+      <!-- 共通 -->
+      <div class="form-row"><label class="form-label">水分目標 (mL/日)</label><input class="form-input" type="number" id="t-water" value="1500" /></div>
+      <div class="form-row"><label class="form-label">塩分上限 (g/日)</label><input class="form-input" type="number" id="t-salt" value="7" /></div>
+      <!-- 健常者専用 -->
+      <div class="form-row healthy-only" id="t-row-fiber" style="display:none;"><label class="form-label">食物繊維目標 (g/日)</label><input class="form-input" type="number" id="t-fiber" value="21" /></div>
+      <div class="form-row healthy-only" id="t-row-fat" style="display:none;"><label class="form-label">脂質目標 (g/日)</label><input class="form-input" type="number" id="t-fat" value="55" /></div>
     </div>
     <button class="btn btn-primary btn-full" style="margin-top:16px;" onclick="saveTargets()">保存</button>
     <button class="btn btn-ghost btn-full" onclick="closeModal('targetModal')">キャンセル</button>
@@ -2456,7 +2503,7 @@ function runDataMigration() {
     if (Array.isArray(meals) && meals.length > 0) {
       const mealDefaults = {
         calories: 0, protein: 0, carb: 0, fiber: 0,
-        potassium: 0, phosphorus: 0, salt: 0, water: 0,
+        fat: 0, salt: 0, potassium: 0, phosphorus: 0, water: 0,
       };
       let changed = false;
       const migrated = meals.map(m => {
@@ -2528,26 +2575,85 @@ function runDataMigration() {
       }
     }
   } catch(e) {}
+
+  // ─── (E) プロファイル: healthy / targets.fiber / fat フィールド補完 ───
+  try {
+    const uid = (typeof getActiveUid === 'function') ? getActiveUid() : null;
+    if (uid) {
+      const profiles = (typeof getAllProfiles === 'function') ? getAllProfiles() : [];
+      profiles.forEach(p => {
+        let dirty = false;
+        if (!p.targets) { p.targets = {}; dirty = true; }
+        if (p.targets.fiber == null) { p.targets.fiber = p.userType === 'healthy' ? 21 : null; dirty = true; }
+        if (p.targets.fat   == null) { p.targets.fat   = p.userType === 'healthy' ? 55 : null; dirty = true; }
+        if (p.targets.calories == null) { p.targets.calories = 2000; dirty = true; }
+        if (dirty && typeof saveActiveProfile === 'function' && p.uid === uid) saveActiveProfile(p);
+      });
+    }
+  } catch(e) {}
 }
 
 function loadProfile(profile) {
   Object.assign(state, profile);
+  // 旧プロファイルに fiber/fat/calories が無い場合の補完
+  if (!state.targets) state.targets = {};
+  if (!state.targets.calories)  state.targets.calories  = 2000;
+  if (state.targets.fiber == null) state.targets.fiber  = state.userType === 'healthy' ? 21 : null;
+  if (state.targets.fat   == null) state.targets.fat    = state.userType === 'healthy' ? 55 : null;
+  if (!state.targets.salt)         state.targets.salt   = state.userType === 'healthy' ? 7 : 6;
   applyStateToUI();
 }
 
 function applyStateToUI() {
   const el = (id) => document.getElementById(id);
+  const isHealthy = state.userType === 'healthy';
+
   if (el('header-name')) el('header-name').textContent = state.userName;
-  if (el('header-type')) el('header-type').textContent = state.diabetesMode ? '糖尿病モード' : '標準モード';
+  if (el('header-type')) {
+    if (isHealthy) {
+      el('header-type').textContent = '🌿 予防ケアモード';
+      el('header-type').style.color = 'var(--green)';
+    } else {
+      el('header-type').textContent = state.diabetesMode ? '糖尿病モード' : '標準モード';
+      el('header-type').style.color = '';
+    }
+  }
+  // ヘッダーロゴ切り替え
+  if (el('app-header-logo')) {
+    el('app-header-logo').textContent = isHealthy ? '🌿 HealthCare' : '🫁 RenalCare';
+  }
   if (el('s-name-display')) el('s-name-display').textContent = state.userName;
   if (el('s-type-display')) {
-    const tMap = { normal:'慢性腎不全のみ', t2d:'慢性腎不全＋2型糖尿病', t1d:'慢性腎不全＋1型糖尿病' };
+    const tMap = { healthy:'健常者（予防ケア）', normal:'慢性腎不全のみ', t2d:'慢性腎不全＋2型糖尿病', t1d:'慢性腎不全＋1型糖尿病' };
     el('s-type-display').textContent = tMap[state.userType] || '';
   }
   if (el('limit-protein')) el('limit-protein').textContent = state.targets.protein;
   if (el('limit-potassium')) el('limit-potassium').textContent = state.targets.potassium;
   if (el('limit-phosphorus')) el('limit-phosphorus').textContent = state.targets.phosphorus;
-  if (el('s-targets')) el('s-targets').textContent = `タンパク質 ${state.targets.protein}g / カリウム ${state.targets.potassium}mg / リン ${state.targets.phosphorus}mg`;
+  if (el('s-targets')) {
+    if (isHealthy) {
+      el('s-targets').textContent = `タンパク質 ${state.targets.protein}g / 塩分 ${state.targets.salt}g以下 / 食物繊維 ${state.targets.fiber||'—'}g以上`;
+    } else {
+      el('s-targets').textContent = `タンパク質 ${state.targets.protein}g / カリウム ${state.targets.potassium}mg / リン ${state.targets.phosphorus}mg`;
+    }
+  }
+
+  // 健常者モード: CKD固有UIを非表示にする
+  const ckdOnlyEls = document.querySelectorAll('.ckd-only');
+  const healthyOnlyEls = document.querySelectorAll('.healthy-only');
+  ckdOnlyEls.forEach(e => e.style.display = isHealthy ? 'none' : '');
+  healthyOnlyEls.forEach(e => e.style.display = isHealthy ? '' : 'none');
+
+  // ── オンボーディング背景を healthy に合わせて変更 ──
+  const obScreen = document.getElementById('s-onboarding');
+  if (obScreen) {
+    if (isHealthy) {
+      obScreen.style.background = 'radial-gradient(ellipse at 30% 20%, rgba(74,222,128,0.10) 0%, transparent 60%), radial-gradient(ellipse at 80% 80%, rgba(79,195,247,0.06) 0%, transparent 60%), var(--bg)';
+    } else {
+      obScreen.style.background = '';
+    }
+  }
+
   renderUserSwitcher();
   updateHomeSummary();
 }
@@ -2653,9 +2759,26 @@ function showUserSwitchModal() {
 // ===== ONBOARDING =====
 function selectObChoice(type) {
   state.obType = type;
-  document.querySelectorAll('.ob-choice').forEach(c => c.classList.remove('selected'));
-  document.getElementById('oc-'+type).classList.add('selected');
+  document.querySelectorAll('#ob-step1 .ob-choice').forEach(c => c.classList.remove('selected'));
+  const choiceEl = document.getElementById('oc-'+type);
+  if (choiceEl) choiceEl.classList.add('selected');
   document.getElementById('ob-btn1').disabled = false;
+
+  // healthy モード: CKDステップをスキップするためラベルを更新
+  const isHealthy = type === 'healthy';
+  const step2Label = document.querySelector('#ob-step2 .ob-step');
+  const step4Label = document.querySelector('#ob-step4 .ob-step');
+  const step5Label = document.querySelector('#ob-step5 .ob-step');
+  if (isHealthy) {
+    if (step2Label) step2Label.textContent = 'ステップ 2 / 4';
+    if (step4Label) step4Label.textContent = 'ステップ 3 / 4';
+    if (step5Label) step5Label.textContent = 'ステップ 4 / 4';
+    state.ckdStage = null;
+  } else {
+    if (step2Label) step2Label.textContent = 'ステップ 2 / 5';
+    if (step4Label) step4Label.textContent = 'ステップ 4 / 5';
+    if (step5Label) step5Label.textContent = 'ステップ 5 / 5';
+  }
 }
 
 function checkObName() {
@@ -2682,86 +2805,99 @@ function selectTargetMode(mode) {
   document.getElementById('ob-manual-inputs').style.display = mode==='manual' ? 'block' : 'none';
   if (mode === 'auto') {
     const calc = calcAutoTargets();
+    const isHealthy = state.obType === 'healthy';
     const el = document.getElementById('ob-auto-values');
-    if (el && calc) el.innerHTML = [
-      ['カロリー', calc.calories+'kcal'],
+    if (el && calc) el.innerHTML = (isHealthy ? [
+      ['カロリー',   calc.calories+'kcal'],
       ['タンパク質', calc.protein+'g'],
-      ['カリウム', calc.potassium+'mg'],
-      ['リン', calc.phosphorus+'mg'],
-      ['水分', calc.water+'mL'],
-      ['塩分', calc.salt+'g以下'],
-    ].map(([k,v])=>`<div style="background:var(--surface);border-radius:8px;padding:8px;text-align:center;"><div style="font-size:10px;color:var(--text3);">${k}</div><div style="font-size:14px;font-weight:700;color:var(--accent);">${v}</div></div>`).join('');
+      ['塩分',       calc.salt+'g以下'],
+      ['食物繊維',   calc.fiber+'g以上'],
+      ['脂質',       calc.fat+'g目安'],
+      ['水分',       calc.water+'mL'],
+    ] : [
+      ['カロリー',   calc.calories+'kcal'],
+      ['タンパク質', calc.protein+'g'],
+      ['カリウム',   calc.potassium+'mg'],
+      ['リン',       calc.phosphorus+'mg'],
+      ['水分',       calc.water+'mL'],
+      ['塩分',       calc.salt+'g以下'],
+    ]).map(([k,v])=>`<div style="background:var(--surface);border-radius:8px;padding:8px;text-align:center;"><div style="font-size:10px;color:var(--text3);">${k}</div><div style="font-size:14px;font-weight:700;color:var(--accent);">${v}</div></div>`).join('');
   }
 }
 
-// ===== CKD・糖尿病の目標値自動計算 =====
-// 参考: 日本腎臓学会CKD診療ガイドライン2023
+// ===== CKD・糖尿病・健常者の目標値自動計算 =====
+// 参考: 日本腎臓学会CKD診療ガイドライン2023 / 厚生労働省 日本人の食事摂取基準2020年版
 function calcAutoTargets() {
   const weight = parseFloat(state.weight) || 60;
   const height = parseFloat(state.height) || 165;
+  const age    = parseInt(state.age) || 50;
+  const gender = state.gender || 'male';
   const ibw = (height/100 - 1.0) * 0.9 * 100; // 標準体重(kg) 簡易式
-  const bw = Math.min(weight, ibw * 1.25); // 肥満の場合は補正
+  const bw = Math.min(weight, ibw * 1.25);
   const stage = state.ckdStage || 'ckdx';
   const type = state.userType || 'normal';
 
-  // カロリー: 標準体重×25〜35kcal（CKDは30前後）
+  // ── 健常者モード（厚生労働省 食事摂取基準2020） ──────────────────────
+  if (type === 'healthy') {
+    // 基礎代謝量（Harris-Benedictの日本人改良版）
+    const bmr = gender === 'female'
+      ? 665.1 + 9.56 * weight + 1.85 * height - 4.68 * age
+      : 66.47 + 13.75 * weight + 5.0  * height - 6.76 * age;
+    // 身体活動レベル II（ふつう）= 1.75
+    const calories = Math.round(bmr * 1.75 / 50) * 50;
+    // タンパク質: 体重×1.0g/日（一般成人目安）
+    const protein = Math.round(ibw * 1.0);
+    // カリウム: 3,500mg以上（目標量）※生活習慣病予防
+    const potassium = 3500;
+    // リン: 目安量 700〜1000mg
+    const phosphorus = 800;
+    // 水分: 体重×35mL/日
+    const water = Math.round(weight * 35 / 50) * 50;
+    // 塩分: 男性7.5g未満 / 女性6.5g未満（目標量）
+    const salt = gender === 'female' ? 6 : 7;
+    // 食物繊維: 男性21g以上 / 女性18g以上（目標量）
+    const fiber = gender === 'female' ? 18 : 21;
+    // 脂質エネルギー比: 20〜30%目安 → 脂質g = cal×0.25 / 9
+    const fat = Math.round(calories * 0.25 / 9);
+    return { calories, protein, potassium, phosphorus, water, salt, fiber, fat };
+  }
+
+  // ── CKD・糖尿病モード（既存ロジック） ────────────────────────────────
   const calories = Math.round(ibw * 30 / 50) * 50;
 
-  // タンパク質: ステージ別
   const proteinMap = {
-    ckd1: ibw * 0.8,   // G1-2: 0.6〜1.0 → 0.8
-    ckd2: ibw * 0.65,  // G3: 0.6〜0.8 → 0.65
-    ckd3: ibw * 0.5,   // G4-5: 0.4〜0.6 → 0.5
-    ckd4: ibw * 0.9,   // 透析: 0.9〜1.2（透析で失われる）
-    ckdx: ibw * 0.8,
+    ckd1: ibw * 0.8, ckd2: ibw * 0.65, ckd3: ibw * 0.5,
+    ckd4: ibw * 0.9, ckdx: ibw * 0.8,
   };
   const protein = Math.round(proteinMap[stage]);
 
-  // カリウム (mg)
   const potassiumMap = { ckd1:3500, ckd2:2500, ckd3:1500, ckd4:1500, ckdx:2500 };
   const potassium = potassiumMap[stage];
-
-  // リン (mg): タンパク質×15 が目安
   const phosphorus = Math.round(protein * 15 / 50) * 50;
 
-  // 水分 (mL): 全腎協ガイドラインに基づく計算
-  // 参考: https://www.zjk.or.jp/kidney-disease/water-salt-intake/5_5358a3bdbd475/
-  // 透析期（ckd4）: 体重増加目安 中1日<DW×3%、中2日<DW×5% → 飲水量 = DW×3% + 尿量 - 食事水分(推定600mL)
-  //   尿量が不明の場合は透析患者平均500mLを想定
-  //   不感蒸泄（約体重×15mL/日）を差し引いた分が飲水許容量
-  // CKD前期〜後期: 尿量が保たれているため1日尿量+500mL程度が目安
   let water;
   if (stage === 'ckd4') {
-    // 透析期: DW = 体重（透析後）≒ 現在の体重を使用
-    // 中1日透析を想定: DW × 3% の体重増加許容 → 水分収支
-    // 飲水目安 = DW×0.03×1000(mL相当) + 尿量(推定500) - 不感蒸泄(体重×15)
-    const insensibleLoss = Math.round(weight * 15); // 不感蒸泄
-    const estimatedUrine = 500; // 透析患者の平均的尿量
-    const dwGain3pct = Math.round(weight * 0.03 * 1000); // DW比3%の体重増加 → 水分量(mL)
+    const insensibleLoss = Math.round(weight * 15);
+    const estimatedUrine = 500;
+    const dwGain3pct = Math.round(weight * 0.03 * 1000);
     water = Math.max(500, Math.round((dwGain3pct + estimatedUrine - insensibleLoss) / 50) * 50);
-  } else if (stage === 'ckd3') {
-    // 後期(G4-5): 尿量低下あり、尿量+500mL 〜 1000mL目安
-    water = 1000;
-  } else if (stage === 'ckd2') {
-    // 中期(G3): 1000〜1500mL
-    water = 1200;
-  } else if (stage === 'ckd1') {
-    // 前期(G1-2): 尿量保たれている、制限は緩め 1500〜2000mL
-    water = 1500;
-  } else {
-    water = 1500; // 不明
-  }
+  } else if (stage === 'ckd3') { water = 1000; }
+  else if (stage === 'ckd2')   { water = 1200; }
+  else if (stage === 'ckd1')   { water = 1500; }
+  else                          { water = 1500; }
 
-  // 塩分: CKDは3g以上6g未満
   const salt = stage === 'ckd4' ? 6 : 6;
-
-  // 糖尿病合併の場合カロリー調整
   const calFinal = type !== 'normal' ? Math.min(calories, Math.round(ibw * 28 / 50) * 50) : calories;
 
-  return { calories:calFinal, protein, potassium, phosphorus, water, salt };
+  return { calories:calFinal, protein, potassium, phosphorus, water, salt, fiber: null, fat: null };
 }
 
 function goObStep(n) {
+  // healthy モード: CKDステップ(3)をスキップ
+  const isHealthy = state.obType === 'healthy';
+  if (isHealthy && n === 3) n = 4;           // step2→ step4 へ飛ぶ
+  if (isHealthy && n === 2 && state.obStep === 4) n = 2; // step4→ step2 へ戻る
+
   ['ob-step1','ob-step2','ob-step3','ob-step4','ob-step5'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = 'none';
@@ -2772,13 +2908,12 @@ function goObStep(n) {
     // iOS Safari: display:none→block 直後にタップが効かない問題の回避
     target.querySelectorAll('.ob-choice').forEach(el => {
       el.style.cursor = 'pointer';
-      // タッチイベントを明示的に再登録
       el.style.webkitTapHighlightColor = 'transparent';
     });
   }
   state.obStep = n;
   if (n === 5) {
-    const typeMap = { normal:'慢性腎不全のみ', t2d:'慢性腎不全＋2型糖尿病', t1d:'慢性腎不全＋1型糖尿病' };
+    const typeMap = { healthy:'健常者（予防ケア）', normal:'慢性腎不全のみ', t2d:'慢性腎不全＋2型糖尿病', t1d:'慢性腎不全＋1型糖尿病' };
     const stageMap = { ckd1:'前期（G1-2）', ckd2:'中期（G3）', ckd3:'後期（G4-5）', ckd4:'透析期', ckdx:'不明' };
     const genderMap = { male:'男性', female:'女性' };
     const name = document.getElementById('ob-name')?.value || '';
@@ -2792,12 +2927,14 @@ function goObStep(n) {
       <div>👤 <strong>${name}</strong>（${genderMap[gender]}・${age}歳）</div>
       <div>📏 身長 ${height}cm / ⚖️ 体重 ${weight}kg</div>
       <div>🩺 ${typeMap[state.obType||'normal']}</div>
-      <div>🫁 CKD ${stageMap[state.ckdStage||'ckdx']}</div>
+      ${!isHealthy ? `<div>🫁 CKD ${stageMap[state.ckdStage||'ckdx']}</div>` : ''}
       <div style="border-top:1px solid var(--border);margin:8px 0;padding-top:8px;">
         目標: カロリー ${calc?calc.calories:(document.getElementById('ob-calories')?.value||'—')}kcal /
         タンパク質 ${calc?calc.protein:(document.getElementById('ob-protein')?.value||'—')}g<br>
-        カリウム ${calc?calc.potassium:(document.getElementById('ob-potassium')?.value||'—')}mg /
-        リン ${calc?calc.phosphorus:(document.getElementById('ob-phosphorus')?.value||'—')}mg
+        ${isHealthy
+          ? `塩分 ${calc?calc.salt:(document.getElementById('ob-salt')?.value||'—')}g以下 / 食物繊維 ${calc?calc.fiber:(document.getElementById('ob-fiber')?.value||'—')}g以上`
+          : `カリウム ${calc?calc.potassium:(document.getElementById('ob-potassium')?.value||'—')}mg / リン ${calc?calc.phosphorus:(document.getElementById('ob-phosphorus')?.value||'—')}mg`
+        }
       </div>`;
   }
 }
@@ -2819,12 +2956,14 @@ function finishOnboarding() {
 
     if (state.targetMode === 'auto') {
       const calc = calcAutoTargets();
-      state.targets.calories   = calc.calories   || 1800;
+      state.targets.calories   = calc.calories   || 2000;
       state.targets.protein    = calc.protein    || 40;
       state.targets.potassium  = calc.potassium  || 2000;
       state.targets.phosphorus = calc.phosphorus || 700;
       state.targets.water      = calc.water      || 1500;
       state.targets.salt       = calc.salt       || 6;
+      if (calc.fiber != null) state.targets.fiber = calc.fiber;
+      if (calc.fat   != null) state.targets.fat   = calc.fat;
     } else {
       state.targets.calories   = parseInt((document.getElementById('ob-calories')  ||{}).value) || 1800;
       state.targets.protein    = parseInt((document.getElementById('ob-protein')   ||{}).value) || 40;
@@ -2833,7 +2972,15 @@ function finishOnboarding() {
       state.targets.water      = parseInt((document.getElementById('ob-water')     ||{}).value) || 1500;
       state.targets.salt       = parseInt((document.getElementById('ob-salt')      ||{}).value) || 6;
     }
-    state.diabetesMode = state.userType !== 'normal';
+    state.diabetesMode = state.userType !== 'normal' && state.userType !== 'healthy';
+    // healthy モードのデフォルト CKDステージ
+    if (state.userType === 'healthy') state.ckdStage = null;
+    // 食物繊維・脂質目標も保存
+    if (state.targets && state.targetMode === 'auto') {
+      const calc2 = calcAutoTargets();
+      if (calc2.fiber != null) state.targets.fiber = calc2.fiber;
+      if (calc2.fat   != null) state.targets.fat   = calc2.fat;
+    }
 
     try {
       saveActiveProfile({ ...state });
@@ -3283,13 +3430,14 @@ function saveEditMeal() {
 
 function closeModal(id) { const el = document.getElementById(id); if (el) el.classList.remove('open'); }
 function cycleUserType() {
-  const order = ['normal','t2d','t1d'];
+  const order = ['healthy','normal','t2d','t1d'];
   const idx = order.indexOf(state.userType);
   state.userType = order[(idx+1)%order.length];
-  state.diabetesMode = state.userType !== 'normal';
-  const mDesc = { normal:'標準モード（糖質×1）', t2d:'2型糖尿病モード（糖質×3）', t1d:'1型糖尿病モード（糖質×5）' };
+  state.diabetesMode = state.userType !== 'normal' && state.userType !== 'healthy';
+  const mDesc = { healthy:'🌿 予防ケアモード', normal:'標準モード（糖質×1）', t2d:'2型糖尿病モード（糖質×3）', t1d:'1型糖尿病モード（糖質×5）' };
   const el = document.getElementById('s-glucose-mode-desc');
   if (el) el.textContent = mDesc[state.userType];
+  applyStateToUI();
   showToast(mDesc[state.userType]+'に変更しました');
 }
 
@@ -3332,78 +3480,78 @@ function autoSetMealTime(mealType) {
 const FOOD_CAT_CLASS = { main:'sel-main', protein:'sel-protein', sub:'sel-sub', soup:'sel-soup', drink:'sel-drink' };
 const FOOD_CAT_NUTRITION = {
   // 主食
-  '白米（茶碗1杯）':      { kcal:252, protein:3.8, carb:55.7, fiber:0.5, potassium:44,  phosphorus:51  },
-  '玄米（茶碗1杯）':      { kcal:248, protein:4.2, carb:51.3, fiber:2.1, potassium:95,  phosphorus:130 },
-  '食パン（1枚）':         { kcal:158, protein:5.3, carb:28.3, fiber:1.4, potassium:57,  phosphorus:52  },
-  'うどん（1玉）':         { kcal:210, protein:5.2, carb:43.2, fiber:1.6, potassium:14,  phosphorus:34  },
-  'そば（1玉）':           { kcal:234, protein:8.6, carb:43.2, fiber:3.1, potassium:54,  phosphorus:130 },
-  'ラーメン（1玉）':       { kcal:264, protein:8.8, carb:51.6, fiber:2.2, potassium:46,  phosphorus:88  },
-  'スパゲッティ（1人前）': { kcal:298, protein:10.4,carb:57.0, fiber:3.0, potassium:40,  phosphorus:120 },
-  'もち（1個）':           { kcal:118, protein:2.1, carb:26.4, fiber:0.2, potassium:10,  phosphorus:28  },
-  'おかゆ（1杯）':         { kcal:156, protein:2.3, carb:34.3, fiber:0.2, potassium:33,  phosphorus:31  },
-  '焼きそば（1人前）':     { kcal:296, protein:8.0, carb:52.0, fiber:2.5, potassium:140, phosphorus:85  },
+  '白米（茶碗1杯）':      { kcal:252, protein:3.8, carb:55.7, fiber:0.5, potassium:44,  phosphorus:51,  salt:0   },
+  '玄米（茶碗1杯）':      { kcal:248, protein:4.2, carb:51.3, fiber:2.1, potassium:95,  phosphorus:130, salt:0   },
+  '食パン（1枚）':         { kcal:158, protein:5.3, carb:28.3, fiber:1.4, potassium:57,  phosphorus:52,  salt:0.8 },
+  'うどん（1玉）':         { kcal:210, protein:5.2, carb:43.2, fiber:1.6, potassium:14,  phosphorus:34,  salt:0.5 },
+  'そば（1玉）':           { kcal:234, protein:8.6, carb:43.2, fiber:3.1, potassium:54,  phosphorus:130, salt:0.3 },
+  'ラーメン（1玉）':       { kcal:264, protein:8.8, carb:51.6, fiber:2.2, potassium:46,  phosphorus:88,  salt:0.4 },
+  'スパゲッティ（1人前）': { kcal:298, protein:10.4,carb:57.0, fiber:3.0, potassium:40,  phosphorus:120, salt:0.2 },
+  'もち（1個）':           { kcal:118, protein:2.1, carb:26.4, fiber:0.2, potassium:10,  phosphorus:28,  salt:0   },
+  'おかゆ（1杯）':         { kcal:156, protein:2.3, carb:34.3, fiber:0.2, potassium:33,  phosphorus:31,  salt:0   },
+  '焼きそば（1人前）':     { kcal:296, protein:8.0, carb:52.0, fiber:2.5, potassium:140, phosphorus:85,  salt:1.5 },
   // メイン
-  '鶏むね肉（100g）':      { kcal:116, protein:24.4,carb:0,    fiber:0,   potassium:340, phosphorus:220 },
-  '鶏もも肉（100g）':      { kcal:151, protein:20.9,carb:0,    fiber:0,   potassium:320, phosphorus:200 },
-  '豚肉（100g）':          { kcal:263, protein:19.3,carb:0.2,  fiber:0,   potassium:310, phosphorus:180 },
-  '牛肉（100g）':          { kcal:193, protein:21.9,carb:0.5,  fiber:0,   potassium:350, phosphorus:190 },
-  '鮭（1切れ）':           { kcal:148, protein:20.2,carb:0.1,  fiber:0,   potassium:296, phosphorus:216 },
-  '鯖（1切れ）':           { kcal:213, protein:17.8,carb:0.3,  fiber:0,   potassium:264, phosphorus:184 },
-  'マグロ刺身（5切れ）':   { kcal:67,  protein:15.8,carb:0.1,  fiber:0,   potassium:222, phosphorus:174 },
-  'サーモン刺身（5切れ）': { kcal:130, protein:13.5,carb:0.1,  fiber:0,   potassium:210, phosphorus:192 },
-  'タイ刺身（5切れ）':     { kcal:70,  protein:13.2,carb:0.1,  fiber:0,   potassium:204, phosphorus:138 },
-  'ハマチ刺身（5切れ）':   { kcal:125, protein:13.0,carb:0.1,  fiber:0,   potassium:228, phosphorus:150 },
-  'ホタテ刺身（3粒）':     { kcal:48,  protein:9.7, carb:2.0,  fiber:0,   potassium:180, phosphorus:132 },
-  '甘エビ刺身（5尾）':     { kcal:39,  protein:8.0, carb:0.1,  fiber:0,   potassium:160, phosphorus:104 },
-  '生ウニ（大さじ2）':     { kcal:37,  protein:4.8, carb:1.2,  fiber:0,   potassium:111, phosphorus:105 },
-  'いくら（大さじ1）':     { kcal:41,  protein:4.7, carb:0.1,  fiber:0,   potassium:51,  phosphorus:99  },
-  '卵（1個）':             { kcal:91,  protein:7.4, carb:0.2,  fiber:0,   potassium:78,  phosphorus:120 },
-  '豆腐（半丁）':          { kcal:80,  protein:7.4, carb:2.4,  fiber:0.3, potassium:225, phosphorus:105 },
-  '納豆（1パック）':       { kcal:100, protein:8.3, carb:6.1,  fiber:3.4, potassium:330, phosphorus:190 },
+  '鶏むね肉（100g）':      { kcal:116, protein:24.4,carb:0,    fiber:0,   potassium:340, phosphorus:220, salt:0.1 },
+  '鶏もも肉（100g）':      { kcal:151, protein:20.9,carb:0,    fiber:0,   potassium:320, phosphorus:200, salt:0.1 },
+  '豚肉（100g）':          { kcal:263, protein:19.3,carb:0.2,  fiber:0,   potassium:310, phosphorus:180, salt:0.1 },
+  '牛肉（100g）':          { kcal:193, protein:21.9,carb:0.5,  fiber:0,   potassium:350, phosphorus:190, salt:0.1 },
+  '鮭（1切れ）':           { kcal:148, protein:20.2,carb:0.1,  fiber:0,   potassium:296, phosphorus:216, salt:0.1 },
+  '鯖（1切れ）':           { kcal:213, protein:17.8,carb:0.3,  fiber:0,   potassium:264, phosphorus:184, salt:0.2 },
+  'マグロ刺身（5切れ）':   { kcal:67,  protein:15.8,carb:0.1,  fiber:0,   potassium:222, phosphorus:174, salt:0.1 },
+  'サーモン刺身（5切れ）': { kcal:130, protein:13.5,carb:0.1,  fiber:0,   potassium:210, phosphorus:192, salt:0.1 },
+  'タイ刺身（5切れ）':     { kcal:70,  protein:13.2,carb:0.1,  fiber:0,   potassium:204, phosphorus:138, salt:0.1 },
+  'ハマチ刺身（5切れ）':   { kcal:125, protein:13.0,carb:0.1,  fiber:0,   potassium:228, phosphorus:150, salt:0.1 },
+  'ホタテ刺身（3粒）':     { kcal:48,  protein:9.7, carb:2.0,  fiber:0,   potassium:180, phosphorus:132, salt:0.2 },
+  '甘エビ刺身（5尾）':     { kcal:39,  protein:8.0, carb:0.1,  fiber:0,   potassium:160, phosphorus:104, salt:0.2 },
+  '生ウニ（大さじ2）':     { kcal:37,  protein:4.8, carb:1.2,  fiber:0,   potassium:111, phosphorus:105, salt:0.3 },
+  'いくら（大さじ1）':     { kcal:41,  protein:4.7, carb:0.1,  fiber:0,   potassium:51,  phosphorus:99,  salt:0.5 },
+  '卵（1個）':             { kcal:91,  protein:7.4, carb:0.2,  fiber:0,   potassium:78,  phosphorus:120, salt:0.2 },
+  '豆腐（半丁）':          { kcal:80,  protein:7.4, carb:2.4,  fiber:0.3, potassium:225, phosphorus:105, salt:0   },
+  '納豆（1パック）':       { kcal:100, protein:8.3, carb:6.1,  fiber:3.4, potassium:330, phosphorus:190, salt:0   },
   // サブ
-  'キャベツ（小鉢）':      { kcal:17,  protein:0.8, carb:3.1,  fiber:1.4, potassium:78,  phosphorus:22  },
-  'ほうれん草（小鉢）':    { kcal:14,  protein:1.7, carb:1.1,  fiber:1.7, potassium:276, phosphorus:36  },
-  'トマト（中1個）':       { kcal:29,  protein:1.1, carb:5.6,  fiber:1.5, potassium:315, phosphorus:39  },
-  'ブロッコリー（小鉢）':  { kcal:23,  protein:3.0, carb:2.2,  fiber:3.0, potassium:192, phosphorus:66  },
-  '大根・煮物（小鉢）':    { kcal:18,  protein:0.5, carb:3.5,  fiber:1.4, potassium:230, phosphorus:18  },
-  'じゃがいも（中1個）':   { kcal:76,  protein:1.6, carb:16.7, fiber:1.3, potassium:340, phosphorus:40  },
-  'さつまいも（小）':      { kcal:131, protein:1.2, carb:30.3, fiber:2.2, potassium:480, phosphorus:46  },
-  '玉ねぎ（1/2個）':       { kcal:27,  protein:0.8, carb:6.4,  fiber:1.3, potassium:120, phosphorus:24  },
-  '長ねぎ（1/2本）':       { kcal:17,  protein:0.6, carb:3.9,  fiber:1.1, potassium:100, phosphorus:18  },
-  'にんじん（煮物）':      { kcal:20,  protein:0.4, carb:4.1,  fiber:1.4, potassium:135, phosphorus:18  },
-  'しいたけ（2枚）':       { kcal:11,  protein:0.9, carb:2.0,  fiber:1.5, potassium:100, phosphorus:36  },
-  'えのき（1袋）':         { kcal:22,  protein:2.7, carb:3.7,  fiber:3.9, potassium:340, phosphorus:110 },
-  'しめじ（50g）':         { kcal:9,   protein:1.0, carb:1.5,  fiber:1.7, potassium:185, phosphorus:50  },
+  'キャベツ（小鉢）':      { kcal:17,  protein:0.8, carb:3.1,  fiber:1.4, potassium:78,  phosphorus:22,  salt:0   },
+  'ほうれん草（小鉢）':    { kcal:14,  protein:1.7, carb:1.1,  fiber:1.7, potassium:276, phosphorus:36,  salt:0   },
+  'トマト（中1個）':       { kcal:29,  protein:1.1, carb:5.6,  fiber:1.5, potassium:315, phosphorus:39,  salt:0   },
+  'ブロッコリー（小鉢）':  { kcal:23,  protein:3.0, carb:2.2,  fiber:3.0, potassium:192, phosphorus:66,  salt:0   },
+  '大根・煮物（小鉢）':    { kcal:18,  protein:0.5, carb:3.5,  fiber:1.4, potassium:230, phosphorus:18,  salt:0.5 },
+  'じゃがいも（中1個）':   { kcal:76,  protein:1.6, carb:16.7, fiber:1.3, potassium:340, phosphorus:40,  salt:0   },
+  'さつまいも（小）':      { kcal:131, protein:1.2, carb:30.3, fiber:2.2, potassium:480, phosphorus:46,  salt:0   },
+  '玉ねぎ（1/2個）':       { kcal:27,  protein:0.8, carb:6.4,  fiber:1.3, potassium:120, phosphorus:24,  salt:0   },
+  '長ねぎ（1/2本）':       { kcal:17,  protein:0.6, carb:3.9,  fiber:1.1, potassium:100, phosphorus:18,  salt:0   },
+  'にんじん（煮物）':      { kcal:20,  protein:0.4, carb:4.1,  fiber:1.4, potassium:135, phosphorus:18,  salt:0.4 },
+  'しいたけ（2枚）':       { kcal:11,  protein:0.9, carb:2.0,  fiber:1.5, potassium:100, phosphorus:36,  salt:0   },
+  'えのき（1袋）':         { kcal:22,  protein:2.7, carb:3.7,  fiber:3.9, potassium:340, phosphorus:110, salt:0   },
+  'しめじ（50g）':         { kcal:9,   protein:1.0, carb:1.5,  fiber:1.7, potassium:185, phosphorus:50,  salt:0   },
   // 汁物・デザート
-  '味噌汁（1杯）':         { kcal:49,  protein:3.2, carb:3.8,  fiber:0.5, potassium:220, phosphorus:80  },
-  'すまし汁（1杯）':       { kcal:8,   protein:0.5, carb:0.8,  fiber:0,   potassium:85,  phosphorus:15  },
-  'コンソメスープ（1杯）': { kcal:10,  protein:0.5, carb:1.2,  fiber:0,   potassium:80,  phosphorus:12  },
-  'みかん（1個）':         { kcal:38,  protein:0.5, carb:9.1,  fiber:0.8, potassium:120, phosphorus:14  },
-  'りんご（半個）':        { kcal:69,  protein:0.2, carb:17.8, fiber:1.4, potassium:144, phosphorus:14  },
-  'バナナ（1本）':         { kcal:93,  protein:1.1, carb:21.4, fiber:1.1, potassium:360, phosphorus:27  },
-  'いちご（5粒）':         { kcal:26,  protein:0.7, carb:5.8,  fiber:0.8, potassium:135, phosphorus:21  },
-  'ヨーカン（1切れ）':     { kcal:158, protein:1.5, carb:37.0, fiber:0.9, potassium:30,  phosphorus:18  },
-  '大福もち（1個）':       { kcal:145, protein:2.6, carb:32.5, fiber:0.4, potassium:24,  phosphorus:40  },
-  'アイスクリーム（1個）': { kcal:180, protein:3.5, carb:22.5, fiber:0,   potassium:160, phosphorus:100 },
-  'プリン（1個）':         { kcal:126, protein:4.5, carb:15.2, fiber:0,   potassium:140, phosphorus:110 },
-  'せんべい（2枚）':       { kcal:76,  protein:1.5, carb:16.6, fiber:0.2, potassium:18,  phosphorus:32  },
+  '味噌汁（1杯）':         { kcal:49,  protein:3.2, carb:3.8,  fiber:0.5, potassium:220, phosphorus:80,  salt:1.5 },
+  'すまし汁（1杯）':       { kcal:8,   protein:0.5, carb:0.8,  fiber:0,   potassium:85,  phosphorus:15,  salt:1.2 },
+  'コンソメスープ（1杯）': { kcal:10,  protein:0.5, carb:1.2,  fiber:0,   potassium:80,  phosphorus:12,  salt:1.4 },
+  'みかん（1個）':         { kcal:38,  protein:0.5, carb:9.1,  fiber:0.8, potassium:120, phosphorus:14,  salt:0   },
+  'りんご（半個）':        { kcal:69,  protein:0.2, carb:17.8, fiber:1.4, potassium:144, phosphorus:14,  salt:0   },
+  'バナナ（1本）':         { kcal:93,  protein:1.1, carb:21.4, fiber:1.1, potassium:360, phosphorus:27,  salt:0   },
+  'いちご（5粒）':         { kcal:26,  protein:0.7, carb:5.8,  fiber:0.8, potassium:135, phosphorus:21,  salt:0   },
+  'ヨーカン（1切れ）':     { kcal:158, protein:1.5, carb:37.0, fiber:0.9, potassium:30,  phosphorus:18,  salt:0   },
+  '大福もち（1個）':       { kcal:145, protein:2.6, carb:32.5, fiber:0.4, potassium:24,  phosphorus:40,  salt:0   },
+  'アイスクリーム（1個）': { kcal:180, protein:3.5, carb:22.5, fiber:0,   potassium:160, phosphorus:100, salt:0.2 },
+  'プリン（1個）':         { kcal:126, protein:4.5, carb:15.2, fiber:0,   potassium:140, phosphorus:110, salt:0.2 },
+  'せんべい（2枚）':       { kcal:76,  protein:1.5, carb:16.6, fiber:0.2, potassium:18,  phosphorus:32,  salt:0.4 },
   // 飲み物
-  '水・お茶（200ml）':     { kcal:0,   protein:0,   carb:0,    fiber:0,   potassium:0,   phosphorus:0   },
-  'コーヒー・紅茶（200ml）':{ kcal:8,  protein:0.4, carb:1.4,  fiber:0,   potassium:130, phosphorus:6   },
-  '牛乳（200ml）':         { kcal:134, protein:6.6, carb:9.6,  fiber:0,   potassium:300, phosphorus:190 },
-  '豆乳（200ml）':         { kcal:92,  protein:7.2, carb:3.0,  fiber:0.4, potassium:230, phosphorus:98  },
-  'ジュース（200ml）':     { kcal:84,  protein:0.8, carb:19.2, fiber:0.3, potassium:240, phosphorus:20  },
-  'スポーツドリンク（500ml）':{ kcal:115,protein:0, carb:28.5, fiber:0,   potassium:195, phosphorus:15  },
-  'ビール（350ml）':       { kcal:140, protein:1.0, carb:10.9, fiber:0,   potassium:105, phosphorus:42  },
-  'ノンアルビール（350ml）':{ kcal:35,  protein:0.4, carb:7.0,  fiber:0,  potassium:42,  phosphorus:14  },
-  // 春雨・こんにゃく類（腎臓病患者に重要な低タンパク・低カリウム食材）
-  '春雨（乾燥20g）':       { kcal:68,  protein:0.0, carb:17.0, fiber:0.2, potassium:2,   phosphorus:6   },
-  '春雨スープ（1人前）':   { kcal:72,  protein:0.2, carb:18.0, fiber:0.3, potassium:25,  phosphorus:12  },
-  'こんにゃく（100g）':    { kcal:5,   protein:0.1, carb:2.3,  fiber:2.2, potassium:33,  phosphorus:5   },
-  'しらたき（100g）':      { kcal:6,   protein:0.2, carb:2.9,  fiber:2.9, potassium:12,  phosphorus:10  },
-  'もやし（小鉢）':        { kcal:14,  protein:1.7, carb:1.3,  fiber:1.3, potassium:69,  phosphorus:31  },
-  '白菜（小鉢）':          { kcal:14,  protein:0.8, carb:2.2,  fiber:1.3, potassium:160, phosphorus:30  },
-  '低タンパクご飯（1杯）': { kcal:231, protein:0.5, carb:53.9, fiber:0.2, potassium:15,  phosphorus:15  },
+  '水・お茶（200ml）':     { kcal:0,   protein:0,   carb:0,    fiber:0,   potassium:0,   phosphorus:0,   salt:0   },
+  'コーヒー・紅茶（200ml）':{ kcal:8,  protein:0.4, carb:1.4,  fiber:0,   potassium:130, phosphorus:6,   salt:0   },
+  '牛乳（200ml）':         { kcal:134, protein:6.6, carb:9.6,  fiber:0,   potassium:300, phosphorus:190, salt:0.2 },
+  '豆乳（200ml）':         { kcal:92,  protein:7.2, carb:3.0,  fiber:0.4, potassium:230, phosphorus:98,  salt:0.2 },
+  'ジュース（200ml）':     { kcal:84,  protein:0.8, carb:19.2, fiber:0.3, potassium:240, phosphorus:20,  salt:0   },
+  'スポーツドリンク（500ml）':{ kcal:115,protein:0, carb:28.5, fiber:0,   potassium:195, phosphorus:15,  salt:1.0 },
+  'ビール（350ml）':       { kcal:140, protein:1.0, carb:10.9, fiber:0,   potassium:105, phosphorus:42,  salt:0   },
+  'ノンアルビール（350ml）':{ kcal:35,  protein:0.4, carb:7.0,  fiber:0,  potassium:42,  phosphorus:14,  salt:0   },
+  // 春雨・こんにゃく類
+  '春雨（乾燥20g）':       { kcal:68,  protein:0.0, carb:17.0, fiber:0.2, potassium:2,   phosphorus:6,   salt:0   },
+  '春雨スープ（1人前）':   { kcal:72,  protein:0.2, carb:18.0, fiber:0.3, potassium:25,  phosphorus:12,  salt:1.5 },
+  'こんにゃく（100g）':    { kcal:5,   protein:0.1, carb:2.3,  fiber:2.2, potassium:33,  phosphorus:5,   salt:0   },
+  'しらたき（100g）':      { kcal:6,   protein:0.2, carb:2.9,  fiber:2.9, potassium:12,  phosphorus:10,  salt:0   },
+  'もやし（小鉢）':        { kcal:14,  protein:1.7, carb:1.3,  fiber:1.3, potassium:69,  phosphorus:31,  salt:0   },
+  '白菜（小鉢）':          { kcal:14,  protein:0.8, carb:2.2,  fiber:1.3, potassium:160, phosphorus:30,  salt:0   },
+  '低タンパクご飯（1杯）': { kcal:231, protein:0.5, carb:53.9, fiber:0.2, potassium:15,  phosphorus:15,  salt:0   },
 };
 const PORTION_RATIO = { none:0.0, small:0.5, normal:1.0, large:1.5 };
 
@@ -3422,31 +3570,80 @@ function toggleFoodCat(el) { el.classList.toggle(FOOD_CAT_CLASS[el.dataset.cat])
 
 function updateNutritionPreview() {
   const anySelected = ['main','protein','sub','soup','drink'].some(cat => document.querySelector(`.food-cat-chip[data-cat="${cat}"].${FOOD_CAT_CLASS[cat]}`));
-  const preview = document.getElementById('nutrition-preview');
-  if (!anySelected) { if (preview) preview.classList.remove('visible'); return; }
-  let kcal=0, protein=0, carb=0, fiber=0, potassium=0, phosphorus=0;
+  const hasFqItems  = _fqSelections.length > 0;
+  const preview     = document.getElementById('nutrition-preview');
+  if (!anySelected && !hasFqItems) { if (preview) preview.classList.remove('visible'); return; }
+
+  // ── ① チップ選択由来の栄養合計 ──
+  let chipKcal=0, chipProtein=0, chipCarb=0, chipFiber=0, chipK=0, chipP=0, chipSalt=0;
   ['main','protein','sub','soup','drink'].forEach(group => {
     const ratio = getGroupPortion(group);
     document.querySelectorAll(`.food-cat-chip[data-cat="${group}"].${FOOD_CAT_CLASS[group]}`).forEach(c => {
       const n = FOOD_CAT_NUTRITION[c.textContent.trim()];
-      if (n) { kcal+=n.kcal*ratio; protein+=n.protein*ratio; carb+=n.carb*ratio; fiber+=n.fiber*ratio; potassium+=n.potassium*ratio; phosphorus+=n.phosphorus*ratio; }
+      if (n) {
+        chipKcal    += (n.kcal      || 0) * ratio;
+        chipProtein += (n.protein   || 0) * ratio;
+        chipCarb    += (n.carb      || 0) * ratio;
+        chipFiber   += (n.fiber     || 0) * ratio;
+        chipK       += (n.potassium || 0) * ratio;
+        chipP       += (n.phosphorus|| 0) * ratio;
+        chipSalt    += (n.salt      || 0) * ratio;
+      }
     });
   });
-  kcal=Math.round(kcal); protein=Math.round(protein*10)/10; carb=Math.round(carb*10)/10; fiber=Math.round(fiber*10)/10; potassium=Math.round(potassium); phosphorus=Math.round(phosphorus);
-  document.getElementById('prev-kcal').textContent = kcal;
-  document.getElementById('prev-protein').textContent = protein;
-  document.getElementById('prev-carb').textContent = carb;
-  document.getElementById('prev-fiber').textContent = fiber;
-  document.getElementById('prev-k').textContent = potassium;
-  document.getElementById('prev-p').textContent = phosphorus;
+
+  // ── ② 食品DB（_fqSelections）由来の栄養合計 ──
+  let fqKcal=0, fqProtein=0, fqCarb=0, fqFiber=0, fqK=0, fqP=0, fqSalt=0, fqWater=0;
+  _fqSelections.forEach(s => {
+    const r = s.multiplier || 1;
+    fqKcal    += (s.cal     || 0) * r;
+    fqProtein += (s.protein || 0) * r;
+    fqCarb    += (s.carb    || 0) * r;
+    fqFiber   += (s.fiber   || 0) * r;
+    fqK       += (s.k       || 0) * r;
+    fqP       += (s.p       || 0) * r;
+    fqSalt    += (s.salt    || 0) * r;
+    fqWater   += (s.water   || 0) * r;
+  });
+
+  // ── ③ 合算 ──
+  const kcal      = Math.round(chipKcal    + fqKcal);
+  const protein   = Math.round((chipProtein + fqProtein)   * 10) / 10;
+  const carb      = Math.round((chipCarb    + fqCarb)      * 10) / 10;
+  const fiber_val = Math.round((chipFiber   + fqFiber)     * 10) / 10;
+  const potassium = Math.round(chipK        + fqK);
+  const phosphorus= Math.round(chipP        + fqP);
+  const salt_val  = Math.round((chipSalt    + fqSalt)      * 10) / 10;
+  const water_val = Math.round(fqWater); // チップは水分0
+
+  // プレビュー表示更新
+  const setText = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  setText('prev-kcal',    kcal);
+  setText('prev-protein', protein);
+  setText('prev-carb',    carb);
+  setText('prev-fiber',   fiber_val);
+  setText('prev-k',       potassium);
+  setText('prev-p',       phosphorus);
   if (preview) preview.classList.add('visible');
-  const setIfNotManual = (id, val) => { const el = document.getElementById(id); if (el && !el.dataset.manualEdit) el.value = val; };
-  setIfNotManual('record-calories', kcal); setIfNotManual('record-protein', protein);
-  setIfNotManual('record-carb', carb); setIfNotManual('record-fiber', fiber);
-  setIfNotManual('record-potassium', potassium); setIfNotManual('record-phosphorus', phosphorus);
-  // 食品DBチップ由来の水分はchip選択では現状0（手動入力）
+
+  // ── ④ フォームへの反映：manualEdit が付いていない項目のみ合算値で上書き ──
+  //  ※ fqConfirm で既に加算済みの値を二重加算しないよう、
+  //     ここでは「チップ由来 + fqSelections合計」を直接セットする（上書き方式で正しい）
+  const setField = (id, val) => {
+    const el = document.getElementById(id);
+    if (el && !el.dataset.manualEdit) el.value = val;
+  };
+  setField('record-calories',  kcal);
+  setField('record-protein',   protein);
+  setField('record-carb',      carb);
+  setField('record-fiber',     fiber_val);
+  setField('record-potassium', potassium);
+  setField('record-phosphorus',phosphorus);
+  setField('record-salt',      salt_val || '');
+  if (water_val > 0) setField('record-water', water_val);
+
   recalcGlucose();
-  updateRecordNutrSummary(); // サマリーバーも更新
+  updateRecordNutrSummary();
 }
 
 function getSelectedFoodCats() {
@@ -3464,7 +3661,7 @@ function resetFoodCats() { document.querySelectorAll('.food-cat-chip').forEach(c
 
 function resetRecord() {
   window._currentPhotoBase64 = null;
-  ['record-name','record-calories','record-protein','record-carb','record-fiber','record-potassium','record-phosphorus','record-water'].forEach(id => { const el = document.getElementById(id); if (el) el.value=''; });
+  ['record-name','record-calories','record-protein','record-carb','record-fiber','record-potassium','record-phosphorus','record-salt','record-water'].forEach(id => { const el = document.getElementById(id); if (el) el.value=''; });
   // 日付・時刻をリセット
   const dateEl = document.getElementById('record-date');
   if (dateEl) { const d = new Date(); dateEl.value = d.toISOString().slice(0, 10); }
@@ -3486,7 +3683,7 @@ function resetRecord() {
   resetFoodCats();
   _fqSelections = []; // 食品DB選択リストもリセット
   renderRecordFqList(); // 追加済みリスト表示もクリア
-  ['record-calories','record-protein','record-carb','record-fiber','record-potassium','record-phosphorus','record-water'].forEach(id => { const el=document.getElementById(id); if (el) delete el.dataset.manualEdit; });
+  ['record-calories','record-protein','record-carb','record-fiber','record-potassium','record-phosphorus','record-salt','record-water'].forEach(id => { const el=document.getElementById(id); if (el) delete el.dataset.manualEdit; });
   const preview = document.getElementById('nutrition-preview');
   if (preview) preview.classList.remove('visible');
 }
@@ -3510,6 +3707,7 @@ async function saveMeal() {
     fiber: parseFloat(document.getElementById('record-fiber')?.value)||0,
     potassium: parseFloat(document.getElementById('record-potassium')?.value)||0,
     phosphorus: parseFloat(document.getElementById('record-phosphorus')?.value)||0,
+    salt: parseFloat(document.getElementById('record-salt')?.value)||0,
     water: parseFloat(document.getElementById('record-water')?.value)||0,
     meal_type: document.getElementById('record-meal-type')?.value||'breakfast',
     food_categories: getSelectedFoodCats(),
@@ -3664,9 +3862,12 @@ function updateHomeSummary() {
     acc.protein   += m.protein    || 0;
     acc.potassium += m.potassium  || 0;
     acc.phosphorus+= m.phosphorus || 0;
+    acc.salt      += m.salt       || 0;
+    acc.fiber     += m.fiber      || 0;
+    acc.fat       += m.fat        || 0;
     acc.water     += m.water      || 0;
     return acc;
-  }, {calories:0, protein:0, potassium:0, phosphorus:0, water:0});
+  }, {calories:0, protein:0, potassium:0, phosphorus:0, salt:0, fiber:0, fat:0, water:0});
 
   const setMetric = (id, val, unit) => {
     const el = document.getElementById(id);
@@ -3676,6 +3877,22 @@ function updateHomeSummary() {
   setMetric('m-protein',    Math.round(totals.protein*10)/10, 'g');
   setMetric('m-potassium',  Math.round(totals.potassium).toLocaleString(), 'mg');
   setMetric('m-phosphorus', Math.round(totals.phosphorus), 'mg');
+
+  // ── 栄養管理詳細バー更新（共通） ──────────────────────────────────────
+  const setNutrBar = (barId, valId, maxId, val, max, unit) => {
+    const b = document.getElementById(barId);
+    const v = document.getElementById(valId);
+    const m = document.getElementById(maxId);
+    if (b) b.style.width = Math.min(100, max > 0 ? Math.round(val/max*100) : 0) + '%';
+    if (v) v.textContent = unit === 'mg' ? Math.round(val).toLocaleString() : (Math.round(val*10)/10);
+    if (m) m.textContent = unit === 'mg' ? Math.round(max).toLocaleString() : max;
+  };
+  setNutrBar('nutr-bar-k',   'nutr-val-k',   'nutr-max-k',   totals.potassium,  state.targets.potassium  || 2000, 'mg');
+  setNutrBar('nutr-bar-p',   'nutr-val-p',   'nutr-max-p',   totals.phosphorus, state.targets.phosphorus || 700,  'mg');
+  setNutrBar('nutr-bar-pr',  'nutr-val-pr',  'nutr-max-pr',  totals.protein,    state.targets.protein    || 40,   'g');
+  setNutrBar('nutr-bar-fiber','nutr-val-fiber','nutr-max-fiber', totals.fiber||0, state.targets.fiber||21, 'g');
+  setNutrBar('nutr-bar-salt', 'nutr-val-salt', 'nutr-max-salt',  totals.salt||0,  state.targets.salt||7,   'g');
+  setNutrBar('nutr-bar-fat',  'nutr-val-fat',  'nutr-max-fat',   totals.fat||0,   state.targets.fat||55,   'g');
 
   // ── 水分カード更新（食事由来 + 飲料ログ合算） ─────────────────────────
   const waterLog     = getTodayWaterLog ? getTodayWaterLog() : [];
@@ -3769,13 +3986,46 @@ function updateHomeSummary() {
     dwBlock.style.display = 'none';
   }
 
+  const isHealthy = state.userType === 'healthy';
   const updateBar = (barId, val, max) => {
     const el = document.getElementById(barId);
     if (el) el.style.width = Math.min(100, max > 0 ? Math.round(val/max*100) : 0) + '%';
   };
+  updateBar('prog-calories',   totals.calories,   state.targets.calories  || 2000);
   updateBar('prog-protein',    totals.protein,    state.targets.protein);
   updateBar('prog-potassium',  totals.potassium,  state.targets.potassium);
   updateBar('prog-phosphorus', totals.phosphorus, state.targets.phosphorus);
+
+  // タンパク質ラベル: healthyは「目標以上」、CKDは「以下」
+  const labelProteinEl = document.getElementById('label-protein');
+  if (labelProteinEl) {
+    labelProteinEl.innerHTML = isHealthy
+      ? `目標 <span id="limit-protein">${state.targets.protein}</span>g以上`
+      : `目標 <span id="limit-protein">${state.targets.protein}</span>g以下`;
+  }
+
+  if (isHealthy) {
+    // 食物繊維（健常者モード）
+    const fiberTarget = state.targets.fiber || 21;
+    const totalFiber  = todayMeals.reduce((s,m) => s+(m.fiber||0), 0);
+    const fiberEl  = document.getElementById('m-fiber');
+    const fiberLimEl = document.getElementById('limit-fiber');
+    if (fiberEl)   fiberEl.innerHTML = Math.round(totalFiber*10)/10 + '<span class="metric-unit">g</span>';
+    if (fiberLimEl) fiberLimEl.textContent = fiberTarget;
+    updateBar('prog-fiber', totalFiber, fiberTarget);
+
+    // 塩分（健常者モード）
+    const saltTarget = state.targets.salt || 7;
+    const totalSalt  = todayMeals.reduce((s,m) => s+(m.salt||0), 0);
+    const saltEl     = document.getElementById('m-salt');
+    const saltLimEl  = document.getElementById('limit-salt');
+    if (saltEl)    saltEl.innerHTML = Math.round(totalSalt*10)/10 + '<span class="metric-unit">g</span>';
+    if (saltLimEl) saltLimEl.textContent = saltTarget;
+    updateBar('prog-salt', totalSalt, saltTarget);
+  }
+
+  // DWブロック: 健常者は非表示（dwBlock は上部で宣言済み）
+  if (isHealthy && dwBlock) { dwBlock.style.display = 'none'; }
 
   const homeMeals = document.getElementById('home-meals');
   if (homeMeals) {
@@ -3798,6 +4048,78 @@ function updateHomeSummary() {
   }
   updateGlucoseGraph();
   updateWaterCard();
+  updatePreventionCard();
+}
+
+/**
+ * 健常者モード専用: 予防アドバイスカードを更新
+ */
+function updatePreventionCard() {
+  const card = document.getElementById('home-prevention-card');
+  if (!card) return;
+  if (state.userType !== 'healthy') { card.style.display = 'none'; return; }
+  card.style.display = '';
+
+  const meals    = localLoadMeals();
+  const today    = new Date().toDateString();
+  const todayM   = meals.filter(m => new Date(m.recorded_at).toDateString() === today);
+  const totals   = todayM.reduce((a,m) => ({
+    calories: a.calories + (m.calories||0),
+    protein:  a.protein  + (m.protein ||0),
+    fiber:    a.fiber    + (m.fiber   ||0),
+    salt:     a.salt     + (m.salt    ||0),
+    fat:      a.fat      + (m.fat     ||0),
+  }), { calories:0, protein:0, fiber:0, salt:0, fat:0 });
+
+  const meds    = loadMedicines ? loadMedicines() : [];
+  const checks = [
+    {
+      icon: '💧', label: '水分を十分に摂った',
+      ok: (() => { try { const wl = getTodayWaterLog(); return wl.reduce((s,e)=>s+(e.ml||0),0) >= (state.targets.water || 1500); } catch(e){return false;} })(),
+      tip: '1日 ' + (state.targets.water||1500).toLocaleString() + 'mL を目標に',
+    },
+    {
+      icon: '🥗', label: '食物繊維を摂れた',
+      ok: totals.fiber >= (state.targets.fiber || 21) * 0.7,
+      tip: '野菜・きのこ・豆類を意識して',
+    },
+    {
+      icon: '🧂', label: '塩分を抑えられた',
+      ok: todayM.length > 0 && totals.salt <= (state.targets.salt || 7),
+      tip: '目標 ' + (state.targets.salt||7) + 'g 以下',
+    },
+    {
+      icon: '💊', label: '服薬チェック完了',
+      ok: (() => { try { const ent = getTodayMedcheckEntries ? getTodayMedcheckEntries() : []; return ent.length > 0 && ent.every(e=>e.status==='taken'); } catch(e){return false;} })(),
+      tip: meds.length > 0 ? '飲み忘れに注意' : '薬管理タブから登録',
+    },
+    {
+      icon: '🍽', label: '食事を記録した',
+      ok: todayM.length >= 2,
+      tip: '朝・昼・夕の3食を記録しよう',
+    },
+  ];
+
+  const doneCount = checks.filter(c => c.ok).length;
+  const scoreEl = document.getElementById('home-prevention-score');
+  if (scoreEl) scoreEl.textContent = `${doneCount} / ${checks.length} 達成`;
+
+  const listEl = document.getElementById('home-prevention-list');
+  if (listEl) {
+    listEl.innerHTML = checks.map(c => `
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:9px;
+        background:${c.ok ? 'var(--green-dim)' : 'var(--surface2)'};
+        border:1px solid ${c.ok ? 'rgba(74,222,128,0.3)' : 'var(--border)'};transition:all .2s;">
+        <span style="font-size:18px;">${c.icon}</span>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:13px;font-weight:600;color:${c.ok ? 'var(--green)' : 'var(--text)'};">
+            ${c.ok ? '✓ ' : ''}${c.label}
+          </div>
+          ${!c.ok ? `<div style="font-size:11px;color:var(--text3);margin-top:1px;">${c.tip}</div>` : ''}
+        </div>
+        <span style="font-size:16px;">${c.ok ? '✅' : '⬜'}</span>
+      </div>`).join('');
+  }
 }
 
 function setPeriod(el, period) { document.querySelectorAll('.period-btn').forEach(b=>b.classList.remove('active')); el.classList.add('active'); }
@@ -3809,20 +4131,51 @@ function showPatientDetail(name) {
 }
 function showPremiumModal() { showToast('プレミアムプランの詳細は近日公開予定です'); }
 function showTargetModal() {
-  document.getElementById('t-protein').value=state.targets.protein;
-  document.getElementById('t-potassium').value=state.targets.potassium;
-  document.getElementById('t-phosphorus').value=state.targets.phosphorus;
-  document.getElementById('t-water').value=state.targets.water;
+  const isHealthy = state.userType === 'healthy';
+  // モーダルタイトル更新
+  const titleEl = document.getElementById('targetModal-title');
+  if (titleEl) titleEl.textContent = isHealthy ? '🌿 健康目標値を設定' : '🎯 目標値を設定';
+  // タンパク質ラベル
+  const labelEl = document.getElementById('t-label-protein');
+  if (labelEl) labelEl.textContent = isHealthy ? 'タンパク質目標 (g/日)' : 'タンパク質上限 (g/日)';
+  // フォームに現在値をセット
+  const v = state.targets;
+  const setVal = (id, val) => { const el = document.getElementById(id); if (el && val != null) el.value = val; };
+  setVal('t-calories',  v.calories  || 2000);
+  setVal('t-protein',   v.protein   || (isHealthy ? 60 : 40));
+  setVal('t-potassium', v.potassium || 2000);
+  setVal('t-phosphorus',v.phosphorus|| 700);
+  setVal('t-water',     v.water     || 1500);
+  setVal('t-salt',      v.salt      || (isHealthy ? 7 : 6));
+  setVal('t-fiber',     v.fiber     || 21);
+  setVal('t-fat',       v.fat       || 55);
+  // CKD/healthy クラス適用
+  document.querySelectorAll('#targetModal .ckd-only').forEach(e => e.style.display = isHealthy ? 'none' : '');
+  document.querySelectorAll('#targetModal .healthy-only').forEach(e => e.style.display = isHealthy ? '' : 'none');
   document.getElementById('targetModal').classList.add('open');
 }
 function saveTargets() {
-  state.targets.protein=parseInt(document.getElementById('t-protein').value)||40;
-  state.targets.potassium=parseInt(document.getElementById('t-potassium').value)||2000;
-  state.targets.phosphorus=parseInt(document.getElementById('t-phosphorus').value)||700;
-  state.targets.water=parseInt(document.getElementById('t-water').value)||1500;
-  const el=document.getElementById('s-targets');
-  if (el) el.textContent=`タンパク質 ${state.targets.protein}g / カリウム ${state.targets.potassium}mg / リン ${state.targets.phosphorus}mg`;
-  closeModal('targetModal'); showToast('✅ 目標値を保存しました');
+  const isHealthy = state.userType === 'healthy';
+  const getVal = (id, def) => parseInt(document.getElementById(id)?.value) || def;
+  state.targets.calories   = getVal('t-calories',  2000);
+  state.targets.protein    = getVal('t-protein',   isHealthy ? 60 : 40);
+  state.targets.potassium  = getVal('t-potassium', 2000);
+  state.targets.phosphorus = getVal('t-phosphorus',700);
+  state.targets.water      = getVal('t-water',     1500);
+  state.targets.salt       = getVal('t-salt',      isHealthy ? 7 : 6);
+  state.targets.fiber      = getVal('t-fiber',     21);
+  state.targets.fat        = getVal('t-fat',       55);
+  const el = document.getElementById('s-targets');
+  if (el) {
+    el.textContent = isHealthy
+      ? `タンパク質 ${state.targets.protein}g / 塩分 ${state.targets.salt}g以下 / 食物繊維 ${state.targets.fiber}g以上`
+      : `タンパク質 ${state.targets.protein}g / カリウム ${state.targets.potassium}mg / リン ${state.targets.phosphorus}mg`;
+  }
+  // 変更をローカルストレージに保存
+  try { saveActiveProfile({ ...state }); } catch(e) {}
+  closeModal('targetModal');
+  showToast('✅ 目標値を保存しました');
+  updateHomeSummary();
 }
 function updateHomeDate() {
   const d=new Date(); const days=['日','月','火','水','木','金','土'];
@@ -3841,6 +4194,7 @@ function navTo(page) {
   if (page==='record')   initRecordDate();
   if (page==='medicine') { setMedDateToday(); renderMedicineLog(); }
   if (page==='water' || page==='home') { updateWaterCard(); updateWaterBalance(); }
+  if (page==='home') updatePreventionCard();
 }
 
 // ===== 健康記録 =====
@@ -4355,7 +4709,7 @@ function updateGlucoseGraph() {
     else if (currentG < 180)  { glucoseBadge.textContent='やや高め'; glucoseBadge.className='glucose-badge gb-warn'; }
     else                      { glucoseBadge.textContent='高め'; glucoseBadge.className='glucose-badge gb-high'; }
   }
-  const modeMap = { normal:'標準モード（糖質×1）', t2d:'2型糖尿病モード（食後2〜3時間で降下）', t1d:'1型糖尿病モード（食後4時間で降下）' };
+  const modeMap = { healthy:'予防ケアモード（健康維持）', normal:'標準モード（糖質×1）', t2d:'2型糖尿病モード（食後2〜3時間で降下）', t1d:'1型糖尿病モード（食後4時間で降下）' };
   if (modeEl) modeEl.textContent = '📊 ' + (modeMap[type] || '');
 }
 
@@ -4630,8 +4984,8 @@ function recalcGlucose() {
   const carb=parseFloat(document.getElementById('record-carb')?.value)||0;
   const fiber=parseFloat(document.getElementById('record-fiber')?.value)||0;
   const sugar=Math.max(0,carb-fiber);
-  const fMap={normal:1,t2d:3,t1d:5};
-  const lMap={normal:'標準モード：糖質×1',t2d:'2型糖尿病モード：糖質×3',t1d:'1型糖尿病モード：糖質×5'};
+  const fMap={healthy:1,normal:1,t2d:3,t1d:5};
+  const lMap={healthy:'予防ケアモード：糖質×1',normal:'標準モード：糖質×1',t2d:'2型糖尿病モード：糖質×3',t1d:'1型糖尿病モード：糖質×5'};
   const rise=Math.round(sugar*(fMap[state.userType]||1));
   const glucoseEl=document.getElementById('ai-glucose-result');
   if (glucoseEl) { const div=glucoseEl.querySelector('div:not(.alert-title)'); if (div) div.innerHTML=`糖質${sugar}g → <strong>推定 +${rise} mg/dL</strong>（${lMap[state.userType]||lMap.normal}）`; }
@@ -5583,6 +5937,7 @@ function fqConfirm() {
     add('edit-fiber',     round1(_fqFood.fiber || 0));
     add('edit-potassium', round0(_fqFood.k || 0));
     add('edit-phosphorus',round0(_fqFood.p || 0));
+    add('edit-salt',      round1(_fqFood.salt || 0));
     add('edit-water',     round0(_fqFood.water || 0));
     // 料理名が空なら食品名を入れる
     const nameEl = document.getElementById('edit-name');
@@ -5607,12 +5962,14 @@ function fqConfirm() {
     add('record-fiber',     round1(_fqFood.fiber || 0));
     add('record-potassium', round0(_fqFood.k || 0));
     add('record-phosphorus',round0(_fqFood.p || 0));
+    add('record-salt',      round1(_fqFood.salt || 0));
     add('record-water',     round0(_fqFood.water || 0));
     // 追加済みリストに積む（×ボタンで削除できるよう栄養値も保持）
     _fqSelections.push({
       name: _fqFood.name, cat: _fqFood.cat || '', grams: gramsNum, multiplier: r,
       cal: _fqFood.cal||0, protein: _fqFood.protein||0, carb: _fqFood.carb||0,
-      fiber: _fqFood.fiber||0, k: _fqFood.k||0, p: _fqFood.p||0, water: _fqFood.water||0
+      fiber: _fqFood.fiber||0, k: _fqFood.k||0, p: _fqFood.p||0,
+      salt: _fqFood.salt||0, water: _fqFood.water||0
     });
     // 料理名が空なら食品名を入れる
     const nameEl = document.getElementById('record-name');
@@ -5706,6 +6063,7 @@ function removeRecordFqItem(idx) {
   sub('record-fiber',     round1((sel.fiber||0) * r));
   sub('record-potassium', Math.round((sel.k||0) * r));
   sub('record-phosphorus',Math.round((sel.p||0) * r));
+  sub('record-salt',      round1((sel.salt||0) * r));
   sub('record-water',     Math.round((sel.water||0) * r));
   _fqSelections.splice(idx, 1);
   renderRecordFqList();
