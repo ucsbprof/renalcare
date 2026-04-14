@@ -183,6 +183,10 @@ html, body {
 .ai-result { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--r); padding: 16px; margin-bottom: 12px; animation: slideUp 0.4s ease; }
 @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes spin { to { transform: rotate(360deg); } }
+@keyframes pulse {
+  0%,100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
 
 .food-cat-chip { background: var(--surface2); border: 1px solid var(--border2); border-radius: 20px; padding: 6px 13px; font-size: 13px; cursor: pointer; color: var(--text2); transition: all 0.15s; user-select: none; -webkit-user-select: none; }
 .food-cat-chip:active { transform: scale(0.95); }
@@ -400,6 +404,10 @@ body.is-premium .premium-banner { display: none !important; }
 .loading-overlay.open { display: flex; }
 .loader { width: 48px; height: 48px; border: 3px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
+@keyframes pulse {
+  0%,100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
 .loading-text { font-size: 14px; color: var(--text2); }
 
 .toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--surface); border: 1px solid var(--border2); border-radius: 24px; padding: 12px 20px; font-size: 13px; z-index: 2000; transition: transform 0.3s ease; box-shadow: var(--shadow); white-space: nowrap; }
@@ -1667,6 +1675,34 @@ body.is-premium .premium-banner { display: none !important; }
         <div class="setting-row" onclick="document.getElementById('import-file-input').click()" style="cursor:pointer;"><div class="setting-icon">📥</div><div class="setting-text"><div class="setting-name">データをインポート（JSON）</div><div class="setting-desc">エクスポートしたファイルから復元</div></div><div class="setting-arrow">›</div></div>
         <input type="file" id="import-file-input" accept=".json" style="display:none;" onchange="importAllData(event)" />
       </div>
+      <!-- 出典・ライセンス情報 -->
+      <div class="settings-section" style="margin-top:8px;">
+        <div class="settings-title">📚 データ出典・免責</div>
+        <div style="padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);">
+          <div style="font-size:12px;color:var(--text2);line-height:1.9;">
+            <div style="margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border);">
+              <span style="color:var(--accent);font-weight:700;">食品栄養データ</span><br>
+              文部科学省「日本食品標準成分表2020年版（八訂）」参考<br>
+              <span style="font-size:11px;color:var(--text3);">実際の値は製品・調理法により異なります</span>
+            </div>
+            <div style="margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border);">
+              <span style="color:var(--accent);font-weight:700;">栄養管理目標値の根拠</span><br>
+              日本腎臓学会「CKD診療ガイドライン2023」<br>
+              厚生労働省「日本人の食事摂取基準2020年版」<br>
+              <span style="font-size:11px;color:var(--text3);">参考目安値。個人差あり。必ず担当医に相談を</span>
+            </div>
+            <div>
+              <span style="color:var(--accent);font-weight:700;">OCRエンジン</span><br>
+              Tesseract.js（Apache License 2.0）<br>
+              <span style="font-size:11px;color:var(--text3);">© Naptha / Tesseract.js contributors</span>
+            </div>
+          </div>
+          <div style="margin-top:10px;padding:8px 10px;background:var(--red-dim);border:1px solid rgba(248,113,113,0.2);border-radius:8px;font-size:11px;color:var(--red);line-height:1.6;">
+            ⚠ 本アプリは医療機器ではありません。記載の栄養成分・目標値はあくまで参考値であり、医療上の判断は必ず担当医・管理栄養士にご相談ください。
+          </div>
+          <div style="margin-top:8px;font-size:10px;color:var(--text3);text-align:right;">アプリバージョン 2.0.0 / 規約 v1.2</div>
+        </div>
+      </div>
       <div style="height:20px;"></div>
     </div>
 
@@ -2271,7 +2307,15 @@ body.is-premium .premium-banner { display: none !important; }
     <div class="modal-title">記録を編集</div>
     <input type="hidden" id="edit-id" />
     <div style="margin-top:16px;">
-      <div class="form-row"><label class="form-label">料理名・メモ</label><input class="form-input" type="text" id="edit-name" /></div>
+      <div class="form-row" style="position:relative;">
+        <label class="form-label">料理名・メモ</label>
+        <input class="form-input" type="text" id="edit-name"
+          placeholder="食品名で検索するか直接入力"
+          oninput="editNameAutoComplete(this.value)"
+          onblur="setTimeout(()=>closeEditNameAC(),200)"
+          autocomplete="off" />
+        <div id="edit-name-ac-list" style="display:none;position:absolute;z-index:9999;left:0;right:0;top:100%;background:var(--surface);border:1px solid var(--border2);border-radius:var(--rs);max-height:200px;overflow-y:auto;box-shadow:var(--shadow);"></div>
+      </div>
       <div class="form-row"><label class="form-label">食事の種類</label>
         <select class="form-input" id="edit-meal-type">
           <option value="breakfast">🌅 朝食</option>
@@ -2494,6 +2538,101 @@ body.is-premium .premium-banner { display: none !important; }
 const SUPABASE_URL = 'https://jndutodslomhfoterrbb.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_ekRnlsdMwKthxJv0VEg3vw_tBKc7EIj';
 
+// =====================================================
+// ===== 修正モーダル 食品名オートコンプリート =====
+// =====================================================
+function editNameAutoComplete(query) {
+  const acList = document.getElementById('edit-name-ac-list');
+  if (!acList) return;
+  const q = (query || '').trim();
+  if (q.length < 1) { acList.style.display = 'none'; return; }
+
+  // foodDatabase + マイ食品を統合検索
+  const myFoods = loadMyFoods ? loadMyFoods() : [];
+  const baseOnly = foodDatabase.filter(f => !f.custom);
+  const allFoods = [...myFoods, ...baseOnly];
+
+  const variants = [q, toHiragana(q), toKatakana(q)];
+  const matched = allFoods.filter(f => {
+    const name = f.name || '';
+    return variants.some(v => name.toLowerCase().includes(v.toLowerCase()));
+  }).slice(0, 10);
+
+  if (matched.length === 0) { acList.style.display = 'none'; return; }
+
+  acList.innerHTML = matched.map(f => {
+    const safe = f.name.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    return `<div onclick="selectEditNameAC(${JSON.stringify(f.name).replace(/"/g,'&quot;')})"
+      style="padding:9px 12px;border-bottom:1px solid var(--border);cursor:pointer;font-size:13px;display:flex;justify-content:space-between;align-items:center;"
+      onmousedown="event.preventDefault()">
+      <span>${safe}</span>
+      <span style="font-size:11px;color:var(--text3);">${f.cal||0}kcal・P${f.protein||0}g</span>
+    </div>`;
+  }).join('');
+  acList.style.display = 'block';
+}
+
+function selectEditNameAC(name) {
+  const nameEl = document.getElementById('edit-name');
+  if (nameEl) nameEl.value = name;
+  closeEditNameAC();
+  // 食品DBに一致するものがあれば栄養成分も自動セット
+  const myFoods = loadMyFoods ? loadMyFoods() : [];
+  const allFoods = [...myFoods, ...foodDatabase];
+  const food = allFoods.find(f => f.name === name);
+  if (food) {
+    const setIfEmpty = (id, val) => {
+      const el = document.getElementById(id);
+      if (el && (!el.value || parseFloat(el.value) === 0)) el.value = val;
+    };
+    setIfEmpty('edit-calories',   food.cal     || 0);
+    setIfEmpty('edit-protein',    food.protein  || 0);
+    setIfEmpty('edit-carb',       food.carb     || 0);
+    setIfEmpty('edit-fiber',      food.fiber    || 0);
+    setIfEmpty('edit-potassium',  food.k        || 0);
+    setIfEmpty('edit-phosphorus', food.p        || 0);
+    setIfEmpty('edit-salt',       food.salt     || 0);
+  }
+}
+
+function closeEditNameAC() {
+  const acList = document.getElementById('edit-name-ac-list');
+  if (acList) acList.style.display = 'none';
+}
+
+// =====================================================
+// ===== 過去データのマイグレーション =====
+// water / stock の自動補完
+// =====================================================
+function migrateOldData() {
+  // 1) 食事データのwaterフィールド補完
+  try {
+    const key = 'renalcare_meals';
+    const meals = JSON.parse(localStorage.getItem(key) || '[]');
+    let changed = false;
+    meals.forEach(m => {
+      if (m.water === undefined || m.water === null) {
+        m.water = 0;
+        changed = true;
+      }
+    });
+    if (changed) localStorage.setItem(key, JSON.stringify(meals));
+  } catch(e) {}
+
+  // 2) 薬データのstock補完（migrateMedStockと連動）
+  migrateMedStock();
+
+  // 3) 招待コード使用履歴の整合チェック（念のため）
+  try {
+    const usedRaw = localStorage.getItem('renalcare_used_codes');
+    if (usedRaw && typeof JSON.parse(usedRaw) !== 'object') {
+      localStorage.removeItem('renalcare_used_codes');
+    }
+  } catch(e) {}
+}
+
+
+
 async function dbSaveMeal(meal) {
   try {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/meals`, { method:'POST', headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Prefer':'return=minimal'}, body:JSON.stringify(meal) });
@@ -2564,6 +2703,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 薬データ: stock / daysSupply / prescDate フィールドのマイグレーション
   migrateMedStock();
+  // 全データの一括マイグレーション（water・stock補完）
+  if (typeof migrateOldData === 'function') migrateOldData();
 
   // 旧バージョンで WATER_KEY が undefined だった場合のデータ移行
   try {
@@ -3546,6 +3687,7 @@ function openEditModal(meal) {
   _editFqSelections = [];
   _fqCallerMode = 'record'; // デフォルトに戻す
   renderEditFqList();
+  closeEditNameAC(); // オートコンプリートリストを閉じる
   document.getElementById('edit-id').value        = meal.id||'';
   document.getElementById('edit-name').value      = meal.dish_name||'';
   document.getElementById('edit-meal-type').value = meal.meal_type||'breakfast';
@@ -3952,7 +4094,11 @@ async function saveMeal() {
   const waterFromMeal = manualWater || waterResult.total;
 
   if (saved) {
-    showToast(`✅ 記録しました${waterFromMeal>0?' (水分+'+waterFromMeal+'mL)':''}`);
+    const isMerged = meal._mergeResult === 'merged';
+    const waterMsg = waterFromMeal > 0 ? ' (水分+' + waterFromMeal + 'mL)' : '';
+    showToast(isMerged
+      ? '✅ 同じ時間帯のデータに合算しました' + waterMsg
+      : '✅ 記録しました' + waterMsg);
   } else {
     showToast('⚠️ 保存に失敗しました');
   }
@@ -3967,21 +4113,69 @@ function localSaveMeal(meal) {
   if (photoData) {
     try { localStorage.setItem('renalcare_photo_' + meal.id, photoData); } catch(e) {}
   }
+
+  // ============================================================
+  // 【合算ロジック】同じ日付・食事区分に既存レコードがあれば
+  // 新規レコードを追加せず栄養成分を合算して更新する
+  // ============================================================
+  function _doMergeOrInsert(mealToSave) {
+    const existing = JSON.parse(localStorage.getItem(key) || '[]');
+    const mealDate = new Date(mealToSave.recorded_at).toDateString();
+    const mealType = mealToSave.meal_type;
+
+    // 同日・同区分の最新レコードを探す（IDが異なるもの）
+    const sameSlotIdx = existing.findIndex(m =>
+      m.id !== mealToSave.id &&
+      new Date(m.recorded_at).toDateString() === mealDate &&
+      m.meal_type === mealType
+    );
+
+    if (sameSlotIdx !== -1) {
+      // 既存レコードに合算
+      const base = existing[sameSlotIdx];
+      const mergedDishName = base.dish_name && base.dish_name !== mealToSave.dish_name
+        ? base.dish_name + '・' + mealToSave.dish_name
+        : (mealToSave.dish_name || base.dish_name || '食事');
+      // 料理名が長くなりすぎないよう50文字で切る
+      const trimmedName = mergedDishName.length > 50 ? mergedDishName.slice(0, 47) + '…' : mergedDishName;
+
+      existing[sameSlotIdx] = {
+        ...base,
+        dish_name:  trimmedName,
+        calories:   Math.round(((base.calories  || 0) + (mealToSave.calories  || 0)) * 10) / 10,
+        protein:    Math.round(((base.protein   || 0) + (mealToSave.protein   || 0)) * 10) / 10,
+        carb:       Math.round(((base.carb      || 0) + (mealToSave.carb      || 0)) * 10) / 10,
+        fiber:      Math.round(((base.fiber     || 0) + (mealToSave.fiber     || 0)) * 10) / 10,
+        potassium:  Math.round(((base.potassium || 0) + (mealToSave.potassium || 0)) * 10) / 10,
+        phosphorus: Math.round(((base.phosphorus|| 0) + (mealToSave.phosphorus|| 0)) * 10) / 10,
+        salt:       Math.round(((base.salt      || 0) + (mealToSave.salt      || 0)) * 100) / 100,
+        water:      Math.round(((base.water     || 0) + (mealToSave.water     || 0)) * 10) / 10,
+        // food_categoriesは既存を保持（上書きしない）
+        _merged: true,
+      };
+      localStorage.setItem(key, JSON.stringify(existing));
+      return 'merged';
+    } else {
+      // 新規追加
+      existing.unshift(mealToSave);
+      if (existing.length > 500) existing.splice(500);
+      localStorage.setItem(key, JSON.stringify(existing));
+      return 'inserted';
+    }
+  }
+
   let saved = false;
   let attempt = 0;
   while (!saved && attempt < 3) {
     try {
-      const existing = JSON.parse(localStorage.getItem(key) || '[]');
-      existing.unshift(mealToSave);
-      if (existing.length > 500) existing.splice(500);
-      localStorage.setItem(key, JSON.stringify(existing));
+      const result = _doMergeOrInsert(mealToSave);
       saved = true;
+      // 合算された場合はトースト用フラグをセット
+      mealToSave._mergeResult = result;
     } catch(e) {
-      // 容量超過 → 古い写真データを削除してリトライ
       attempt++;
       try {
         const existing = JSON.parse(localStorage.getItem(key) || '[]');
-        // 古い順に写真データを削除
         [...existing].reverse().forEach(m => {
           if (m.photo_base64 === '[saved]') {
             try { localStorage.removeItem('renalcare_photo_' + m.id); } catch(e2) {}
@@ -3990,7 +4184,6 @@ function localSaveMeal(meal) {
         });
         localStorage.setItem(key, JSON.stringify(existing));
       } catch(e2) {
-        // それでも無理なら古い記録を削除
         try {
           const existing = JSON.parse(localStorage.getItem(key) || '[]');
           existing.splice(existing.length - 20);
@@ -6374,31 +6567,44 @@ async function runOcr(imageDataUrl, onProgress) {
     enhancedUrl = await _enhanceImageForOcr(imageDataUrl);
   } catch(e) { /* 失敗してもオリジナルで続行 */ }
 
-  const result = await Tesseract.recognize(enhancedUrl, 'jpn+eng', {
-    logger: m => {
-      if (m.status === 'recognizing text') {
-        const pct = Math.round((m.progress || 0) * 100);
-        if (onProgress) onProgress(pct, `認識中... ${pct}%`);
-      } else if (m.status === 'loading tesseract core') {
-        if (onProgress) onProgress(0, 'エンジン読み込み中...');
-      } else if (m.status === 'initializing tesseract') {
-        if (onProgress) onProgress(5, '初期化中...');
-      } else if (m.status === 'loading language traineddata') {
-        if (onProgress) onProgress(10, '言語データ読み込み中...');
-      }
-    },
-    // PSM 11: スパーステキスト（OSD不要）— お薬手帳シールのような
-    //         小ラベル・断片的テキストに最適。文字をできるだけ多く拾う。
-    // PSM 6 (均一ブロック) は栄養ラベルに向いているが
-    // 処方ラベルは複数行・複数列のため PSM 11 が有利
-    tessedit_pageseg_mode: '11',
-    // 日本語文字の文脈維持（単語間スペースを保持してから cleanOcrText で除去）
-    preserve_interword_spaces: '1',
-    tessedit_char_whitelist: '',
-  });
-  const text = result?.data?.text || '';
-  try { result.data = null; } catch(e) {}
-  return text;
+  // ─── PSM6（均一ブロック）+ PSM11（スパース）デュアルパス ───────────
+  // PSM6: 栄養成分表・均一レイアウトのラベルに最適
+  // PSM11: お薬手帳シール・断片的テキストに最適
+  // 両方の結果を連結してクリーニングにかけることで認識率を最大化
+  async function _recognize(url, psm) {
+    try {
+      const r = await Tesseract.recognize(url, 'jpn+eng', {
+        logger: m => {
+          if (m.status === 'recognizing text') {
+            const pct = Math.round((m.progress || 0) * 100);
+            if (onProgress) onProgress(psm === '6' ? Math.round(pct * 0.5) : 50 + Math.round(pct * 0.5),
+              `認識中(PSM${psm})... ${pct}%`);
+          } else if (m.status === 'loading tesseract core') {
+            if (onProgress) onProgress(0, 'エンジン読み込み中...');
+          } else if (m.status === 'loading language traineddata') {
+            if (onProgress) onProgress(5, '言語データ読み込み中...');
+          }
+        },
+        tessedit_pageseg_mode: psm,
+        preserve_interword_spaces: '1',
+        // 数値・単位が確実に認識されるようwhitelistは使わない
+        tessedit_char_whitelist: '',
+        // 日本語処理最適化: 縦書き対応（処方箋の薬名行など）
+        tessedit_ocr_engine_mode: '3', // LSTM + テッセラクト
+      });
+      return r?.data?.text || '';
+    } catch(e) { return ''; }
+  }
+
+  if (onProgress) onProgress(0, '認識中(PSM6)...');
+  const text6  = await _recognize(enhancedUrl, '6');
+  if (onProgress) onProgress(50, '認識中(PSM11)...');
+  const text11 = await _recognize(enhancedUrl, '11');
+
+  // 両パスを改行区切りで連結（重複行は cleanOcrText で自然に消える）
+  const combined = text6 + '\n---\n' + text11;
+  if (onProgress) onProgress(100, '認識完了');
+  return combined;
 }
 
 /**
@@ -6857,6 +7063,17 @@ function applyOcrResults() {
 
   // 既存のカードを一度すべて折りたたんで新しいカードを追加
   selected.forEach(drug => {
+    // daysSupplyがあれば初期stockを「処方日数 × 1日3回 × 1錠」の保守的な値として算出
+    // 実際の用法が判明している場合はその値で上書き
+    let initStock = 0;
+    if (drug.daysSupply > 0) {
+      const doseNum  = parseFloat((drug.dose || '').match(/(\d+(?:\.\d+)?)/)?.[1] || '1') || 1;
+      const usageTxt = drug.usage || '';
+      const timesPerDay = /1日3回|3回|三回/.test(usageTxt) ? 3
+                        : /1日2回|2回|二回/.test(usageTxt) ? 2
+                        : 1; // デフォルト1回/日
+      initStock = Math.round(doseNum * timesPerDay * drug.daysSupply);
+    }
     addMedCard({
       name:       drug.name,
       form:       drug.dose || '',
@@ -6865,7 +7082,7 @@ function applyOcrResults() {
       prn:        drug.frequency === 'prn',
       daysSupply: drug.daysSupply || '',
       prescDate:  drug.prescDate  || '',
-      stock:      drug.daysSupply ? String(drug.daysSupply) : '',
+      stock:      initStock > 0 ? String(initStock) : '',
     });
   });
 
@@ -7508,7 +7725,18 @@ function saveMedicine() {
     monthDay:  monthDay2,
     color:     _medColor,
     daysSupply: parseInt(document.getElementById('med-days-supply')?.value||'0')||null,
-    stock:      parseInt(document.getElementById('med-stock')?.value||'0')||0,
+    stock: (() => {
+      const manualStock = parseInt(document.getElementById('med-stock')?.value||'0')||0;
+      const ds = parseInt(document.getElementById('med-days-supply')?.value||'0')||0;
+      if (manualStock > 0) return manualStock;
+      if (ds > 0) {
+        // 処方日数 × 1日服用回数 × 1回量 = 初期在庫
+        const tc = timings.length || 1;
+        const da = parseFloat(timingDoses[timings[0]] || '1') || 1;
+        return Math.round(da * tc * ds);
+      }
+      return 0;
+    })(),
     prescDate:  document.getElementById('med-presc-date')?.value || null,
     createdAt: existingMed?.createdAt || new Date().toISOString()
   };
@@ -7781,8 +8009,20 @@ function renderMedicineLog() {
  * stock が設定されていない場合は空文字を返す
  */
 function _stockBadgeHTML(med) {
-  if (typeof med.stock !== 'number' && !med.stock) return '';
-  const stock = typeof med.stock === 'number' ? med.stock : parseInt(med.stock)||0;
+  // stockが未設定かつdaysSupplyがある場合 → 初期stockを動的算出して表示
+  let stock = (typeof med.stock === 'number') ? med.stock
+            : (med.stock !== undefined && med.stock !== null && med.stock !== '')
+              ? parseInt(med.stock) || 0
+              : -1; // -1 = 未設定
+
+  // 未設定でdaysSupplyがある場合は処方日数から推定
+  if (stock < 0 && med.daysSupply > 0) {
+    const tc2 = (med.timings || []).length || 1;
+    const da2 = parseFloat(med.doseAmount || '1') || 1;
+    stock = Math.round(da2 * tc2 * med.daysSupply);
+  }
+
+  if (stock < 0) return ''; // 本当に未設定
 
   let dosePerTake = 1;
   const doseAmt = med.doseAmount || (med.timingDoses ? Object.values(med.timingDoses)[0] : '') || '';
@@ -7793,20 +8033,26 @@ function _stockBadgeHTML(med) {
   const dosePerDay = dosePerTake * timingsCount;
   const daysLeft = dosePerDay > 0 ? Math.floor(stock / dosePerDay) : stock;
 
-  let color, bg, icon;
+  let color, bg, icon, urgency = '';
   if (daysLeft <= 0) {
     color = 'var(--red)'; bg = 'var(--red-dim)'; icon = '🚨';
+    urgency = 'font-weight:800;animation:pulse 1s ease-in-out infinite;';
   } else if (daysLeft <= 3) {
     color = 'var(--red)'; bg = 'var(--red-dim)'; icon = '⚠️';
+    urgency = 'font-weight:700;';
   } else if (daysLeft <= 7) {
     color = 'var(--amber)'; bg = 'var(--amber-dim)'; icon = '📉';
+    urgency = 'font-weight:600;';
   } else {
     color = 'var(--green)'; bg = 'var(--green-dim)'; icon = '📦';
   }
 
-  const daysText = daysLeft <= 0 ? '残薬なし' : `あと約${daysLeft}日分`;
-  return `<div style="display:inline-flex;align-items:center;gap:4px;margin-top:3px;padding:2px 8px;border-radius:10px;background:${bg};border:1px solid ${color};font-size:11px;color:${color};font-weight:600;">
-    ${icon} ${daysText}（残${stock}）
+  const daysText = daysLeft <= 0
+    ? '残薬なし！受診が必要です'
+    : `残薬：あと ${daysLeft} 日分`;
+
+  return `<div style="display:inline-flex;align-items:center;gap:4px;margin-top:3px;padding:3px 9px;border-radius:10px;background:${bg};border:1px solid ${color};font-size:11px;color:${color};${urgency}">
+    ${icon} ${daysText}<span style="opacity:0.7;margin-left:3px;">(${stock}錠/包)</span>
   </div>`;
 }
 
@@ -7818,7 +8064,17 @@ function migrateMedStock() {
     const meds = loadMedicines();
     let changed = false;
     meds.forEach(m => {
-      if (typeof m.stock     === 'undefined') { m.stock     = 0;    changed = true; }
+      // daysSupply がある場合、stock が未設定または0なら初期在庫を設定
+      if (typeof m.daysSupply !== 'undefined' && m.daysSupply > 0 &&
+          (typeof m.stock === 'undefined' || m.stock === 0)) {
+        // 1日の服用回数 × daysSupply = 初期stock
+        const timingsCount = (m.timings || []).length || 1;
+        const doseAmt = m.doseAmount || '1';
+        const doseNum = parseFloat(doseAmt) || 1;
+        m.stock = Math.round(doseNum * timingsCount * m.daysSupply);
+        changed = true;
+      }
+      if (typeof m.stock      === 'undefined') { m.stock     = 0;    changed = true; }
       if (typeof m.daysSupply === 'undefined') { m.daysSupply = null; changed = true; }
       if (typeof m.prescDate  === 'undefined') { m.prescDate  = null; changed = true; }
     });
