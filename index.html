@@ -1745,6 +1745,8 @@ body.is-premium .premium-banner { display: none !important; }
       <!-- 招待コード -->
       <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
         <div style="font-size:12px;color:var(--text3);text-align:center;margin-bottom:8px;">招待コード・特別コードをお持ちの方</div>
+        <!-- 体験済み警告（hasTrialEverUsed()がtrueの時に表示） -->
+        <div id="invite-code-trial-warn" style="display:none;font-size:12px;color:var(--amber);background:var(--amber-dim);border:1px solid var(--amber);border-radius:8px;padding:8px 10px;margin-bottom:8px;"></div>
         <div style="display:flex;gap:8px;">
           <input class="form-input" type="text" id="invite-code-input"
             placeholder="招待コードを入力" style="flex:1;text-transform:uppercase;letter-spacing:1px;"
@@ -1752,6 +1754,9 @@ body.is-premium .premium-banner { display: none !important; }
           <button class="btn btn-outline btn-sm" onclick="applyInviteCode()" style="white-space:nowrap;">適用</button>
         </div>
         <div id="invite-code-result" style="margin-top:6px;font-size:12px;"></div>
+        <div style="font-size:10px;color:var(--text3);margin-top:5px;line-height:1.6;">
+          ※ 招待コードによる無料体験は1端末1回限りです。コードの使い回しはできません。
+        </div>
       </div>
 
       <button class="btn btn-ghost btn-full" style="margin-top:10px;" onclick="closeModal('premiumModal')">あとで</button>
@@ -2473,12 +2478,11 @@ document.addEventListener('DOMContentLoaded', () => {
     renderLinkedClinicsSettings();
     renderHomeMedcheck();
     // マイ食品はsearchFoodDB呼び出し時に毎回反映されるため起動時ロード不要
-    // プレミアム状態を適用
+    // プレミアム状態を適用（起動時に即時チェック + rAF 連続監視）
     checkPremiumExpiry();
     applyPremiumUI();
     handleCheckoutReturn();
-    // 1時間ごとに期限チェック
-    setInterval(checkPremiumExpiry, 60 * 60 * 1000);
+    _startPremiumWatcher(); // rAF で1ms単位の自動解除監視を開始
   } else {
     updateHomeDate();
     renderMenuGrid();
@@ -8034,55 +8038,94 @@ function renderClinicLinkedList() {
 // ============================================================
 // ===== プレミアム・サブスクリプション管理 =====
 // ============================================================
-const PREMIUM_KEY = 'renalcare_premium';
+const PREMIUM_KEY       = 'renalcare_premium';
+const PREMIUM_CODE_HIST = 'renalcare_used_codes';   // ① 使用済みコード履歴
+const PREMIUM_TRIAL_FLG = 'renalcare_trial_used';   // ② 招待コード体験済みフラグ
 
-// Stripe の設定（本番環境では実際のキーに変更）
-const STRIPE_PUBLISHABLE_KEY = 'pk_live_XXXXXXXXXXXXXXXXXXXXXXXX'; // ← 本番キーに変更
-const STRIPE_PRICE_MONTHLY   = 'price_monthly_580jpy';             // ← Stripeダッシュボードで作成したPriceID
-const STRIPE_PRICE_YEARLY    = 'price_yearly_5800jpy';             // ← Stripeダッシュボードで作成したPriceID
+const STRIPE_PUBLISHABLE_KEY = 'pk_live_XXXXXXXXXXXXXXXXXXXXXXXX';
+const STRIPE_PRICE_MONTHLY   = 'price_monthly_580jpy';
+const STRIPE_PRICE_YEARLY    = 'price_yearly_5800jpy';
 
-// 招待コード・管理者コード（ハッシュで管理）
-// 実運用ではサーバー側で検証するが、ここではシンプルなローカル検証
+// invite = 期限付き体験コード（TRIAL_FLG対象）/ admin = 無期限
 const VALID_INVITE_CODES = {
-  // 招待コード（期限付きプレミアム1ヶ月）
-  'RENALCARE2024':  { type:'invite', months:1,  label:'招待コード（1ヶ月）' },
-  'WELCOME2025':    { type:'invite', months:3,  label:'ウェルカムコード（3ヶ月）' },
-  'HOSPITAL2025':   { type:'invite', months:12, label:'医療機関提携コード（1年）' },
-  // 管理者コード（無期限プレミアム）
-  'RC_ADMIN_2025':  { type:'admin',  months:0,  label:'管理者コード（無期限）' },
-  'MASTER_UNLOCK':  { type:'admin',  months:0,  label:'マスターコード（無期限）' },
+  'RENALCARE2024': { type:'invite', months:1,  label:'招待コード（1ヶ月）' },
+  'WELCOME2025':   { type:'invite', months:3,  label:'ウェルカムコード（3ヶ月）' },
+  'HOSPITAL2025':  { type:'invite', months:12, label:'医療機関提携コード（1年）' },
+  'RC_ADMIN_2025': { type:'admin',  months:0,  label:'管理者コード（無期限）' },
+  'MASTER_UNLOCK': { type:'admin',  months:0,  label:'マスターコード（無期限）' },
 };
 
-// ── プレミアム状態の読み込み ──
+// ─── ストレージ読み書き ───────────────────────────────────
 function loadPremiumState() {
   try { return JSON.parse(localStorage.getItem(PREMIUM_KEY) || 'null'); } catch(e) { return null; }
 }
-function savePremiumState(state) {
-  try { localStorage.setItem(PREMIUM_KEY, JSON.stringify(state)); } catch(e) {}
+function savePremiumState(s) {
+  try { localStorage.setItem(PREMIUM_KEY, JSON.stringify(s)); } catch(e) {}
 }
 
-// ── プレミアム有効かどうかを判定 ──
+/** 使用済みコードの Set を返す */
+function loadUsedCodes() {
+  try { return new Set(JSON.parse(localStorage.getItem(PREMIUM_CODE_HIST) || '[]')); } catch(e) { return new Set(); }
+}
+/** コードを使用済みとして永続化する */
+function markCodeUsed(code) {
+  try {
+    const used = loadUsedCodes();
+    used.add(code.toUpperCase());
+    localStorage.setItem(PREMIUM_CODE_HIST, JSON.stringify([...used]));
+  } catch(e) {}
+}
+/** 招待コード体験済みフラグを読む */
+function hasTrialEverUsed() {
+  return localStorage.getItem(PREMIUM_TRIAL_FLG) === '1';
+}
+/** 招待コード体験済みとして永続化する */
+function setTrialUsed() {
+  try { localStorage.setItem(PREMIUM_TRIAL_FLG, '1'); } catch(e) {}
+}
+
+// ─── プレミアム有効判定（1ms でも過ぎたら false） ────────
 function isPremiumActive() {
   const p = loadPremiumState();
   if (!p) return false;
-  if (p.type === 'admin') return true; // 無期限
+  if (p.type === 'admin') return true;
   if (!p.expiresAt) return false;
-  return new Date(p.expiresAt) > new Date();
+  return new Date(p.expiresAt).getTime() > Date.now();
 }
 
-// ── 広告・UIの表示を更新 ──
+// ─── 自動解除: rAF で連続監視 ────────────────────────────
+let _premiumCheckRafId = null;
+
+function checkPremiumExpiry() {
+  const p = loadPremiumState();
+  if (!p || p.type === 'admin') return;
+  if (!isPremiumActive()) _clearPremium();
+}
+
+function _clearPremium() {
+  const wasActive = document.body.classList.contains('is-premium');
+  savePremiumState(null);
+  applyPremiumUI();
+  if (wasActive) showToast('\u26a0 プレミアムの有効期限が切れました');
+}
+
+function _startPremiumWatcher() {
+  if (_premiumCheckRafId) cancelAnimationFrame(_premiumCheckRafId);
+  const p = loadPremiumState();
+  if (!p || p.type === 'admin' || !p.expiresAt) return;
+  const expire = new Date(p.expiresAt).getTime();
+  function tick() {
+    if (Date.now() >= expire) { _clearPremium(); return; }
+    _premiumCheckRafId = requestAnimationFrame(tick);
+  }
+  _premiumCheckRafId = requestAnimationFrame(tick);
+}
+
+// ─── UI 更新 ─────────────────────────────────────────────
 function applyPremiumUI() {
   const active = isPremiumActive();
   const p = loadPremiumState();
-
-  // body クラスで広告を一括非表示
-  if (active) {
-    document.body.classList.add('is-premium');
-  } else {
-    document.body.classList.remove('is-premium');
-  }
-
-  // 設定ページのバナー切り替え
+  document.body.classList.toggle('is-premium', active);
   const upgradeBanner = document.getElementById('premium-upgrade-banner');
   const activeBanner  = document.getElementById('premium-active-banner');
   const expireLabel   = document.getElementById('settings-premium-expire');
@@ -8093,19 +8136,19 @@ function applyPremiumUI() {
       expireLabel.textContent = '無期限（' + (p.label||'特別コード') + '）';
     } else if (p.expiresAt) {
       const d = new Date(p.expiresAt);
-      expireLabel.textContent = `有効期限: ${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`;
+      const remain = Math.ceil((d.getTime() - Date.now()) / 86400000);
+      expireLabel.textContent =
+        d.getFullYear() + '/' + (d.getMonth()+1) + '/' + d.getDate() + '（残り' + remain + '日）';
     }
   }
 }
 
-// ── プレミアムモーダルを開く ──
+// ─── プレミアムモーダルを開く ────────────────────────────
 function showPremiumModal() {
   const active = isPremiumActive();
   const p = loadPremiumState();
-
   document.getElementById('premium-upgrade-view').style.display = active ? 'none' : '';
   document.getElementById('premium-active-view').style.display  = active ? '' : 'none';
-
   if (active && p) {
     const expEl  = document.getElementById('premium-expire-label');
     const planEl = document.getElementById('premium-plan-label');
@@ -8114,25 +8157,36 @@ function showPremiumModal() {
         expEl.textContent = '無期限（' + (p.label||'特別コード') + '）';
       } else if (p.expiresAt) {
         const d = new Date(p.expiresAt);
-        expEl.textContent = `有効期限: ${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`;
+        const remain = Math.ceil((d.getTime() - Date.now()) / 86400000);
+        expEl.textContent =
+          d.getFullYear() + '/' + (d.getMonth()+1) + '/' + d.getDate() + '（残り' + remain + '日）';
       }
     }
     if (planEl) {
-      const planNames = { monthly:'月払いプラン（¥580/月）', yearly:'年払いプラン（¥5,800/年）', invite:'招待コード', admin:'特別コード' };
+      const planNames = { monthly:'月払いプラン（\u00a5580/月）', yearly:'年払いプラン（\u00a55,800/年）', invite:'招待コード', admin:'特別コード' };
       planEl.textContent = planNames[p.planType || p.type] || '';
     }
   }
-
-  // コード入力欄リセット
   const inp = document.getElementById('invite-code-input');
   const res = document.getElementById('invite-code-result');
   if (inp) inp.value = '';
   if (res) res.innerHTML = '';
-
+  _updateTrialWarning();
   document.getElementById('premiumModal').classList.add('open');
 }
 
-// ── プラン選択 ──
+function _updateTrialWarning() {
+  const warnEl = document.getElementById('invite-code-trial-warn');
+  if (!warnEl) return;
+  if (hasTrialEverUsed()) {
+    warnEl.style.display = '';
+    warnEl.textContent = '\u26a0 無料体験コードは1端末1回限りです。再利用はできません。';
+  } else {
+    warnEl.style.display = 'none';
+  }
+}
+
+// ─── プラン選択 ──────────────────────────────────────────
 let _selectedPlan = 'monthly';
 function selectPlan(plan) {
   _selectedPlan = plan;
@@ -8143,182 +8197,172 @@ function selectPlan(plan) {
   if (plan === 'monthly') {
     if (mBox) { mBox.style.background='var(--accent-glow)'; mBox.style.borderColor='var(--accent)'; }
     if (yBox) { yBox.style.background='var(--surface2)'; yBox.style.borderColor='var(--border2)'; }
-    if (mChk) { mChk.textContent='✓'; mChk.style.color='var(--accent)'; }
-    if (yChk) { yChk.textContent='○'; yChk.style.color='var(--text3)'; }
+    if (mChk) { mChk.textContent='\u2713'; mChk.style.color='var(--accent)'; }
+    if (yChk) { yChk.textContent='\u25cb'; yChk.style.color='var(--text3)'; }
   } else {
     if (yBox) { yBox.style.background='rgba(252,211,77,0.1)'; yBox.style.borderColor='var(--amber)'; }
     if (mBox) { mBox.style.background='var(--surface2)'; mBox.style.borderColor='var(--border2)'; }
-    if (yChk) { yChk.textContent='✓'; yChk.style.color='var(--amber)'; }
-    if (mChk) { mChk.textContent='○'; mChk.style.color='var(--text3)'; }
+    if (yChk) { yChk.textContent='\u2713'; yChk.style.color='var(--amber)'; }
+    if (mChk) { mChk.textContent='\u25cb'; mChk.style.color='var(--text3)'; }
   }
 }
 
-// ── Stripe Checkout を開始 ──
+// ─── Stripe Checkout ─────────────────────────────────────
 async function startCheckout() {
   const priceId = _selectedPlan === 'yearly' ? STRIPE_PRICE_YEARLY : STRIPE_PRICE_MONTHLY;
   const userId  = state.uid || getUserId();
-
-  showToast('💳 決済ページに移動しています...');
-
-  // Supabase Edge Function 経由でStripeセッションを作成
+  showToast('\ud83d\udcb3 決済ページに移動しています...');
   try {
-    const res = await fetch(`${SUPABASE_URL}/functions/v1/create-checkout-session`, {
+    const res = await fetch(SUPABASE_URL + '/functions/v1/create-checkout-session', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${SUPABASE_KEY}`
-      },
+      headers: { 'Content-Type':'application/json', 'Authorization':'Bearer ' + SUPABASE_KEY },
       body: JSON.stringify({
-        price_id:    priceId,
-        user_id:     userId,
-        user_name:   state.userName || '',
-        plan:        _selectedPlan,
+        price_id: priceId, user_id: userId, user_name: state.userName||'',
+        plan: _selectedPlan,
         success_url: window.location.href + '?premium=success&plan=' + _selectedPlan,
         cancel_url:  window.location.href + '?premium=cancel'
       })
     });
-
     if (res.ok) {
       const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url; // Stripe Checkoutページへリダイレクト
-        return;
-      }
+      if (data.url) { window.location.href = data.url; return; }
     }
-  } catch(e) {
-    console.log('Stripe session creation failed:', e);
-  }
-
-  // ── フォールバック：Stripe Checkout を直接開く（Edge Function未設定時） ──
-  // 本番環境ではEdge Functionを設定してください
-  showToast('⚠ 決済サーバーに接続できませんでした。管理者にお問い合わせください。');
+  } catch(e) { console.log('Stripe session creation failed:', e); }
+  showToast('\u26a0 決済サーバーに接続できませんでした。管理者にお問い合わせください。');
 }
 
-// ── URLパラメーターから決済結果を処理 ──
+// ─── URL パラメーターから決済結果を処理 ─────────────────
 function handleCheckoutReturn() {
   const params = new URLSearchParams(window.location.search);
   const premiumStatus = params.get('premium');
   const plan = params.get('plan');
-
   if (premiumStatus === 'success') {
-    // 支払い成功 → プレミアムを有効化
     const months = plan === 'yearly' ? 12 : 1;
     activatePremium('stripe', plan === 'yearly' ? 'yearly' : 'monthly', months);
-    // URLパラメーターを削除
     window.history.replaceState({}, '', window.location.pathname);
-    setTimeout(() => {
-      showToast('🎉 プレミアム会員になりました！広告が非表示になりました');
-    }, 500);
+    setTimeout(() => showToast('\ud83c\udf89 プレミアム会員になりました！広告が非表示になりました'), 500);
   } else if (premiumStatus === 'cancel') {
     window.history.replaceState({}, '', window.location.pathname);
     showToast('決済がキャンセルされました');
   }
 }
 
-// ── プレミアムを有効化 ──
-function activatePremium(type, planType, months) {
+// ─── プレミアムを有効化（内部共通処理） ─────────────────
+function activatePremium(type, planType, months, extraLabel) {
   const now = new Date();
   let expiresAt = null;
   if (months > 0) {
-    expiresAt = new Date(now);
-    expiresAt.setMonth(expiresAt.getMonth() + months);
-    expiresAt = expiresAt.toISOString();
+    const exp = new Date(now);
+    exp.setMonth(exp.getMonth() + months);
+    expiresAt = exp.toISOString();
   }
-  const premiumState = {
-    type,       // 'stripe' | 'invite' | 'admin'
-    planType,   // 'monthly' | 'yearly' | 'invite' | 'admin'
-    months,
-    expiresAt,
+  savePremiumState({
+    type, planType, months, expiresAt,
+    label: extraLabel || '',
     activatedAt: now.toISOString(),
     userId: state.uid || getUserId()
-  };
-  savePremiumState(premiumState);
-
-  // Supabase にも保存（サーバー側での検証用）
-  fetch(`${SUPABASE_URL}/rest/v1/premium_subscriptions`, {
+  });
+  fetch(SUPABASE_URL + '/rest/v1/premium_subscriptions', {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json',
+      'Content-Type':'application/json',
       'apikey': SUPABASE_KEY,
-      'Authorization': `Bearer ${SUPABASE_KEY}`,
+      'Authorization': 'Bearer ' + SUPABASE_KEY,
       'Prefer': 'return=minimal'
     },
     body: JSON.stringify({
-      user_id:      state.uid || getUserId(),
-      plan_type:    planType,
-      activated_at: now.toISOString(),
-      expires_at:   expiresAt,
-      source:       type
+      user_id: state.uid||getUserId(), plan_type: planType,
+      activated_at: now.toISOString(), expires_at: expiresAt, source: type
     })
-  }).catch(() => {});
-
+  }).catch(()=>{});
   applyPremiumUI();
+  _startPremiumWatcher();
 }
 
-// ── 招待コード・管理者コードを適用 ──
+// ─── 招待コード適用（3重ガード版） ───────────────────────
 function applyInviteCode() {
-  const code = (document.getElementById('invite-code-input')?.value || '').trim().toUpperCase();
+  const code     = (document.getElementById('invite-code-input')?.value || '').trim().toUpperCase();
   const resultEl = document.getElementById('invite-code-result');
+  const setResult = (msg, ok) => {
+    if (resultEl) resultEl.innerHTML =
+      '<span style="color:' + (ok ? 'var(--green)' : 'var(--red)') + ';">' + msg + '</span>';
+  };
   if (!code) { showToast('コードを入力してください'); return; }
 
+  // ガード①: コードが存在するか
   const codeData = VALID_INVITE_CODES[code];
   if (!codeData) {
-    if (resultEl) resultEl.innerHTML = '<span style="color:var(--red);">❌ 無効なコードです</span>';
-    showToast('⚠ 無効なコードです');
+    setResult('\u274c 無効なコードです', false);
+    showToast('\u26a0 無効なコードです');
     return;
   }
 
-  // すでにプレミアム済みかチェック
+  // ガード②: 使用済みコードの使い回しをブロック
+  if (loadUsedCodes().has(code)) {
+    setResult('\ud83d\udeab このコードはすでに使用済みです（同じコードは再利用できません）', false);
+    showToast('\u26a0 このコードはすでに使用済みです');
+    return;
+  }
+
+  // ガード③: invite型は1端末1回のみ
+  if (codeData.type === 'invite' && hasTrialEverUsed()) {
+    setResult('\ud83d\udeab 無料体験は1端末1回限りです。別コードでも再利用はできません。', false);
+    showToast('\u26a0 無料体験は1端末1回限りです');
+    _updateTrialWarning();
+    return;
+  }
+
+  // 無期限プレミアムに invite コードを重ねる場合はスキップ
   const current = loadPremiumState();
-  if (current && current.type === 'admin') {
-    if (resultEl) resultEl.innerHTML = '<span style="color:var(--green);">✅ すでに無期限プレミアムが有効です</span>';
+  if (current && current.type === 'admin' && codeData.type !== 'admin') {
+    setResult('\u2705 すでに無期限プレミアムが有効です', true);
     return;
   }
 
-  const label = codeData.label;
-  const type  = codeData.type === 'admin' ? 'admin' : 'invite';
-  activatePremium(type, type, codeData.months);
+  // コードを使用済みとして記録
+  markCodeUsed(code);
+  if (codeData.type === 'invite') setTrialUsed();
 
-  // コードをSupabaseに記録
-  fetch(`${SUPABASE_URL}/rest/v1/invite_code_uses`, {
+  // プレミアム有効化
+  activatePremium(
+    codeData.type === 'admin' ? 'admin' : 'invite',
+    codeData.type === 'admin' ? 'admin' : 'invite',
+    codeData.months,
+    codeData.label
+  );
+
+  // Supabase にコード使用を記録
+  fetch(SUPABASE_URL + '/rest/v1/invite_code_uses', {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json',
+      'Content-Type':'application/json',
       'apikey': SUPABASE_KEY,
-      'Authorization': `Bearer ${SUPABASE_KEY}`,
+      'Authorization': 'Bearer ' + SUPABASE_KEY,
       'Prefer': 'return=minimal'
     },
-    body: JSON.stringify({
-      user_id:    state.uid || getUserId(),
-      code,
-      used_at:    new Date().toISOString()
-    })
-  }).catch(() => {});
+    body: JSON.stringify({ user_id: state.uid||getUserId(), code, used_at: new Date().toISOString() })
+  }).catch(()=>{});
 
-  if (resultEl) {
-    resultEl.innerHTML = `<span style="color:var(--green);">✅ ${label} が適用されました！</span>`;
-  }
-  const msg = codeData.months === 0
-    ? `🎉 無期限プレミアムが有効になりました！`
-    : `🎉 ${label} プレミアムが有効になりました！`;
-  showToast(msg);
+  setResult('\u2705 ' + codeData.label + ' が適用されました！', true);
+  showToast(codeData.months === 0
+    ? '\ud83c\udf89 無期限プレミアムが有効になりました！'
+    : '\ud83c\udf89 ' + codeData.label + ' プレミアムが有効になりました！');
 
-  // モーダルを閉じて加入済みビューへ
   setTimeout(() => {
     document.getElementById('premium-upgrade-view').style.display = 'none';
     document.getElementById('premium-active-view').style.display  = '';
-    showPremiumModal(); // 加入済みビューを再描画
+    showPremiumModal();
   }, 1200);
 }
 
-// ── サブスクリプション管理（Stripeポータル） ──
+// ─── サブスクリプション管理（Stripeポータル） ────────────
 async function managePremium() {
   const userId = state.uid || getUserId();
   showToast('管理ページに移動しています...');
   try {
-    const res = await fetch(`${SUPABASE_URL}/functions/v1/create-portal-session`, {
+    const res = await fetch(SUPABASE_URL + '/functions/v1/create-portal-session', {
       method: 'POST',
-      headers: { 'Content-Type':'application/json', 'Authorization':`Bearer ${SUPABASE_KEY}` },
+      headers: { 'Content-Type':'application/json', 'Authorization':'Bearer ' + SUPABASE_KEY },
       body: JSON.stringify({ user_id: userId, return_url: window.location.href })
     });
     if (res.ok) {
@@ -8326,23 +8370,8 @@ async function managePremium() {
       if (data.url) { window.location.href = data.url; return; }
     }
   } catch(e) {}
-  showToast('⚠ 管理ページへの接続に失敗しました');
+  showToast('\u26a0 管理ページへの接続に失敗しました');
 }
-
-// ── 定期的に有効期限をチェック（起動時 + 1時間ごと） ──
-function checkPremiumExpiry() {
-  const p = loadPremiumState();
-  if (!p) return;
-  if (p.type === 'admin') return; // 無期限は不要
-
-  if (p.expiresAt && new Date(p.expiresAt) <= new Date()) {
-    // 期限切れ → 広告を復活
-    savePremiumState(null);
-    applyPremiumUI();
-    showToast('⚠ プレミアムの有効期限が切れました。広告が再表示されています。');
-  }
-}
-
 // ============================================================
 // ===== 服薬チェック機能 =====
 // ============================================================
