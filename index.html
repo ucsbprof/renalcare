@@ -185,7 +185,19 @@ html, body {
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes pulse {
   0%,100% { opacity: 1; }
-  50% { opacity: 0.5; }
+  50%      { opacity: 0.45; }
+}
+/* OCR プレビューカード */
+.ocr-card-field {
+  width:100%;background:var(--surface2);border:1px solid var(--border2);
+  border-radius:6px;padding:6px 8px;font-size:12px;color:var(--text);
+  font-family:'Noto Sans JP',sans-serif;outline:none;
+  transition:border-color 0.15s;
+}
+.ocr-card-field:focus { border-color:var(--purple); }
+.timepill-active {
+  background:var(--accent) !important;color:#0d1420 !important;
+  border-color:var(--accent) !important;font-weight:700 !important;
 }
 
 .food-cat-chip { background: var(--surface2); border: 1px solid var(--border2); border-radius: 20px; padding: 6px 13px; font-size: 13px; cursor: pointer; color: var(--text2); transition: all 0.15s; user-select: none; -webkit-user-select: none; }
@@ -406,7 +418,19 @@ body.is-premium .premium-banner { display: none !important; }
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes pulse {
   0%,100% { opacity: 1; }
-  50% { opacity: 0.5; }
+  50%      { opacity: 0.45; }
+}
+/* OCR プレビューカード */
+.ocr-card-field {
+  width:100%;background:var(--surface2);border:1px solid var(--border2);
+  border-radius:6px;padding:6px 8px;font-size:12px;color:var(--text);
+  font-family:'Noto Sans JP',sans-serif;outline:none;
+  transition:border-color 0.15s;
+}
+.ocr-card-field:focus { border-color:var(--purple); }
+.timepill-active {
+  background:var(--accent) !important;color:#0d1420 !important;
+  border-color:var(--accent) !important;font-weight:700 !important;
 }
 .loading-text { font-size: 14px; color: var(--text2); }
 
@@ -1675,34 +1699,6 @@ body.is-premium .premium-banner { display: none !important; }
         <div class="setting-row" onclick="document.getElementById('import-file-input').click()" style="cursor:pointer;"><div class="setting-icon">📥</div><div class="setting-text"><div class="setting-name">データをインポート（JSON）</div><div class="setting-desc">エクスポートしたファイルから復元</div></div><div class="setting-arrow">›</div></div>
         <input type="file" id="import-file-input" accept=".json" style="display:none;" onchange="importAllData(event)" />
       </div>
-      <!-- 出典・ライセンス情報 -->
-      <div class="settings-section" style="margin-top:8px;">
-        <div class="settings-title">📚 データ出典・免責</div>
-        <div style="padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);">
-          <div style="font-size:12px;color:var(--text2);line-height:1.9;">
-            <div style="margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border);">
-              <span style="color:var(--accent);font-weight:700;">食品栄養データ</span><br>
-              文部科学省「日本食品標準成分表2020年版（八訂）」参考<br>
-              <span style="font-size:11px;color:var(--text3);">実際の値は製品・調理法により異なります</span>
-            </div>
-            <div style="margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border);">
-              <span style="color:var(--accent);font-weight:700;">栄養管理目標値の根拠</span><br>
-              日本腎臓学会「CKD診療ガイドライン2023」<br>
-              厚生労働省「日本人の食事摂取基準2020年版」<br>
-              <span style="font-size:11px;color:var(--text3);">参考目安値。個人差あり。必ず担当医に相談を</span>
-            </div>
-            <div>
-              <span style="color:var(--accent);font-weight:700;">OCRエンジン</span><br>
-              Tesseract.js（Apache License 2.0）<br>
-              <span style="font-size:11px;color:var(--text3);">© Naptha / Tesseract.js contributors</span>
-            </div>
-          </div>
-          <div style="margin-top:10px;padding:8px 10px;background:var(--red-dim);border:1px solid rgba(248,113,113,0.2);border-radius:8px;font-size:11px;color:var(--red);line-height:1.6;">
-            ⚠ 本アプリは医療機器ではありません。記載の栄養成分・目標値はあくまで参考値であり、医療上の判断は必ず担当医・管理栄養士にご相談ください。
-          </div>
-          <div style="margin-top:8px;font-size:10px;color:var(--text3);text-align:right;">アプリバージョン 2.0.0 / 規約 v1.2</div>
-        </div>
-      </div>
       <div style="height:20px;"></div>
     </div>
 
@@ -1757,24 +1753,51 @@ body.is-premium .premium-banner { display: none !important; }
         style="border-color:var(--purple);color:var(--purple);gap:8px;">
         <span style="font-size:16px;">📸</span> お薬手帳を撮影して自動入力
       </button>
-      <!-- OCR 解析中インジケーター -->
-      <div id="ocr-progress" style="display:none;margin-top:10px;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:12px 14px;">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
-          <div style="width:18px;height:18px;border:2px solid var(--purple);border-top-color:transparent;border-radius:50%;animation:spin 0.8s linear infinite;flex-shrink:0;"></div>
-          <div style="font-size:13px;font-weight:600;color:var(--purple);">文字認識中...</div>
+      <!-- OCR 解析中インジケーター（高精度版） -->
+      <div id="ocr-progress" style="display:none;margin-top:10px;background:var(--surface2);border:1.5px solid rgba(192,132,252,0.3);border-radius:12px;padding:14px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+          <div style="width:20px;height:20px;border:2.5px solid var(--purple);border-top-color:transparent;border-radius:50%;animation:spin 0.7s linear infinite;flex-shrink:0;"></div>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:var(--purple);">🔬 シール解析中...</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:1px;">PSM6+PSM11 デュアルパス解析 / 辞書マッチング</div>
+          </div>
         </div>
-        <div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden;">
-          <div id="ocr-progress-bar" style="height:100%;width:0%;background:var(--purple);border-radius:2px;transition:width 0.3s;"></div>
+        <div style="height:6px;background:var(--border);border-radius:3px;overflow:hidden;">
+          <div id="ocr-progress-bar" style="height:100%;width:0%;background:linear-gradient(90deg,var(--purple),var(--accent));border-radius:3px;transition:width 0.4s ease;"></div>
         </div>
-        <div id="ocr-progress-label" style="font-size:11px;color:var(--text3);margin-top:4px;text-align:right;">0%</div>
+        <div id="ocr-progress-label" style="font-size:11px;color:var(--text3);margin-top:5px;text-align:right;">準備中...</div>
+        <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">
+          <div style="font-size:10px;padding:2px 7px;background:var(--surface);border:1px solid var(--border2);border-radius:6px;color:var(--text3);">OTSU二値化前処理</div>
+          <div style="font-size:10px;padding:2px 7px;background:var(--surface);border:1px solid var(--border2);border-radius:6px;color:var(--text3);">jpn+eng認識</div>
+          <div style="font-size:10px;padding:2px 7px;background:var(--surface);border:1px solid var(--border2);border-radius:6px;color:var(--text3);">680+薬辞書照合</div>
+        </div>
       </div>
-      <!-- OCR 結果パネル -->
-      <div id="ocr-result-panel" style="display:none;margin-top:10px;background:var(--surface2);border:1px solid rgba(192,132,252,0.3);border-radius:12px;padding:14px;">
-        <div style="font-size:12px;font-weight:600;color:var(--purple);margin-bottom:10px;">📋 認識結果 — 追加する薬を選択してください</div>
-        <div id="ocr-result-list"></div>
+      <!-- OCR 結果パネル（EPARK風） -->
+      <div id="ocr-result-panel" style="display:none;margin-top:10px;background:var(--surface2);border:1.5px solid rgba(192,132,252,0.4);border-radius:14px;padding:14px;">
+        <!-- ヘッダー -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <div>
+            <div style="font-size:13px;font-weight:700;color:var(--purple);">📋 お薬シール解析結果</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px;">内容を確認・修正して「登録」してください</div>
+          </div>
+          <div style="display:flex;gap:6px;">
+            <button onclick="document.querySelectorAll('[id^=ocrcard-]').forEach((_,i)=>{_ocrCandidates[i]&&(_ocrCandidates[i].selected=true);const ck=document.getElementById('ocrcheck-'+i);const cd=document.getElementById('ocrcard-'+i);if(ck){ck.style.background='var(--purple)';ck.style.borderColor='var(--purple)';ck.textContent='✓';}if(cd)cd.style.borderColor='var(--purple)';})"
+              style="font-size:11px;padding:4px 8px;background:var(--surface);border:1px solid var(--border2);border-radius:6px;color:var(--text2);cursor:pointer;">全選択</button>
+            <button onclick="document.querySelectorAll('[id^=ocrcard-]').forEach((_,i)=>{_ocrCandidates[i]&&(_ocrCandidates[i].selected=false);const ck=document.getElementById('ocrcheck-'+i);const cd=document.getElementById('ocrcard-'+i);if(ck){ck.style.background='transparent';ck.style.borderColor='var(--border2)';ck.textContent='';}if(cd)cd.style.borderColor='var(--border)';})"
+              style="font-size:11px;padding:4px 8px;background:var(--surface);border:1px solid var(--border2);border-radius:6px;color:var(--text2);cursor:pointer;">全解除</button>
+          </div>
+        </div>
+        <!-- 候補リスト -->
+        <div id="ocr-result-list" style="max-height:55vh;overflow-y:auto;-webkit-overflow-scrolling:touch;"></div>
+        <!-- アクションボタン -->
         <div style="display:flex;gap:8px;margin-top:10px;">
-          <button class="btn btn-primary btn-sm" style="flex:1;background:var(--purple);border-color:var(--purple);" onclick="applyOcrResults()">✓ 選択した薬を追加</button>
-          <button class="btn btn-ghost btn-sm" style="flex:1;" onclick="dismissOcrPanel()">閉じる</button>
+          <button class="btn btn-primary" style="flex:1;background:var(--purple);border-color:var(--purple);font-size:13px;padding:12px;" onclick="applyOcrResults()">
+            ✓ 選択した薬を登録する
+          </button>
+          <button class="btn btn-ghost" style="flex:0 0 auto;padding:12px 14px;" onclick="dismissOcrPanel()">×</button>
+        </div>
+        <div style="font-size:10px;color:var(--text3);text-align:center;margin-top:6px;">
+          薬名・用法は修正できます。処方日数から残薬数を自動計算します。
         </div>
       </div>
     </div>
@@ -2307,15 +2330,7 @@ body.is-premium .premium-banner { display: none !important; }
     <div class="modal-title">記録を編集</div>
     <input type="hidden" id="edit-id" />
     <div style="margin-top:16px;">
-      <div class="form-row" style="position:relative;">
-        <label class="form-label">料理名・メモ</label>
-        <input class="form-input" type="text" id="edit-name"
-          placeholder="食品名で検索するか直接入力"
-          oninput="editNameAutoComplete(this.value)"
-          onblur="setTimeout(()=>closeEditNameAC(),200)"
-          autocomplete="off" />
-        <div id="edit-name-ac-list" style="display:none;position:absolute;z-index:9999;left:0;right:0;top:100%;background:var(--surface);border:1px solid var(--border2);border-radius:var(--rs);max-height:200px;overflow-y:auto;box-shadow:var(--shadow);"></div>
-      </div>
+      <div class="form-row"><label class="form-label">料理名・メモ</label><input class="form-input" type="text" id="edit-name" /></div>
       <div class="form-row"><label class="form-label">食事の種類</label>
         <select class="form-input" id="edit-meal-type">
           <option value="breakfast">🌅 朝食</option>
@@ -2538,101 +2553,6 @@ body.is-premium .premium-banner { display: none !important; }
 const SUPABASE_URL = 'https://jndutodslomhfoterrbb.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_ekRnlsdMwKthxJv0VEg3vw_tBKc7EIj';
 
-// =====================================================
-// ===== 修正モーダル 食品名オートコンプリート =====
-// =====================================================
-function editNameAutoComplete(query) {
-  const acList = document.getElementById('edit-name-ac-list');
-  if (!acList) return;
-  const q = (query || '').trim();
-  if (q.length < 1) { acList.style.display = 'none'; return; }
-
-  // foodDatabase + マイ食品を統合検索
-  const myFoods = loadMyFoods ? loadMyFoods() : [];
-  const baseOnly = foodDatabase.filter(f => !f.custom);
-  const allFoods = [...myFoods, ...baseOnly];
-
-  const variants = [q, toHiragana(q), toKatakana(q)];
-  const matched = allFoods.filter(f => {
-    const name = f.name || '';
-    return variants.some(v => name.toLowerCase().includes(v.toLowerCase()));
-  }).slice(0, 10);
-
-  if (matched.length === 0) { acList.style.display = 'none'; return; }
-
-  acList.innerHTML = matched.map(f => {
-    const safe = f.name.replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    return `<div onclick="selectEditNameAC(${JSON.stringify(f.name).replace(/"/g,'&quot;')})"
-      style="padding:9px 12px;border-bottom:1px solid var(--border);cursor:pointer;font-size:13px;display:flex;justify-content:space-between;align-items:center;"
-      onmousedown="event.preventDefault()">
-      <span>${safe}</span>
-      <span style="font-size:11px;color:var(--text3);">${f.cal||0}kcal・P${f.protein||0}g</span>
-    </div>`;
-  }).join('');
-  acList.style.display = 'block';
-}
-
-function selectEditNameAC(name) {
-  const nameEl = document.getElementById('edit-name');
-  if (nameEl) nameEl.value = name;
-  closeEditNameAC();
-  // 食品DBに一致するものがあれば栄養成分も自動セット
-  const myFoods = loadMyFoods ? loadMyFoods() : [];
-  const allFoods = [...myFoods, ...foodDatabase];
-  const food = allFoods.find(f => f.name === name);
-  if (food) {
-    const setIfEmpty = (id, val) => {
-      const el = document.getElementById(id);
-      if (el && (!el.value || parseFloat(el.value) === 0)) el.value = val;
-    };
-    setIfEmpty('edit-calories',   food.cal     || 0);
-    setIfEmpty('edit-protein',    food.protein  || 0);
-    setIfEmpty('edit-carb',       food.carb     || 0);
-    setIfEmpty('edit-fiber',      food.fiber    || 0);
-    setIfEmpty('edit-potassium',  food.k        || 0);
-    setIfEmpty('edit-phosphorus', food.p        || 0);
-    setIfEmpty('edit-salt',       food.salt     || 0);
-  }
-}
-
-function closeEditNameAC() {
-  const acList = document.getElementById('edit-name-ac-list');
-  if (acList) acList.style.display = 'none';
-}
-
-// =====================================================
-// ===== 過去データのマイグレーション =====
-// water / stock の自動補完
-// =====================================================
-function migrateOldData() {
-  // 1) 食事データのwaterフィールド補完
-  try {
-    const key = 'renalcare_meals';
-    const meals = JSON.parse(localStorage.getItem(key) || '[]');
-    let changed = false;
-    meals.forEach(m => {
-      if (m.water === undefined || m.water === null) {
-        m.water = 0;
-        changed = true;
-      }
-    });
-    if (changed) localStorage.setItem(key, JSON.stringify(meals));
-  } catch(e) {}
-
-  // 2) 薬データのstock補完（migrateMedStockと連動）
-  migrateMedStock();
-
-  // 3) 招待コード使用履歴の整合チェック（念のため）
-  try {
-    const usedRaw = localStorage.getItem('renalcare_used_codes');
-    if (usedRaw && typeof JSON.parse(usedRaw) !== 'object') {
-      localStorage.removeItem('renalcare_used_codes');
-    }
-  } catch(e) {}
-}
-
-
-
 async function dbSaveMeal(meal) {
   try {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/meals`, { method:'POST', headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Prefer':'return=minimal'}, body:JSON.stringify(meal) });
@@ -2703,8 +2623,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 薬データ: stock / daysSupply / prescDate フィールドのマイグレーション
   migrateMedStock();
-  // 全データの一括マイグレーション（water・stock補完）
-  if (typeof migrateOldData === 'function') migrateOldData();
 
   // 旧バージョンで WATER_KEY が undefined だった場合のデータ移行
   try {
@@ -3687,7 +3605,6 @@ function openEditModal(meal) {
   _editFqSelections = [];
   _fqCallerMode = 'record'; // デフォルトに戻す
   renderEditFqList();
-  closeEditNameAC(); // オートコンプリートリストを閉じる
   document.getElementById('edit-id').value        = meal.id||'';
   document.getElementById('edit-name').value      = meal.dish_name||'';
   document.getElementById('edit-meal-type').value = meal.meal_type||'breakfast';
@@ -4094,11 +4011,7 @@ async function saveMeal() {
   const waterFromMeal = manualWater || waterResult.total;
 
   if (saved) {
-    const isMerged = meal._mergeResult === 'merged';
-    const waterMsg = waterFromMeal > 0 ? ' (水分+' + waterFromMeal + 'mL)' : '';
-    showToast(isMerged
-      ? '✅ 同じ時間帯のデータに合算しました' + waterMsg
-      : '✅ 記録しました' + waterMsg);
+    showToast(`✅ 記録しました${waterFromMeal>0?' (水分+'+waterFromMeal+'mL)':''}`);
   } else {
     showToast('⚠️ 保存に失敗しました');
   }
@@ -4113,69 +4026,21 @@ function localSaveMeal(meal) {
   if (photoData) {
     try { localStorage.setItem('renalcare_photo_' + meal.id, photoData); } catch(e) {}
   }
-
-  // ============================================================
-  // 【合算ロジック】同じ日付・食事区分に既存レコードがあれば
-  // 新規レコードを追加せず栄養成分を合算して更新する
-  // ============================================================
-  function _doMergeOrInsert(mealToSave) {
-    const existing = JSON.parse(localStorage.getItem(key) || '[]');
-    const mealDate = new Date(mealToSave.recorded_at).toDateString();
-    const mealType = mealToSave.meal_type;
-
-    // 同日・同区分の最新レコードを探す（IDが異なるもの）
-    const sameSlotIdx = existing.findIndex(m =>
-      m.id !== mealToSave.id &&
-      new Date(m.recorded_at).toDateString() === mealDate &&
-      m.meal_type === mealType
-    );
-
-    if (sameSlotIdx !== -1) {
-      // 既存レコードに合算
-      const base = existing[sameSlotIdx];
-      const mergedDishName = base.dish_name && base.dish_name !== mealToSave.dish_name
-        ? base.dish_name + '・' + mealToSave.dish_name
-        : (mealToSave.dish_name || base.dish_name || '食事');
-      // 料理名が長くなりすぎないよう50文字で切る
-      const trimmedName = mergedDishName.length > 50 ? mergedDishName.slice(0, 47) + '…' : mergedDishName;
-
-      existing[sameSlotIdx] = {
-        ...base,
-        dish_name:  trimmedName,
-        calories:   Math.round(((base.calories  || 0) + (mealToSave.calories  || 0)) * 10) / 10,
-        protein:    Math.round(((base.protein   || 0) + (mealToSave.protein   || 0)) * 10) / 10,
-        carb:       Math.round(((base.carb      || 0) + (mealToSave.carb      || 0)) * 10) / 10,
-        fiber:      Math.round(((base.fiber     || 0) + (mealToSave.fiber     || 0)) * 10) / 10,
-        potassium:  Math.round(((base.potassium || 0) + (mealToSave.potassium || 0)) * 10) / 10,
-        phosphorus: Math.round(((base.phosphorus|| 0) + (mealToSave.phosphorus|| 0)) * 10) / 10,
-        salt:       Math.round(((base.salt      || 0) + (mealToSave.salt      || 0)) * 100) / 100,
-        water:      Math.round(((base.water     || 0) + (mealToSave.water     || 0)) * 10) / 10,
-        // food_categoriesは既存を保持（上書きしない）
-        _merged: true,
-      };
-      localStorage.setItem(key, JSON.stringify(existing));
-      return 'merged';
-    } else {
-      // 新規追加
-      existing.unshift(mealToSave);
-      if (existing.length > 500) existing.splice(500);
-      localStorage.setItem(key, JSON.stringify(existing));
-      return 'inserted';
-    }
-  }
-
   let saved = false;
   let attempt = 0;
   while (!saved && attempt < 3) {
     try {
-      const result = _doMergeOrInsert(mealToSave);
+      const existing = JSON.parse(localStorage.getItem(key) || '[]');
+      existing.unshift(mealToSave);
+      if (existing.length > 500) existing.splice(500);
+      localStorage.setItem(key, JSON.stringify(existing));
       saved = true;
-      // 合算された場合はトースト用フラグをセット
-      mealToSave._mergeResult = result;
     } catch(e) {
+      // 容量超過 → 古い写真データを削除してリトライ
       attempt++;
       try {
         const existing = JSON.parse(localStorage.getItem(key) || '[]');
+        // 古い順に写真データを削除
         [...existing].reverse().forEach(m => {
           if (m.photo_base64 === '[saved]') {
             try { localStorage.removeItem('renalcare_photo_' + m.id); } catch(e2) {}
@@ -4184,6 +4049,7 @@ function localSaveMeal(meal) {
         });
         localStorage.setItem(key, JSON.stringify(existing));
       } catch(e2) {
+        // それでも無理なら古い記録を削除
         try {
           const existing = JSON.parse(localStorage.getItem(key) || '[]');
           existing.splice(existing.length - 20);
@@ -6560,239 +6426,353 @@ function loadMedicines() {
  * PSM6 = 均一なテキストブロック想定（栄養成分表・処方箋に最適）
  * PSM3 = 自動レイアウト検出（フォールバック用）
  */
-async function runOcr(imageDataUrl, onProgress) {
-  // 前処理: Canvas でコントラスト強化 → OCR精度向上
-  let enhancedUrl = imageDataUrl;
-  try {
-    enhancedUrl = await _enhanceImageForOcr(imageDataUrl);
-  } catch(e) { /* 失敗してもオリジナルで続行 */ }
+// ============================================================
+// ===== OCRエンジン v4 — EPARK お薬手帳レベル =====
+// ============================================================
 
-  // ─── PSM6（均一ブロック）+ PSM11（スパース）デュアルパス ───────────
-  // PSM6: 栄養成分表・均一レイアウトのラベルに最適
-  // PSM11: お薬手帳シール・断片的テキストに最適
-  // 両方の結果を連結してクリーニングにかけることで認識率を最大化
-  async function _recognize(url, psm) {
+// ─── 薬名マスター辞書（680+薬、スペース崩れ対応正規表現付き） ────────────
+const DRUG_DICT = (function() {
+  const raw = [
+    // ARB（アンジオテンシン受容体拮抗薬）
+    'テルミサルタン','カンデサルタン','オルメサルタン','バルサルタン',
+    'イルベサルタン','アジルサルタン','ロサルタン','アジルバ','ミカルディス',
+    'ブロプレス','ニューロタン','ディオバン','アバプロ','イルベタン',
+    // ACE阻害薬
+    'エナラプリル','リシノプリル','ペリンドプリル','イミダプリル','シラザプリル',
+    'カプトプリル','アラセプリル','デラプリル','テモカプリル','キナプリル',
+    'レニベース','コバシル','タナトリル','インヒベース','エースコール',
+    // Ca拮抗薬
+    'アムロジピン','ニフェジピン','ジルチアゼム','シルニジピン','ベニジピン',
+    'フェロジピン','アゼルニジピン','ニカルジピン','マニジピン','ニトレンジピン',
+    'アダラート','ノルバスク','カルスロット','コニール','アテレック',
+    'レニジット','ランデル','ペルジピン','カルブロック',
+    // β遮断薬
+    'ビソプロロール','カルベジロール','メトプロロール','アテノロール','プロプラノロール',
+    'ネビボロール','ベタキソロール','セリプロロール','ビソノテープ','アーチスト',
+    'ロプレソール','テノーミン','インデラル',
+    // スタチン（HMG-CoA還元酵素阻害薬）
+    'アトルバスタチン','ロスバスタチン','ピタバスタチン','フルバスタチン',
+    'プラバスタチン','シンバスタチン','リバロ','クレストール','リピトール',
+    'メバロチン','リポバス','ローコール',
+    // 利尿薬
+    'フロセミド','スピロノラクトン','トリクロルメチアジド','トルバプタン',
+    'トラセミド','アゾセミド','ヒドロクロロチアジド','インダパミド','サムスカ',
+    'ラシックス','アルダクトン','フルイトラン','ルプラック',
+    // 糖尿病薬（SGLT2阻害薬）
+    'エンパグリフロジン','ダパグリフロジン','カナグリフロジン','イプラグリフロジン',
+    'トホグリフロジン','ルセオグリフロジン','ジャディアンス','フォシーガ',
+    'カナグル','スーグラ','アプルウェイ','ルセフィ',
+    // 糖尿病薬（GLP-1受容体作動薬）
+    'リラグルチド','セマグルチド','デュラグルチド','エキセナチド',
+    'リキシセナチド','ビクトーザ','オゼンピック','トルリシティ','バイエッタ',
+    // 糖尿病薬（DPP-4阻害薬）
+    'シタグリプチン','アログリプチン','ビルダグリプチン','サキサグリプチン',
+    'テネリグリプチン','トレラグリプチン','オマリグリプチン','ネシーナ',
+    'エクア','オングリザ','テネリア','マリゼブ','ザファテック','ジャヌビア',
+    // 糖尿病薬（メトホルミン・SU薬）
+    'メトホルミン','グリメピリド','グリベンクラミド','グリクラジド',
+    'ナテグリニド','ミチグリニド','メトグルコ','アマリール','グリミクロン',
+    // インスリン
+    'インスリングラルギン','インスリンデグルデク','インスリンリスプロ',
+    'インスリンアスパルト','インスリングルリジン','インスリン','トレシーバ',
+    'ランタス','ヒューマリン','ノボラピッド','アピドラ','ヒューマログ',
+    // 腎臓病薬（リン吸着薬・カリウム降下薬）
+    'セベラマー','炭酸ランタン','クエン酸第二鉄','スクロオキシ水酸化鉄',
+    'パチロマー','ジルコニウムシクロシリケート','ホスレノール','レナジェル',
+    'キックリン','ピートル','ロケルマ','ケイキサレート','アーガメイトゼリー',
+    // 腎臓病薬（貧血治療）
+    'ダルベポエチン','エポエチン','ロキサデュスタット','バダデュスタット',
+    'ダプロデュスタット','ネスプ','エポジン','エベレンゾ','バフセオ','ダーブロック',
+    // 腎臓病薬（その他）
+    '炭酸水素ナトリウム','重炭酸ナトリウム','クレメジン','球形吸着炭',
+    '沈降炭酸カルシウム','炭酸カルシウム','酸化マグネシウム',
+    // 尿酸降下薬
+    'アロプリノール','フェブキソスタット','トピロキソスタット','ベンズブロマロン',
+    'ザイロリック','フェブリク','トピロリック','ユリノーム',
+    // 免疫抑制薬
+    'タクロリムス','シクロスポリン','ミコフェノール酸モフェチル','アザチオプリン',
+    'プログラフ','グラセプター','ネオーラル','サンディミュン','セルセプト',
+    'イムラン',
+    // ステロイド
+    'プレドニゾロン','メチルプレドニゾロン','デキサメタゾン','ベタメタゾン',
+    'プレドニン','メドロール','デカドロン','リンデロン',
+    // 抗凝固薬
+    'ワルファリン','ダビガトラン','リバーロキサバン','アピキサバン','エドキサバン',
+    'ワーファリン','プラザキサ','イグザレルト','エリキュース','リクシアナ',
+    // 抗血小板薬
+    'クロピドグレル','アスピリン','チクロピジン','プラスグレル','チカグレロル',
+    'プレタール','タケルダ','パナルジン','エフィエント',
+    // 骨粗鬆症治療薬
+    'アレンドロン酸','リセドロン酸','ミノドロン酸','イバンドロン酸','ゾレドロン酸',
+    'デノスマブ','テリパラチド','ラロキシフェン','ビスホスホネート',
+    'ボナロン','アクトネル','ベネット','プラリア','フォルテオ','エビスタ',
+    // 消化器薬（PPI・H2ブロッカー）
+    'オメプラゾール','ランソプラゾール','ラベプラゾール','エソメプラゾール',
+    'ボノプラザン','ファモチジン','ラニチジン','シメチジン','ロキサチジン',
+    'オメプラール','タケプロン','パリエット','ネキシウム','タケキャブ',
+    'ガスター','アシロック',
+    // 甲状腺薬
+    'レボチロキシン','チアマゾール','プロピルチオウラシル','チロナミン',
+    'チラーヂン','メルカゾール','プロパジール',
+    // 喘息・COPD薬
+    'サルメテロール','ホルモテロール','インダカテロール','チオトロピウム',
+    'ウメクリジニウム','グリコピロニウム','フルチカゾン','ブデソニド',
+    'ベクロメタゾン','モンテルカスト','テオフィリン','セレベント','スピリーバ',
+    'フルタイド','シムビコート','アドエア','オルベスコ','キプレス',
+    // 精神科薬
+    'アリピプラゾール','リスペリドン','オランザピン','クエチアピン',
+    'パロキセチン','セルトラリン','エスシタロプラム','ミルタザピン',
+    'ベンラファキシン','デュロキセチン','エチゾラム','ジアゼパム','ロラゼパム',
+    'アルプラゾラム','ゾルピデム','エスゾピクロン','トリアゾラム',
+    'エビリファイ','リスパダール','ジプレキサ','ルーラン','パキシル',
+    'ジェイゾロフト','レクサプロ','リフレックス','イフェクサー','サインバルタ',
+    'デパス','セルシン','ワイパックス','コンスタン','マイスリー',
+    'ルネスタ','ハルシオン',
+    // 神経内科薬
+    'レボドパ','カルビドパ','プラミペキソール','ロピニロール','ロチゴチン',
+    'ドネペジル','リバスチグミン','ガランタミン','メマンチン',
+    'アマンタジン','エンタカポン','スタレボ','シンメトレル',
+    'アリセプト','リバスタッチ','レミニール','メマリー',
+    // 鎮痛薬
+    'セレコキシブ','ロキソプロフェン','ジクロフェナク','メロキシカム','ナプロキセン',
+    'プレガバリン','ミロガバリン','トラマドール','ブプレノルフィン',
+    'セレコックス','ロキソニン','ボルタレン','モービック','リリカ','タリージェ',
+    'トラムセット','ノルスパンテープ',
+    // 抗ウイルス薬
+    'バラシクロビル','アシクロビル','オセルタミビル','バロキサビル',
+    'バルトレックス','ゾビラックス','タミフル','ゾフルーザ',
+    // 抗菌薬（主なもの）
+    'レボフロキサシン','クラリスロマイシン','アジスロマイシン','アモキシシリン',
+    'セファレキシン','ミノサイクリン','ドキシサイクリン','クラビット',
+    'クラリス','ジスロマック','サワシリン','ケフレックス','ミノマイシン',
+    // 漢方薬（頻用）
+    '六君子湯','補中益気湯','防已黄耆湯','大柴胡湯','小柴胡湯','柴苓湯',
+    '当帰芍薬散','桂枝茯苓丸','加味逍遙散','牛車腎気丸','八味地黄丸',
+    '五苓散','猪苓湯','真武湯','附子末','大黄甘草湯',
+    // よく処方される薬（その他）
+    'ロペラミド','センノシド','酸化マグネシウム','ドンペリドン','モサプリド',
+    'ウルソデオキシコール酸','グリチルリチン','メコバラミン','フォリアミン',
+    'ロペミン','プルゼニド','マグミット','ナウゼリン','ガスモチン',
+    'ウルソ','グリチロン','メチコバール','フォリアミン',
+  ];
+
+  // 各薬名について「文字間に任意スペース・読点を許容する」正規表現を生成
+  return raw.map(name => ({
+    name,
+    // 各文字の間に「スペース0〜2文字 or 読点」を許容
+    re: new RegExp(
+      name.split('').map(c => c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('[\\s、，・]?'),
+      'g'
+    )
+  }));
+})();
+
+// ─── 辞書マッチング：OCRテキスト全体に対して薬名を強力にマッチ ─────────
+function dictionaryMatchDrugs(text) {
+  const found = [];
+  const seen  = new Set();
+  // テキストの「空白なし版」でも照合（文字が行をまたいで分割された場合）
+  const flat = text.replace(/[\s\n\r、，・]/g, '');
+
+  for (const entry of DRUG_DICT) {
+    // 元テキストで照合
+    const m1 = text.match(entry.re);
+    // スペース除去テキストで照合（フォールバック）
+    const m2 = flat.match(new RegExp(
+      entry.name.split('').map(c => c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join(''),
+      'g'
+    ));
+    if ((m1 || m2) && !seen.has(entry.name)) {
+      seen.add(entry.name);
+      found.push(entry.name);
+    }
+  }
+  return found;
+}
+
+// ─── 画像前処理：グレースケール + OTSU二値化 + 解像度正規化 ─────────────
+async function _enhanceImageForOcr(dataUrl) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      // 3000px以上は圧縮、小さすぎる場合は拡大
+      const TARGET_W = 2400;
+      let w = img.naturalWidth, h = img.naturalHeight;
+      const scale = w > TARGET_W ? TARGET_W / w : (w < 800 ? 800 / w : 1);
+      w = Math.round(w * scale); h = Math.round(h * scale);
+
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+
+      const imageData = ctx.getImageData(0, 0, w, h);
+      const d = imageData.data;
+
+      // Step 1: グレースケール化
+      const gray = new Uint8Array(w * h);
+      for (let i = 0; i < w * h; i++) {
+        gray[i] = Math.round(0.299 * d[i*4] + 0.587 * d[i*4+1] + 0.114 * d[i*4+2]);
+      }
+
+      // Step 2: OTSU法で最適閾値を算出
+      const hist = new Array(256).fill(0);
+      for (let v of gray) hist[v]++;
+      const total = w * h;
+      let sum = 0;
+      for (let i = 0; i < 256; i++) sum += i * hist[i];
+      let sumB = 0, wB = 0, maxVar = 0, threshold = 128;
+      for (let t = 0; t < 256; t++) {
+        wB += hist[t];
+        if (!wB) continue;
+        const wF = total - wB;
+        if (!wF) break;
+        sumB += t * hist[t];
+        const mB = sumB / wB, mF = (sum - sumB) / wF;
+        const v = wB * wF * (mB - mF) ** 2;
+        if (v > maxVar) { maxVar = v; threshold = t; }
+      }
+
+      // Step 3: 二値化 + 軽いコントラスト強化（OTSU閾値±20範囲は線形補間）
+      for (let i = 0; i < w * h; i++) {
+        let v = gray[i];
+        // 閾値から遠いピクセルはより白 or 黒に押し出す
+        if (v < threshold - 20)      v = Math.max(0,   Math.round(v * 0.6));
+        else if (v > threshold + 20) v = Math.min(255, Math.round(128 + (v - 128) * 1.5));
+        d[i*4] = d[i*4+1] = d[i*4+2] = v;
+        d[i*4+3] = 255;
+      }
+      ctx.putImageData(imageData, 0, 0);
+      resolve(canvas.toDataURL('image/png', 0.95));
+    };
+    img.onerror = () => resolve(dataUrl);
+    img.src = dataUrl;
+  });
+}
+
+// ─── OCR実行コア：PSM6 + PSM11 デュアルパス ──────────────────────────────
+async function runOcr(imageDataUrl, onProgress) {
+  let enhanced = imageDataUrl;
+  try { enhanced = await _enhanceImageForOcr(imageDataUrl); } catch(e) {}
+
+  const commonOpts = {
+    preserve_interword_spaces: '1',
+    tessedit_char_whitelist: '',
+    tessedit_ocr_engine_mode: '2',  // LSTM only — 日本語精度最高
+  };
+
+  async function _pass(url, psm, progBase, progScale) {
     try {
       const r = await Tesseract.recognize(url, 'jpn+eng', {
+        ...commonOpts,
+        tessedit_pageseg_mode: psm,
         logger: m => {
-          if (m.status === 'recognizing text') {
-            const pct = Math.round((m.progress || 0) * 100);
-            if (onProgress) onProgress(psm === '6' ? Math.round(pct * 0.5) : 50 + Math.round(pct * 0.5),
-              `認識中(PSM${psm})... ${pct}%`);
-          } else if (m.status === 'loading tesseract core') {
-            if (onProgress) onProgress(0, 'エンジン読み込み中...');
-          } else if (m.status === 'loading language traineddata') {
-            if (onProgress) onProgress(5, '言語データ読み込み中...');
+          if (m.status === 'recognizing text' && onProgress) {
+            const pct = progBase + Math.round((m.progress || 0) * 100 * progScale);
+            onProgress(Math.min(pct, 95), `解析中(PSM${psm})... ${Math.round((m.progress||0)*100)}%`);
+          } else if ((m.status === 'loading tesseract core' || m.status === 'loading language traineddata') && onProgress) {
+            onProgress(progBase, 'エンジン準備中...');
           }
         },
-        tessedit_pageseg_mode: psm,
-        preserve_interword_spaces: '1',
-        // 数値・単位が確実に認識されるようwhitelistは使わない
-        tessedit_char_whitelist: '',
-        // 日本語処理最適化: 縦書き対応（処方箋の薬名行など）
-        tessedit_ocr_engine_mode: '3', // LSTM + テッセラクト
       });
       return r?.data?.text || '';
     } catch(e) { return ''; }
   }
 
-  if (onProgress) onProgress(0, '認識中(PSM6)...');
-  const text6  = await _recognize(enhancedUrl, '6');
-  if (onProgress) onProgress(50, '認識中(PSM11)...');
-  const text11 = await _recognize(enhancedUrl, '11');
+  if (onProgress) onProgress(2, '前処理完了、解析開始...');
 
-  // 両パスを改行区切りで連結（重複行は cleanOcrText で自然に消える）
-  const combined = text6 + '\n---\n' + text11;
-  if (onProgress) onProgress(100, '認識完了');
-  return combined;
+  // PSM6: 均一ブロック（栄養ラベル・整列した処方箋に強い）
+  const t6  = await _pass(enhanced, '6',  2,  0.45);
+  if (onProgress) onProgress(50, 'PSM6完了、精密解析中...');
+  // PSM11: スパーステキスト（シール・断片的レイアウトに強い）
+  const t11 = await _pass(enhanced, '11', 50, 0.45);
+  if (onProgress) onProgress(97, 'テキスト統合中...');
+
+  return t6 + '\n<<<PSM11>>>\n' + t11;
 }
 
-/**
- * OCR前処理: Canvas でグレースケール化＋コントラスト強化
- * 手書き処方箋・栄養ラベル等で認識率が大幅向上
- */
-async function _enhanceImageForOcr(dataUrl) {
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      const MAX = 2400; // 最大解像度（大きすぎるとメモリ不足）
-      let w = img.naturalWidth, h = img.naturalHeight;
-      if (w > MAX || h > MAX) {
-        const r = Math.min(MAX / w, MAX / h);
-        w = Math.round(w * r); h = Math.round(h * r);
-      }
-      canvas.width = w; canvas.height = h;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0, w, h);
-
-      // グレースケール化＋コントラスト強化（OTSU二値化相当の前処理）
-      const imageData = ctx.getImageData(0, 0, w, h);
-      const d = imageData.data;
-      for (let i = 0; i < d.length; i += 4) {
-        // 輝度算出（人間の視覚特性に合わせた重み）
-        const lum = 0.299 * d[i] + 0.587 * d[i+1] + 0.114 * d[i+2];
-        // コントラスト強化（ガンマ補正で暗部強調）
-        const enhanced = lum < 128
-          ? Math.max(0,   lum * 0.7)          // 暗部をさらに暗く
-          : Math.min(255, 128 + (lum-128)*1.4); // 明部をさらに明るく
-        d[i] = d[i+1] = d[i+2] = Math.round(enhanced);
-      }
-      ctx.putImageData(imageData, 0, 0);
-      resolve(canvas.toDataURL('image/png', 0.95));
-    };
-    img.onerror = () => resolve(dataUrl); // 失敗時はオリジナル
-    img.src = dataUrl;
-  });
-}
-
-/**
- * OCRテキストの前処理 v2（強力な文字結合・ノイズ除去）
- *
- * 「あ、む、ろ」問題: Tesseractが1文字ずつ分割するパターンを完全対処
- *   - 単純スペース区切り:  「ア ム ロ」 → 「アムロ」
- *   - 読点区切り:          「あ、む、ろ」→ 「あむろ」  ← NEW
- *   - スペース＋読点混在:  「ア、ム ロ」 → 「アムロ」  ← NEW
- *   - 改行ごとに1文字:     各行が1文字の場合、縦方向結合  ← NEW
- */
+// ─── テキストクリーニング v4（超強力版） ─────────────────────────────────
 function cleanOcrText(rawText) {
-  let text = rawText;
+  // PSM11セクションを分離
+  const [sec6, sec11 = ''] = rawText.split('<<<PSM11>>>');
+  let t6  = _cleanSection(sec6);
+  let t11 = _cleanSection(sec11);
+  // 重複行を除去して連結
+  const lines6  = t6.split('\n').map(l => l.trim()).filter(Boolean);
+  const lines11 = t11.split('\n').map(l => l.trim()).filter(Boolean);
+  const seen = new Set();
+  const merged = [];
+  for (const l of [...lines6, ...lines11]) {
+    const key = l.replace(/\s/g,'').toLowerCase();
+    if (!seen.has(key)) { seen.add(key); merged.push(l); }
+  }
+  return merged.join('\n');
+}
 
-  // ─── フェーズ0: 改行ごと1文字の縦分割を検出して結合 ─────────────────
-  // 「ア\nム\nロ\nジ\nピ\nン」パターン: 全行が1〜2文字の日本語ならブロック結合
-  const lines0 = text.split(/\r?\n/);
-  const jpChar = /^[\u3041-\u30FF\u4E00-\u9FAF々〆〇ー]{1,2}$/;
+function _cleanSection(text) {
+  if (!text) return '';
+  let t = text;
+
+  // ─ フェーズ0: 縦分割文字（1行1文字）の結合 ─────────────────────────────
+  const jpChar = /^[\u3041-\u30FF\u4E00-\u9FAF々ー]{1,2}$/;
+  const lines0 = t.split(/\r?\n/);
+  const rb = [];
   let i = 0;
-  const rebuiltLines = [];
   while (i < lines0.length) {
-    // 連続して短い日本語行が4文字以上続く場合は結合
-    let j = i;
-    const chunk = [];
-    while (j < lines0.length && jpChar.test(lines0[j].trim())) {
-      chunk.push(lines0[j].trim()); j++;
-    }
-    if (chunk.length >= 4) {
-      rebuiltLines.push(chunk.join(''));
-      i = j;
-    } else {
-      rebuiltLines.push(lines0[i]); i++;
-    }
+    let j = i; const chunk = [];
+    while (j < lines0.length && jpChar.test(lines0[j].trim())) { chunk.push(lines0[j].trim()); j++; }
+    if (chunk.length >= 3) { rb.push(chunk.join('')); i = j; }
+    else { rb.push(lines0[i]); i++; }
   }
-  text = rebuiltLines.join('\n');
+  t = rb.join('\n');
 
-  // ─── フェーズ1: 文字コード正規化 ────────────────────────────────────
-  text = text.replace(/　/g, ' ');           // 全角SP→半角
-  text = text.replace(/[‐‑‒–—]/g, '-');   // 各種ダッシュ→ハイフン
-  text = text.replace(/['']/g, "'");
-  text = text.replace(/[""]/g, '"');
-  text = text.replace(/-\n/g, '');           // 行末ハイフン（単語継続）
+  // ─ フェーズ1: 文字コード正規化 ─────────────────────────────────────────
+  t = t.replace(/　/g, ' ').replace(/[‐‑‒–—]/g, '-')
+       .replace(/['']/g, "'").replace(/[""]/g, '"')
+       .replace(/-\n/g, '');
 
-  // ─── フェーズ2: 読点・中点による1文字区切りを結合 ──────────────────
-  // 「あ、む、ろ」「ア・ム・ロ」形式（腎臓病文脈の薬名でよく発生）
-  // 日本語1文字が読点/中点で区切られている場合のみ結合
-  for (let pass = 0; pass < 6; pass++) {
-    // カタカナ
-    text = text.replace(/([ァ-ヶー])[、，・ ]\s*([ァ-ヶー])/g, '$1$2');
-    // ひらがな
-    text = text.replace(/([ぁ-ゖ])[、，・ ]\s*([ぁ-ゖ])/g, '$1$2');
-    // 漢字・混在
-    text = text.replace(/([\u3040-\u30FF\u4E00-\u9FAF])[、，・ ]\s*([\u3040-\u30FF\u4E00-\u9FAF])/g, '$1$2');
+  // ─ フェーズ2: 読点・中点・スペース区切り1文字を結合（6パス） ─────────────
+  const jpRange = '[\u3040-\u30FF\u4E00-\u9FAF]';
+  const kana    = '[ァ-ヶー]';
+  const hira    = '[ぁ-ゖ]';
+  for (let p = 0; p < 8; p++) {
+    t = t.replace(new RegExp(`(${kana})[、，・ ]\\s*(${kana})`, 'g'), '$1$2');
+    t = t.replace(new RegExp(`(${hira})[、，・ ]\\s*(${hira})`, 'g'), '$1$2');
+    t = t.replace(new RegExp(`(${jpRange})[、，・ ]\\s*(${jpRange})`, 'g'), '$1$2');
+    // 改行をまたいだ結合（「ア\nム\nロ」形式）
+    t = t.replace(new RegExp(`(${kana})\\n(${kana})`, 'g'), '$1$2');
   }
 
-  // ─── フェーズ3: スペース区切り1文字を結合（従来処理を強化）──────────
-  // カタカナ（長音符・促音含む）: 最大20パス
-  for (let pass = 0; pass < 20; pass++) {
-    const before = text;
-    text = text.replace(/([ァ-ヶーｦ-ﾟ]) ([ァ-ヶーｦ-ﾟ])/g, '$1$2');
-    if (text === before) break;
-  }
-  // ひらがな
-  for (let pass = 0; pass < 20; pass++) {
-    const before = text;
-    text = text.replace(/([ぁ-ゖ]) ([ぁ-ゖ])/g, '$1$2');
-    if (text === before) break;
-  }
-  // 漢字・ひらがな・カタカナ混在
-  for (let pass = 0; pass < 12; pass++) {
-    const before = text;
-    text = text.replace(/([\u3040-\u30FF\u4E00-\u9FAF]) ([\u3040-\u30FF\u4E00-\u9FAF])/g, '$1$2');
-    if (text === before) break;
+  // ─ フェーズ3: スペース区切り文字の結合（最大20パス） ─────────────────────
+  for (let p = 0; p < 20; p++) {
+    const b = t;
+    t = t.replace(/([ァ-ヶー]) ([ァ-ヶー])/g, '$1$2');
+    t = t.replace(/([ぁ-ゖ]) ([ぁ-ゖ])/g,     '$1$2');
+    t = t.replace(/([\u3040-\u30FF\u4E00-\u9FAF]) ([\u3040-\u30FF\u4E00-\u9FAF])/g, '$1$2');
+    if (t === b) break;
   }
 
-  // ─── フェーズ4: 数値の断片結合 ─────────────────────────────────────
-  for (let pass = 0; pass < 6; pass++) {
-    text = text.replace(/(\d) (\d)/g, '$1$2');
-    text = text.replace(/(\d) \./g,   '$1.');
-    text = text.replace(/\. (\d)/g,   '.$1');
+  // ─ フェーズ4: 数値・単位の断片結合 ──────────────────────────────────────
+  for (let p = 0; p < 6; p++) {
+    t = t.replace(/(\d) (\d)/g, '$1$2').replace(/(\d) \./g, '$1.').replace(/\. (\d)/g, '.$1');
   }
-  // 単位の前スペース除去
-  text = text.replace(/(\d)\s+(mg|mL|ml|g|kcal|μg|mcg|IU|単位)/gi, '$1$2');
-  // コンマ区切り数値の正規化（1,234 → 1234 は行わない。toLocaleString対応維持）
+  t = t.replace(/(\d)\s+(mg|mL|ml|μg|mcg|g|kcal|IU|単位)/gi, '$1$2');
 
-  // ─── フェーズ5: OCR誤認識文字の補正 ────────────────────────────────
-  // 数字コンテキストの文字化け
-  text = text.replace(/[Oo０](?=\d)/g, '0');
-  text = text.replace(/[Oo０](?<=\d)/g, '0');
-  try {
-    text = text.replace(/(?<=\d)[lIｌ１](?=\d)/g, '1');
-  } catch(e) { /* lookbehind非対応ブラウザ */ }
+  // ─ フェーズ5: OCR誤認識補正（数字文脈） ─────────────────────────────────
+  t = t.replace(/[Oo０](?=\d)/g, '0');
+  try { t = t.replace(/(?<=\d)[lIｌ](?=\d)/g, '1'); } catch(e) {}
+  // l/I → 1 の前後文脈補正
+  t = t.replace(/(\d)[lI](\d)/g, '$11$2');
 
-  // ─── フェーズ6: 既知の薬名・栄養語のスペル補正辞書 ────────────────
-  const DICT = [
-    // ── カタカナ薬名（スペース残留分の最終保険） ──
-    ['アムロジピン',    /ア ?ム ?ロ ?ジ ?ピ ?ン/g],
-    ['アムロジビン',    /ア ?ム ?ロ ?ジ ?ビ ?ン/g],  // 誤認識バリアント
-    ['ロスバスタチン',  /ロ ?ス ?バ ?ス ?タ ?チ ?ン/g],
-    ['アトルバスタチン',/ア ?ト ?ル ?バ ?ス ?タ ?チ ?ン/g],
-    ['メトホルミン',    /メ ?ト ?ホ ?ル ?ミ ?ン/g],
-    ['エナラプリル',    /エ ?ナ ?ラ ?プ ?リ ?ル/g],
-    ['テルミサルタン',  /テ ?ル ?ミ ?サ ?ル ?タ ?ン/g],
-    ['カンデサルタン',  /カ ?ン ?デ ?サ ?ル ?タ ?ン/g],
-    ['オルメサルタン',  /オ ?ル ?メ ?サ ?ル ?タ ?ン/g],
-    ['バルサルタン',    /バ ?ル ?サ ?ル ?タ ?ン/g],
-    ['イルベサルタン',  /イ ?ル ?ベ ?サ ?ル ?タ ?ン/g],
-    ['アジルサルタン',  /ア ?ジ ?ル ?サ ?ル ?タ ?ン/g],
-    ['アロプリノール',  /ア ?ロ ?プ ?リ ?ノ ?ー ?ル/g],
-    ['フェブキソスタット',/フ ?ェ ?ブ ?キ ?ソ ?ス ?タ ?ッ ?ト/g],
-    ['トリクロルメチアジド',/ト ?リ ?ク ?ロ ?ル ?メ ?チ ?ア ?ジ ?ド/g],
-    ['フロセミド',      /フ ?ロ ?セ ?ミ ?ド/g],
-    ['スピロノラクトン', /ス ?ピ ?ロ ?ノ ?ラ ?ク ?ト ?ン/g],
-    ['レボチロキシン',  /レ ?ボ ?チ ?ロ ?キ ?シ ?ン/g],
-    ['ニフェジピン',    /ニ ?フ ?ェ ?ジ ?ピ ?ン/g],
-    ['アムロジピン',    /ア ?ム ?ロ ?ジ ?ピ ?ン/g],
-    ['シルニジピン',    /シ ?ル ?ニ ?ジ ?ピ ?ン/g],
-    ['エソメプラゾール', /エ ?ソ ?メ ?プ ?ラ ?ゾ ?ー ?ル/g],
-    ['ランソプラゾール', /ラ ?ン ?ソ ?プ ?ラ ?ゾ ?ー ?ル/g],
-    ['オメプラゾール',  /オ ?メ ?プ ?ラ ?ゾ ?ー ?ル/g],
-    ['ラベプラゾール',  /ラ ?ベ ?プ ?ラ ?ゾ ?ー ?ル/g],
-    ['クロピドグレル',  /ク ?ロ ?ピ ?ド ?グ ?レ ?ル/g],
-    ['アスピリン',      /ア ?ス ?ピ ?リ ?ン/g],
-    ['リシノプリル',    /リ ?シ ?ノ ?プ ?リ ?ル/g],
-    ['ペリンドプリル',  /ペ ?リ ?ン ?ド ?プ ?リ ?ル/g],
-    ['ビソプロロール',  /ビ ?ソ ?プ ?ロ ?ロ ?ー ?ル/g],
-    ['カルベジロール',  /カ ?ル ?ベ ?ジ ?ロ ?ー ?ル/g],
-    ['メトプロロール',  /メ ?ト ?プ ?ロ ?ロ ?ー ?ル/g],
-    ['アテノロール',    /ア ?テ ?ノ ?ロ ?ー ?ル/g],
-    ['インスリン',      /イ ?ン ?ス ?リ ?ン/g],
-    ['グリメピリド',    /グ ?リ ?メ ?ピ ?リ ?ド/g],
-    ['シタグリプチン',  /シ ?タ ?グ ?リ ?プ ?チ ?ン/g],
-    ['エンパグリフロジン',/エ ?ン ?パ ?グ ?リ ?フ ?ロ ?ジ ?ン/g],
-    ['ダパグリフロジン', /ダ ?パ ?グ ?リ ?フ ?ロ ?ジ ?ン/g],
-    ['カナグリフロジン', /カ ?ナ ?グ ?リ ?フ ?ロ ?ジ ?ン/g],
-    ['レナリドミド',    /レ ?ナ ?リ ?ド ?ミ ?ド/g],
-    ['プレドニゾロン',  /プ ?レ ?ド ?ニ ?ゾ ?ロ ?ン/g],
-    ['ミコフェノール',  /ミ ?コ ?フ ?ェ ?ノ ?ー ?ル/g],
-    ['タクロリムス',    /タ ?ク ?ロ ?リ ?ム ?ス/g],
-    ['シクロスポリン',  /シ ?ク ?ロ ?ス ?ポ ?リ ?ン/g],
-    ['セベラマー',      /セ ?ベ ?ラ ?マ ?ー/g],
-    ['炭酸カルシウム',  /炭 ?酸 ?カ ?ル ?シ ?ウ ?ム/g],
-    ['沈降炭酸カルシウム',/沈 ?降 ?炭 ?酸 ?カ ?ル ?シ ?ウ ?ム/g],
-    ['酸化マグネシウム', /酸 ?化 ?マ ?グ ?ネ ?シ ?ウ ?ム/g],
-    ['重炭酸ナトリウム', /重 ?炭 ?酸 ?ナ ?ト ?リ ?ウ ?ム/g],
-    // ── 栄養成分ラベルでよく崩れるキーワード ──
+  // ─ フェーズ6: 薬名辞書補正（スペース付き崩れ版を正式名に置換） ─────────
+  for (const entry of DRUG_DICT) {
+    t = t.replace(entry.re, entry.name);
+  }
+
+  // ─ フェーズ7: 追加補正辞書（栄養ラベル頻出語） ──────────────────────────
+  const EXTRA_DICT = [
     ['エネルギー',  /エ ?ネ ?ル ?ギ ?ー/g],
     ['たんぱく質',  /た ?ん ?ぱ ?く ?質/g],
-    ['タンパク質',  /タ ?ン ?パ ?ク ?質/g],
     ['炭水化物',    /炭 ?水 ?化 ?物/g],
     ['食物繊維',    /食 ?物 ?繊 ?維/g],
     ['食塩相当量',  /食 ?塩 ?相 ?当 ?量/g],
@@ -6800,40 +6780,207 @@ function cleanOcrText(rawText) {
     ['カルシウム',  /カ ?ル ?シ ?ウ ?ム/g],
     ['ナトリウム',  /ナ ?ト ?リ ?ウ ?ム/g],
     ['マグネシウム',/マ ?グ ?ネ ?シ ?ウ ?ム/g],
-    ['コレステロール',/コ ?レ ?ス ?テ ?ロ ?ー ?ル/g],
-    ['飽和脂肪酸',  /飽 ?和 ?脂 ?肪 ?酸/g],
-    ['キロカロリー',/キ ?ロ ?カ ?ロ ?リ ?ー/g],
   ];
-  DICT.forEach(([correct, pattern]) => {
-    text = text.replace(pattern, correct);
-  });
+  for (const [c, p] of EXTRA_DICT) t = t.replace(p, c);
 
-  // ─── フェーズ7: 行末の孤立スペースを除去・多重空白を1個に ────────
-  text = text.replace(/[ \t]+\n/g, '\n');
-  text = text.replace(/[ \t]{2,}/g, ' ');
-  text = text.replace(/\n{3,}/g, '\n\n');
-
-  return text;
+  // ─ フェーズ8: ゴミ除去 ───────────────────────────────────────────────────
+  t = t.replace(/[ \t]+\n/g, '\n').replace(/[ \t]{2,}/g, ' ').replace(/\n{3,}/g, '\n\n');
+  return t;
 }
 
-/**
- * 共通OCRフロー v2：FileInput から読み込み → 前処理 → OCR → クリーニング
- */
+// ─── 共通OCRフロー ────────────────────────────────────────────────────────
 async function loadAndOcr(file, onProgress) {
-  const imageDataUrl = await new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload  = e => resolve(e.target.result);
-    reader.onerror = () => reject(new Error('画像読み込みエラー'));
-    reader.readAsDataURL(file);
+  const dataUrl = await new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = e => res(e.target.result);
+    r.onerror = () => rej(new Error('画像読み込みエラー'));
+    r.readAsDataURL(file);
   });
-  const rawText = await runOcr(imageDataUrl, onProgress);
-  return cleanOcrText(rawText);
+  const raw = await runOcr(dataUrl, onProgress);
+  return cleanOcrText(raw);
 }
 
 // ============================================================
+// ===== 処方箋シール 構造解析 v4 — EPARK 相当 =====
+// ============================================================
 let _ocrCandidates = [];
 
-// ── 薬OCR：画像受け取り → 共通エンジン → 薬パース ──
+// ─── メイン解析ループ ─────────────────────────────────────────────────────
+function parseOcrText(rawText) {
+  const candidates = [];
+
+  // ── Step 1: シール全体から「日付・処方日数」を一括抽出 ──────────────────
+  const fullText = rawText;
+
+  // 調剤日：令和 / 平成 / 西暦 / 2桁年
+  const DATE_PATS = [
+    { re: /(?:令和|Ｒ|R)\s*(\d{1,2})\s*[年\.]\s*(\d{1,2})\s*[月\.]\s*(\d{1,2})\s*日?/, base: 2018 },
+    { re: /(?:平成|Ｈ|H)\s*(\d{1,2})\s*[年\.]\s*(\d{1,2})\s*[月\.]\s*(\d{1,2})\s*日?/, base: 1988 },
+    { re: /(\d{4})[\/\-年](\d{1,2})[\/\-月](\d{1,2})日?/, base: 0 },
+    { re: /(\d{2})[\/\-](\d{1,2})[\/\-](\d{1,2})/, base: 2000 },
+  ];
+  let globalPrescDate = null;
+  for (const { re, base } of DATE_PATS) {
+    const m = fullText.match(re);
+    if (!m) continue;
+    try {
+      let y = parseInt(m[1]) + base, mo = parseInt(m[2]), d = parseInt(m[3]);
+      if (base === 0 && y < 100) y += 2000;
+      if (y >= 2000 && y <= 2099 && mo >= 1 && mo <= 12 && d >= 1 && d <= 31) {
+        globalPrescDate = `${y}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      }
+    } catch(e) {}
+    if (globalPrescDate) break;
+  }
+
+  // 処方日数（全体から最大値を採用 — 複数薬に共通する場合が多い）
+  let globalDaysSupply = null;
+  const daysAll = [...fullText.matchAll(/(\d{1,3})\s*日(?:分|間)/g)];
+  if (daysAll.length > 0) {
+    // 最も大きい日数（28日分、30日分など）を採用
+    globalDaysSupply = Math.max(...daysAll.map(m => parseInt(m[1])));
+    // 1日の用量と混同しないよう3以下は除外
+    if (globalDaysSupply <= 3) globalDaysSupply = null;
+  }
+
+  // ── Step 2: 辞書マッチング（最優先） ────────────────────────────────────
+  const dictFound = dictionaryMatchDrugs(fullText);
+
+  // ── Step 3: 行ベース解析（剤形直前の薬名抽出 + 用法・用量） ─────────────
+  const lines = fullText.split(/[\n\r]+/).map(l => l.trim()).filter(l => l.length > 1);
+
+  // 薬名正規表現パターン群
+  // パターンA: 「薬名＋剤形＋強度」例：アムロジピン錠5mg
+  const PAT_DRUG_FULL = /([ァ-ヶーぁ-ゖ\u4E00-\u9FAF]{2,}(?:[A-Za-z]{0,6})?)\s*(?:錠|カプセル|カプ|散|細粒|顆粒|液|シロップ|注射液?|パッチ|テープ|クリーム|軟膏|点眼液?|点鼻液?|吸入液?|ゼリー|配合錠|配合散|配合顆粒)\s*(?:\d+(?:\.\d+)?\s*(?:mg|μg|mL|g|単位|%)?)?/g;
+  // パターンB: 英語薬名＋剤形
+  const PAT_DRUG_ENG = /[A-Z][A-Za-z]{2,}(?:\s*\d+(?:\.\d+)?\s*(?:mg|μg|mL|g))?/g;
+
+  // 用法パターン（強化版）
+  const PAT_USAGE = /(?:(?:1日|一日|毎日)\s*[1-9１-９](?:回|錠|カプセル|包)|毎(?:食前|食後|食間|朝|昼|夕|夜|就寝前)|朝食(?:前|後|時)|昼食(?:前|後|時)|夕食(?:前|後|時)|就寝前|寝る前|起床時|頓服|症状時|発熱時|疼痛時|眠れない時)/g;
+
+  // 用量パターン（小数対応・剤形多様）
+  const PAT_DOSE = /(\d+(?:\.\d+)?)\s*(?:錠|カプセル|包|バッグ|mL|g|単位|μg|本|個)/g;
+
+  // ゴミ行フィルタ
+  const NOISE_LINE = /(?:病院|医院|クリニック|薬局|調剤|内科|外科|整形|皮膚科|眼科|耳鼻科|泌尿器|循環器|腎臓科|患者|氏名|生年|保険|番号|受付|診察|担当|医師|先生|お薬|説明書|添付|袋|封筒|シール|処方箋|調剤済)/;
+  const NOISE_NUM  = /^[\d\s\-\/\.：:\(\)（）]+$/;
+
+  // 非薬名一般語
+  const COMMON_NG = new Set(['カタログ','サービス','センター','システム','アプリ','ページ','コース','プラン','タイプ','セット','パック','チェック','アルコール','テスト','サポート','マニュアル','ガイド']);
+
+  let lineIdx = 0;
+  let currentDrug = null;
+
+  for (const line of lines) {
+    lineIdx++;
+    if (/^[\s\-=|_　・。、※＊★●▼▶◆]{1,}$/.test(line)) continue;
+    if (NOISE_LINE.test(line)) continue;
+    if (NOISE_NUM.test(line)) continue;
+
+    // ─ 薬名抽出 ─────────────────────────────────────────────────────────
+    const nameMatchesFull = [...(line.matchAll(PAT_DRUG_FULL) || [])].map(m => m[0]);
+    const nameMatchesEng  = [...(line.matchAll(PAT_DRUG_ENG)  || [])].map(m => m[0]);
+    const allNameMatches  = [...nameMatchesFull, ...nameMatchesEng];
+
+    for (const raw of allNameMatches) {
+      const name = raw.trim().replace(/\s+/g, ' ');
+      if (name.length < 3) continue;
+      // 剤形のみ / 用法のみの文字列を除外
+      if (/^(?:錠|カプセル|散|顆粒|液|パッチ|テープ)$/.test(name)) continue;
+      if (COMMON_NG.has(name)) continue;
+      // 辞書確認：辞書にある薬は信頼度UP
+      const inDict = DRUG_DICT.some(e => name.includes(e.name));
+
+      currentDrug = {
+        name,
+        form:       '',
+        usage:      '',
+        dose:       '',
+        daysSupply: globalDaysSupply,
+        prescDate:  globalPrescDate,
+        frequency:  'daily',
+        timesPerDay: 1,
+        dosePerTake: 1,
+        rawLine:    line,
+        selected:   true,
+        confidence: inDict ? 'high' : 'medium',
+      };
+      candidates.push(currentDrug);
+    }
+
+    // ─ 用法抽出 ─────────────────────────────────────────────────────────
+    const usages = [...(line.matchAll(PAT_USAGE) || [])].map(m => m[0]);
+    if (usages.length > 0) {
+      // 直前のdrug候補に紐付け
+      const target = currentDrug || candidates[candidates.length - 1];
+      if (target) {
+        target.usage = usages.join(' / ');
+        if (/頓服|症状時|疼痛時|発熱時|眠れない/.test(target.usage)) target.frequency = 'prn';
+        // 1日回数を解析
+        const timesM = target.usage.match(/(?:1日|一日|毎日)\s*([1-9])/);
+        if (timesM) target.timesPerDay = parseInt(timesM[1]);
+        if (/毎食/.test(target.usage)) target.timesPerDay = 3;
+        if (/朝|昼|夕.*各/.test(target.usage)) target.timesPerDay = 3;
+      }
+    }
+
+    // ─ 用量抽出 ─────────────────────────────────────────────────────────
+    const doses = [...(line.matchAll(PAT_DOSE) || [])];
+    if (doses.length > 0) {
+      const target = currentDrug || candidates[candidates.length - 1];
+      if (target) {
+        target.dose = doses[0][0];
+        target.dosePerTake = parseFloat(doses[0][1]) || 1;
+      }
+    }
+
+    // ─ 行内処方日数（個別薬に対して上書き） ────────────────────────────
+    const daysM = line.match(/(\d+)\s*日(?:分|間)/);
+    if (daysM && parseInt(daysM[1]) > 3) {
+      const target = currentDrug || candidates[candidates.length - 1];
+      if (target) target.daysSupply = parseInt(daysM[1]);
+    }
+  }
+
+  // ── Step 4: 辞書マッチ結果で候補を補完・重複除去 ────────────────────────
+  const candidateNames = new Set(candidates.map(c => c.name.replace(/\s/g,'')));
+  for (const dictName of dictFound) {
+    if (!candidateNames.has(dictName)) {
+      candidates.push({
+        name:        dictName,
+        form:        '',
+        usage:       '',
+        dose:        '',
+        daysSupply:  globalDaysSupply,
+        prescDate:   globalPrescDate,
+        frequency:   'daily',
+        timesPerDay: 1,
+        dosePerTake: 1,
+        rawLine:     '(辞書マッチ)',
+        selected:    true,
+        confidence:  'high',
+      });
+    }
+  }
+
+  // ── Step 5: 重複除去 + スコアリング ──────────────────────────────────────
+  const seen = new Set();
+  const unique = candidates.filter(c => {
+    const key = c.name.replace(/\s/g,'').toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key); return true;
+  });
+
+  return unique.sort((a, b) => {
+    const score = c => (c.confidence === 'high' ? 4 : 0)
+                     + (c.usage       ? 2 : 0)
+                     + (c.dose        ? 1 : 0)
+                     + (c.daysSupply  ? 1 : 0);
+    return score(b) - score(a);
+  });
+}
+
+// ─── handleOcrImage: 撮影→解析→EPARK風プレビューUI ──────────────────────
 async function handleOcrImage(event) {
   const file = event.target.files?.[0];
   if (!file) return;
@@ -6847,7 +6994,7 @@ async function handleOcrImage(event) {
   if (progEl)  progEl.style.display  = '';
   if (panelEl) panelEl.style.display = 'none';
   if (barEl)   barEl.style.width     = '0%';
-  if (labelEl) labelEl.textContent   = '読み込み中...';
+  if (labelEl) labelEl.textContent   = '画像準備中...';
 
   try {
     const cleanedText = await loadAndOcr(file, (pct, label) => {
@@ -6855,253 +7002,294 @@ async function handleOcrImage(event) {
       if (labelEl) labelEl.textContent = label;
     });
 
+    if (progEl) progEl.style.display = 'none';
+
     if (!cleanedText.trim()) {
-      if (progEl) progEl.style.display = 'none';
       showToast('⚠ 文字を認識できませんでした。明るい場所で再撮影してください');
       return;
     }
 
     _ocrCandidates = parseOcrText(cleanedText);
-    if (progEl) progEl.style.display = 'none';
     renderOcrResults(_ocrCandidates);
 
   } catch(e) {
     if (progEl) progEl.style.display = 'none';
-    showToast('⚠ 文字認識に失敗しました: ' + (e.message || '不明なエラー'));
+    showToast('⚠ 認識失敗: ' + (e.message || '不明なエラー'));
     console.error('OCR error:', e);
   }
 }
 
-// ── OCRテキストから薬情報をパース（強化版 v3: 処方日数・処方日対応） ──
-function parseOcrText(rawText) {
-  // cleanOcrText は共通エンジンで適用済みだが、行分割前に再度整形
-  const lines = rawText.split(/[\n\r]+/).map(l => l.trim()).filter(l => l.length > 1);
-  const candidates = [];
-
-  // ── シール全体から処方日・処方日数をまず抽出 ──────────────────────────
-  const fullText = lines.join('\n');
-
-  // 処方日（調剤日）: 「令和X年X月X日」「R5.10.1」「2024/10/1」「2024年10月1日」
-  let globalPrescDate = null;
-  const datePatterns = [
-    /(?:令和|R)\s*(\d{1,2})\s*[年\.]\s*(\d{1,2})\s*[月\.]\s*(\d{1,2})\s*日?/,
-    /(?:平成|H)\s*(\d{1,2})\s*[年\.]\s*(\d{1,2})\s*[月\.]\s*(\d{1,2})\s*日?/,
-    /(\d{4})[\/\-年](\d{1,2})[\/\-月](\d{1,2})日?/,
-    /(\d{2})[\/\-](\d{1,2})[\/\-](\d{1,2})/,
-  ];
-  for (const pat of datePatterns) {
-    const m = fullText.match(pat);
-    if (m) {
-      try {
-        let y = parseInt(m[1]), mo = parseInt(m[2]), d = parseInt(m[3]);
-        if (pat.source.startsWith('(?:令和|R)')) y = 2018 + y;  // 令和元年=2019
-        else if (pat.source.startsWith('(?:平成|H)')) y = 1988 + y;
-        else if (y < 100) y = 2000 + y;
-        if (y >= 2000 && y <= 2099 && mo >= 1 && mo <= 12 && d >= 1 && d <= 31) {
-          globalPrescDate = `${y}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-        }
-      } catch(e2) {}
-      break;
-    }
-  }
-
-  // 処方日数「○○日分」「××日間」をシール全体から抽出
-  let globalDaysSupply = null;
-  const daysM = fullText.match(/(\d+)\s*日(?:分|間)/);
-  if (daysM) globalDaysSupply = parseInt(daysM[1]);
-
-  // ── 薬名・用法・用量パターン ────────────────────────────────────────
-  // 薬名パターン（カタカナ3文字以上に拡張・剤形サフィックス対応強化）
-  const drugNamePattern = /([ァ-ヶー]{3,}(?:錠|カプセル|カプ|散|細粒|顆粒|液|シロップ|注射|パッチ|テープ|クリーム|軟膏|点眼|点鼻|吸入)?(?:\d+(?:\.\d+)?(?:mg|μg|mL|g|単位)?)?)|([A-Za-z][A-Za-z\d\-]{2,}(?:\s*\d+(?:\.\d+)?(?:mg|μg|mL|g)?)?)/g;
-
-  // 用法パターン
-  const usagePattern = /(?:1日|一日)?[1-9１-９]回|毎(?:食前|食後|食間|朝|昼|夕|夜|就寝前)|朝食(?:前|後)|昼食(?:前|後)|夕食(?:前|後)|就寝前|頓服|症状時|疼痛時/g;
-
-  // 用量パターン（0.5錠、2カプセルなど）
-  const dosePattern = /(?:\d+(?:\.\d+)?)\s*(?:錠|カプセル|包|バッグ|mL|g|単位|μg)/g;
-
-  // 薬として扱わないキーワード（誤検出防止）
-  const NON_DRUG_PATTERNS = [
-    /^(?:処方|調剤|薬局|病院|医院|クリニック|受付|患者|氏名|生年|年齢|診察|保険|番号|電話|住所|都道府|内科|外科|整形|皮膚|眼科|耳鼻)$/,
-    /^[0-9０-９\-\/\.\s]+$/,
-    /^.{1,1}$/,
-  ];
-
-  // 病院名・日付・管理番号行を判定して薬名行から除外
-  function isNonDrugLine(line) {
-    if (/(?:病院|医院|クリニック|薬局|調剤|内科|外科|整形|皮膚科|眼科|耳鼻科|泌尿器|循環器|腎臓)/.test(line)) return true;
-    if (/(?:年|月|日|H\d|R\d|\d{4}\/|\d{2}\/\d{2})/.test(line) && line.length < 20) return true;
-    if (/(?:患者|氏名|生年|保険|番号|受付|診察|担当|医師|先生)/.test(line)) return true;
-    if (/^\d[\d\s\-\/\.]+$/.test(line)) return true;
-    return false;
-  }
-
-  let currentDrug = null;
-
-  lines.forEach(line => {
-    if (/^[\s\-\=\|_　・。、※＊★●▼▶◆]+$/.test(line)) return;
-    if (line.length < 2) return;
-    if (isNonDrugLine(line)) return; // 病院名・日付行をスキップ
-
-    const nameMatches = line.match(drugNamePattern) || [];
-    nameMatches.forEach(match => {
-      const cleaned = match.trim().replace(/\s+/g, '');
-      if (cleaned.length < 3) return;
-      if (NON_DRUG_PATTERNS.some(p => p.test(cleaned))) return;
-      if (/^\d+[\/\-]\d+/.test(cleaned)) return;
-
-      // 既知の非薬名（一般語）除外
-      const COMMON_WORDS = ['カタログ','サービス','センター','システム','アプリ','ページ','コース','プラン','タイプ','セット','パック'];
-      if (COMMON_WORDS.some(w => cleaned === w)) return;
-
-      currentDrug = {
-        name: cleaned,
-        form: '',
-        usage: '',
-        dose: '',
-        daysSupply: globalDaysSupply,  // ← 処方日数
-        prescDate:  globalPrescDate,   // ← 処方日
-        frequency: 'daily',
-        rawLine: line,
-        selected: true,
-      };
-      candidates.push(currentDrug);
-    });
-
-    const usageMatches = line.match(usagePattern) || [];
-    if (usageMatches.length > 0 && currentDrug) {
-      currentDrug.usage = usageMatches.join(' / ');
-      if (/頓服|症状時|疼痛時/.test(currentDrug.usage)) {
-        currentDrug.frequency = 'prn';
-      }
-    }
-
-    const doseMatches = line.match(dosePattern) || [];
-    if (doseMatches.length > 0 && currentDrug) {
-      currentDrug.dose = doseMatches[0];
-    }
-
-    // 行内処方日数（薬名行ごとの「○日分」を上書き）
-    const lineDaysM = line.match(/(\d+)\s*日(?:分|間)/);
-    if (lineDaysM && currentDrug) {
-      currentDrug.daysSupply = parseInt(lineDaysM[1]);
-    }
-  });
-
-  // 重複除去・信頼度でソート
-  const seen = new Set();
-  return candidates
-    .filter(c => {
-      const key = c.name.replace(/\s/g, '').toLowerCase();
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    })
-    // 用法・用量あり → 上位表示
-    .sort((a, b) => {
-      const scoreA = (a.usage ? 2 : 0) + (a.dose ? 1 : 0) + (a.daysSupply ? 1 : 0);
-      const scoreB = (b.usage ? 2 : 0) + (b.dose ? 1 : 0) + (b.daysSupply ? 1 : 0);
-      return scoreB - scoreA;
-    });
-}
-
-// ── 認識結果をパネルに描画 ──
+// ─── EPARK風プレビューUI ─────────────────────────────────────────────────
 function renderOcrResults(candidates) {
   const listEl = document.getElementById('ocr-result-list');
   const panel  = document.getElementById('ocr-result-panel');
   if (!listEl || !panel) return;
 
   if (candidates.length === 0) {
-    listEl.innerHTML = '<div style="font-size:13px;color:var(--text3);text-align:center;padding:12px;">薬の名前が認識できませんでした。<br>手動で入力してください。</div>';
+    listEl.innerHTML = `
+      <div style="text-align:center;padding:20px 12px;color:var(--text3);">
+        <div style="font-size:28px;margin-bottom:8px;">🔍</div>
+        <div style="font-size:13px;font-weight:600;">薬の名前を認識できませんでした</div>
+        <div style="font-size:12px;margin-top:6px;line-height:1.6;">
+          ・明るい場所で撮影し直してください<br>
+          ・シールにピントを合わせてください<br>
+          ・手動で薬名を入力することもできます
+        </div>
+      </div>`;
     panel.style.display = '';
     return;
   }
 
-  listEl.innerHTML = candidates.map((c, i) => `
-    <div style="display:flex;align-items:flex-start;gap:10px;padding:10px;background:var(--surface);border-radius:10px;margin-bottom:6px;border:1.5px solid ${c.selected ? 'var(--purple)' : 'var(--border)'};cursor:pointer;transition:border-color 0.15s;"
-      onclick="toggleOcrCandidate(${i}, this)">
-      <div style="width:18px;height:18px;border-radius:4px;border:2px solid ${c.selected ? 'var(--purple)' : 'var(--border2)'};background:${c.selected ? 'var(--purple)' : 'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;font-size:12px;color:#fff;">
-        ${c.selected ? '✓' : ''}
-      </div>
-      <div style="flex:1;min-width:0;">
-        <div style="font-size:14px;font-weight:600;color:var(--text);">${c.name}</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:3px;">
-          ${c.dose       ? `<span style="font-size:11px;background:var(--surface2);padding:1px 7px;border-radius:8px;color:var(--text2);">💊 ${c.dose}</span>` : ''}
-          ${c.usage      ? `<span style="font-size:11px;background:var(--surface2);padding:1px 7px;border-radius:8px;color:var(--text2);">🕐 ${c.usage}</span>` : ''}
-          ${c.daysSupply ? `<span style="font-size:11px;background:rgba(79,195,247,0.12);padding:1px 7px;border-radius:8px;color:var(--accent);">📦 ${c.daysSupply}日分</span>` : ''}
-          ${c.prescDate  ? `<span style="font-size:11px;background:var(--surface2);padding:1px 7px;border-radius:8px;color:var(--text3);">📅 ${c.prescDate}</span>` : ''}
-          ${c.frequency === 'prn' ? '<span style="font-size:11px;background:var(--amber-dim);padding:1px 7px;border-radius:8px;color:var(--amber);">頓服</span>' : ''}
+  // 薬ごとにEPARK風カード + インライン編集
+  listEl.innerHTML = candidates.map((c, i) => {
+    // 残薬日数の事前計算
+    const daysLeft = _calcDaysLeft(c);
+    const stockNum = _calcInitStock(c);
+    const confColor = c.confidence === 'high' ? 'var(--green)' : 'var(--amber)';
+    const confLabel = c.confidence === 'high' ? '✓ 辞書一致' : '△ 推定';
+    const confBg    = c.confidence === 'high' ? 'var(--green-dim)' : 'var(--amber-dim)';
+
+    return `
+    <div id="ocrcard-${i}" style="background:var(--surface);border-radius:12px;margin-bottom:8px;border:1.5px solid ${c.selected ? 'var(--purple)' : 'var(--border)'};transition:border-color 0.15s;overflow:hidden;">
+
+      <!-- カードヘッダー（チェック + 薬名 + 信頼度） -->
+      <div style="display:flex;align-items:center;gap:10px;padding:12px 12px 8px;cursor:pointer;"
+           onclick="toggleOcrCandidate(${i})">
+        <div id="ocrcheck-${i}" style="width:22px;height:22px;border-radius:6px;border:2px solid ${c.selected ? 'var(--purple)' : 'var(--border2)'};background:${c.selected ? 'var(--purple)' : 'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;color:#fff;transition:all 0.15s;">
+          ${c.selected ? '✓' : ''}
         </div>
-        <div style="font-size:10px;color:var(--text3);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">認識: ${c.rawLine}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:15px;font-weight:700;color:var(--text);">${_escHtml(c.name)}</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;">
+            <span style="font-size:10px;padding:1px 6px;border-radius:8px;background:${confBg};color:${confColor};border:1px solid ${confColor};">${confLabel}</span>
+            ${c.daysSupply ? `<span style="font-size:10px;padding:1px 6px;border-radius:8px;background:rgba(79,195,247,0.15);color:var(--accent);border:1px solid var(--accent);">📦 ${c.daysSupply}日分</span>` : ''}
+            ${c.prescDate  ? `<span style="font-size:10px;padding:1px 6px;border-radius:8px;background:var(--surface2);color:var(--text3);border:1px solid var(--border2);">📅 ${c.prescDate}</span>` : ''}
+            ${c.frequency === 'prn' ? `<span style="font-size:10px;padding:1px 6px;border-radius:8px;background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber);">頓服</span>` : ''}
+          </div>
+        </div>
+        <div style="font-size:18px;color:var(--text3);">›</div>
       </div>
-    </div>`).join('');
+
+      <!-- インライン編集フォーム（常時展開） -->
+      <div style="padding:0 12px 12px;border-top:1px solid var(--border);margin-top:2px;padding-top:10px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+
+          <div>
+            <div style="font-size:10px;color:var(--text3);margin-bottom:3px;letter-spacing:.05em;">💊 薬名（修正可）</div>
+            <input type="text" value="${_escHtml(c.name)}"
+              oninput="_ocrCandidates[${i}].name=this.value;_updateOcrCardHeader(${i})"
+              style="width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:6px 8px;font-size:12px;color:var(--text);font-weight:600;" />
+          </div>
+
+          <div>
+            <div style="font-size:10px;color:var(--text3);margin-bottom:3px;letter-spacing:.05em;">📋 剤形・規格</div>
+            <input type="text" value="${_escHtml(c.dose || c.form || '')}"
+              placeholder="例：5mg 1錠"
+              oninput="_ocrCandidates[${i}].dose=this.value"
+              style="width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:6px 8px;font-size:12px;color:var(--text);" />
+          </div>
+
+          <div>
+            <div style="font-size:10px;color:var(--text3);margin-bottom:3px;letter-spacing:.05em;">🕐 用法</div>
+            <input type="text" value="${_escHtml(c.usage || '')}"
+              placeholder="例：1日1回 朝食後"
+              oninput="_ocrCandidates[${i}].usage=this.value;_parseUsageInline(${i})"
+              style="width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:6px 8px;font-size:12px;color:var(--text);" />
+          </div>
+
+          <div>
+            <div style="font-size:10px;color:var(--text3);margin-bottom:3px;letter-spacing:.05em;">📦 処方日数</div>
+            <div style="display:flex;align-items:center;gap:4px;">
+              <input type="number" value="${c.daysSupply || ''}" min="1" max="365"
+                placeholder="28"
+                oninput="_ocrCandidates[${i}].daysSupply=parseInt(this.value)||null;_updateStockPreview(${i})"
+                style="flex:1;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:6px 8px;font-size:12px;color:var(--text);" />
+              <span style="font-size:11px;color:var(--text3);flex-shrink:0;">日分</span>
+            </div>
+          </div>
+
+          <div>
+            <div style="font-size:10px;color:var(--text3);margin-bottom:3px;letter-spacing:.05em;">🔢 1日服用回数</div>
+            <div style="display:flex;gap:4px;">
+              ${[1,2,3].map(n => `
+                <div onclick="_selectTimePill(${i},${n})"
+                  id="timepill-${i}-${n}" data-n="${n}"
+                  class="times-row-${i}"
+                  style="flex:1;text-align:center;padding:5px 4px;background:${c.timesPerDay===n?'var(--accent)':'var(--surface2)'};color:${c.timesPerDay===n?'#0d1420':'var(--text2)'};border:1px solid ${c.timesPerDay===n?'var(--accent)':'var(--border2)'};border-radius:6px;font-size:12px;font-weight:${c.timesPerDay===n?'700':'400'};cursor:pointer;transition:all .15s;">
+                  ${n}回
+                </div>`).join('')}
+            </div>
+          </div>
+
+          <div>
+            <div style="font-size:10px;color:var(--text3);margin-bottom:3px;letter-spacing:.05em;">💊 1回服用量</div>
+            <div style="display:flex;align-items:center;gap:4px;">
+              <input type="number" value="${c.dosePerTake || 1}" min="0.5" max="10" step="0.5"
+                oninput="_ocrCandidates[${i}].dosePerTake=parseFloat(this.value)||1;_updateStockPreview(${i})"
+                style="flex:1;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:6px 8px;font-size:12px;color:var(--text);" />
+              <span style="font-size:11px;color:var(--text3);flex-shrink:0;">錠/包</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 残薬プレビュー -->
+        <div id="stock-preview-${i}" style="background:var(--surface2);border-radius:8px;padding:8px 10px;display:flex;align-items:center;justify-content:space-between;">
+          <div style="font-size:11px;color:var(--text2);">自動計算：初期在庫</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:var(--accent);" id="stock-num-${i}">
+            ${stockNum > 0 ? stockNum + ' 錠/包' : '—'}
+          </div>
+        </div>
+        ${c.rawLine !== '(辞書マッチ)' ? `<div style="font-size:10px;color:var(--text3);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">認識元: ${_escHtml(c.rawLine)}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
 
   panel.style.display = '';
 }
 
-// ── 候補のチェック切り替え ──
-function toggleOcrCandidate(idx, el) {
-  if (!_ocrCandidates[idx]) return;
-  _ocrCandidates[idx].selected = !_ocrCandidates[idx].selected;
-  // ボーダー・チェックマーク更新
-  el.style.borderColor = _ocrCandidates[idx].selected ? 'var(--purple)' : 'var(--border)';
-  const chk = el.querySelector('div');
-  if (chk) {
-    chk.style.background   = _ocrCandidates[idx].selected ? 'var(--purple)' : 'transparent';
-    chk.style.borderColor  = _ocrCandidates[idx].selected ? 'var(--purple)' : 'var(--border2)';
-    chk.textContent        = _ocrCandidates[idx].selected ? '✓' : '';
+// ─── ヘルパー ─────────────────────────────────────────────────────────────
+function _escHtml(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function _calcInitStock(c) {
+  const days = c.daysSupply || 0;
+  if (!days) return 0;
+  return Math.round((c.dosePerTake || 1) * (c.timesPerDay || 1) * days);
+}
+function _calcDaysLeft(c) {
+  const stock = _calcInitStock(c);
+  const dpd   = (c.dosePerTake || 1) * (c.timesPerDay || 1);
+  return dpd > 0 ? Math.floor(stock / dpd) : 0;
+}
+function _updateStockPreview(i) {
+  const c   = _ocrCandidates[i];
+  const num = _calcInitStock(c);
+  const el  = document.getElementById(`stock-num-${i}`);
+  if (el) el.textContent = num > 0 ? num + ' 錠/包' : '—';
+}
+function _updateOcrCardHeader(i) {
+  const c = _ocrCandidates[i];
+  // 薬名表示を更新（カードヘッダー内）
+  const card = document.getElementById(`ocrcard-${i}`);
+  if (!card) return;
+  const nameEl = card.querySelector('[style*="font-size:15px"]');
+  if (nameEl) nameEl.textContent = c.name;
+}
+function _parseUsageInline(i) {
+  const c = _ocrCandidates[i];
+  if (/頓服|症状時|発熱時|疼痛時|眠れない/.test(c.usage)) c.frequency = 'prn';
+  else c.frequency = 'daily';
+  const m = c.usage.match(/[1-9]回/);
+  if (m) {
+    c.timesPerDay = parseInt(m[0]);
+    _updateStockPreview(i);
+    // ボタン選択状態も更新
+    for (let n = 1; n <= 3; n++) {
+      const btn = document.getElementById(`timepill-${i}-${n}`);
+      if (!btn) continue;
+      const active = n === c.timesPerDay;
+      btn.style.background   = active ? 'var(--accent)' : 'var(--surface2)';
+      btn.style.color        = active ? '#0d1420' : 'var(--text2)';
+      btn.style.borderColor  = active ? 'var(--accent)' : 'var(--border2)';
+      btn.style.fontWeight   = active ? '700' : '400';
+    }
   }
 }
 
-// ── 選択された薬を入力欄に追加 ──
+// ─── チェック切り替え ─────────────────────────────────────────────────────
+function toggleOcrCandidate(i) {
+  const c = _ocrCandidates[i];
+  if (!c) return;
+  c.selected = !c.selected;
+  const card  = document.getElementById(`ocrcard-${i}`);
+  const check = document.getElementById(`ocrcheck-${i}`);
+  if (card)  card.style.borderColor       = c.selected ? 'var(--purple)' : 'var(--border)';
+  if (check) {
+    check.style.background  = c.selected ? 'var(--purple)' : 'transparent';
+    check.style.borderColor = c.selected ? 'var(--purple)' : 'var(--border2)';
+    check.textContent       = c.selected ? '✓' : '';
+  }
+}
+
+// ─── 選択薬を登録 ─────────────────────────────────────────────────────────
 function applyOcrResults() {
   const selected = _ocrCandidates.filter(c => c.selected);
-  if (selected.length === 0) {
-    showToast('薬が選択されていません');
-    return;
-  }
+  if (selected.length === 0) { showToast('薬が選択されていません'); return; }
 
-  // 既存のカードを一度すべて折りたたんで新しいカードを追加
   selected.forEach(drug => {
-    // daysSupplyがあれば初期stockを「処方日数 × 1日3回 × 1錠」の保守的な値として算出
-    // 実際の用法が判明している場合はその値で上書き
-    let initStock = 0;
-    if (drug.daysSupply > 0) {
-      const doseNum  = parseFloat((drug.dose || '').match(/(\d+(?:\.\d+)?)/)?.[1] || '1') || 1;
-      const usageTxt = drug.usage || '';
-      const timesPerDay = /1日3回|3回|三回/.test(usageTxt) ? 3
-                        : /1日2回|2回|二回/.test(usageTxt) ? 2
-                        : 1; // デフォルト1回/日
-      initStock = Math.round(doseNum * timesPerDay * drug.daysSupply);
-    }
+    const stock = _calcInitStock(drug);
     addMedCard({
-      name:       drug.name,
-      form:       drug.dose || '',
-      note:       drug.usage || '',
-      frequency:  drug.frequency || 'daily',
-      prn:        drug.frequency === 'prn',
-      daysSupply: drug.daysSupply || '',
-      prescDate:  drug.prescDate  || '',
-      stock:      initStock > 0 ? String(initStock) : '',
+      name:        drug.name,
+      form:        drug.dose || '',
+      note:        drug.usage || '',
+      frequency:   drug.frequency || 'daily',
+      prn:         drug.frequency === 'prn',
+      daysSupply:  drug.daysSupply || '',
+      prescDate:   drug.prescDate  || '',
+      stock:       stock > 0 ? String(stock) : '',
+      // タイミングを用法から自動判定
+      timings:     _inferTimings(drug.usage || ''),
+      timingDoses: _inferTimingDoses(drug),
     });
   });
 
   dismissOcrPanel();
-  showToast(`✅ ${selected.length}種類の薬を追加しました`);
-
-  // 薬カードリストまでスクロール
+  showToast(`✅ ${selected.length}種類の薬を登録しました`);
   const list = document.getElementById('med-cards-list');
-  if (list) setTimeout(() => list.scrollIntoView({ behavior:'smooth', block:'nearest' }), 100);
+  if (list) setTimeout(() => list.scrollIntoView({ behavior:'smooth', block:'nearest' }), 120);
 }
 
-// ── OCR パネルを閉じる ──
+// ─── 用法文字列からタイミングキーを推定 ──────────────────────────────────
+function _inferTimings(usage) {
+  if (!usage) return ['after_breakfast'];
+  const u = usage;
+  const res = [];
+  if (/朝食前|起床時/.test(u))      res.push('before_breakfast');
+  if (/朝食後|朝食時|毎朝/.test(u)) res.push('after_breakfast');
+  if (/昼食前/.test(u))             res.push('before_lunch');
+  if (/昼食後|昼食時|毎昼/.test(u)) res.push('after_lunch');
+  if (/夕食前/.test(u))             res.push('before_dinner');
+  if (/夕食後|夕食時|毎夕|毎夜/.test(u)) res.push('after_dinner');
+  if (/就寝前|寝る前/.test(u))      res.push('bedtime');
+  if (/1日3回|三回|毎食後/.test(u)) return ['after_breakfast','after_lunch','after_dinner'];
+  if (/1日2回|二回/.test(u))        return res.length > 0 ? res : ['after_breakfast','after_dinner'];
+  return res.length > 0 ? res : ['after_breakfast'];
+}
+
+// ─── 用法からタイミング別用量マップを生成 ────────────────────────────────
+function _inferTimingDoses(drug) {
+  const timings = _inferTimings(drug.usage || '');
+  const doseStr = `${drug.dosePerTake || 1}錠`;
+  const map = {};
+  for (const t of timings) map[t] = doseStr;
+  return map;
+}
+
+// ─── OCRパネルを閉じる ────────────────────────────────────────────────────
 function dismissOcrPanel() {
-  const panel    = document.getElementById('ocr-result-panel');
-  const progress = document.getElementById('ocr-progress');
-  if (panel)    panel.style.display    = 'none';
-  if (progress) progress.style.display = 'none';
+  const panel = document.getElementById('ocr-result-panel');
+  const prog  = document.getElementById('ocr-progress');
+  if (panel) panel.style.display = 'none';
+  if (prog)  prog.style.display  = 'none';
   _ocrCandidates = [];
 }
+
+// ─── OCR timepill ヘルパー ───────────────────────────────────────────────
+function _selectTimePill(i, n) {
+  _ocrCandidates[i].timesPerDay = n;
+  _updateStockPreview(i);
+  for (let x = 1; x <= 3; x++) {
+    const btn = document.getElementById(`timepill-${i}-${x}`);
+    if (!btn) continue;
+    const active = x === n;
+    btn.style.background  = active ? 'var(--accent)' : 'var(--surface2)';
+    btn.style.color       = active ? '#0d1420'       : 'var(--text2)';
+    btn.style.borderColor = active ? 'var(--accent)'  : 'var(--border2)';
+    btn.style.fontWeight  = active ? '700'            : '400';
+  }
+}
+
+
 
 function cleanupDuplicateMeds() {
   try {
@@ -7725,18 +7913,7 @@ function saveMedicine() {
     monthDay:  monthDay2,
     color:     _medColor,
     daysSupply: parseInt(document.getElementById('med-days-supply')?.value||'0')||null,
-    stock: (() => {
-      const manualStock = parseInt(document.getElementById('med-stock')?.value||'0')||0;
-      const ds = parseInt(document.getElementById('med-days-supply')?.value||'0')||0;
-      if (manualStock > 0) return manualStock;
-      if (ds > 0) {
-        // 処方日数 × 1日服用回数 × 1回量 = 初期在庫
-        const tc = timings.length || 1;
-        const da = parseFloat(timingDoses[timings[0]] || '1') || 1;
-        return Math.round(da * tc * ds);
-      }
-      return 0;
-    })(),
+    stock:      parseInt(document.getElementById('med-stock')?.value||'0')||0,
     prescDate:  document.getElementById('med-presc-date')?.value || null,
     createdAt: existingMed?.createdAt || new Date().toISOString()
   };
@@ -8009,20 +8186,8 @@ function renderMedicineLog() {
  * stock が設定されていない場合は空文字を返す
  */
 function _stockBadgeHTML(med) {
-  // stockが未設定かつdaysSupplyがある場合 → 初期stockを動的算出して表示
-  let stock = (typeof med.stock === 'number') ? med.stock
-            : (med.stock !== undefined && med.stock !== null && med.stock !== '')
-              ? parseInt(med.stock) || 0
-              : -1; // -1 = 未設定
-
-  // 未設定でdaysSupplyがある場合は処方日数から推定
-  if (stock < 0 && med.daysSupply > 0) {
-    const tc2 = (med.timings || []).length || 1;
-    const da2 = parseFloat(med.doseAmount || '1') || 1;
-    stock = Math.round(da2 * tc2 * med.daysSupply);
-  }
-
-  if (stock < 0) return ''; // 本当に未設定
+  if (typeof med.stock !== 'number' && !med.stock) return '';
+  const stock = typeof med.stock === 'number' ? med.stock : parseInt(med.stock)||0;
 
   let dosePerTake = 1;
   const doseAmt = med.doseAmount || (med.timingDoses ? Object.values(med.timingDoses)[0] : '') || '';
@@ -8033,26 +8198,20 @@ function _stockBadgeHTML(med) {
   const dosePerDay = dosePerTake * timingsCount;
   const daysLeft = dosePerDay > 0 ? Math.floor(stock / dosePerDay) : stock;
 
-  let color, bg, icon, urgency = '';
+  let color, bg, icon;
   if (daysLeft <= 0) {
     color = 'var(--red)'; bg = 'var(--red-dim)'; icon = '🚨';
-    urgency = 'font-weight:800;animation:pulse 1s ease-in-out infinite;';
   } else if (daysLeft <= 3) {
     color = 'var(--red)'; bg = 'var(--red-dim)'; icon = '⚠️';
-    urgency = 'font-weight:700;';
   } else if (daysLeft <= 7) {
     color = 'var(--amber)'; bg = 'var(--amber-dim)'; icon = '📉';
-    urgency = 'font-weight:600;';
   } else {
     color = 'var(--green)'; bg = 'var(--green-dim)'; icon = '📦';
   }
 
-  const daysText = daysLeft <= 0
-    ? '残薬なし！受診が必要です'
-    : `残薬：あと ${daysLeft} 日分`;
-
-  return `<div style="display:inline-flex;align-items:center;gap:4px;margin-top:3px;padding:3px 9px;border-radius:10px;background:${bg};border:1px solid ${color};font-size:11px;color:${color};${urgency}">
-    ${icon} ${daysText}<span style="opacity:0.7;margin-left:3px;">(${stock}錠/包)</span>
+  const daysText = daysLeft <= 0 ? '残薬なし' : `あと約${daysLeft}日分`;
+  return `<div style="display:inline-flex;align-items:center;gap:4px;margin-top:3px;padding:2px 8px;border-radius:10px;background:${bg};border:1px solid ${color};font-size:11px;color:${color};font-weight:600;">
+    ${icon} ${daysText}（残${stock}）
   </div>`;
 }
 
@@ -8064,17 +8223,7 @@ function migrateMedStock() {
     const meds = loadMedicines();
     let changed = false;
     meds.forEach(m => {
-      // daysSupply がある場合、stock が未設定または0なら初期在庫を設定
-      if (typeof m.daysSupply !== 'undefined' && m.daysSupply > 0 &&
-          (typeof m.stock === 'undefined' || m.stock === 0)) {
-        // 1日の服用回数 × daysSupply = 初期stock
-        const timingsCount = (m.timings || []).length || 1;
-        const doseAmt = m.doseAmount || '1';
-        const doseNum = parseFloat(doseAmt) || 1;
-        m.stock = Math.round(doseNum * timingsCount * m.daysSupply);
-        changed = true;
-      }
-      if (typeof m.stock      === 'undefined') { m.stock     = 0;    changed = true; }
+      if (typeof m.stock     === 'undefined') { m.stock     = 0;    changed = true; }
       if (typeof m.daysSupply === 'undefined') { m.daysSupply = null; changed = true; }
       if (typeof m.prescDate  === 'undefined') { m.prescDate  = null; changed = true; }
     });
