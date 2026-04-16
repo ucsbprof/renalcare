@@ -6590,34 +6590,73 @@ function dictionaryMatchDrugs(text) {
   return found;
 }
 
-// ─── 画像前処理：グレースケール + OTSU二値化 + 解像度正規化 ─────────────
+// ─── 画像前処理 v5：グレースケール + コントラスト強調 + アンシャープマスク + OTSU二値化 ───
 async function _enhanceImageForOcr(dataUrl) {
   return new Promise(resolve => {
     const img = new Image();
     img.onload = () => {
-      // 3000px以上は圧縮、小さすぎる場合は拡大
-      const TARGET_W = 2400;
+      // ── 解像度正規化（処方箋シールは小さいため積極的に拡大） ──────────────
+      const TARGET_W = 2600;
       let w = img.naturalWidth, h = img.naturalHeight;
-      const scale = w > TARGET_W ? TARGET_W / w : (w < 800 ? 800 / w : 1);
+      const scale = w > TARGET_W ? TARGET_W / w : (w < 900 ? Math.min(3.0, 900 / w) : 1);
       w = Math.round(w * scale); h = Math.round(h * scale);
 
       const canvas = document.createElement('canvas');
       canvas.width = w; canvas.height = h;
       const ctx = canvas.getContext('2d');
+      // 高品質リサンプリング
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
       ctx.drawImage(img, 0, 0, w, h);
 
       const imageData = ctx.getImageData(0, 0, w, h);
       const d = imageData.data;
 
-      // Step 1: グレースケール化
+      // ── Step 1: グレースケール化（輝度重み付き） ─────────────────────────
       const gray = new Uint8Array(w * h);
       for (let i = 0; i < w * h; i++) {
         gray[i] = Math.round(0.299 * d[i*4] + 0.587 * d[i*4+1] + 0.114 * d[i*4+2]);
       }
 
-      // Step 2: OTSU法で最適閾値を算出
+      // ── Step 2: コントラスト強調（S字トーンカーブ） ───────────────────────
+      const contrast = new Uint8Array(256);
+      for (let i = 0; i < 256; i++) {
+        // midpoint=128 で S字カーブ（alpha=1.8 が強め）
+        const x = (i - 128) / 128;
+        const s = x / (1 - Math.abs(x) * 0.7 + 0.0001);
+        contrast[i] = Math.min(255, Math.max(0, Math.round(s * 100 + 128)));
+      }
+      const grayC = new Uint8Array(w * h);
+      for (let i = 0; i < w * h; i++) grayC[i] = contrast[gray[i]];
+
+      // ── Step 3: アンシャープマスク（ぼやけ文字の輪郭強調） ───────────────
+      // 3x3 ガウシアンブラー（σ≈0.8）
+      const blur = new Float32Array(w * h);
+      const kw = [1, 2, 1, 2, 4, 2, 1, 2, 1]; // Gaussian 3x3 (sum=16)
+      for (let y = 1; y < h - 1; y++) {
+        for (let x = 1; x < w - 1; x++) {
+          let acc = 0;
+          for (let dy = -1; dy <= 1; dy++) {
+            for (let dx = -1; dx <= 1; dx++) {
+              acc += grayC[(y + dy) * w + (x + dx)] * kw[(dy + 1) * 3 + (dx + 1)];
+            }
+          }
+          blur[y * w + x] = acc / 16;
+        }
+      }
+      // エッジ行列のコピー
+      for (let x = 0; x < w; x++) { blur[x] = grayC[x]; blur[(h-1)*w+x] = grayC[(h-1)*w+x]; }
+      for (let y = 0; y < h; y++) { blur[y*w] = grayC[y*w]; blur[y*w+w-1] = grayC[y*w+w-1]; }
+
+      const sharp = new Uint8Array(w * h);
+      const AMOUNT = 1.4; // アンシャープ強度
+      for (let i = 0; i < w * h; i++) {
+        sharp[i] = Math.min(255, Math.max(0, Math.round(grayC[i] + AMOUNT * (grayC[i] - blur[i]))));
+      }
+
+      // ── Step 4: OTSU法で最適閾値算出 ─────────────────────────────────────
       const hist = new Array(256).fill(0);
-      for (let v of gray) hist[v]++;
+      for (let v of sharp) hist[v]++;
       const total = w * h;
       let sum = 0;
       for (let i = 0; i < 256; i++) sum += i * hist[i];
@@ -6633,24 +6672,25 @@ async function _enhanceImageForOcr(dataUrl) {
         if (v > maxVar) { maxVar = v; threshold = t; }
       }
 
-      // Step 3: 二値化 + 軽いコントラスト強化（OTSU閾値±20範囲は線形補間）
+      // ── Step 5: ソフト二値化（閾値近傍は中間調維持でTesseractに優しく） ──
       for (let i = 0; i < w * h; i++) {
-        let v = gray[i];
-        // 閾値から遠いピクセルはより白 or 黒に押し出す
-        if (v < threshold - 20)      v = Math.max(0,   Math.round(v * 0.6));
-        else if (v > threshold + 20) v = Math.min(255, Math.round(128 + (v - 128) * 1.5));
+        let v = sharp[i];
+        const dist = v - threshold;
+        if (dist < -25)       v = Math.max(0,   Math.round(v * 0.5));       // 黒側：強く黒に
+        else if (dist > 25)   v = Math.min(255, Math.round(200 + dist * 0.7)); // 白側：強く白に
+        else                  v = dist < 0 ? Math.round(v * 0.75) : Math.round(150 + dist * 2); // 閾値周辺：グラデーション
         d[i*4] = d[i*4+1] = d[i*4+2] = v;
         d[i*4+3] = 255;
       }
       ctx.putImageData(imageData, 0, 0);
-      resolve(canvas.toDataURL('image/png', 0.95));
+      resolve(canvas.toDataURL('image/png', 1.0));
     };
     img.onerror = () => resolve(dataUrl);
     img.src = dataUrl;
   });
 }
 
-// ─── OCR実行コア：PSM6 + PSM11 デュアルパス ──────────────────────────────
+// ─── OCR実行コア v5：PSM6 + PSM11 デュアルパス + 信頼度取得 ─────────────
 async function runOcr(imageDataUrl, onProgress) {
   let enhanced = imageDataUrl;
   try { enhanced = await _enhanceImageForOcr(imageDataUrl); } catch(e) {}
@@ -6675,7 +6715,12 @@ async function runOcr(imageDataUrl, onProgress) {
           }
         },
       });
-      return r?.data?.text || '';
+      // words 配列から低信頼トークンを補正したテキストを生成
+      const words = r?.data?.words || [];
+      const suggestedText = _applySuggestCorrection(words);
+      // 補正版と元テキストを統合（補正版を優先）
+      const rawText = r?.data?.text || '';
+      return suggestedText || rawText;
     } catch(e) { return ''; }
   }
 
@@ -6801,16 +6846,101 @@ async function loadAndOcr(file, onProgress) {
 }
 
 // ============================================================
-// ===== 処方箋シール 構造解析 v4 — EPARK 相当 =====
+// ===== EPARK式：接尾辞ベース強制薬名結合 v5 =====
 // ============================================================
-let _ocrCandidates = [];
+
+/** 薬名接尾辞リスト（EPARKお薬手帳準拠） */
+const DRUG_SUFFIXES = [
+  '配合錠', 'OD錠', 'LD錠', 'HD錠', 'DS錠', 'SR錠', 'CR錠', 'XR錠',
+  'カプセル', '軟カプセル', '硬カプセル',
+  '点眼液', '点眼', '点耳液', '点鼻液',
+  '軟膏', 'クリーム', 'ゲル', 'ローション',
+  'テープ', 'パッチ', '貼付剤',
+  'シロップ', '懸濁液', '溶液', '注射液',
+  '吸入粉末', '吸入液', '吸入剤',
+  '細粒', '顆粒', '散', '末',
+  '坐剤', '坐薬',
+  '錠',                       // 汎用は最後（より具体的なものを先に）
+];
+
+/**
+ * 接尾辞ベース強制結合
+ * OCRで分断されたテキストから「前15文字以内の空白を詰めて薬名ブロックを生成」
+ * 例: "アムロ ジピン 錠 5mg" → "アムロジピン錠5mg"
+ */
+function _joinBySuffix(text) {
+  let result = text;
+  for (const suf of DRUG_SUFFIXES) {
+    // 接尾辞の直前15文字以内にある空白・改行をすべて削除
+    const escaped = suf.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    // パターン: (先行する日本語文字列)（空白混じり）(接尾辞)
+    // 先行部分の空白を詰める
+    const re = new RegExp(
+      `([ァ-ヶーぁ-ゖ\\u4E00-\\u9FAF][ァ-ヶーぁ-ゖ\\u4E00-\\u9FAFa-zA-Z0-9\\s]{0,13})\\s+(${escaped})`,
+      'g'
+    );
+    result = result.replace(re, (match, pre, suffix) => {
+      return pre.replace(/\s+/g, '') + suffix;
+    });
+  }
+  return result;
+}
+
+// ─── 強化版構造解析用正規表現（EPARK準拠） ─────────────────────────────────
+const RE_STRUCT = {
+  // 【用法】1日[1-4]回、分[1-4]、食前後中、就寝前
+  usage: /(?:1日[1-9１-９]回|一日[1-9]回|分[1-4]|毎(?:食前|食後|食間)|朝食(?:前|後)|昼食(?:前|後)|夕食(?:前|後)|就寝前|寝る前|起床時|頓服|症状時)/g,
+  // 【日数】xx日分 または xx日間
+  days:  /([0-9０-９]{1,3})\s*日(?:分|間)/g,
+  // 【用量】数字+単位（小数点対応）
+  dose:  /([0-9０-９]+(?:[.．][0-9０-９]+)?)\s*(錠|cp|カプセル|包|g|mg|μg|mL|ml|単位)/gi,
+};
+
+/**
+ * 信頼度の低いトークン（confidence < CONF_THRESH）を文脈から補正
+ * Tesseract の word-level confidence が取れる場合に利用
+ */
+const CONF_THRESH = 60; // 60%未満を低信頼とみなす
+
+/**
+ * 低信頼トークンのサジェスト補正
+ * 前後の文字から薬名辞書に最も近い候補に置換する
+ */
+function _applySuggestCorrection(words) {
+  // words: [{text, conf}] の配列（Tesseract の words 配列）
+  if (!words || !Array.isArray(words)) return '';
+  return words.map((w, idx) => {
+    if ((w.confidence ?? 100) >= CONF_THRESH) return w.text;
+    // 低信頼: 前後2語のコンテキストで辞書から候補を探す
+    const ctx = [
+      words[idx - 2]?.text || '',
+      words[idx - 1]?.text || '',
+      w.text,
+      words[idx + 1]?.text || '',
+      words[idx + 2]?.text || '',
+    ].join('');
+    // 文字長が近い薬名を候補にする（±3文字）
+    const len = w.text.length;
+    const candidates = DRUG_DICT.filter(e =>
+      Math.abs(e.name.length - len) <= 3 && ctx.includes(e.name.slice(0, 2))
+    );
+    if (candidates.length > 0) {
+      // 最初の1文字が一致するものを優先
+      const best = candidates.find(e => e.name[0] === w.text[0]) || candidates[0];
+      return best.name;
+    }
+    return w.text; // 補正不可の場合はそのまま
+  }).join(' ');
+}
+
+
 
 // ─── メイン解析ループ ─────────────────────────────────────────────────────
 function parseOcrText(rawText) {
   const candidates = [];
 
-  // ── Step 1: シール全体から「日付・処方日数」を一括抽出 ──────────────────
-  const fullText = rawText;
+  // ── Step 0（NEW）: 接尾辞ベース強制結合 → 「あ、む、ろ」分断を物理的に修復 ─
+  const fullText = _joinBySuffix(rawText);
 
   // 調剤日：令和 / 平成 / 西暦 / 2桁年
   const DATE_PATS = [
@@ -6850,16 +6980,36 @@ function parseOcrText(rawText) {
   const lines = fullText.split(/[\n\r]+/).map(l => l.trim()).filter(l => l.length > 1);
 
   // 薬名正規表現パターン群
-  // パターンA: 「薬名＋剤形＋強度」例：アムロジピン錠5mg
-  const PAT_DRUG_FULL = /([ァ-ヶーぁ-ゖ\u4E00-\u9FAF]{2,}(?:[A-Za-z]{0,6})?)\s*(?:錠|カプセル|カプ|散|細粒|顆粒|液|シロップ|注射液?|パッチ|テープ|クリーム|軟膏|点眼液?|点鼻液?|吸入液?|ゼリー|配合錠|配合散|配合顆粒)\s*(?:\d+(?:\.\d+)?\s*(?:mg|μg|mL|g|単位|%)?)?/g;
+  // パターンA: 「薬名＋剤形＋強度」接尾辞リストをDRUG_SUFFIXESと同期
+  const sufPat = DRUG_SUFFIXES.map(s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
+  const PAT_DRUG_FULL = new RegExp(
+    `([ァ-ヶーぁ-ゖ\\u4E00-\\u9FAF]{2,}(?:[A-Za-z]{0,8})?)\\s*(?:${sufPat})\\s*(?:\\d+(?:\\.\\d+)?\\s*(?:mg|μg|mL|ml|g|単位|%|IU)?)?`,
+    'g'
+  );
   // パターンB: 英語薬名＋剤形
   const PAT_DRUG_ENG = /[A-Z][A-Za-z]{2,}(?:\s*\d+(?:\.\d+)?\s*(?:mg|μg|mL|g))?/g;
 
-  // 用法パターン（強化版）
-  const PAT_USAGE = /(?:(?:1日|一日|毎日)\s*[1-9１-９](?:回|錠|カプセル|包)|毎(?:食前|食後|食間|朝|昼|夕|夜|就寝前)|朝食(?:前|後|時)|昼食(?:前|後|時)|夕食(?:前|後|時)|就寝前|寝る前|起床時|頓服|症状時|発熱時|疼痛時|眠れない時)/g;
+  // 【用法】EPARK準拠強化版（分[1-4]・就寝前・食間 等を追加）
+  const PAT_USAGE = new RegExp(
+    '(?:' +
+      '(?:1日|一日|毎日)\\s*[1-9１-９]\\s*回|' +       // 1日3回
+      '分\\s*[1-4]|' +                                  // 分3（分割投与）
+      '毎食(?:前|後|間)|' +                             // 毎食後
+      '[毎]?朝食?(?:前|後|時)|' +                       // 朝食後
+      '[毎]?昼食?(?:前|後|時)|' +                       // 昼食前
+      '[毎]?夕食?(?:前|後|時)|' +                       // 夕食後
+      '就寝前|寝る前|起床時|食間|' +                    // その他タイミング
+      '頓服|症状時|発熱時|疼痛時|眠れない時|' +         // 頓服系
+      '朝昼夕\\s*各|朝夕各|朝夕[1-9]' +                 // 分割記述
+    ')',
+    'g'
+  );
 
-  // 用量パターン（小数対応・剤形多様）
-  const PAT_DOSE = /(\d+(?:\.\d+)?)\s*(?:錠|カプセル|包|バッグ|mL|g|単位|μg|本|個)/g;
+  // 【日数】([0-9]+)日分 — 全角数字にも対応
+  const PAT_DAYS = /([0-9０-９]{1,3})\s*日(?:分|間)/g;
+
+  // 【用量】([0-9.]+)\s*(錠|cp|g|mg|ml) — 全角数字・小数対応（EPARK準拠）
+  const PAT_DOSE = /([0-9０-９]+(?:[.．][0-9０-９]+)?)\s*(?:錠|cp|カプセル|包|バッグ|mL|ml|g|mg|μg|単位|本|個)/g;
 
   // ゴミ行フィルタ
   const NOISE_LINE = /(?:病院|医院|クリニック|薬局|調剤|内科|外科|整形|皮膚科|眼科|耳鼻科|泌尿器|循環器|腎臓科|患者|氏名|生年|保険|番号|受付|診察|担当|医師|先生|お薬|説明書|添付|袋|封筒|シール|処方箋|調剤済)/;
@@ -6911,34 +7061,43 @@ function parseOcrText(rawText) {
     // ─ 用法抽出 ─────────────────────────────────────────────────────────
     const usages = [...(line.matchAll(PAT_USAGE) || [])].map(m => m[0]);
     if (usages.length > 0) {
-      // 直前のdrug候補に紐付け
       const target = currentDrug || candidates[candidates.length - 1];
       if (target) {
         target.usage = usages.join(' / ');
         if (/頓服|症状時|疼痛時|発熱時|眠れない/.test(target.usage)) target.frequency = 'prn';
-        // 1日回数を解析
-        const timesM = target.usage.match(/(?:1日|一日|毎日)\s*([1-9])/);
+        // 1日回数を解析（「1日3回」「分3」両対応）
+        const timesM  = target.usage.match(/(?:1日|一日|毎日)\s*([1-9])\s*回/);
+        const bunM    = target.usage.match(/分\s*([1-4])/);
         if (timesM) target.timesPerDay = parseInt(timesM[1]);
+        else if (bunM) target.timesPerDay = parseInt(bunM[1]);
         if (/毎食/.test(target.usage)) target.timesPerDay = 3;
-        if (/朝|昼|夕.*各/.test(target.usage)) target.timesPerDay = 3;
+        if (/朝昼夕|朝夕各|朝夕[1-9]/.test(target.usage)) target.timesPerDay = 3;
+        if (/朝夕\s*各|朝夕[12]/.test(target.usage) && target.timesPerDay !== 3) target.timesPerDay = 2;
       }
     }
 
-    // ─ 用量抽出 ─────────────────────────────────────────────────────────
+    // ─ 用量抽出（EPARK式：全角数字・小数点対応） ──────────────────────────
     const doses = [...(line.matchAll(PAT_DOSE) || [])];
     if (doses.length > 0) {
       const target = currentDrug || candidates[candidates.length - 1];
       if (target) {
         target.dose = doses[0][0];
-        target.dosePerTake = parseFloat(doses[0][1]) || 1;
+        // 全角数字を半角に変換してからparseFloat
+        const numStr = doses[0][1].replace(/[０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0))
+                                   .replace(/．/g, '.');
+        target.dosePerTake = parseFloat(numStr) || 1;
       }
     }
 
-    // ─ 行内処方日数（個別薬に対して上書き） ────────────────────────────
-    const daysM = line.match(/(\d+)\s*日(?:分|間)/);
-    if (daysM && parseInt(daysM[1]) > 3) {
-      const target = currentDrug || candidates[candidates.length - 1];
-      if (target) target.daysSupply = parseInt(daysM[1]);
+    // ─ 行内処方日数（全角数字対応・個別薬に対して上書き） ─────────────────
+    const daysMatch = [...(line.matchAll(PAT_DAYS) || [])];
+    if (daysMatch.length > 0) {
+      const numStr = daysMatch[0][1].replace(/[０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0));
+      const days = parseInt(numStr);
+      if (days > 3) {
+        const target = currentDrug || candidates[candidates.length - 1];
+        if (target) target.daysSupply = days;
+      }
     }
   }
 
@@ -6963,7 +7122,7 @@ function parseOcrText(rawText) {
     }
   }
 
-  // ── Step 5: 重複除去 + スコアリング ──────────────────────────────────────
+  // ── Step 5: 重複除去 + スコアリング（3段階信頼度対応） ──────────────────
   const seen = new Set();
   const unique = candidates.filter(c => {
     const key = c.name.replace(/\s/g,'').toLowerCase();
@@ -6971,8 +7130,16 @@ function parseOcrText(rawText) {
     seen.add(key); return true;
   });
 
+  // 信頼度の再評価：用法・用量・日数が1つも取れなかった場合は low に降格
+  unique.forEach(c => {
+    if (c.confidence === 'medium' && !c.usage && !c.dose && !c.daysSupply) {
+      c.confidence = 'low';
+    }
+  });
+
   return unique.sort((a, b) => {
-    const score = c => (c.confidence === 'high' ? 4 : 0)
+    const confScore = c => c.confidence === 'high' ? 8 : c.confidence === 'medium' ? 4 : 0;
+    const score = c => confScore(c)
                      + (c.usage       ? 2 : 0)
                      + (c.dose        ? 1 : 0)
                      + (c.daysSupply  ? 1 : 0);
@@ -6994,12 +7161,19 @@ async function handleOcrImage(event) {
   if (progEl)  progEl.style.display  = '';
   if (panelEl) panelEl.style.display = 'none';
   if (barEl)   barEl.style.width     = '0%';
-  if (labelEl) labelEl.textContent   = '画像準備中...';
+  if (labelEl) labelEl.textContent   = '① 画像を準備しています...';
 
   try {
     const cleanedText = await loadAndOcr(file, (pct, label) => {
       if (barEl)   barEl.style.width   = pct + '%';
-      if (labelEl) labelEl.textContent = label;
+      // 進捗に応じてEPARK風の5段階ステップラベルを表示
+      if (labelEl) {
+        if      (pct <  5)  labelEl.textContent = '① 画像補正中（グレースケール・アンシャープ）...';
+        else if (pct < 10)  labelEl.textContent = '② OTSU二値化 処理中...';
+        else if (pct < 50)  labelEl.textContent = '③ ' + label;
+        else if (pct < 90)  labelEl.textContent = '④ ' + label;
+        else                labelEl.textContent = '⑤ 辞書マッチング・構造解析中...';
+      }
     });
 
     if (progEl) progEl.style.display = 'none';
@@ -7019,7 +7193,7 @@ async function handleOcrImage(event) {
   }
 }
 
-// ─── EPARK風プレビューUI ─────────────────────────────────────────────────
+// ─── EPARK式 解析結果プレビューUI v5 ────────────────────────────────────
 function renderOcrResults(candidates) {
   const listEl = document.getElementById('ocr-result-list');
   const panel  = document.getElementById('ocr-result-panel');
@@ -7027,123 +7201,241 @@ function renderOcrResults(candidates) {
 
   if (candidates.length === 0) {
     listEl.innerHTML = `
-      <div style="text-align:center;padding:20px 12px;color:var(--text3);">
-        <div style="font-size:28px;margin-bottom:8px;">🔍</div>
-        <div style="font-size:13px;font-weight:600;">薬の名前を認識できませんでした</div>
-        <div style="font-size:12px;margin-top:6px;line-height:1.6;">
-          ・明るい場所で撮影し直してください<br>
-          ・シールにピントを合わせてください<br>
-          ・手動で薬名を入力することもできます
+      <div style="text-align:center;padding:24px 12px;color:var(--text3);">
+        <div style="font-size:36px;margin-bottom:10px;">🔍</div>
+        <div style="font-size:14px;font-weight:700;color:var(--text2);">薬の名前を認識できませんでした</div>
+        <div style="font-size:12px;margin-top:8px;line-height:1.8;background:var(--surface2);border-radius:10px;padding:12px;">
+          ✦ 明るい場所でシールに密着して撮影<br>
+          ✦ シール全体がフレームに入るように<br>
+          ✦ 手ブレに注意（台において撮影推奨）
         </div>
       </div>`;
     panel.style.display = '';
     return;
   }
 
-  // 薬ごとにEPARK風カード + インライン編集
-  listEl.innerHTML = candidates.map((c, i) => {
-    // 残薬日数の事前計算
-    const daysLeft = _calcDaysLeft(c);
+  // ── 解析サマリーバナー ────────────────────────────────────────────────
+  const highConf  = candidates.filter(c => c.confidence === 'high').length;
+  const medConf   = candidates.filter(c => c.confidence === 'medium').length;
+  const lowConf   = candidates.filter(c => c.confidence === 'low').length;
+  const hasSuggest = lowConf > 0 || medConf > 0;
+
+  const summaryHtml = `
+    <div style="background:linear-gradient(135deg,rgba(192,132,252,0.12),rgba(79,195,247,0.08));
+                border:1px solid rgba(192,132,252,0.35);border-radius:12px;
+                padding:12px 14px;margin-bottom:10px;">
+      <div style="font-size:12px;font-weight:700;color:var(--purple);margin-bottom:8px;">
+        📋 解析結果 — ${candidates.length}種類の薬を検出
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        ${highConf > 0 ? `<span style="font-size:11px;padding:2px 8px;border-radius:8px;background:var(--green-dim);color:var(--green);border:1px solid var(--green);">✓ 辞書一致 ${highConf}件</span>` : ''}
+        ${medConf  > 0 ? `<span style="font-size:11px;padding:2px 8px;border-radius:8px;background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber);">△ 推定 ${medConf}件</span>` : ''}
+        ${lowConf  > 0 ? `<span style="font-size:11px;padding:2px 8px;border-radius:8px;background:var(--red-dim);color:var(--red);border:1px solid var(--red);">⚠ 要確認 ${lowConf}件</span>` : ''}
+      </div>
+      ${hasSuggest ? `
+        <div style="margin-top:8px;font-size:11px;color:var(--amber);line-height:1.6;
+                    background:var(--amber-dim);border-radius:8px;padding:7px 10px;border:1px solid rgba(252,211,77,0.3);">
+          ⚠️ △推定・⚠要確認の薬名は認識精度が低い可能性があります。<br>
+          登録前に薬名フィールドを必ずご確認・修正してください。
+        </div>` : ''}
+    </div>`;
+
+  // ── 薬ごとカード（EPARK風確認・修正UI） ──────────────────────────────
+  const cardsHtml = candidates.map((c, i) => {
     const stockNum = _calcInitStock(c);
-    const confColor = c.confidence === 'high' ? 'var(--green)' : 'var(--amber)';
-    const confLabel = c.confidence === 'high' ? '✓ 辞書一致' : '△ 推定';
-    const confBg    = c.confidence === 'high' ? 'var(--green-dim)' : 'var(--amber-dim)';
+
+    // 3段階信頼度バッジ
+    let confColor, confLabel, confBg, confBorder, confIcon;
+    if (c.confidence === 'high') {
+      confColor = 'var(--green)'; confBg = 'var(--green-dim)'; confBorder = 'var(--green)';
+      confIcon = '✓'; confLabel = '辞書一致';
+    } else if (c.confidence === 'medium') {
+      confColor = 'var(--amber)'; confBg = 'var(--amber-dim)'; confBorder = 'var(--amber)';
+      confIcon = '△'; confLabel = '推定';
+    } else {
+      confColor = 'var(--red)'; confBg = 'var(--red-dim)'; confBorder = 'var(--red)';
+      confIcon = '⚠'; confLabel = '要確認';
+    }
+
+    // 用法の構造を視覚的に分解して表示
+    const usageParts = (c.usage || '').split('/').map(s => s.trim()).filter(Boolean);
+    const usageBadges = usageParts.map(u =>
+      `<span style="font-size:10px;padding:1px 6px;border-radius:6px;background:rgba(79,195,247,0.12);color:var(--accent);border:1px solid rgba(79,195,247,0.3);">${_escHtml(u)}</span>`
+    ).join('');
+
+    // 低信頼 or 推定の場合、薬名フィールドに警告ボーダー
+    const nameFieldBorder = c.confidence !== 'high'
+      ? `border:1.5px solid ${confBorder};`
+      : 'border:1px solid var(--border2);';
 
     return `
-    <div id="ocrcard-${i}" style="background:var(--surface);border-radius:12px;margin-bottom:8px;border:1.5px solid ${c.selected ? 'var(--purple)' : 'var(--border)'};transition:border-color 0.15s;overflow:hidden;">
+    <div id="ocrcard-${i}"
+         style="background:var(--surface);border-radius:14px;margin-bottom:10px;
+                border:1.5px solid ${c.selected ? 'var(--purple)' : 'var(--border)'};
+                transition:all 0.18s;overflow:hidden;
+                box-shadow:${c.confidence !== 'high' ? `0 0 0 1px ${confBorder}22` : 'none'};">
 
-      <!-- カードヘッダー（チェック + 薬名 + 信頼度） -->
-      <div style="display:flex;align-items:center;gap:10px;padding:12px 12px 8px;cursor:pointer;"
+      <!-- ① カードヘッダー：チェック / 薬名 / 信頼度バッジ群 -->
+      <div style="display:flex;align-items:flex-start;gap:10px;padding:12px 12px 8px;cursor:pointer;"
            onclick="toggleOcrCandidate(${i})">
-        <div id="ocrcheck-${i}" style="width:22px;height:22px;border-radius:6px;border:2px solid ${c.selected ? 'var(--purple)' : 'var(--border2)'};background:${c.selected ? 'var(--purple)' : 'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;color:#fff;transition:all 0.15s;">
+
+        <!-- チェックボックス -->
+        <div id="ocrcheck-${i}"
+             style="width:24px;height:24px;border-radius:7px;flex-shrink:0;margin-top:1px;
+                    border:2px solid ${c.selected ? 'var(--purple)' : 'var(--border2)'};
+                    background:${c.selected ? 'var(--purple)' : 'transparent'};
+                    display:flex;align-items:center;justify-content:center;
+                    font-size:14px;color:#fff;transition:all 0.15s;">
           ${c.selected ? '✓' : ''}
         </div>
+
         <div style="flex:1;min-width:0;">
-          <div style="font-size:15px;font-weight:700;color:var(--text);">${_escHtml(c.name)}</div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;">
-            <span style="font-size:10px;padding:1px 6px;border-radius:8px;background:${confBg};color:${confColor};border:1px solid ${confColor};">${confLabel}</span>
-            ${c.daysSupply ? `<span style="font-size:10px;padding:1px 6px;border-radius:8px;background:rgba(79,195,247,0.15);color:var(--accent);border:1px solid var(--accent);">📦 ${c.daysSupply}日分</span>` : ''}
-            ${c.prescDate  ? `<span style="font-size:10px;padding:1px 6px;border-radius:8px;background:var(--surface2);color:var(--text3);border:1px solid var(--border2);">📅 ${c.prescDate}</span>` : ''}
-            ${c.frequency === 'prn' ? `<span style="font-size:10px;padding:1px 6px;border-radius:8px;background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber);">頓服</span>` : ''}
+          <!-- 薬名 -->
+          <div style="font-size:16px;font-weight:700;color:var(--text);line-height:1.3;">
+            ${_escHtml(c.name)}
           </div>
+          <!-- バッジ行 -->
+          <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:5px;align-items:center;">
+            <!-- 信頼度バッジ -->
+            <span style="font-size:10px;padding:2px 7px;border-radius:8px;
+                         background:${confBg};color:${confColor};border:1px solid ${confBorder};
+                         font-weight:700;">
+              ${confIcon} ${confLabel}
+            </span>
+            ${c.daysSupply ? `<span style="font-size:10px;padding:2px 7px;border-radius:8px;background:rgba(79,195,247,0.13);color:var(--accent);border:1px solid rgba(79,195,247,0.4);">📦 ${c.daysSupply}日分</span>` : ''}
+            ${c.prescDate  ? `<span style="font-size:10px;padding:2px 7px;border-radius:8px;background:var(--surface2);color:var(--text3);border:1px solid var(--border2);">📅 ${c.prescDate}</span>` : ''}
+            ${c.frequency === 'prn' ? `<span style="font-size:10px;padding:2px 7px;border-radius:8px;background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber);">頓服</span>` : ''}
+          </div>
+          <!-- 用法バッジ（あれば） -->
+          ${usageBadges ? `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;">${usageBadges}</div>` : ''}
         </div>
-        <div style="font-size:18px;color:var(--text3);">›</div>
+
+        <div style="font-size:20px;color:var(--text3);align-self:center;">›</div>
       </div>
 
-      <!-- インライン編集フォーム（常時展開） -->
-      <div style="padding:0 12px 12px;border-top:1px solid var(--border);margin-top:2px;padding-top:10px;">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+      <!-- ② 解析結果：確認・修正フォーム（EPARK中間画面） -->
+      <div style="padding:0 12px 13px;border-top:1px solid var(--border);padding-top:11px;">
 
-          <div>
-            <div style="font-size:10px;color:var(--text3);margin-bottom:3px;letter-spacing:.05em;">💊 薬名（修正可）</div>
+        ${c.confidence !== 'high' ? `
+        <div style="background:${confBg};border:1px solid ${confBorder};border-radius:8px;
+                    padding:7px 10px;margin-bottom:9px;font-size:11px;color:${confColor};line-height:1.6;">
+          ${confIcon} <strong>薬名を確認してください</strong><br>
+          認識精度が低いため、以下の薬名フィールドで正しい薬名に修正してください。
+        </div>` : ''}
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:9px;">
+
+          <!-- 薬名フィールド（低信頼は警告ボーダー） -->
+          <div style="grid-column:1/-1;">
+            <div style="font-size:10px;color:var(--text3);margin-bottom:3px;letter-spacing:.05em;display:flex;align-items:center;gap:4px;">
+              💊 薬名（修正可）
+              ${c.confidence !== 'high' ? `<span style="color:${confColor};font-weight:700;">${confIcon} 要確認</span>` : ''}
+            </div>
             <input type="text" value="${_escHtml(c.name)}"
               oninput="_ocrCandidates[${i}].name=this.value;_updateOcrCardHeader(${i})"
-              style="width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:6px 8px;font-size:12px;color:var(--text);font-weight:600;" />
+              style="width:100%;background:var(--surface2);${nameFieldBorder}border-radius:7px;
+                     padding:8px 10px;font-size:13px;color:var(--text);font-weight:700;
+                     font-family:'Noto Sans JP',sans-serif;outline:none;" />
           </div>
 
+          <!-- 剤形・規格 -->
           <div>
             <div style="font-size:10px;color:var(--text3);margin-bottom:3px;letter-spacing:.05em;">📋 剤形・規格</div>
             <input type="text" value="${_escHtml(c.dose || c.form || '')}"
               placeholder="例：5mg 1錠"
               oninput="_ocrCandidates[${i}].dose=this.value"
-              style="width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:6px 8px;font-size:12px;color:var(--text);" />
+              style="width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:7px;
+                     padding:7px 9px;font-size:12px;color:var(--text);font-family:'Noto Sans JP',sans-serif;outline:none;" />
           </div>
 
+          <!-- 用法 -->
           <div>
             <div style="font-size:10px;color:var(--text3);margin-bottom:3px;letter-spacing:.05em;">🕐 用法</div>
             <input type="text" value="${_escHtml(c.usage || '')}"
-              placeholder="例：1日1回 朝食後"
+              placeholder="例：1日3回 毎食後"
               oninput="_ocrCandidates[${i}].usage=this.value;_parseUsageInline(${i})"
-              style="width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:6px 8px;font-size:12px;color:var(--text);" />
+              style="width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:7px;
+                     padding:7px 9px;font-size:12px;color:var(--text);font-family:'Noto Sans JP',sans-serif;outline:none;" />
           </div>
 
+          <!-- 処方日数 -->
           <div>
             <div style="font-size:10px;color:var(--text3);margin-bottom:3px;letter-spacing:.05em;">📦 処方日数</div>
             <div style="display:flex;align-items:center;gap:4px;">
               <input type="number" value="${c.daysSupply || ''}" min="1" max="365"
                 placeholder="28"
                 oninput="_ocrCandidates[${i}].daysSupply=parseInt(this.value)||null;_updateStockPreview(${i})"
-                style="flex:1;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:6px 8px;font-size:12px;color:var(--text);" />
+                style="flex:1;background:var(--surface2);border:1px solid var(--border2);border-radius:7px;
+                       padding:7px 9px;font-size:12px;color:var(--text);outline:none;" />
               <span style="font-size:11px;color:var(--text3);flex-shrink:0;">日分</span>
             </div>
           </div>
 
+          <!-- 1日服用回数 -->
           <div>
-            <div style="font-size:10px;color:var(--text3);margin-bottom:3px;letter-spacing:.05em;">🔢 1日服用回数</div>
+            <div style="font-size:10px;color:var(--text3);margin-bottom:3px;letter-spacing:.05em;">🔢 1日回数</div>
             <div style="display:flex;gap:4px;">
               ${[1,2,3].map(n => `
                 <div onclick="_selectTimePill(${i},${n})"
-                  id="timepill-${i}-${n}" data-n="${n}"
-                  class="times-row-${i}"
-                  style="flex:1;text-align:center;padding:5px 4px;background:${c.timesPerDay===n?'var(--accent)':'var(--surface2)'};color:${c.timesPerDay===n?'#0d1420':'var(--text2)'};border:1px solid ${c.timesPerDay===n?'var(--accent)':'var(--border2)'};border-radius:6px;font-size:12px;font-weight:${c.timesPerDay===n?'700':'400'};cursor:pointer;transition:all .15s;">
+                     id="timepill-${i}-${n}"
+                     style="flex:1;text-align:center;padding:6px 2px;cursor:pointer;border-radius:7px;
+                            font-size:12px;transition:all .15s;
+                            background:${c.timesPerDay===n ? 'var(--accent)' : 'var(--surface2)'};
+                            color:${c.timesPerDay===n ? '#0d1420' : 'var(--text2)'};
+                            border:1.5px solid ${c.timesPerDay===n ? 'var(--accent)' : 'var(--border2)'};
+                            font-weight:${c.timesPerDay===n ? '700' : '400'};">
                   ${n}回
                 </div>`).join('')}
             </div>
           </div>
 
+          <!-- 1回服用量 -->
           <div>
-            <div style="font-size:10px;color:var(--text3);margin-bottom:3px;letter-spacing:.05em;">💊 1回服用量</div>
+            <div style="font-size:10px;color:var(--text3);margin-bottom:3px;letter-spacing:.05em;">💊 1回量</div>
             <div style="display:flex;align-items:center;gap:4px;">
               <input type="number" value="${c.dosePerTake || 1}" min="0.5" max="10" step="0.5"
                 oninput="_ocrCandidates[${i}].dosePerTake=parseFloat(this.value)||1;_updateStockPreview(${i})"
-                style="flex:1;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:6px 8px;font-size:12px;color:var(--text);" />
+                style="flex:1;background:var(--surface2);border:1px solid var(--border2);border-radius:7px;
+                       padding:7px 9px;font-size:12px;color:var(--text);outline:none;" />
               <span style="font-size:11px;color:var(--text3);flex-shrink:0;">錠/包</span>
             </div>
           </div>
-        </div>
 
-        <!-- 残薬プレビュー -->
-        <div id="stock-preview-${i}" style="background:var(--surface2);border-radius:8px;padding:8px 10px;display:flex;align-items:center;justify-content:space-between;">
-          <div style="font-size:11px;color:var(--text2);">自動計算：初期在庫</div>
-          <div style="font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:var(--accent);" id="stock-num-${i}">
-            ${stockNum > 0 ? stockNum + ' 錠/包' : '—'}
+        </div><!-- /grid -->
+
+        <!-- ③ 在庫自動計算プレビュー -->
+        <div id="stock-preview-${i}"
+             style="background:var(--surface2);border-radius:9px;padding:9px 12px;
+                    display:flex;align-items:center;justify-content:space-between;
+                    border:1px solid var(--border);">
+          <div>
+            <div style="font-size:10px;color:var(--text3);">自動計算：初期在庫</div>
+            <div style="font-size:10px;color:var(--text3);margin-top:1px;">
+              ${c.dosePerTake || 1}錠 × ${c.timesPerDay || 1}回 × ${c.daysSupply || '?'}日
+            </div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;color:var(--accent);"
+                 id="stock-num-${i}">
+              ${stockNum > 0 ? stockNum + ' 錠/包' : '—'}
+            </div>
+            ${stockNum > 0 ? `<div style="font-size:10px;color:var(--text3);">${c.daysSupply || 0}日分</div>` : ''}
           </div>
         </div>
-        ${c.rawLine !== '(辞書マッチ)' ? `<div style="font-size:10px;color:var(--text3);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">認識元: ${_escHtml(c.rawLine)}</div>` : ''}
-      </div>
+
+        <!-- 認識元テキスト（デバッグ表示） -->
+        ${c.rawLine && c.rawLine !== '(辞書マッチ)' ? `
+          <div style="font-size:10px;color:var(--text3);margin-top:5px;
+                      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+                      padding:3px 6px;background:var(--surface2);border-radius:5px;">
+            🔤 認識元: ${_escHtml(c.rawLine.slice(0, 60))}${c.rawLine.length > 60 ? '…' : ''}
+          </div>` : ''}
+
+      </div><!-- /form -->
     </div>`;
   }).join('');
 
+  listEl.innerHTML = summaryHtml + cardsHtml;
   panel.style.display = '';
 }
 
@@ -7166,6 +7458,14 @@ function _updateStockPreview(i) {
   const num = _calcInitStock(c);
   const el  = document.getElementById(`stock-num-${i}`);
   if (el) el.textContent = num > 0 ? num + ' 錠/包' : '—';
+  // 計算式テキストも更新（stock-preview内の2行目）
+  const prevEl = document.getElementById(`stock-preview-${i}`);
+  if (prevEl) {
+    const formulaEl = prevEl.querySelector('.stock-formula');
+    if (formulaEl) {
+      formulaEl.textContent = `${c.dosePerTake || 1}錠 × ${c.timesPerDay || 1}回 × ${c.daysSupply || '?'}日`;
+    }
+  }
 }
 function _updateOcrCardHeader(i) {
   const c = _ocrCandidates[i];
