@@ -10,7 +10,108 @@
 <link rel="manifest" href="manifest.json">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Kaisei+Opti:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+
+<!-- ===== Google AdSense ===== -->
+<!-- TODO: あなたのAdSenseパブリッシャーIDに置き換えてください -->
+<!-- 例: ca-pub-XXXXXXXXXXXXXXXXX -->
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXXX"
+     crossorigin="anonymous"></script>
+
 <style>
+/* ===== 時間帯広告モーダル ===== */
+#ad-time-overlay {
+  position: fixed; inset: 0; z-index: 99998;
+  background: rgba(0,0,0,0.75);
+  display: none; align-items: center; justify-content: center;
+  padding: 20px;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: adFadeIn 0.35s ease;
+}
+#ad-time-overlay.open { display: flex; }
+@keyframes adFadeIn { from { opacity:0; } to { opacity:1; } }
+
+#ad-time-box {
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  border-radius: 24px;
+  width: 100%; max-width: 420px;
+  overflow: hidden;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.7);
+  animation: adSlideUp 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes adSlideUp { from { transform: translateY(40px) scale(0.96); opacity:0; } to { transform: translateY(0) scale(1); opacity:1; } }
+
+.ad-time-header {
+  padding: 20px 20px 12px;
+  display: flex; align-items: center; gap: 10px;
+  border-bottom: 1px solid var(--border);
+}
+.ad-time-emoji { font-size: 28px; }
+.ad-time-label {
+  flex: 1;
+  font-family: 'Kaisei Opti', serif;
+  font-size: 18px; color: var(--text);
+}
+.ad-time-close-btn {
+  font-size: 22px; color: var(--text3);
+  cursor: pointer; padding: 4px; line-height: 1;
+  border-radius: 50%; border: none; background: none;
+  transition: color 0.2s, background 0.2s;
+  width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+}
+.ad-time-close-btn:hover { color: var(--text); background: var(--surface2); }
+
+.ad-time-body { padding: 16px 20px; }
+
+.ad-slot-wrapper {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--rs);
+  overflow: hidden;
+  min-height: 250px;
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+}
+.ad-slot-placeholder {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 8px; color: var(--text3); font-size: 12px; padding: 32px 16px; text-align: center;
+}
+.ad-slot-placeholder .ad-p-icon { font-size: 32px; opacity: 0.5; }
+
+.ad-time-footer {
+  padding: 12px 20px 20px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.ad-countdown {
+  text-align: center; font-size: 12px; color: var(--text3);
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.ad-countdown-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px; font-weight: 700; color: var(--accent);
+  min-width: 20px; text-align: center;
+}
+.ad-skip-btn {
+  width: 100%; padding: 13px; border-radius: var(--rs);
+  font-size: 14px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s;
+  border: 1.5px solid var(--border2);
+  background: var(--surface2); color: var(--text2);
+  font-family: 'Noto Sans JP', sans-serif;
+}
+.ad-skip-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.ad-skip-btn:not(:disabled):hover { border-color: var(--accent); color: var(--accent); }
+
+.ad-label-small {
+  text-align: center;
+  font-size: 10px; color: var(--text3);
+  letter-spacing: 1px;
+}
+
+/* プレミアム時は広告モーダル非表示 */
+body.is-premium #ad-time-overlay { display: none !important; }
+
 :root {
   --bg: #0d1420;
   --bg2: #111c2e;
@@ -9474,6 +9575,197 @@ function importAllData(event) {
     <button class="btn btn-ghost btn-full" style="margin-top:8px;" onclick="closeModal('medScheduleModal')">キャンセル</button>
   </div>
 </div>
+
+<!-- ===== 朝昼夜 時間帯広告モーダル ===== -->
+<div id="ad-time-overlay">
+  <div id="ad-time-box">
+    <div class="ad-time-header">
+      <span class="ad-time-emoji" id="ad-time-emoji">☀️</span>
+      <span class="ad-time-label" id="ad-time-label">おはようございます</span>
+      <button class="ad-time-close-btn" id="ad-close-x" onclick="closeAdModal()" title="閉じる">✕</button>
+    </div>
+    <div class="ad-time-body">
+      <div class="ad-label-small" style="margin-bottom:8px;">ADVERTISEMENT</div>
+      <div class="ad-slot-wrapper">
+        <!-- ★ あなたのAdSense広告スロットに置き換えてください ★
+             管理画面 → 広告 → 新しい広告ユニット → ディスプレイ広告
+             data-ad-client と data-ad-slot を取得して下記に設定してください -->
+        <ins class="adsbygoogle"
+             style="display:block;width:100%;min-height:250px;"
+             data-ad-client="ca-pub-XXXXXXXXXXXXXXXXX"
+             data-ad-slot="XXXXXXXXXX"
+             data-ad-format="auto"
+             data-full-width-responsive="true"></ins>
+        <!-- AdSense未設定時のプレースホルダー（設定後は自動で消えます） -->
+        <div class="ad-slot-placeholder" id="ad-placeholder">
+          <span class="ad-p-icon">📢</span>
+          <div style="font-weight:600;color:var(--text2);">広告エリア</div>
+          <div style="font-size:11px;color:var(--text3);line-height:1.6;max-width:240px;">
+            Google AdSenseのパブリッシャーIDと広告スロットIDを<br>HTMLに設定するとここに広告が表示されます
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="ad-time-footer">
+      <div class="ad-countdown">
+        <span id="ad-countdown-msg">閉じるまで</span>
+        <span class="ad-countdown-num" id="ad-countdown-num">5</span>
+        <span>秒</span>
+      </div>
+      <button class="ad-skip-btn" id="ad-skip-btn" onclick="closeAdModal()" disabled>
+        ⏭ スキップして続ける
+      </button>
+      <div class="ad-label-small" id="ad-time-context">今日も健康管理を続けましょう 💪</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// ===== 朝昼夜 時間帯広告システム =====
+// ============================================================
+(function() {
+  const AD_KEY = 'renalcare_ad_shown_dates';
+  const SKIP_SECONDS = 5; // スキップ可能になるまでの秒数
+
+  // 時間帯の定義: [開始時, 終了時, 絵文字, ラベル, サブテキスト, ストレージキー]
+  const AD_SLOTS = [
+    { start: 5,  end: 11, emoji: '☀️',  label: 'おはようございます',   sub: '今日も健康的な一日を！ 🌅',      key: 'morning' },
+    { start: 11, end: 17, emoji: '🌤️', label: 'お昼のお知らせ',        sub: '水分補給は忘れずに 💧',          key: 'noon'    },
+    { start: 17, end: 24, emoji: '🌙',  label: 'お疲れさまでした',      sub: '今日の記録を確認しましょう 📋',   key: 'evening' },
+  ];
+
+  function getTodayKey(slotKey) {
+    const d = new Date();
+    const ds = `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+    return `${ds}_${slotKey}`;
+  }
+
+  function wasShownToday(slotKey) {
+    try {
+      const shown = JSON.parse(localStorage.getItem(AD_KEY) || '{}');
+      return !!shown[getTodayKey(slotKey)];
+    } catch(e) { return false; }
+  }
+
+  function markShownToday(slotKey) {
+    try {
+      const shown = JSON.parse(localStorage.getItem(AD_KEY) || '{}');
+      shown[getTodayKey(slotKey)] = true;
+      // 7日以上前のエントリを削除（容量節約）
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - 7);
+      Object.keys(shown).forEach(k => {
+        const parts = k.split('_');
+        const [y, m, d2] = parts;
+        if (new Date(`${y}-${m}-${d2}`) < cutoff) delete shown[k];
+      });
+      localStorage.setItem(AD_KEY, JSON.stringify(shown));
+    } catch(e) {}
+  }
+
+  function getCurrentSlot() {
+    const h = new Date().getHours();
+    return AD_SLOTS.find(s => h >= s.start && h < s.end) || null;
+  }
+
+  let _countdownTimer = null;
+
+  function startCountdown() {
+    const numEl  = document.getElementById('ad-countdown-num');
+    const skipBtn= document.getElementById('ad-skip-btn');
+    const msgEl  = document.getElementById('ad-countdown-msg');
+    if (!numEl || !skipBtn) return;
+
+    let remaining = SKIP_SECONDS;
+    numEl.textContent = remaining;
+    skipBtn.disabled = true;
+
+    if (_countdownTimer) clearInterval(_countdownTimer);
+    _countdownTimer = setInterval(() => {
+      remaining--;
+      if (remaining <= 0) {
+        clearInterval(_countdownTimer);
+        numEl.textContent = '0';
+        skipBtn.disabled = false;
+        skipBtn.textContent = '✅ 閉じる';
+        if (msgEl) msgEl.textContent = '';
+        numEl.parentElement.style.display = 'none';
+      } else {
+        numEl.textContent = remaining;
+      }
+    }, 1000);
+  }
+
+  window.closeAdModal = function() {
+    const overlay = document.getElementById('ad-time-overlay');
+    if (!overlay) return;
+    overlay.classList.remove('open');
+    if (_countdownTimer) { clearInterval(_countdownTimer); _countdownTimer = null; }
+  };
+
+  function showAdModal(slot) {
+    // プレミアムユーザーはスキップ
+    if (document.body.classList.contains('is-premium')) return;
+
+    const overlay = document.getElementById('ad-time-overlay');
+    const emojiEl  = document.getElementById('ad-time-emoji');
+    const labelEl  = document.getElementById('ad-time-label');
+    const subEl    = document.getElementById('ad-time-context');
+    const skipBtn  = document.getElementById('ad-skip-btn');
+    const numEl    = document.getElementById('ad-countdown-num');
+    if (!overlay) return;
+
+    if (emojiEl)  emojiEl.textContent  = slot.emoji;
+    if (labelEl)  labelEl.textContent  = slot.label;
+    if (subEl)    subEl.textContent    = slot.sub;
+    if (skipBtn)  { skipBtn.disabled = true; skipBtn.textContent = '⏭ スキップして続ける'; }
+    if (numEl)    numEl.textContent    = SKIP_SECONDS;
+    const msgEl = document.getElementById('ad-countdown-msg');
+    if (msgEl) msgEl.textContent = '閉じるまで';
+
+    // AdSenseの広告ユニットを再読み込み
+    try {
+      (window.adsbygoogle = window.adsbygoogle || []).push({});
+    } catch(e) {}
+
+    // プレースホルダーの表示・非表示
+    const ph = document.getElementById('ad-placeholder');
+    if (ph) {
+      const ins = overlay.querySelector('ins.adsbygoogle');
+      ph.style.display = (ins && ins.getAttribute('data-adsbygoogle-status') === 'done') ? 'none' : 'flex';
+    }
+
+    overlay.classList.add('open');
+    markShownToday(slot.key);
+
+    setTimeout(() => startCountdown(), 100);
+  }
+
+  function checkAndShowAd() {
+    const slot = getCurrentSlot();
+    if (!slot) return;
+    if (wasShownToday(slot.key)) return;
+    // アプリが完全にロードされてから少し待って表示
+    setTimeout(() => showAdModal(slot), 1500);
+  }
+
+  // ページロード時に確認
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', checkAndShowAd);
+  } else {
+    checkAndShowAd();
+  }
+
+  // ページがフォアグラウンドに戻った時にも確認（スマホのアプリ切り替え対応）
+  document.addEventListener('visibilitychange', function() {
+    if (document.visibilityState === 'visible') {
+      checkAndShowAd();
+    }
+  });
+
+})();
+</script>
 
 </body>
 </html>
