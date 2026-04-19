@@ -29,6 +29,7 @@
   animation: adFadeIn 0.35s ease;
 }
 #ad-time-overlay.open { display: flex; }
+#ad-time-overlay:not(.open) { pointer-events: none !important; }
 @keyframes adFadeIn { from { opacity:0; } to { opacity:1; } }
 
 #ad-time-box {
@@ -581,6 +582,11 @@ body.is-premium .premium-banner { display: none !important; }
   padding: 16px;
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
+}
+#terms-overlay[style*="display:none"],
+#terms-overlay[style*="display: none"] {
+  pointer-events: none !important;
+  visibility: hidden !important;
 }
 #terms-box {
   background: var(--bg2);
@@ -8239,7 +8245,16 @@ let _termsChecked       = false;
 
 /** 起動時: 未同意なら利用規約オーバーレイを表示 */
 function initTermsCheck() {
-  if (hasAgreedToTerms()) return; // 同意済み → 何もしない
+  const overlay = document.getElementById('terms-overlay');
+  if (hasAgreedToTerms()) {
+    // 同意済み → 確実に非表示・クリックブロックなし
+    if (overlay) {
+      overlay.style.display = 'none';
+      overlay.style.pointerEvents = 'none';
+      overlay.style.visibility = 'hidden';
+    }
+    return;
+  }
   showTermsOverlay(false);
 }
 
@@ -8270,7 +8285,13 @@ function showTermsOverlay(viewOnly) {
       btn.onclick = () => {
         overlay.style.transition = 'opacity 0.3s';
         overlay.style.opacity = '0';
-        setTimeout(() => { overlay.style.display = 'none'; btn.textContent = '同意して開始'; btn.onclick = agreeToTerms; }, 300);
+        setTimeout(() => {
+          overlay.style.display = 'none';
+          overlay.style.pointerEvents = 'none';
+          overlay.style.visibility = 'hidden';
+          btn.textContent = '同意して開始';
+          btn.onclick = agreeToTerms;
+        }, 300);
       };
     } else {
       btn.textContent = '同意して開始';
@@ -8321,7 +8342,11 @@ function agreeToTerms() {
   if (overlay) {
     overlay.style.transition = 'opacity 0.4s';
     overlay.style.opacity = '0';
-    setTimeout(() => { overlay.style.display = 'none'; }, 400);
+    setTimeout(() => {
+      overlay.style.display = 'none';
+      overlay.style.pointerEvents = 'none';
+      overlay.style.visibility = 'hidden';
+    }, 400);
   }
   showToast('✅ 利用規約への同意を記録しました。ご利用いただきありがとうございます。');
 }
