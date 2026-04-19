@@ -1165,7 +1165,7 @@ body.is-premium .premium-banner { display: none !important; }
 
         <!-- 結果メイン表示 -->
         <div style="text-align:center;padding:14px 0 10px;border:1px solid rgba(192,132,252,0.3);border-radius:12px;background:rgba(192,132,252,0.05);margin-bottom:12px;">
-          <div style="font-size:11px;color:var(--text3);margin-bottom:4px;">（食事水分 ＋ 飲物 ＋ 代謝水）― 尿量 ― 不感蒸泄</div>
+        <div id="wb-formula-label" style="font-size:11px;color:var(--text3);margin-bottom:4px;">（食事水分 ＋ 飲物 ＋ 代謝水）― 尿量 ― 不感蒸泄</div>
           <div style="display:flex;align-items:baseline;justify-content:center;gap:4px;">
             <span id="wb-result" style="font-family:'JetBrains Mono',monospace;font-size:38px;font-weight:700;color:var(--green);">0</span>
             <span style="font-size:14px;color:var(--text2);">g</span>
@@ -1185,6 +1185,14 @@ body.is-premium .premium-banner { display: none !important; }
                 <span>水分摂取量</span>
               </div>
               <span id="wb-intake" style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--accent);">0 mL</span>
+            </div>
+            <!-- 食事重量（透析患者のみ） -->
+            <div style="display:flex;justify-content:space-between;align-items:center;" id="wb-food-weight-row">
+              <div style="display:flex;align-items:center;gap:6px;">
+                <span style="width:8px;height:8px;border-radius:50%;background:var(--amber);display:inline-block;flex-shrink:0;"></span>
+                <span>＋ 食事重量</span>
+              </div>
+              <span id="wb-food-weight" style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--amber);">0 g</span>
             </div>
             <!-- 代謝水 -->
             <div style="display:flex;justify-content:space-between;align-items:center;">
@@ -1219,6 +1227,7 @@ body.is-premium .premium-banner { display: none !important; }
         <!-- 透析目安 -->
         <div style="font-size:10px;color:var(--text3);margin-top:8px;line-height:1.7;">
           ※ 体重増加 ＝（食事水分 ＋ 飲物 ＋ 代謝水）― 尿量 ― 不感蒸泄（全腎協ガイドライン準拠）<br>
+          ※ 透析患者は上記に加え「食事重量」を加算。食べた食事の総重量（g）がそのまま体重増加につながります。<br>
           ※ 代謝水 ≒ 摂取カロリー × 0.12 mL/kcal（食事記録がない場合は体重 × 2.5 mL/kg で推定）<br>
           ※ 不感蒸泄 ＝ 体重 × 15 mL/kg/日（皮膚蒸散＋呼気）。水分1mL ≒ 1g として体重換算。<br>
           ※ 透析患者の体重増加目安は<strong style="color:var(--text2);">ドライウェイト（DW）比</strong>で個人差があります。一般的な指標は中1日 &lt;3%DW、週末 &lt;5%DW。必ず主治医の指示に従ってください。
@@ -1447,6 +1456,21 @@ body.is-premium .premium-banner { display: none !important; }
           <div class="form-row"><label class="form-label">リン (mg)</label><input class="form-input" type="number" id="record-phosphorus" placeholder="0" oninput="this.dataset.manualEdit='1';updateRecordNutrSummary()" /></div>
           <div class="form-row"><label class="form-label">🧂 塩分 (g)</label><input class="form-input" type="number" id="record-salt" placeholder="0" step="0.1" oninput="this.dataset.manualEdit='1';updateRecordNutrSummary()" /></div>
           <div class="form-row" style="grid-column:1/-1;"><label class="form-label" style="display:flex;align-items:center;gap:5px;"><span style="width:8px;height:8px;border-radius:50%;background:var(--accent);display:inline-block;"></span>💧 水分量 (mL) <span style="font-size:10px;color:var(--text3);margin-left:2px;">食品・飲み物の水分含有量</span></label><input class="form-input" type="number" id="record-water" placeholder="0" min="0" oninput="this.dataset.manualEdit='1';updateRecordNutrSummary()" /></div>
+          <!-- ▼ 透析患者のみ表示：食事重量 -->
+          <div class="form-row" style="grid-column:1/-1;" id="record-food-weight-row">
+            <label class="form-label" style="display:flex;align-items:center;gap:5px;">
+              <span style="width:8px;height:8px;border-radius:50%;background:var(--amber);display:inline-block;"></span>
+              🍱 食事の重量 (g)
+              <span style="font-size:10px;color:var(--text3);margin-left:2px;">食べた食事の総重量（体重増加に加算）</span>
+            </label>
+            <input class="form-input" type="number" id="record-food-weight" placeholder="0" min="0"
+              style="border-color:rgba(252,211,77,0.4);"
+              oninput="updateRecordNutrSummary()" />
+            <div style="font-size:11px;color:var(--text3);margin-top:5px;line-height:1.6;">
+              💡 透析患者は食事の重量がそのまま体重増加につながります。<br>
+              食べた食事の合計重量をグラムで入力してください（例：ご飯150g＋おかず200g＝350g）
+            </div>
+          </div>
         </div>
         <!-- 推定最大血糖値 -->
         <div id="peak-glucose-row" style="display:none;margin-top:6px;padding:10px 12px;background:var(--amber-dim);border:1px solid rgba(252,211,77,0.3);border-radius:var(--rs);">
@@ -4037,7 +4061,10 @@ function resetFoodCats() { document.querySelectorAll('.food-cat-chip').forEach(c
 
 function resetRecord() {
   window._currentPhotoBase64 = null;
-  ['record-name','record-calories','record-protein','record-carb','record-fiber','record-potassium','record-phosphorus','record-salt','record-water'].forEach(id => { const el = document.getElementById(id); if (el) el.value=''; });
+  ['record-name','record-calories','record-protein','record-carb','record-fiber','record-potassium','record-phosphorus','record-salt','record-water','record-food-weight'].forEach(id => { const el = document.getElementById(id); if (el) el.value=''; });
+  // 透析患者のみ食事重量フィールドを表示
+  const fwRow = document.getElementById('record-food-weight-row');
+  if (fwRow) fwRow.style.display = (state.ckdStage === 'ckd4') ? '' : 'none';
   // 日付・時刻をリセット
   const dateEl = document.getElementById('record-date');
   if (dateEl) { const d = new Date(); dateEl.value = d.toISOString().slice(0, 10); }
@@ -4085,6 +4112,7 @@ async function saveMeal() {
     phosphorus: parseFloat(document.getElementById('record-phosphorus')?.value)||0,
     salt: parseFloat(document.getElementById('record-salt')?.value)||0,
     water: parseFloat(document.getElementById('record-water')?.value)||0,
+    food_weight: (state.ckdStage === 'ckd4') ? (parseFloat(document.getElementById('record-food-weight')?.value)||0) : 0,
     meal_type: document.getElementById('record-meal-type')?.value||'breakfast',
     food_categories: getSelectedFoodCats(),
     recorded_at: (() => {
@@ -4567,7 +4595,12 @@ function navTo(page) {
   if (nb) nb.classList.add('active');
   if (page==='history')  renderHistory();
   if (page==='health')   renderHealthPage();
-  if (page==='record')   initRecordDate();
+  if (page==='record') {
+    initRecordDate();
+    // 透析患者のみ食事重量フィールドを表示
+    const fwRow = document.getElementById('record-food-weight-row');
+    if (fwRow) fwRow.style.display = (state.ckdStage === 'ckd4') ? '' : 'none';
+  }
   if (page==='medicine') { setMedDateToday(); renderMedicineLog(); }
   if (page==='water' || page==='home') { updateWaterCard(); updateWaterBalance(); }
   if (page==='home') updatePreventionCard();
@@ -4860,15 +4893,36 @@ function updateWaterBalance() {
   const insVal     = insensible ? insensible.total : 0;
 
   // 体重増加量（mL ≒ g）
-  const balanceG = (intake + metabolicWater) - urineTotal - insVal;
+  // 透析患者は食事重量もそのまま体重増加に加算
+  const foodWeightG = (() => {
+    if (state.ckdStage !== 'ckd4') return 0;
+    const allMealsForWeight = localLoadMeals ? localLoadMeals() : [];
+    const todayStr2 = new Date().toDateString();
+    return allMealsForWeight
+      .filter(m => new Date(m.recorded_at).toDateString() === todayStr2)
+      .reduce((s, m) => s + (m.food_weight || 0), 0);
+  })();
+  const balanceG = (intake + metabolicWater + foodWeightG) - urineTotal - insVal;
 
   console.log('[WaterBalance] waterLog:', waterLog.length, 'entries | mealIntake:', mealIntake, 'drinkIntake:', drinkIntake, 'intake:', intake, '| todayKcal:', todayKcal, 'metabolicWater:', metabolicWater, '| urine:', urineTotal, 'ins:', insVal, '| balanceG:', balanceG);
 
   // 内訳表示
-  const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val.toLocaleString() + ' mL'; };
+  const set = (id, val, unit) => { const el = document.getElementById(id); if (el) el.textContent = val.toLocaleString() + ' ' + (unit||'mL'); };
   set('wb-intake',     intake);
   set('wb-urine',      urineTotal);
   set('wb-insensible', insVal);
+  // 食事重量（透析患者のみ表示）
+  const fwRowEl = document.getElementById('wb-food-weight-row');
+  const fwEl    = document.getElementById('wb-food-weight');
+  if (fwRowEl) fwRowEl.style.display = (state.ckdStage === 'ckd4') ? '' : 'none';
+  if (fwEl)    fwEl.textContent = foodWeightG.toLocaleString() + ' g';
+  // 計算式ラベル更新
+  const formulaEl = document.getElementById('wb-formula-label');
+  if (formulaEl) {
+    formulaEl.textContent = state.ckdStage === 'ckd4'
+      ? '（食事水分 ＋ 飲物 ＋ 代謝水 ＋ 食事重量）― 尿量 ― 不感蒸泄'
+      : '（食事水分 ＋ 飲物 ＋ 代謝水）― 尿量 ― 不感蒸泄';
+  }
   // 代謝水の表示（要素があれば）
   const metaEl = document.getElementById('wb-metabolic');
   if (metaEl) metaEl.textContent = metabolicWater.toLocaleString() + ' mL';
@@ -8539,49 +8593,132 @@ function activatePremium(type, planType, months, extraLabel) {
 }
 
 // ─── 招待コード適用（3重ガード版） ───────────────────────
-function applyInviteCode() {
+async function applyInviteCode() {
   const code     = (document.getElementById('invite-code-input')?.value || '').trim().toUpperCase();
   const resultEl = document.getElementById('invite-code-result');
+  const applyBtn = document.querySelector('button[onclick="applyInviteCode()"]');
+
   const setResult = (msg, ok) => {
     if (resultEl) resultEl.innerHTML =
       '<span style="color:' + (ok ? 'var(--green)' : 'var(--red)') + ';">' + msg + '</span>';
   };
+
   if (!code) { showToast('コードを入力してください'); return; }
 
-  // ガード①: コードが存在するか
+  // ──────────────────────────────────────────────
+  // ガード①: クライアント側でコードの存在確認（高速チェック）
+  // ──────────────────────────────────────────────
   const codeData = VALID_INVITE_CODES[code];
   if (!codeData) {
-    setResult('\u274c 無効なコードです', false);
-    showToast('\u26a0 無効なコードです');
-    return;
-  }
-
-  // ガード②: 使用済みコードの使い回しをブロック（規約違反）
-  if (loadUsedCodes().has(code)) {
-    setResult('\ud83d\udeab このコードはすでに使用済みです（同じコードは再利用できません）', false);
-    showToast('\u26a0 このコードはすでに使用済みです');
-    // 繰り返し試みた場合は規約違反として記録・剥奪
-    revokeForViolation('使用済みコードの再利用試行: ' + code);
-    return;
-  }
-
-  // ガード③: invite型は1端末1回のみ（規約違反）
-  if (codeData.type === 'invite' && hasTrialEverUsed()) {
-    setResult('\ud83d\udeab 無料体験は1端末1回限りです。別コードでも再利用はできません。', false);
-    showToast('\u26a0 無料体験は1端末1回限りです');
-    revokeForViolation('体験済みフラグが立っているにもかかわらず招待コードを再試行: ' + code);
-    _updateTrialWarning();
+    setResult('❌ 無効なコードです', false);
+    showToast('⚠ 無効なコードです');
     return;
   }
 
   // 無期限プレミアムに invite コードを重ねる場合はスキップ
   const current = loadPremiumState();
   if (current && current.type === 'admin' && codeData.type !== 'admin') {
-    setResult('\u2705 すでに無期限プレミアムが有効です', true);
+    setResult('✅ すでに無期限プレミアムが有効です', true);
     return;
   }
 
-  // コードを使用済みとして記録
+  // ──────────────────────────────────────────────
+  // ガード②: Supabase でサーバー側の使用済みチェック（改ざん不可能）
+  //   同じコード OR 同じユーザーIDによるinvite型の使用履歴を検索
+  // ──────────────────────────────────────────────
+  const userId = state.uid || getUserId();
+
+  // ボタンをローディング状態に
+  if (applyBtn) { applyBtn.disabled = true; applyBtn.textContent = '確認中…'; }
+  setResult('🔍 サーバーで確認中…', true);
+
+  try {
+    // ── チェック A: このコード自体が誰かに使われていないか ──
+    const checkCodeRes = await fetch(
+      `${SUPABASE_URL}/rest/v1/invite_code_uses?code=eq.${encodeURIComponent(code)}&select=id,user_id&limit=1`,
+      { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
+    );
+
+    if (!checkCodeRes.ok) throw new Error('network_error');
+    const codeRows = await checkCodeRes.json();
+
+    if (codeRows.length > 0) {
+      // コードがすでに別ユーザーに使われている
+      setResult('🚫 このコードはすでに使用済みです。1コード1人限りです。', false);
+      showToast('⚠ このコードはすでに使用済みです');
+      markCodeUsed(code); // ローカルにも記録
+      revokeForViolation('サーバー確認済み：使用済みコードの再利用試行: ' + code);
+      if (applyBtn) { applyBtn.disabled = false; applyBtn.textContent = '適用'; }
+      return;
+    }
+
+    // ── チェック B: invite型の場合、同じユーザーが過去に招待コードを使っていないか ──
+    if (codeData.type === 'invite') {
+      const checkUserRes = await fetch(
+        `${SUPABASE_URL}/rest/v1/invite_code_uses?user_id=eq.${encodeURIComponent(userId)}&select=id,code&limit=1`,
+        { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
+      );
+
+      if (!checkUserRes.ok) throw new Error('network_error');
+      const userRows = await checkUserRes.json();
+
+      if (userRows.length > 0) {
+        setResult('🚫 無料体験は1アカウント1回限りです。別のコードでも再利用はできません。', false);
+        showToast('⚠ 招待コードは1回限りです');
+        setTrialUsed(); // ローカルにも記録
+        revokeForViolation('サーバー確認済み：同一ユーザーによる招待コード複数使用試行: ' + code);
+        if (applyBtn) { applyBtn.disabled = false; applyBtn.textContent = '適用'; }
+        return;
+      }
+    }
+
+  } catch(e) {
+    // ネットワークエラー時はオフラインフォールバック（ローカルチェックのみ）
+    console.warn('Supabase check failed, falling back to local check:', e);
+
+    if (loadUsedCodes().has(code)) {
+      setResult('🚫 このコードはすでに使用済みです', false);
+      showToast('⚠ このコードはすでに使用済みです');
+      if (applyBtn) { applyBtn.disabled = false; applyBtn.textContent = '適用'; }
+      return;
+    }
+    if (codeData.type === 'invite' && hasTrialEverUsed()) {
+      setResult('🚫 無料体験は1回限りです', false);
+      showToast('⚠ 無料体験は1回限りです');
+      if (applyBtn) { applyBtn.disabled = false; applyBtn.textContent = '適用'; }
+      return;
+    }
+  }
+
+  // ──────────────────────────────────────────────
+  // ガード通過 → Supabase に使用記録を書き込み（先に書く）
+  // ──────────────────────────────────────────────
+  try {
+    const insertRes = await fetch(SUPABASE_URL + '/rest/v1/invite_code_uses', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_KEY,
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({ user_id: userId, code, used_at: new Date().toISOString() })
+    });
+    // 409 Conflict = ユニーク制約違反（同時使用の競合）
+    if (insertRes.status === 409) {
+      setResult('🚫 このコードはすでに使用済みです（競合）', false);
+      showToast('⚠ このコードはすでに使用済みです');
+      if (applyBtn) { applyBtn.disabled = false; applyBtn.textContent = '適用'; }
+      return;
+    }
+  } catch(e) {
+    console.warn('Supabase insert failed:', e);
+    // 書き込み失敗時でもローカルには記録してプレミアム付与
+  }
+
+  // ──────────────────────────────────────────────
+  // ローカルにも使用済み記録（二重防衛）
+  // ──────────────────────────────────────────────
   markCodeUsed(code);
   if (codeData.type === 'invite') setTrialUsed();
 
@@ -8593,22 +8730,11 @@ function applyInviteCode() {
     codeData.label
   );
 
-  // Supabase にコード使用を記録
-  fetch(SUPABASE_URL + '/rest/v1/invite_code_uses', {
-    method: 'POST',
-    headers: {
-      'Content-Type':'application/json',
-      'apikey': SUPABASE_KEY,
-      'Authorization': 'Bearer ' + SUPABASE_KEY,
-      'Prefer': 'return=minimal'
-    },
-    body: JSON.stringify({ user_id: state.uid||getUserId(), code, used_at: new Date().toISOString() })
-  }).catch(()=>{});
-
-  setResult('\u2705 ' + codeData.label + ' が適用されました！', true);
+  if (applyBtn) { applyBtn.disabled = false; applyBtn.textContent = '適用'; }
+  setResult('✅ ' + codeData.label + ' が適用されました！', true);
   showToast(codeData.months === 0
-    ? '\ud83c\udf89 無期限プレミアムが有効になりました！'
-    : '\ud83c\udf89 ' + codeData.label + ' プレミアムが有効になりました！');
+    ? '🎉 無期限プレミアムが有効になりました！'
+    : '🎉 ' + codeData.label + ' プレミアムが有効になりました！');
 
   setTimeout(() => {
     document.getElementById('premium-upgrade-view').style.display = 'none';
