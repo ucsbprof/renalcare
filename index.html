@@ -113,29 +113,29 @@
 body.is-premium #ad-time-overlay { display: none !important; }
 
 :root {
-  --bg: #0d1420;
-  --bg2: #111c2e;
-  --surface: #16243a;
-  --surface2: #1c2f4a;
-  --border: #1e3354;
-  --border2: #264266;
-  --accent: #4fc3f7;
-  --accent2: #0288d1;
-  --accent-glow: rgba(79,195,247,0.12);
-  --green: #4ade80;
-  --green-dim: rgba(74,222,128,0.12);
-  --amber: #fcd34d;
-  --amber-dim: rgba(252,211,77,0.12);
-  --red: #f87171;
-  --red-dim: rgba(248,113,113,0.12);
-  --purple: #c084fc;
-  --purple-dim: rgba(192,132,252,0.12);
-  --text: #e2eaf6;
-  --text2: #8ba5c8;
-  --text3: #3d5a7a;
+  --bg: #090f1a;
+  --bg2: #0d1625;
+  --surface: #121e30;
+  --surface2: #182436;
+  --border: #1d2f48;
+  --border2: #273f60;
+  --accent: #60ceff;
+  --accent2: #2196f3;
+  --accent-glow: rgba(96,206,255,0.14);
+  --green: #5de88a;
+  --green-dim: rgba(93,232,138,0.14);
+  --amber: #fdd96a;
+  --amber-dim: rgba(253,217,106,0.14);
+  --red: #ff7b7b;
+  --red-dim: rgba(255,123,123,0.14);
+  --purple: #ce93fc;
+  --purple-dim: rgba(206,147,252,0.14);
+  --text: #eef4ff;
+  --text2: #a8c4de;
+  --text3: #527090;
   --r: 16px;
-  --rs: 10px;
-  --shadow: 0 4px 24px rgba(0,0,0,0.4);
+  --rs: 12px;
+  --shadow: 0 4px 28px rgba(0,0,0,0.55);
 }
 
 * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
@@ -147,6 +147,9 @@ html, body {
   color: var(--text);
   font-family: 'Noto Sans JP', sans-serif;
   font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .screen { position:fixed; inset:0; display:none; flex-direction:column; background:var(--bg); }
@@ -206,34 +209,34 @@ html, body {
 .btn-sm { padding: 8px 14px; font-size: 12px; border-radius: 8px; }
 
 #s-app { flex-direction: column; }
-.app-header { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; position: relative; z-index: 10; }
-.header-logo { font-family: 'Kaisei Opti', serif; font-size: 18px; color: var(--accent); letter-spacing: 1px; }
+.app-header { background: var(--bg2); border-bottom: 1px solid var(--border2); padding: 13px 16px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; position: relative; z-index: 10; box-shadow: 0 2px 12px rgba(0,0,0,0.3); }
+.header-logo { font-family: 'Kaisei Opti', serif; font-size: 19px; color: var(--accent); letter-spacing: 1px; font-weight: 700; }
 .header-user { display: flex; align-items: center; gap: 8px; cursor: pointer; }
 .header-avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--accent-glow); border: 1.5px solid var(--accent); display: flex; align-items: center; justify-content: center; font-size: 16px; }
 .header-name { font-size: 13px; color: var(--text2); }
 .app-content { flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; padding-bottom: 80px; }
 
-.bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg2); border-top: 1px solid var(--border); display: flex; padding: 8px 0 max(8px, env(safe-area-inset-bottom)); z-index: 100; }
+.bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg2); border-top: 1px solid var(--border2); display: flex; padding: 8px 0 max(8px, env(safe-area-inset-bottom)); z-index: 100; box-shadow: 0 -2px 16px rgba(0,0,0,0.3); }
 .nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 0; cursor: pointer; transition: all 0.2s; color: var(--text3); position: relative; }
 .nav-btn.active { color: var(--accent); }
-.nav-btn .nav-icon { font-size: 22px; line-height: 1; }
-.nav-btn .nav-label { font-size: 10px; font-weight: 500; }
+.nav-btn .nav-icon { font-size: 23px; line-height: 1; }
+.nav-btn .nav-label { font-size: 10px; font-weight: 600; letter-spacing: 0.3px; }
 .nav-btn.active::before { content: ''; position: absolute; top: -8px; left: 50%; transform: translateX(-50%); width: 32px; height: 3px; background: var(--accent); border-radius: 0 0 3px 3px; }
 
 .page { display: none; padding: 16px; }
 .page.active { display: block; }
 .page-title-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
-.page-title { font-family: 'Kaisei Opti', serif; font-size: 22px; color: var(--text); letter-spacing: 0.5px; }
+.page-title { font-family: 'Kaisei Opti', serif; font-size: 24px; color: var(--text); letter-spacing: 0.5px; }
 .page-sub { font-size: 12px; color: var(--text2); margin-top: 3px; }
 
-.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 16px; margin-bottom: 12px; position: relative; overflow: hidden; }
-.card-title { font-size: 11px; color: var(--text3); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 10px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 18px; margin-bottom: 14px; position: relative; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.25); }
+.card-title { font-size: 11px; color: var(--text2); letter-spacing: 1.8px; text-transform: uppercase; margin-bottom: 12px; font-weight: 600; }
 
 .metrics-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
-.metric-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 14px; position: relative; overflow: hidden; }
-.metric-val { font-family: 'JetBrains Mono', monospace; font-size: 26px; font-weight: 600; line-height: 1.1; }
+.metric-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 16px 14px; position: relative; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+.metric-val { font-family: 'JetBrains Mono', monospace; font-size: 28px; font-weight: 700; line-height: 1.1; letter-spacing: -0.5px; }
 .metric-unit { font-size: 12px; color: var(--text2); margin-left: 3px; }
-.metric-name { font-size: 11px; color: var(--text3); margin-top: 4px; }
+.metric-name { font-size: 11px; color: var(--text2); margin-top: 5px; letter-spacing: 0.2px; }
 .m-green { border-color: rgba(74,222,128,0.3); }
 .m-green .metric-val { color: var(--green); }
 .m-blue { border-color: rgba(79,195,247,0.3); }
@@ -244,7 +247,7 @@ html, body {
 .m-red .metric-val { color: var(--red); }
 .metric-glow { position: absolute; top: -20px; right: -20px; width: 80px; height: 80px; border-radius: 50%; filter: blur(30px); opacity: 0.5; }
 
-.prog-wrap { height: 5px; background: var(--surface2); border-radius: 3px; margin-top: 8px; overflow: hidden; }
+.prog-wrap { height: 6px; background: var(--surface2); border-radius: 3px; margin-top: 10px; overflow: hidden; }
 .prog-fill { height: 100%; border-radius: 3px; transition: width 0.6s cubic-bezier(0.4,0,0.2,1); }
 .pg-green { background: var(--green); }
 .pg-amber { background: var(--amber); }
@@ -258,20 +261,20 @@ html, body {
 .nutr-val { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600; width: 62px; text-align: right; flex-shrink: 0; }
 .nutr-max { font-size: 10px; color: var(--text3); width: 52px; text-align: right; flex-shrink: 0; }
 
-.meal-item { display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--surface2); border-radius: var(--rs); margin-bottom: 8px; border: 1px solid transparent; cursor: pointer; transition: all 0.2s; }
+.meal-item { display: flex; align-items: center; gap: 12px; padding: 13px 14px; background: var(--surface2); border-radius: var(--rs); margin-bottom: 8px; border: 1px solid var(--border); cursor: pointer; transition: all 0.2s; }
 .meal-item:hover { border-color: var(--border2); }
 .meal-item:active { transform: scale(0.98); }
 .meal-emoji { width: 48px; height: 48px; border-radius: 10px; background: var(--surface); display: flex; align-items: center; justify-content: center; font-size: 26px; flex-shrink: 0; }
 .meal-info { flex: 1; min-width: 0; }
-.meal-name { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.meal-time { font-size: 11px; color: var(--text3); margin-top: 2px; }
+.meal-name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text); }
+.meal-time { font-size: 11px; color: var(--text2); margin-top: 3px; }
 .meal-tags { display: flex; gap: 4px; margin-top: 4px; flex-wrap: wrap; }
 .tag { font-size: 10px; padding: 2px 7px; border-radius: 20px; border: 1px solid; white-space: nowrap; }
 .tag-green { color: var(--green); border-color: var(--green); background: var(--green-dim); }
 .tag-amber { color: var(--amber); border-color: var(--amber); background: var(--amber-dim); }
 .tag-red { color: var(--red); border-color: var(--red); background: var(--red-dim); }
 .tag-blue { color: var(--accent); border-color: var(--accent); background: var(--accent-glow); }
-.meal-kcal { font-family: 'JetBrains Mono', monospace; font-size: 14px; color: var(--accent); flex-shrink: 0; text-align: right; }
+.meal-kcal { font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 700; color: var(--accent); flex-shrink: 0; text-align: right; }
 .meal-kcal-unit { font-size: 10px; color: var(--text3); }
 
 .glucose-big { display: flex; align-items: baseline; gap: 8px; margin: 6px 0 10px; }
@@ -417,8 +420,8 @@ html, body {
 .alert-info .alert-title { color: var(--accent); }
 
 .form-row { margin-bottom: 12px; }
-.form-label { font-size: 12px; color: var(--text2); margin-bottom: 6px; display: block; }
-.form-input { width: 100%; background: var(--surface2); border: 1.5px solid var(--border); border-radius: var(--rs); padding: 11px 14px; color: var(--text); font-size: 14px; font-family: 'Noto Sans JP', sans-serif; outline: none; transition: border-color 0.2s; }
+.form-label { font-size: 12px; color: var(--text2); margin-bottom: 7px; display: block; font-weight: 500; letter-spacing: 0.2px; }
+.form-input { width: 100%; background: var(--surface2); border: 1.5px solid var(--border2); border-radius: var(--rs); padding: 12px 14px; color: var(--text); font-size: 15px; font-family: 'Noto Sans JP', sans-serif; outline: none; transition: border-color 0.2s; }
 .form-input:focus { border-color: var(--accent); }
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
@@ -477,8 +480,8 @@ html, body {
 .setting-row:hover { border-color: var(--border2); }
 .setting-icon { font-size: 20px; margin-right: 12px; flex-shrink: 0; }
 .setting-text { flex: 1; }
-.setting-name { font-size: 14px; }
-.setting-desc { font-size: 12px; color: var(--text3); margin-top: 2px; }
+.setting-name { font-size: 14px; font-weight: 500; color: var(--text); }
+.setting-desc { font-size: 12px; color: var(--text2); margin-top: 3px; }
 .setting-arrow { color: var(--text3); font-size: 14px; }
 .toggle { width: 44px; height: 24px; border-radius: 12px; background: var(--border2); position: relative; cursor: pointer; transition: background 0.2s; flex-shrink: 0; }
 .toggle.on { background: var(--accent); }
@@ -924,9 +927,12 @@ body.is-premium .premium-banner { display: none !important; }
 
     <!-- HOME -->
     <div class="page active" id="page-home">
-      <div class="page-title-row">
-        <div><div class="page-title">今日の記録</div><div class="page-sub" id="home-date">読み込み中...</div></div>
-        <button class="btn btn-primary btn-sm" onclick="navTo('record')">✏️ 記録する</button>
+      <div class="page-title-row" style="margin-bottom:16px;">
+        <div>
+          <div class="page-title" id="home-greeting" style="font-size:22px;">今日の記録</div>
+          <div class="page-sub" id="home-date" style="font-size:13px;color:var(--text2);margin-top:3px;">読み込み中...</div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="navTo('record')" style="padding:10px 16px;font-size:13px;">✏️ 記録する</button>
       </div>
       <div class="metrics-row stagger" id="home-metrics">
         <div class="metric-card m-green">
@@ -1800,6 +1806,14 @@ body.is-premium .premium-banner { display: none !important; }
         <div class="settings-title">プロフィール</div>
         <div class="setting-row"><div class="setting-icon">👤</div><div class="setting-text"><div class="setting-name" id="s-name-display">—</div><div class="setting-desc">名前</div></div><div class="setting-arrow">›</div></div>
         <div class="setting-row"><div class="setting-icon">🩺</div><div class="setting-text"><div class="setting-name" id="s-type-display">—</div><div class="setting-desc" id="s-type-desc">健康ステータス</div></div><div class="setting-arrow">›</div></div>
+        <div class="setting-row" onclick="showBodyMeasurementsModal()" style="cursor:pointer;">
+          <div class="setting-icon">📏</div>
+          <div class="setting-text">
+            <div class="setting-name">身長・体重・年齢・性別</div>
+            <div class="setting-desc" id="s-body-display">設定を開いて確認・修正できます</div>
+          </div>
+          <div class="setting-arrow">›</div>
+        </div>
         <div class="setting-row" onclick="showUserSwitchModal()" style="cursor:pointer;"><div class="setting-icon">🔄</div><div class="setting-text"><div class="setting-name">ユーザーを切り替える</div><div class="setting-desc">複数人で使う場合はこちら</div></div><div class="setting-arrow">›</div></div>
       </div>
       <div class="settings-section">
@@ -3049,6 +3063,7 @@ function applyStateToUI() {
 
   renderUserSwitcher();
   updateHomeSummary();
+  if (typeof _updateBodyDisplay === 'function') _updateBodyDisplay();
 }
 
 // ===== ユーザー切替UI =====
@@ -4582,8 +4597,22 @@ function saveTargets() {
   updateHomeSummary();
 }
 function updateHomeDate() {
-  const d=new Date(); const days=['日','月','火','水','木','金','土'];
-  document.getElementById('home-date').textContent=`${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${days[d.getDay()]}）`;
+  const d = new Date();
+  const days = ['日','月','火','水','木','金','土'];
+  const dateStr = `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${days[d.getDay()]}）`;
+  const el = document.getElementById('home-date');
+  if (el) el.textContent = dateStr;
+
+  // 時間帯別あいさつ
+  const h = d.getHours();
+  const greeting = h < 5  ? '🌙 こんばんは' :
+                   h < 11 ? '☀️ おはようございます' :
+                   h < 17 ? '🌤 こんにちは' : '🌙 こんばんは';
+  const greetEl = document.getElementById('home-greeting');
+  if (greetEl) {
+    const name = state.userName ? `、${state.userName}さん` : '';
+    greetEl.textContent = greeting + name;
+  }
 }
 function showScreen(id) { document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
 function navTo(page) {
@@ -9685,7 +9714,170 @@ function importAllData(event) {
   // input をリセットして同じファイルを再選択できるように
   event.target.value = '';
 }
-</script>
+
+// ============================================================
+// ===== 身体情報編集モーダル =====
+// ============================================================
+
+function showBodyMeasurementsModal() {
+  // 現在の値をフォームにセット
+  const ageEl    = document.getElementById('edit-age');
+  const genderEl = document.getElementById('edit-gender');
+  const heightEl = document.getElementById('edit-height');
+  const weightEl = document.getElementById('edit-weight');
+  if (ageEl)    ageEl.value    = state.age    || '';
+  if (genderEl) genderEl.value = state.gender || 'male';
+  if (heightEl) heightEl.value = state.height || '';
+  if (weightEl) weightEl.value = state.weight || '';
+
+  _updateBodyCalcPreview();
+
+  // 入力のたびにプレビュー更新
+  ['edit-age','edit-gender','edit-height','edit-weight'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.oninput = _updateBodyCalcPreview;
+  });
+
+  document.getElementById('bodyMeasurementsModal').classList.add('open');
+}
+
+function _updateBodyCalcPreview() {
+  const age    = parseInt(document.getElementById('edit-age')?.value)    || 0;
+  const gender = document.getElementById('edit-gender')?.value           || 'male';
+  const height = parseFloat(document.getElementById('edit-height')?.value) || 0;
+  const weight = parseFloat(document.getElementById('edit-weight')?.value) || 0;
+  const el     = document.getElementById('body-calc-preview');
+  if (!el) return;
+
+  if (!height && !weight && !age) {
+    el.innerHTML = '<span style="color:var(--text3);">— 値を入力すると自動計算されます —</span>';
+    return;
+  }
+
+  const lines = [];
+
+  // BMI
+  if (height > 0 && weight > 0) {
+    const bmi = weight / ((height / 100) ** 2);
+    const bmiColor = bmi < 18.5 ? 'var(--accent)' : bmi < 25 ? 'var(--green)' : bmi < 30 ? 'var(--amber)' : 'var(--red)';
+    const bmiLabel = bmi < 18.5 ? '低体重' : bmi < 25 ? '標準' : bmi < 30 ? '過体重' : '肥満';
+    lines.push(`📊 BMI: <strong style="color:${bmiColor};">${bmi.toFixed(1)}</strong> <span style="color:${bmiColor};">(${bmiLabel})</span>`);
+
+    // 標準体重
+    const ibw = (height / 100) ** 2 * 22;
+    lines.push(`🎯 標準体重: <strong>${ibw.toFixed(1)} kg</strong>`);
+
+    // 不感蒸泄（1日）
+    const ins = Math.round(weight * 15);
+    lines.push(`💨 不感蒸泄目安: <strong>${ins.toLocaleString()} mL/日</strong>`);
+  }
+
+  // 基礎代謝（ハリス-ベネディクト）
+  if (height > 0 && weight > 0 && age > 0) {
+    const bmr = gender === 'female'
+      ? Math.round(655.1 + 9.563 * weight + 1.850 * height - 4.676 * age)
+      : Math.round(66.47 + 13.75 * weight + 5.003 * height - 6.755 * age);
+    lines.push(`🔥 基礎代謝: <strong>${bmr.toLocaleString()} kcal/日</strong>`);
+  }
+
+  // 透析DW比目安
+  if (weight > 0 && state.ckdStage === 'ckd4') {
+    lines.push(`⚖️ DW×3%: <strong style="color:var(--amber);">${(weight * 0.03).toFixed(1)} kg</strong>　DW×5%: <strong style="color:var(--red);">${(weight * 0.05).toFixed(1)} kg</strong>`);
+  }
+
+  el.innerHTML = lines.join('<br>') || '<span style="color:var(--text3);">— 値を入力すると自動計算されます —</span>';
+}
+
+function saveBodyMeasurements() {
+  const age    = document.getElementById('edit-age')?.value.trim()    || '';
+  const gender = document.getElementById('edit-gender')?.value        || 'male';
+  const height = document.getElementById('edit-height')?.value.trim() || '';
+  const weight = document.getElementById('edit-weight')?.value.trim() || '';
+
+  // バリデーション
+  if (height && (parseFloat(height) < 100 || parseFloat(height) > 220)) {
+    showToast('⚠ 身長は100〜220cmで入力してください'); return;
+  }
+  if (weight && (parseFloat(weight) < 20 || parseFloat(weight) > 200)) {
+    showToast('⚠ 体重は20〜200kgで入力してください'); return;
+  }
+  if (age && (parseInt(age) < 1 || parseInt(age) > 120)) {
+    showToast('⚠ 年齢は1〜120の範囲で入力してください'); return;
+  }
+
+  // stateを更新
+  state.age    = age;
+  state.gender = gender;
+  state.height = height;
+  state.weight = weight;
+
+  // プロフィールに保存
+  saveActiveProfile({ ...state });
+
+  // 設定画面の表示を更新
+  _updateBodyDisplay();
+
+  // 体重収支・水分計算を再計算
+  updateWaterBalance();
+
+  // 目標値も再計算（auto モードの場合）
+  if (state.targetMode === 'auto') calcAutoTargets();
+
+  closeModal('bodyMeasurementsModal');
+  showToast('✅ 身体情報を保存しました');
+}
+
+function _updateBodyDisplay() {
+  const el = document.getElementById('s-body-display');
+  if (!el) return;
+  const parts = [];
+  if (state.age)    parts.push(`${state.age}歳`);
+  if (state.gender) parts.push(state.gender === 'male' ? '男性' : '女性');
+  if (state.height) parts.push(`身長 ${state.height}cm`);
+  if (state.weight) parts.push(`体重 ${state.weight}kg`);
+  el.textContent = parts.length > 0 ? parts.join(' · ') : '設定を開いて確認・修正できます';
+}
+
+
+<!-- ===== 身長・体重・年齢・性別 編集モーダル ===== -->
+<div class="modal-bg" id="bodyMeasurementsModal" onclick="closeModal('bodyMeasurementsModal')">
+  <div class="modal" onclick="event.stopPropagation()" style="max-height:90vh;overflow-y:auto;">
+    <div class="modal-handle"></div>
+    <div class="modal-title">📏 身体情報を編集</div>
+    <div style="font-size:13px;color:var(--text2);margin:4px 0 20px;line-height:1.6;">体重・身長は不感蒸泄・目標カロリーの自動計算に使用されます。</div>
+
+    <div class="form-grid" style="margin-bottom:14px;">
+      <div class="form-row" style="margin-bottom:0;">
+        <label class="form-label">🎂 年齢</label>
+        <input class="form-input" type="number" id="edit-age" placeholder="例：65" min="1" max="120" />
+      </div>
+      <div class="form-row" style="margin-bottom:0;">
+        <label class="form-label">⚥ 性別</label>
+        <select class="form-input" id="edit-gender">
+          <option value="male">男性</option>
+          <option value="female">女性</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-grid" style="margin-bottom:20px;">
+      <div class="form-row" style="margin-bottom:0;">
+        <label class="form-label">📐 身長 (cm)</label>
+        <input class="form-input" type="number" id="edit-height" placeholder="例：165" min="100" max="220" />
+      </div>
+      <div class="form-row" style="margin-bottom:0;">
+        <label class="form-label">⚖️ 体重 (kg)</label>
+        <input class="form-input" type="number" id="edit-weight" placeholder="例：60.0" min="20" max="200" step="0.1" />
+      </div>
+    </div>
+
+    <div style="background:var(--surface2);border-radius:var(--rs);padding:12px 14px;margin-bottom:20px;font-size:12px;color:var(--text2);line-height:1.8;">
+      <div id="body-calc-preview" style="color:var(--text2);">— 値を入力すると自動計算されます —</div>
+    </div>
+
+    <button class="btn btn-primary btn-full" onclick="saveBodyMeasurements()">✓ 保存する</button>
+    <button class="btn btn-ghost btn-full" style="margin-top:8px;" onclick="closeModal('bodyMeasurementsModal')">キャンセル</button>
+  </div>
+</div>
 
 <!-- ===== 服薬スケジュール編集モーダル ===== -->
 <div class="modal-bg" id="medScheduleModal" onclick="closeModal('medScheduleModal')">
