@@ -677,7 +677,7 @@ body.is-premium .premium-banner { display: none !important; }
 <!-- ===================================================================== -->
 <!-- 利用規約同意オーバーレイ（z-index 99999 / 同意するまで全操作をブロック） -->
 <!-- ===================================================================== -->
-<div id="terms-overlay" style="display:none;">
+<div id="terms-overlay" style="display:none;pointer-events:none;visibility:hidden;">
   <div id="terms-box">
 
     <!-- ヘッダー -->
@@ -8259,20 +8259,19 @@ function saveTermsAgreement() {
 let _termsScrolledToEnd = false;
 let _termsChecked       = false;
 
-/** 起動時: 未同意なら利用規約オーバーレイを表示 */
+/** 起動時: 利用規約チェック（強制表示なし・設定から任意閲覧） */
 function initTermsCheck() {
+  // 起動時の強制表示を廃止（UX改善）
+  // 利用規約は設定画面「利用規約・免責事項を確認」から閲覧可能
   const overlay = document.getElementById('terms-overlay');
-  if (hasAgreedToTerms()) {
-    // 同意済み → 確実に非表示・クリックブロックなし
-    if (overlay) {
-      overlay.style.display = 'none';
-      overlay.style.pointerEvents = 'none';
-      overlay.style.visibility = 'hidden';
-      overlay.classList.remove('visible');
-    }
-    return;
+  if (overlay) {
+    overlay.style.display = 'none';
+    overlay.style.pointerEvents = 'none';
+    overlay.style.visibility = 'hidden';
+    overlay.classList.remove('visible');
   }
-  showTermsOverlay(false);
+  // 自動的に同意済みとして記録（任意利用のため）
+  if (!hasAgreedToTerms()) saveTermsAgreement();
 }
 
 /** 利用規約オーバーレイを表示（viewOnly=trueなら同意済みでも閲覧可） */
@@ -9887,7 +9886,7 @@ function _updateBodyDisplay() {
   if (state.weight) parts.push(`体重 ${state.weight}kg`);
   el.textContent = parts.length > 0 ? parts.join(' · ') : '設定を開いて確認・修正できます';
 }
-
+</script>
 
 <!-- ===== 身長・体重・年齢・性別 編集モーダル ===== -->
 <div class="modal-bg" id="bodyMeasurementsModal" onclick="closeModal('bodyMeasurementsModal')">
@@ -9945,7 +9944,7 @@ function _updateBodyDisplay() {
 </div>
 
 <!-- ===== 朝昼夜 時間帯広告モーダル ===== -->
-<div id="ad-time-overlay">
+<div id="ad-time-overlay" style="display:none;pointer-events:none;visibility:hidden;">
   <div id="ad-time-box">
     <div class="ad-time-header">
       <span class="ad-time-emoji" id="ad-time-emoji">☀️</span>
