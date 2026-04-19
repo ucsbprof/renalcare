@@ -22,14 +22,23 @@
 #ad-time-overlay {
   position: fixed; inset: 0; z-index: 99998;
   background: rgba(0,0,0,0.75);
-  display: none; align-items: center; justify-content: center;
+  display: none;
+  align-items: center;
+  justify-content: center;
   padding: 20px;
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
   animation: adFadeIn 0.35s ease;
+  pointer-events: none;
 }
-#ad-time-overlay.open { display: flex; }
-#ad-time-overlay:not(.open) { pointer-events: none !important; }
+#ad-time-overlay.open {
+  display: flex;
+  pointer-events: auto;
+}
+#ad-time-overlay:not(.open) {
+  pointer-events: none !important;
+  visibility: hidden;
+}
 @keyframes adFadeIn { from { opacity:0; } to { opacity:1; } }
 
 #ad-time-box {
@@ -578,10 +587,17 @@ body.is-premium .premium-banner { display: none !important; }
 #terms-overlay {
   position: fixed; inset: 0; z-index: 99999;
   background: rgba(0,0,0,0.85);
-  display: flex; align-items: center; justify-content: center;
+  display: none;
+  align-items: center;
+  justify-content: center;
   padding: 16px;
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
+  pointer-events: none;
+}
+#terms-overlay.visible {
+  display: flex;
+  pointer-events: auto;
 }
 #terms-overlay[style*="display:none"],
 #terms-overlay[style*="display: none"] {
@@ -8252,6 +8268,7 @@ function initTermsCheck() {
       overlay.style.display = 'none';
       overlay.style.pointerEvents = 'none';
       overlay.style.visibility = 'hidden';
+      overlay.classList.remove('visible');
     }
     return;
   }
@@ -8269,7 +8286,13 @@ function showTermsOverlay(viewOnly) {
   const box     = document.getElementById('terms-checkbox');
   const scroll  = document.getElementById('terms-scroll');
 
-  if (overlay) { overlay.style.opacity = '1'; overlay.style.display = 'flex'; }
+  if (overlay) {
+    overlay.style.opacity = '1';
+    overlay.style.pointerEvents = 'auto';
+    overlay.style.visibility = 'visible';
+    overlay.style.display = 'flex';
+    overlay.classList.add('visible');
+  }
   if (hint)    hint.style.opacity = viewOnly ? '0' : '1';
   if (row)     { row.classList.remove('checked'); }
   if (box)     box.textContent = '';
@@ -8289,6 +8312,7 @@ function showTermsOverlay(viewOnly) {
           overlay.style.display = 'none';
           overlay.style.pointerEvents = 'none';
           overlay.style.visibility = 'hidden';
+          overlay.classList.remove('visible');
           btn.textContent = '同意して開始';
           btn.onclick = agreeToTerms;
         }, 300);
@@ -8346,6 +8370,7 @@ function agreeToTerms() {
       overlay.style.display = 'none';
       overlay.style.pointerEvents = 'none';
       overlay.style.visibility = 'hidden';
+      overlay.classList.remove('visible');
     }, 400);
   }
   showToast('✅ 利用規約への同意を記録しました。ご利用いただきありがとうございます。');
