@@ -4381,7 +4381,11 @@ function updateHomeSummary() {
     const urineRecs  = (typeof getTodayHealthRecords === 'function') ? getTodayHealthRecords('urine') : [];
     const urineTotal = urineRecs.reduce((s,r) => s+(r.vol||0), 0);
     const insVal     = insensible ? insensible.total : 0;
-    const balanceG   = (totalWater + metabolic) - urineTotal - insVal;
+    // 透析患者は食事重量も加算
+    const foodWeightG = (state.ckdStage === 'ckd4')
+      ? todayMeals.reduce((s,m) => s+(m.food_weight||0), 0)
+      : 0;
+    const balanceG   = (totalWater + metabolic + foodWeightG) - urineTotal - insVal;
 
     const wbValEl  = document.getElementById('home-wb-val');
     const wbKgEl   = document.getElementById('home-wb-kg');
@@ -6045,10 +6049,12 @@ function addWater(ml) { addDrink(ml); }
 function addDrink(ml) {
   try {
     const all = JSON.parse(localStorage.getItem(WATER_KEY) || '[]');
-    all.push({ id: 'drink_'+Date.now(), time: new Date().toISOString(), ml, auto: false });
+    all.push({ id: 'drink_'+Date.now(), time: new Date().toISOString(), ml, auto: false, drink: true });
     localStorage.setItem(WATER_KEY, JSON.stringify(all));
   } catch(e) {}
-  updateWaterCard(); updateWaterBalance();
+  updateWaterCard();
+  updateWaterBalance();
+  updateHomeSummary();
   showToast(`💧 ${ml}mL 追加しました`);
 }
 
@@ -6063,7 +6069,13 @@ function editDrinkRecord(id, currentMl) {
   try {
     const all = JSON.parse(localStorage.getItem(WATER_KEY) || '[]');
     const idx = all.findIndex(e => e.id === id);
-    if (idx !== -1) { all[idx].ml = newMl; localStorage.setItem(WATER_KEY, JSON.stringify(all)); showToast('✅ 修正しました'); updateWaterCard(); updateWaterBalance(); }
+    if (idx !== -1) {
+      all[idx].ml = newMl;
+      all[idx].drink = true; // 確実にdrink:trueを設定
+      localStorage.setItem(WATER_KEY, JSON.stringify(all));
+      showToast('✅ 修正しました');
+      updateWaterCard(); updateWaterBalance(); updateHomeSummary();
+    }
   } catch(e) {}
 }
 
@@ -6072,7 +6084,8 @@ function deleteDrinkRecord(id) {
   try {
     const all = JSON.parse(localStorage.getItem(WATER_KEY) || '[]');
     localStorage.setItem(WATER_KEY, JSON.stringify(all.filter(e => e.id !== id)));
-    showToast('🗑 削除しました'); updateWaterCard(); updateWaterBalance();
+    showToast('🗑 削除しました');
+    updateWaterCard(); updateWaterBalance(); updateHomeSummary();
   } catch(e) {}
 }
 
