@@ -119,6 +119,38 @@
   letter-spacing: 1px;
 }
 
+/* ===== 薬名オートコンプリート ===== */
+.drug-suggest-wrap { position: relative; }
+.drug-suggest-list {
+  position: absolute; top: 100%; left: 0; right: 0; z-index: 3000;
+  background: var(--surface); border: 1.5px solid var(--accent);
+  border-radius: var(--rs); box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  max-height: 260px; overflow-y: auto; margin-top: 2px;
+  scrollbar-width: thin;
+}
+.drug-suggest-item {
+  padding: 10px 14px; cursor: pointer; border-bottom: 1px solid var(--border);
+  transition: background 0.15s;
+}
+.drug-suggest-item:last-child { border-bottom: none; }
+.drug-suggest-item:hover, .drug-suggest-item.focused { background: var(--surface2); }
+.drug-suggest-name { font-size: 13px; font-weight: 600; color: var(--text); }
+.drug-suggest-meta { font-size: 11px; color: var(--text2); margin-top: 2px; display: flex; gap: 8px; flex-wrap: wrap; }
+.drug-suggest-cat { color: var(--accent); font-size: 10px; padding: 1px 6px; border-radius: 10px; background: var(--accent-glow); border: 1px solid var(--accent); }
+.drug-suggest-custom { color: var(--purple); font-size: 10px; padding: 1px 6px; border-radius: 10px; background: var(--purple-dim); border: 1px solid var(--purple); }
+.drug-suggest-new { color: var(--green); font-size: 10px; padding: 1px 6px; border-radius: 10px; background: var(--green-dim); border: 1px solid var(--green); }
+/* OCR結果プレビュー */
+.ocr-preview-box {
+  background: var(--surface2); border: 1.5px solid var(--accent);
+  border-radius: var(--r); padding: 14px; margin-top: 10px;
+}
+.ocr-preview-title { font-size: 12px; color: var(--accent); font-weight: 700; letter-spacing: 1px; margin-bottom: 10px; }
+.ocr-preview-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.ocr-preview-label { font-size: 11px; color: var(--text3); width: 60px; flex-shrink: 0; }
+.ocr-preview-val { flex: 1; font-size: 13px; color: var(--text); font-weight: 500; }
+.ocr-preview-stock { color: var(--green); font-weight: 700; }
+
+
 /* プレミアム時は広告モーダル非表示 */
 body.is-premium #ad-time-overlay { display: none !important; }
 
@@ -6323,20 +6355,20 @@ function searchFoodDB(query) {
     }
 
     const base = _currentFoodTab && _currentFoodTab !== 'all' ? foods : foodDatabase;
+    function _norm(s) {
+      return s.toLowerCase()
+        .replace(/[Ａ-Ｚａ-ｚ０-９]/g, c => String.fromCharCode(c.charCodeAt(0)-0xFEE0));
+    }
+    const qN = _norm(q), qNH = toHiragana(qN), qNK = toKatakana(qN);
+    const allV = [...new Set([q, qH, qK, qN, qNH, qNK])];
     foods = base.filter(f => {
-      const name  = f.name;
-      const nameH = toHiragana(name);
-      const nameK = toKatakana(name);
-      const catH  = toHiragana(f.cat || '');
-      const catK  = toKatakana(f.cat || '');
-      // 通常マッチ（ひらがな・カタカナ・元表記）
-      if (variants.some(v => name.includes(v) || nameH.includes(v) || nameK.includes(v) ||
-                              (f.cat||'').includes(v) || catH.includes(v) || catK.includes(v))) return true;
-      // エイリアスマッチ
-      if (aliasKeywords.length > 0 && aliasKeywords.some(kw => name.includes(kw) || (f.cat||'').includes(kw))) return true;
+      const n = f.name, nN = _norm(n), nH = toHiragana(nN), nK = toKatakana(nN);
+      const c = f.cat||'', cN = _norm(c), cH = toHiragana(cN);
+      if (allV.some(v => n.includes(v)||nN.includes(v)||nH.includes(v)||nK.includes(v)||
+                         c.includes(v)||cN.includes(v)||cH.includes(v))) return true;
+      if (aliasKeywords.length>0 && aliasKeywords.some(kw => n.includes(kw)||c.includes(kw))) return true;
       return false;
-    });
-  }
+    });}
   renderFoodResults(foods.slice(0, 100));
 }
 
@@ -6883,8 +6915,182 @@ function saveHospitals(list) {
   try { localStorage.setItem(HOSP_KEY, JSON.stringify(list)); } catch(e) {}
 }
 
+// ============================================================
+// ===== 医薬品データベース (DRUG_DB) =====
+// ============================================================
+const DRUG_DB_CUSTOM_KEY = 'renalcare_drug_db_custom';
+
+const DRUG_DB_BASE = [
+  // ===== インスリン製剤 =====
+  {name:'ノボラピッド注フレックスペン',kana:'のぼらぴっど',category:'インスリン（超速効型）',form:'注射100単位/mL',dose:'指示量単位',freq:'毎食直前',note:'インスリンアスパルト'},
+  {name:'ノボラピッド注100単位/mL',kana:'のぼらぴっど',category:'インスリン（超速効型）',form:'注射バイアル',dose:'指示量単位',freq:'毎食直前'},
+  {name:'ヒューマログ注ミリオペン',kana:'ひゅーまろぐ',category:'インスリン（超速効型）',form:'注射100単位/mL',dose:'指示量単位',freq:'毎食直前',note:'インスリンリスプロ'},
+  {name:'アピドラ注ソロスター',kana:'あぴどら',category:'インスリン（超速効型）',form:'注射100単位/mL',dose:'指示量単位',freq:'毎食直前',note:'インスリングルリジン'},
+  {name:'トレシーバ注フレックスタッチ',kana:'とれしーば',category:'インスリン（持効型）',form:'注射100単位/mL',dose:'指示量単位',freq:'1日1回',note:'インスリンデグルデク'},
+  {name:'ランタス注ソロスター',kana:'らんたす',category:'インスリン（持効型）',form:'注射100単位/mL',dose:'指示量単位',freq:'1日1回',note:'インスリングラルギン'},
+  {name:'ランタスXR注ソロスター',kana:'らんたす',category:'インスリン（持効型）',form:'注射300単位/mL',dose:'指示量単位',freq:'1日1回'},
+  {name:'レベミル注フレックスペン',kana:'れべみる',category:'インスリン（持効型）',form:'注射100単位/mL',dose:'指示量単位',freq:'1〜2回/日',note:'インスリンデテミル'},
+  {name:'ノボラピッド30ミックス注',kana:'のぼらぴっどみっくす',category:'インスリン（混合型）',form:'注射100単位/mL',dose:'指示量単位',freq:'毎食前'},
+  {name:'ヒューマログミックス25注',kana:'ひゅーまろぐみっくす',category:'インスリン（混合型）',form:'注射100単位/mL',dose:'指示量単位',freq:'毎食前'},
+  // ===== GLP-1受容体作動薬 =====
+  {name:'オゼンピック皮下注0.25mgSD',kana:'おぜんぴっく',category:'GLP-1受容体作動薬',form:'注射ペン',dose:'0.25〜1mg',freq:'週1回',note:'セマグルチド'},
+  {name:'オゼンピック皮下注1mgSD',kana:'おぜんぴっく',category:'GLP-1受容体作動薬',form:'注射ペン',dose:'1mg',freq:'週1回'},
+  {name:'マンジャロ皮下注2.5mgアテオス',kana:'まんじゃろ',category:'GLP-1/GIP受容体作動薬',form:'注射ペン',dose:'2.5mg',freq:'週1回',note:'チルゼパチド'},
+  {name:'マンジャロ皮下注5mgアテオス',kana:'まんじゃろ',category:'GLP-1/GIP受容体作動薬',form:'注射ペン',dose:'5mg',freq:'週1回'},
+  {name:'マンジャロ皮下注10mgアテオス',kana:'まんじゃろ',category:'GLP-1/GIP受容体作動薬',form:'注射ペン',dose:'10mg',freq:'週1回'},
+  {name:'マンジャロ皮下注15mgアテオス',kana:'まんじゃろ',category:'GLP-1/GIP受容体作動薬',form:'注射ペン',dose:'15mg',freq:'週1回'},
+  {name:'トルリシティ皮下注0.75mgアテオス',kana:'とるりしてぃ',category:'GLP-1受容体作動薬',form:'注射ペン',dose:'0.75mg',freq:'週1回',note:'デュラグルチド'},
+  {name:'ビクトーザ皮下注18mg',kana:'びくとーざ',category:'GLP-1受容体作動薬',form:'注射ペン',dose:'0.3〜1.8mg',freq:'1日1回',note:'リラグルチド'},
+  {name:'リベルサス錠3mg',kana:'りべるさす',category:'GLP-1受容体作動薬(経口)',form:'錠剤',dose:'3mg',freq:'1日1回空腹時',note:'経口セマグルチド'},
+  {name:'リベルサス錠7mg',kana:'りべるさす',category:'GLP-1受容体作動薬(経口)',form:'錠剤',dose:'7mg',freq:'1日1回空腹時'},
+  {name:'リベルサス錠14mg',kana:'りべるさす',category:'GLP-1受容体作動薬(経口)',form:'錠剤',dose:'14mg',freq:'1日1回空腹時'},
+  // ===== SGLT2阻害薬 =====
+  {name:'フォシーガ錠5mg',kana:'ふぉしーが',category:'SGLT2阻害薬',form:'錠剤',dose:'5mg',freq:'1日1回',note:'ダパグリフロジン'},
+  {name:'フォシーガ錠10mg',kana:'ふぉしーが',category:'SGLT2阻害薬',form:'錠剤',dose:'10mg',freq:'1日1回'},
+  {name:'ジャディアンス錠10mg',kana:'じゃでぃあんす',category:'SGLT2阻害薬',form:'錠剤',dose:'10mg',freq:'1日1回',note:'エンパグリフロジン'},
+  {name:'ジャディアンス錠25mg',kana:'じゃでぃあんす',category:'SGLT2阻害薬',form:'錠剤',dose:'25mg',freq:'1日1回'},
+  {name:'カナグル錠100mg',kana:'かなぐる',category:'SGLT2阻害薬',form:'錠剤',dose:'100mg',freq:'1日1回',note:'カナグリフロジン'},
+  {name:'スーグラ錠50mg',kana:'すーぐら',category:'SGLT2阻害薬',form:'錠剤',dose:'50mg',freq:'1日1回',note:'イプラグリフロジン'},
+  // ===== DPP-4阻害薬 =====
+  {name:'エクア錠50mg',kana:'えくあ',category:'DPP-4阻害薬',form:'錠剤',dose:'50mg',freq:'1日2回',note:'ビルダグリプチン'},
+  {name:'ジャヌビア錠25mg',kana:'じゃぬびあ',category:'DPP-4阻害薬',form:'錠剤',dose:'25mg',freq:'1日1回',note:'シタグリプチン'},
+  {name:'ジャヌビア錠50mg',kana:'じゃぬびあ',category:'DPP-4阻害薬',form:'錠剤',dose:'50mg',freq:'1日1回'},
+  {name:'ジャヌビア錠100mg',kana:'じゃぬびあ',category:'DPP-4阻害薬',form:'錠剤',dose:'100mg',freq:'1日1回'},
+  {name:'トラゼンタ錠5mg',kana:'とらぜんた',category:'DPP-4阻害薬',form:'錠剤',dose:'5mg',freq:'1日1回',note:'リナグリプチン'},
+  {name:'テネリア錠20mg',kana:'てねりあ',category:'DPP-4阻害薬',form:'錠剤',dose:'20mg',freq:'1日1回',note:'テネリグリプチン'},
+  {name:'ネシーナ錠12.5mg',kana:'ねしーな',category:'DPP-4阻害薬',form:'錠剤',dose:'12.5mg',freq:'1日1回',note:'アログリプチン'},
+  // ===== ビグアナイド =====
+  {name:'メトグルコ錠250mg',kana:'めとぐるこ',category:'ビグアナイド',form:'錠剤',dose:'250mg',freq:'食後2〜3回',note:'メトホルミン'},
+  {name:'メトグルコ錠500mg',kana:'めとぐるこ',category:'ビグアナイド',form:'錠剤',dose:'500mg',freq:'食後2〜3回'},
+  // ===== PCSK9阻害薬 =====
+  {name:'レパーサ皮下注140mgオートミニドーザー',kana:'れぱーさ',category:'PCSK9阻害薬',form:'注射ペン140mg',dose:'140mg',freq:'2週に1回',note:'エボロクマブ（脂質異常症）'},
+  {name:'レパーサ皮下注420mgオートミニドーザー',kana:'れぱーさ',category:'PCSK9阻害薬',form:'注射ペン420mg',dose:'420mg',freq:'月1回'},
+  {name:'プラルエント皮下注75mgオートインジェクター',kana:'ぷらるえんと',category:'PCSK9阻害薬',form:'注射ペン75mg',dose:'75〜150mg',freq:'2週に1回',note:'アリロクマブ'},
+  // ===== ARNi =====
+  {name:'エンレスト錠50mg',kana:'えんれすと',category:'ARNi/降圧薬',form:'錠剤',dose:'50mg',freq:'1日2回',note:'サクビトリル・バルサルタン'},
+  {name:'エンレスト錠100mg',kana:'えんれすと',category:'ARNi/降圧薬',form:'錠剤',dose:'100mg',freq:'1日2回'},
+  {name:'エンレスト錠200mg',kana:'えんれすと',category:'ARNi/降圧薬',form:'錠剤',dose:'200mg',freq:'1日2回'},
+  // ===== βブロッカー =====
+  {name:'メインテート錠0.625mg',kana:'めいんてーと',category:'βブロッカー',form:'錠剤',dose:'0.625mg',freq:'1日1回',note:'ビソプロロール'},
+  {name:'メインテート錠2.5mg',kana:'めいんてーと',category:'βブロッカー',form:'錠剤',dose:'2.5mg',freq:'1日1回'},
+  {name:'メインテート錠5mg',kana:'めいんてーと',category:'βブロッカー',form:'錠剤',dose:'5mg',freq:'1日1回'},
+  {name:'アーチスト錠2.5mg',kana:'あーちすと',category:'βブロッカー',form:'錠剤',dose:'2.5mg',freq:'1日2回',note:'カルベジロール'},
+  // ===== 抗凝固薬 =====
+  {name:'リクシアナ錠15mg',kana:'りくしあな',category:'抗凝固薬（DOAC）',form:'錠剤',dose:'15mg',freq:'1日1回',note:'エドキサバン'},
+  {name:'リクシアナ錠30mg',kana:'りくしあな',category:'抗凝固薬（DOAC）',form:'錠剤',dose:'30mg',freq:'1日1回'},
+  {name:'リクシアナ錠60mg',kana:'りくしあな',category:'抗凝固薬（DOAC）',form:'錠剤',dose:'60mg',freq:'1日1回'},
+  {name:'イグザレルト錠10mg',kana:'いぐざれると',category:'抗凝固薬（DOAC）',form:'錠剤',dose:'10mg',freq:'1日1〜2回',note:'リバーロキサバン'},
+  {name:'イグザレルト錠15mg',kana:'いぐざれると',category:'抗凝固薬（DOAC）',form:'錠剤',dose:'15mg',freq:'1日1〜2回'},
+  {name:'エリキュース錠2.5mg',kana:'えりきゅーす',category:'抗凝固薬（DOAC）',form:'錠剤',dose:'2.5mg',freq:'1日2回',note:'アピキサバン'},
+  {name:'エリキュース錠5mg',kana:'えりきゅーす',category:'抗凝固薬（DOAC）',form:'錠剤',dose:'5mg',freq:'1日2回'},
+  {name:'ワーファリン錠0.5mg',kana:'わーふぁりん',category:'抗凝固薬（ビタミンK拮抗）',form:'錠剤',dose:'0.5mg',freq:'1日1回',note:'PT-INR管理必要'},
+  {name:'ワーファリン錠1mg',kana:'わーふぁりん',category:'抗凝固薬（ビタミンK拮抗）',form:'錠剤',dose:'1mg',freq:'1日1回'},
+  {name:'ワーファリン錠2mg',kana:'わーふぁりん',category:'抗凝固薬（ビタミンK拮抗）',form:'錠剤',dose:'2mg',freq:'1日1回'},
+  {name:'ワーファリン錠5mg',kana:'わーふぁりん',category:'抗凝固薬（ビタミンK拮抗）',form:'錠剤',dose:'5mg',freq:'1日1回'},
+  // ===== 腎臓病：高カリウム血症 =====
+  {name:'ロケルマ懸濁用散分包5g',kana:'ろけるま',category:'高K血症治療薬',form:'散剤',dose:'5〜15g',freq:'1日1〜3回',note:'ジルコニウムシクロシリケート'},
+  {name:'ロケルマ懸濁用散分包10g',kana:'ろけるま',category:'高K血症治療薬',form:'散剤',dose:'10g',freq:'1日1回（維持）'},
+  {name:'ケイキサレート散',kana:'けいきされーと',category:'高K血症治療薬',form:'散剤',dose:'15〜30g',freq:'1日1〜3回'},
+  {name:'カリメート散',kana:'かりめーと',category:'高K血症治療薬',form:'散剤',dose:'15〜30g',freq:'1日1〜3回'},
+  // ===== 腎臓病：高リン血症（リン吸着薬）=====
+  {name:'リオナ錠250mg',kana:'りおな',category:'リン吸着薬',form:'錠剤',dose:'250mg',freq:'毎食直前',note:'クエン酸第二鉄水和物'},
+  {name:'炭酸ランタンチュアブル錠250mg',kana:'たんさんらんたん',category:'リン吸着薬',form:'チュアブル錠',dose:'250mg',freq:'毎食直前',note:'ホスレノール'},
+  {name:'炭酸ランタンチュアブル錠500mg',kana:'たんさんらんたん',category:'リン吸着薬',form:'チュアブル錠',dose:'500mg',freq:'毎食直前'},
+  {name:'沈降炭酸カルシウム錠500mg',kana:'ちんこうたんさんかるしうむ',category:'リン吸着薬',form:'錠剤',dose:'500mg',freq:'毎食直前'},
+  {name:'キックリン',kana:'きっくりん',category:'リン吸着薬',form:'カプセル',dose:'250mg',freq:'毎食直前',note:'ビキサロマー'},
+  // ===== 腎臓病：尿酸降下薬 =====
+  {name:'フェブリク錠10mg',kana:'ふぇぶりく',category:'尿酸降下薬',form:'錠剤',dose:'10mg',freq:'1日1回',note:'フェブキソスタット'},
+  {name:'フェブリク錠20mg',kana:'ふぇぶりく',category:'尿酸降下薬',form:'錠剤',dose:'20mg',freq:'1日1回'},
+  {name:'フェブリク錠40mg',kana:'ふぇぶりく',category:'尿酸降下薬',form:'錠剤',dose:'40mg',freq:'1日1回'},
+  {name:'ザイロリック錠100',kana:'ざいろりっく',category:'尿酸降下薬',form:'錠剤',dose:'100mg',freq:'1日2〜3回',note:'アロプリノール'},
+  // ===== 利尿薬 =====
+  {name:'ラシックス錠10mg',kana:'らしっくす',category:'ループ利尿薬',form:'錠剤',dose:'10mg',freq:'1日1〜2回',note:'フロセミド'},
+  {name:'ラシックス錠20mg',kana:'らしっくす',category:'ループ利尿薬',form:'錠剤',dose:'20mg',freq:'1日1〜2回'},
+  {name:'ラシックス錠40mg',kana:'らしっくす',category:'ループ利尿薬',form:'錠剤',dose:'40mg',freq:'1日1〜2回'},
+  {name:'アルダクトンA錠25mg',kana:'あるだくとん',category:'カリウム保持性利尿薬',form:'錠剤',dose:'25mg',freq:'1日1〜2回',note:'スピロノラクトン（K上昇注意）'},
+  {name:'トルバプタン錠7.5mg',kana:'とるばぷたん',category:'V2受容体拮抗薬',form:'錠剤',dose:'7.5mg',freq:'1日1回',note:'サムスカ（低Na注意）'},
+  // ===== ARB/ACE阻害薬 =====
+  {name:'ニューロタン錠25mg',kana:'にゅーろたん',category:'ARB',form:'錠剤',dose:'25mg',freq:'1日1回',note:'ロサルタン'},
+  {name:'ニューロタン錠50mg',kana:'にゅーろたん',category:'ARB',form:'錠剤',dose:'50mg',freq:'1日1回'},
+  {name:'ディオバン錠40mg',kana:'でぃおばん',category:'ARB',form:'錠剤',dose:'40mg',freq:'1日1回',note:'バルサルタン'},
+  {name:'ディオバン錠80mg',kana:'でぃおばん',category:'ARB',form:'錠剤',dose:'80mg',freq:'1日1回'},
+  {name:'ブロプレス錠4',kana:'ぶろぷれす',category:'ARB',form:'錠剤',dose:'4mg',freq:'1日1回',note:'カンデサルタン'},
+  {name:'ブロプレス錠8',kana:'ぶろぷれす',category:'ARB',form:'錠剤',dose:'8mg',freq:'1日1回'},
+  {name:'オルメテック錠10mg',kana:'おるめてっく',category:'ARB',form:'錠剤',dose:'10mg',freq:'1日1回',note:'オルメサルタン'},
+  {name:'ミカルディス錠20mg',kana:'みかるでぃす',category:'ARB',form:'錠剤',dose:'20mg',freq:'1日1回',note:'テルミサルタン'},
+  {name:'アジルバ錠20mg',kana:'あじるば',category:'ARB',form:'錠剤',dose:'20mg',freq:'1日1回',note:'アジルサルタン'},
+  {name:'レニベース錠5',kana:'れにべーす',category:'ACE阻害薬',form:'錠剤',dose:'5mg',freq:'1日1〜2回',note:'エナラプリル'},
+  // ===== スタチン =====
+  {name:'クレストール錠2.5mg',kana:'くれすとーる',category:'スタチン',form:'錠剤',dose:'2.5mg',freq:'1日1回',note:'ロスバスタチン'},
+  {name:'クレストール錠5mg',kana:'くれすとーる',category:'スタチン',form:'錠剤',dose:'5mg',freq:'1日1回'},
+  {name:'リピトール錠5mg',kana:'りぴとーる',category:'スタチン',form:'錠剤',dose:'5mg',freq:'1日1回',note:'アトルバスタチン'},
+  {name:'リピトール錠10mg',kana:'りぴとーる',category:'スタチン',form:'錠剤',dose:'10mg',freq:'1日1回'},
+  {name:'リバロ錠1mg',kana:'りばろ',category:'スタチン',form:'錠剤',dose:'1mg',freq:'1日1回',note:'ピタバスタチン'},
+  {name:'リバロ錠2mg',kana:'りばろ',category:'スタチン',form:'錠剤',dose:'2mg',freq:'1日1回'},
+  {name:'メバロチン錠5',kana:'めばろちん',category:'スタチン',form:'錠剤',dose:'5mg',freq:'1日1回',note:'プラバスタチン'},
+  // ===== 抗血小板薬・消化器 =====
+  {name:'バイアスピリン錠100mg',kana:'ばいあすぴりん',category:'抗血小板薬',form:'錠剤',dose:'100mg',freq:'1日1回',note:'低用量アスピリン'},
+  {name:'プラビックス錠25mg',kana:'ぷらびっくす',category:'抗血小板薬',form:'錠剤',dose:'25mg',freq:'1日1回',note:'クロピドグレル'},
+  {name:'プラビックス錠75mg',kana:'ぷらびっくす',category:'抗血小板薬',form:'錠剤',dose:'75mg',freq:'1日1回'},
+  {name:'タケキャブ錠10mg',kana:'たけきゃぶ',category:'PPI',form:'錠剤',dose:'10mg',freq:'1日1回',note:'ボノプラザン'},
+  {name:'タケキャブ錠20mg',kana:'たけきゃぶ',category:'PPI',form:'錠剤',dose:'20mg',freq:'1日1回'},
+  {name:'ガスター錠20mg',kana:'がすたー',category:'H2ブロッカー',form:'錠剤',dose:'20mg',freq:'1日2回',note:'ファモチジン（腎機能低下時減量）'},
+];
+
+function getDrugDB() {
+  try {
+    const custom = JSON.parse(localStorage.getItem(DRUG_DB_CUSTOM_KEY) || '[]');
+    return [...DRUG_DB_BASE, ...custom];
+  } catch(e) { return [...DRUG_DB_BASE]; }
+}
+
+function learnCustomDrug(name, form, category) {
+  try {
+    const custom = JSON.parse(localStorage.getItem(DRUG_DB_CUSTOM_KEY) || '[]');
+    const allDB = getDrugDB();
+    if (name && name.length >= 2 && !allDB.some(d => d.name === name)) {
+      custom.push({ name, kana:'', category: category||'カスタム', form: form||'', dose:'', freq:'', custom:true, learnedAt: new Date().toISOString() });
+      localStorage.setItem(DRUG_DB_CUSTOM_KEY, JSON.stringify(custom));
+    }
+  } catch(e) {}
+}
+
+function searchDrugDB(query) {
+  if (!query || query.length < 1) return [];
+  const db = getDrugDB();
+  const q = query.toLowerCase();
+  const qH = (typeof toHiragana === 'function') ? toHiragana(q) : q;
+  const qK = (typeof toKatakana === 'function') ? toKatakana(q) : q;
+  return db.map(drug => {
+    const n = drug.name.toLowerCase(), k = (drug.kana||'').toLowerCase();
+    let s = 0;
+    if (n.startsWith(q)||k.startsWith(qH)||k.startsWith(q)) s=100;
+    else if (n.includes(q)||k.includes(qH)||k.includes(q)||n.includes(qK)) s=50;
+    else if ((drug.category||'').toLowerCase().includes(q)) s=10;
+    return {drug, s};
+  }).filter(x=>x.s>0).sort((a,b)=>b.s-a.s).slice(0,10).map(x=>x.drug);
+}
+
+function parseMedLabel(text) {
+  const result = {name:'', form:'', dose:'', days:null, timesPerDay:null, stock:null};
+  if (!text) return result;
+  const lines = text.split(/\n|\r/).map(l=>l.trim()).filter(Boolean);
+  for (const line of lines) {
+    if (line.length>=3 && !line.match(/^[\d]+$/) && !line.match(/^(処方|調剤|薬局|病院|クリニック)/)) {
+      const match = DRUG_DB_BASE.find(d=>line.includes(d.name.slice(0,4)));
+      if (match) { result.name=match.name; result.form=match.form; break; }
+      if (line.match(/錠|カプセル|散|注|液|軟膏|テープ/)) { result.name=line; break; }
+    }
+  }
+  const tm = text.match(/1日\s*(\d+)\s*回/); if(tm) result.timesPerDay=parseInt(tm[1]);
+  const dm = text.match(/(\d+)\s*日分/);     if(dm) result.days=parseInt(dm[1]);
+  if(result.timesPerDay&&result.days) result.stock=result.timesPerDay*result.days;
+  const dose = text.match(/(\d+(?:\.\d+)?\s*(?:mg|μg|g|mL|単位))/i); if(dose) result.dose=dose[1];
+  return result;
+}
+
 // ----- 薬マスター CRUD -----
-function loadMedicines() {
+ {
   try {
     const all = JSON.parse(localStorage.getItem(MED_KEY)||'[]');
     // 重複IDを除去（同一IDは最初の1件のみ残す）
@@ -7147,8 +7353,14 @@ function _makeBulkCardHTML(idx, data) {
     <div id="bulk-card-body-${idx}" style="padding:12px 14px;display:${open?'block':'none'};">
       <div class="form-row">
         <label class="form-label">💊 薬の名前</label>
-        <input class="form-input" type="text" id="bulk-name-${idx}" placeholder="例：フォシーガ錠10mg" value="${d.name||''}"
-          oninput="updateBulkCardLabel(${idx})" />
+        <div class="drug-suggest-wrap" id="drug-wrap-${idx}">
+          <input class="form-input" type="text" id="bulk-name-${idx}" placeholder="例：フォシーガ、ノボラピッド…" value="${d.name||''}"
+            oninput="updateBulkCardLabel(${idx});showDrugSuggest(${idx})"
+            onkeydown="onDrugKeydown(event,${idx})"
+            autocomplete="off" />
+          <div class="drug-suggest-list" id="drug-suggest-${idx}" style="display:none;"></div>
+        </div>
+        ${d.note?`<div style="font-size:11px;color:var(--accent);margin-top:4px;">ℹ️ ${d.note}</div>`:''}
       </div>
       <div class="form-row">
         <label class="form-label">📦 剤形・規格</label>
@@ -7360,6 +7572,8 @@ function saveMedicines_bulk() {
     return;
   }
   saveMedicines(meds);
+  // 未知の薬名を学習保存
+  meds.forEach(m => { if(m.name) learnCustomDrug(m.name, m.form || '', m.category || ''); });
   closeModal('addMedModal');
   const msg = errCount > 0
     ? `✅ ${savedCount}種類を保存（${errCount}件はスキップ）`
@@ -7472,6 +7686,134 @@ function showEditMedModal(id) {
 
   refreshMedHospitalSelect(med.hospitalId || '');
   document.getElementById('addMedModal').classList.add('open');
+}
+
+
+// ============================================================
+// ===== 薬名オートコンプリート制御 =====
+// ============================================================
+
+let _drugFocusIdx = -1;
+if (!window._drugSuggestCache) window._drugSuggestCache = {};
+
+function showDrugSuggest(cardIdx) {
+  const input = document.getElementById('bulk-name-' + cardIdx);
+  const list  = document.getElementById('drug-suggest-' + cardIdx);
+  if (!input || !list) return;
+  const q = input.value.trim();
+  _drugFocusIdx = -1;
+  if (q.length < 1) { list.style.display = 'none'; return; }
+  const results = searchDrugDB(q);
+  window._drugSuggestCache[cardIdx] = results;
+  const isExact = results.some(d => d.name === q);
+  let html = results.map((d, i) => `
+    <div class="drug-suggest-item" data-idx="${cardIdx}" data-i="${i}"
+      onclick="selectDrugSuggest(${cardIdx},${i})" onmousedown="event.preventDefault()">
+      <div class="drug-suggest-name">${d.name}</div>
+      <div class="drug-suggest-meta">
+        ${d.form ? '<span>'+d.form+'</span>' : ''}
+        ${d.dose ? '<span>'+d.dose+'</span>' : ''}
+        ${d.freq ? '<span>'+d.freq+'</span>' : ''}
+        <span class="${d.custom ? 'drug-suggest-custom' : 'drug-suggest-cat'}">${d.category||''}</span>
+        ${d.custom ? '<span class="drug-suggest-custom">📖学習済み</span>' : ''}
+      </div>
+      ${d.note ? '<div style="font-size:10px;color:var(--text3);margin-top:2px;">'+d.note+'</div>' : ''}
+    </div>`).join('');
+  if (!isExact && q.length >= 2) {
+    html += `<div class="drug-suggest-item" onclick="selectNewDrug(${cardIdx})" onmousedown="event.preventDefault()" style="border-top:1px solid var(--border2);">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-size:16px;">➕</span>
+        <div>
+          <div class="drug-suggest-name">"${q}" を新規登録</div>
+          <div class="drug-suggest-meta"><span class="drug-suggest-new">カスタム薬として学習保存</span></div>
+        </div>
+      </div>
+    </div>`;
+  }
+  list.innerHTML = html || '<div style="padding:12px;font-size:12px;color:var(--text3);">候補なし</div>';
+  list.style.display = 'block';
+}
+
+function selectDrugSuggest(cardIdx, resultIdx) {
+  const results = (window._drugSuggestCache || {})[cardIdx];
+  if (!results || !results[resultIdx]) return;
+  const drug = results[resultIdx];
+  const nameEl  = document.getElementById('bulk-name-' + cardIdx);
+  const formEl  = document.getElementById('bulk-form-' + cardIdx);
+  const listEl  = document.getElementById('drug-suggest-' + cardIdx);
+  if (nameEl) nameEl.value = drug.name;
+  if (formEl && drug.form) formEl.value = drug.form;
+  if (listEl) listEl.style.display = 'none';
+  if (drug.freq) {
+    const freqEl = document.getElementById('bulk-freq-' + cardIdx);
+    if (freqEl) {
+      if (drug.freq.includes('週1')) freqEl.value = 'weekly';
+      else if (drug.freq.includes('月1')) freqEl.value = 'monthly';
+      else if (drug.freq.includes('頓服')) freqEl.value = 'prn';
+      else freqEl.value = 'daily';
+      onBulkFreqChange(cardIdx);
+    }
+  }
+  updateBulkCardLabel(cardIdx);
+}
+
+function selectNewDrug(cardIdx) {
+  const nameEl = document.getElementById('bulk-name-' + cardIdx);
+  const listEl = document.getElementById('drug-suggest-' + cardIdx);
+  if (listEl) listEl.style.display = 'none';
+  if (nameEl && nameEl.value.trim().length >= 2) {
+    learnCustomDrug(nameEl.value.trim(), '', 'カスタム');
+    showToast('📖 "' + nameEl.value.trim() + '" を薬リストに学習しました');
+  }
+}
+
+function onDrugKeydown(e, cardIdx) {
+  const list = document.getElementById('drug-suggest-' + cardIdx);
+  if (!list || list.style.display === 'none') return;
+  const items = list.querySelectorAll('.drug-suggest-item');
+  if (!items.length) return;
+  if (e.key === 'ArrowDown') { e.preventDefault(); _drugFocusIdx = Math.min(_drugFocusIdx+1, items.length-1); }
+  else if (e.key === 'ArrowUp') { e.preventDefault(); _drugFocusIdx = Math.max(_drugFocusIdx-1, 0); }
+  else if (e.key === 'Enter' && _drugFocusIdx >= 0) { e.preventDefault(); items[_drugFocusIdx].click(); return; }
+  else if (e.key === 'Escape') { list.style.display = 'none'; return; }
+  items.forEach((el, i) => el.classList.toggle('focused', i === _drugFocusIdx));
+}
+
+document.addEventListener('click', function(e) {
+  document.querySelectorAll('.drug-suggest-list').forEach(list => {
+    if (!list.closest('.drug-suggest-wrap')?.contains(e.target)) list.style.display = 'none';
+  });
+});
+
+// ============================================================
+// ===== 薬シールOCR解析プレビュー =====
+// ============================================================
+
+function showMedOcrPreview(parsed, cardIdx) {
+  const body = document.getElementById('bulk-card-body-' + cardIdx);
+  if (!body) return;
+  let previewEl = document.getElementById('med-ocr-preview-' + cardIdx);
+  if (!previewEl) {
+    previewEl = document.createElement('div');
+    previewEl.id = 'med-ocr-preview-' + cardIdx;
+    previewEl.className = 'ocr-preview-box';
+    body.insertBefore(previewEl, body.firstChild);
+  }
+  const stockHtml = parsed.stock
+    ? `<span class="ocr-preview-stock">📦 ${parsed.stock}錠 (${parsed.timesPerDay}回×${parsed.days}日分)</span>`
+    : '—';
+  previewEl.innerHTML = `
+    <div class="ocr-preview-title">🔍 OCR解析結果</div>
+    <div class="ocr-preview-row"><span class="ocr-preview-label">薬名</span><span class="ocr-preview-val">${parsed.name||'（未検出）'}</span></div>
+    <div class="ocr-preview-row"><span class="ocr-preview-label">用量</span><span class="ocr-preview-val">${parsed.dose||'—'}</span></div>
+    <div class="ocr-preview-row"><span class="ocr-preview-label">在庫</span><span class="ocr-preview-val">${stockHtml}</span></div>
+    <div style="font-size:11px;color:var(--text2);margin-top:8px;">↑ 確認・修正してから保存してください</div>`;
+  const nameEl  = document.getElementById('bulk-name-' + cardIdx);
+  const formEl  = document.getElementById('bulk-form-' + cardIdx);
+  const stockEl = document.getElementById('bulk-stock-' + cardIdx);
+  if (nameEl && parsed.name)  { nameEl.value = parsed.name; updateBulkCardLabel(cardIdx); }
+  if (formEl && parsed.form)  formEl.value = parsed.form;
+  if (stockEl && parsed.stock !== null) stockEl.value = parsed.stock;
 }
 
 function saveMedicine() {
