@@ -7,8 +7,11 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0d1420">
 <title>HealthCare — 健康管理・腎臓病食事管理</title>
-<link rel="manifest" href="manifest.json">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Kaisei+Opti:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="manifest" href="data:application/json,{"name":"HealthCare","short_name":"HealthCare","display":"standalone","theme_color":"#0a1220","background_color":"#0a1220","icons":[{"src":"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>","sizes":"any","type":"image/svg+xml"}]}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Kaisei+Opti:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Kaisei+Opti:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"></noscript>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js" defer></script>
 
 <!-- ===== Google AdSense ===== -->
@@ -204,6 +207,7 @@ html, body {
   padding-bottom: max(24px, env(safe-area-inset-bottom));
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  z-index: 1; /* 他の要素より上に確実に表示 */
   background: radial-gradient(ellipse at 30% 20%, rgba(79,195,247,0.08) 0%, transparent 60%),
               radial-gradient(ellipse at 80% 80%, rgba(192,132,252,0.06) 0%, transparent 60%),
               var(--bg);
@@ -223,7 +227,7 @@ html, body {
 .ob-step { font-size: 11px; color: var(--text3); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 12px; }
 .ob-question { font-size: 16px; font-weight: 500; margin-bottom: 20px; line-height: 1.5; }
 .ob-choices { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
-.ob-choice { display: flex; align-items: center; gap: 14px; padding: 16px; border: 1.5px solid var(--border); border-radius: var(--r); cursor: pointer; transition: all 0.2s; }
+.ob-choice { display: flex; align-items: center; gap: 14px; padding: 16px; border: 1.5px solid var(--border); border-radius: var(--r); cursor: pointer; transition: all 0.2s; pointer-events: auto; -webkit-tap-highlight-color: rgba(79,195,247,0.2); user-select: none; -webkit-user-select: none; }
 .ob-choice:hover { border-color: var(--border2); background: var(--surface2); }
 .ob-choice.selected { border-color: var(--accent); background: var(--accent-glow); }
 .ob-choice-icon { font-size: 28px; flex-shrink: 0; }
@@ -2829,7 +2833,16 @@ const MED_SCHEDULE_KEY= 'renalcare_med_schedule';   // {medId: [slotKey, ...]} o
 
 // ===== INIT =====
 document.addEventListener('DOMContentLoaded', () => {
-  // ── 【最優先】初期化（エラーが起きても続行） ──────────────────────────
+  // ── 【最優先】初期化（エラーが起きても必ず続行） ──────────────────────
+  // terms-overlayを確実に非表示にする（最優先）
+  (function() {
+    const ov = document.getElementById('terms-overlay');
+    const ad = document.getElementById('ad-time-overlay');
+    const lo = document.getElementById('loadingOverlay');
+    if (ov) { ov.style.cssText = 'display:none!important;pointer-events:none!important;visibility:hidden!important;'; }
+    if (ad) { ad.style.cssText = 'display:none!important;pointer-events:none!important;visibility:hidden!important;'; }
+    if (lo) { lo.style.display = 'none'; }
+  })();
   try { initTermsCheck(); } catch(e) { console.warn('initTermsCheck error:', e); }
   try { detectStorageTampering(); } catch(e) { console.warn('detectStorageTampering error:', e); }
 
@@ -3220,11 +3233,13 @@ function showUserSwitchModal() {
 
 // ===== ONBOARDING =====
 function selectObChoice(type) {
+  try {
   state.obType = type;
   document.querySelectorAll('#ob-step1 .ob-choice').forEach(c => c.classList.remove('selected'));
   const choiceEl = document.getElementById('oc-'+type);
   if (choiceEl) choiceEl.classList.add('selected');
-  document.getElementById('ob-btn1').disabled = false;
+  const btn1 = document.getElementById('ob-btn1');
+  if (btn1) btn1.disabled = false;
 
   // healthy モード: CKDステップをスキップするためラベルを更新
   const isHealthy = type === 'healthy';
@@ -3241,8 +3256,8 @@ function selectObChoice(type) {
     if (step4Label) step4Label.textContent = 'ステップ 4 / 5';
     if (step5Label) step5Label.textContent = 'ステップ 5 / 5';
   }
+  } catch(e) { console.warn("selectObChoice error:", e); }
 }
-
 function checkObName() {
   document.getElementById('ob-btn2').disabled = document.getElementById('ob-name').value.trim().length < 2;
 }
