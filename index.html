@@ -9,7 +9,7 @@
 <title>HealthCare — 健康管理・腎臓病食事管理</title>
 <link rel="manifest" href="manifest.json">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Kaisei+Opti:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js" defer></script>
 
 <!-- ===== Google AdSense ===== -->
 <!-- TODO: あなたのAdSenseパブリッシャーIDに置き換えてください -->
@@ -2829,12 +2829,12 @@ const MED_SCHEDULE_KEY= 'renalcare_med_schedule';   // {medId: [slotKey, ...]} o
 
 // ===== INIT =====
 document.addEventListener('DOMContentLoaded', () => {
-  // ── 【最優先】利用規約チェック & 改ざん検知 ──────────────────────────
-  initTermsCheck();          // 未同意なら規約オーバーレイを表示
-  detectStorageTampering();  // localStorage 改ざん検知
+  // ── 【最優先】初期化（エラーが起きても続行） ──────────────────────────
+  try { initTermsCheck(); } catch(e) { console.warn('initTermsCheck error:', e); }
+  try { detectStorageTampering(); } catch(e) { console.warn('detectStorageTampering error:', e); }
 
   // 薬データ: stock / daysSupply / prescDate フィールドのマイグレーション
-  migrateMedStock();
+  try { migrateMedStock(); } catch(e) { console.warn('migrateMedStock error:', e); }
 
   // 旧バージョンで WATER_KEY が undefined だった場合のデータ移行
   try {
@@ -3891,8 +3891,7 @@ function saveEditMeal() {
     _editFqSelections = [];
     showToast('✅ 記録を更新しました');
     closeModal('editModal');
-    renderHistory();
-    updateHomeSummary();
+    refreshAll();
   }
   else showToast('⚠ 更新できませんでした');
 }
@@ -4239,7 +4238,7 @@ async function saveMeal() {
   } else {
     showToast('⚠️ 保存に失敗しました');
   }
-  resetRecord(); navTo('home'); updateHomeSummary(); updateHba1cCard(); updateWaterCard(); updateWaterBalance();
+  resetRecord(); navTo('home'); refreshAll();
 }
 
 function localSaveMeal(meal) {
@@ -4654,6 +4653,32 @@ function saveTargets() {
   showToast('✅ 目標値を保存しました');
   updateHomeSummary();
 }
+
+// ============================================================
+// ===== グローバル全ページ更新関数 =====
+// どのページで変更があっても全情報を同期する
+// ============================================================
+function refreshAll() {
+  try { updateHomeSummary(); }       catch(e) { console.warn('refreshAll: updateHomeSummary', e); }
+  try { updateWaterCard(); }         catch(e) { console.warn('refreshAll: updateWaterCard', e); }
+  try { updateWaterBalance(); }      catch(e) { console.warn('refreshAll: updateWaterBalance', e); }
+  try { updateHba1cCard(); }         catch(e) { console.warn('refreshAll: updateHba1cCard', e); }
+  try { updatePreventionCard && updatePreventionCard(); } catch(e) {}
+  try { renderHomeMedcheck(); }      catch(e) { console.warn('refreshAll: renderHomeMedcheck', e); }
+  try { updateHomeDate(); }          catch(e) {}
+  // 現在表示中のページも更新
+  const activePage = document.querySelector('.page.active');
+  if (activePage) {
+    const pageId = activePage.id;
+    try {
+      if (pageId === 'page-history')  renderHistory();
+      if (pageId === 'page-health')   renderHealthPage();
+      if (pageId === 'page-medicine') { renderMedicineLog(); renderMedRegistered(); }
+      if (pageId === 'page-water')    { updateWaterCard(); updateWaterBalance(); }
+    } catch(e) { console.warn('refreshAll: page update', e); }
+  }
+}
+
 function updateHomeDate() {
   const d = new Date();
   const days = ['日','月','火','水','木','金','土'];
@@ -4680,17 +4705,18 @@ function navTo(page) {
   if (pg) { pg.classList.add('active'); pg.classList.add('fade-in'); }
   const nb=document.getElementById('nav-'+page);
   if (nb) nb.classList.add('active');
+  // ページ移動時に常に最新データを反映
+  if (page==='home')     { updateHomeSummary(); updateWaterCard(); updateWaterBalance(); updateHba1cCard(); try{updatePreventionCard();}catch(e){} }
   if (page==='history')  renderHistory();
   if (page==='health')   renderHealthPage();
   if (page==='record') {
     initRecordDate();
-    // 透析患者のみ食事重量フィールドを表示
     const fwRow = document.getElementById('record-food-weight-row');
     if (fwRow) fwRow.style.display = (state.ckdStage === 'ckd4') ? '' : 'none';
   }
-  if (page==='medicine') { setMedDateToday(); renderMedicineLog(); }
-  if (page==='water' || page==='home') { updateWaterCard(); updateWaterBalance(); }
-  if (page==='home') updatePreventionCard();
+  if (page==='medicine') { setMedDateToday(); renderMedicineLog(); try{renderMedRegistered();}catch(e){} }
+  if (page==='water')    { updateWaterCard(); updateWaterBalance(); }
+  if (page==='settings') { try{_updateBodyDisplay();}catch(e){} }
 }
 
 // ===== 健康記録 =====
@@ -4768,6 +4794,7 @@ function saveHealthRecord(type) {
 
   showToast('✅ 記録しました');
   renderHealthPage();
+  refreshAll();
 }
 
 function getTodayHealthRecords(type) {
@@ -6084,9 +6111,7 @@ function addDrink(ml) {
     all.push({ id: 'drink_'+Date.now(), time: new Date().toISOString(), ml, auto: false, drink: true });
     localStorage.setItem(WATER_KEY, JSON.stringify(all));
   } catch(e) {}
-  updateWaterCard();
-  updateWaterBalance();
-  updateHomeSummary();
+  refreshAll();
   showToast(`💧 ${ml}mL 追加しました`);
 }
 
@@ -7493,12 +7518,6 @@ function showAddMedModal(presetHospitalId) {
   document.getElementById('med-edit-form').style.display   = 'none';
   document.getElementById('med-cards-list').innerHTML = '';
   // OCR パネルをリセット
-  const ocrRow = document.getElementById('med-ocr-row');
-  const ocrDiv = document.getElementById('med-ocr-divider');
-  if (ocrRow) ocrRow.style.display = '';
-  if (ocrDiv) ocrDiv.style.display = '';
-  dismissOcrPanel();
-  refreshMedHospitalSelect(presetHospitalId || '');
   // 1枚目のカードを追加
   addMedCard();
   document.getElementById('addMedModal').classList.add('open');
@@ -7581,7 +7600,7 @@ function saveMedicines_bulk() {
   showToast(msg);
   renderMedicineLog();
   renderHospitalsPanel();
-  renderHomeMedcheck();
+  refreshAll();
 }
 
 // ============================================================
@@ -7600,11 +7619,6 @@ function showEditMedModal(id) {
   document.getElementById('med-add-save-row').style.display = 'none';
   document.getElementById('med-edit-form').style.display    = '';
   // 編集モードでは OCR エリアを非表示
-  const ocrRow2 = document.getElementById('med-ocr-row');
-  const ocrDiv2 = document.getElementById('med-ocr-divider');
-  if (ocrRow2) ocrRow2.style.display = 'none';
-  if (ocrDiv2) ocrDiv2.style.display = 'none';
-  document.getElementById('med-edit-delete-btn').style.display = 'block';
   document.getElementById('med-cards-list').innerHTML = '';
 
   // 編集フォームを構築
