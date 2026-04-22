@@ -2685,6 +2685,53 @@ function getUserId() {
   return uid;
 }
 
+// ===== localStorage フォールバック（file://プロトコル対応） =====
+(function() {
+  // file:// プロトコルや一部ブラウザで localStorage が使えない場合、
+  // インメモリストレージにフォールバックする
+  try {
+    const testKey = '__storage_test__';
+    localStorage.setItem(testKey, '1');
+    localStorage.removeItem(testKey);
+  } catch(e) {
+    console.warn('[Storage] localStorage が利用できないため、インメモリストレージを使用します:', e);
+    // インメモリ実装で localStorage を上書き
+    const _mem = {};
+    const _fakeStorage = {
+      getItem:    (k)    => (k in _mem) ? _mem[k] : null,
+      setItem:    (k, v) => { _mem[k] = String(v); },
+      removeItem: (k)    => { delete _mem[k]; },
+      clear:      ()     => { Object.keys(_mem).forEach(k => delete _mem[k]); },
+      key:        (i)    => Object.keys(_mem)[i] || null,
+      get length()       { return Object.keys(_mem).length; },
+    };
+    try { Object.defineProperty(window, 'localStorage', { value: _fakeStorage, writable: false }); } catch(e2) {}
+
+    // ユーザーへの通知バナーを表示
+    document.addEventListener('DOMContentLoaded', function() {
+      const banner = document.createElement('div');
+      banner.id = 'storage-warning-banner';
+      banner.style.cssText = [
+        'position:fixed','top:0','left:0','right:0','z-index:99999',
+        'background:#7c2d12','border-bottom:2px solid #f97316',
+        'padding:14px 16px','display:flex','flex-direction:column','gap:8px',
+        'box-shadow:0 4px 20px rgba(0,0,0,0.6)',
+      ].join(';');
+      banner.innerHTML = `
+        <div style="font-size:13px;color:#fed7aa;font-weight:700;">⚠️ データが保存されません（file://モードで起動中）</div>
+        <div style="font-size:12px;color:#fdba74;line-height:1.6;">
+          HTMLファイルをダブルクリックで開いている場合、ブラウザのセキュリティ制限により<br>
+          データが保存できず、ボタンが動作しないことがあります。<br>
+          <strong>解決方法：</strong>ローカルサーバーで開いてください。<br>
+          例）<code style="background:#431407;padding:2px 6px;border-radius:4px;">npx serve .</code> または VS Code の Live Server 拡張機能
+        </div>
+        <button onclick="document.getElementById('storage-warning-banner').remove()" style="align-self:flex-start;padding:6px 14px;background:#431407;color:#fed7aa;border:1px solid #f97316;border-radius:8px;font-size:12px;cursor:pointer;">✕ 閉じる（今回のみ動作します）</button>
+      `;
+      document.body.appendChild(banner);
+    });
+  }
+})();
+
 // ===== マルチユーザー管理 =====
 const PROFILES_KEY = 'renalcare_profiles';
 const ACTIVE_UID_KEY = 'renalcare_active_uid';
