@@ -2856,6 +2856,27 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   // 5分ごとにグラフを自動更新
   setInterval(() => { updateGlucoseGraph(); updateHba1cCard(); }, 5 * 60 * 1000);
+
+  // ── ボタンのイベントを addEventListener でも補完登録（onclick属性の補完） ──
+  // ob-choice（タイプ選択）
+  try {
+    document.querySelectorAll('#ob-step1 .ob-choice').forEach(el => {
+      if (el.id && el.id.startsWith('oc-')) {
+        const type = el.id.replace('oc-', '');
+        el.addEventListener('click', () => selectObChoice(type));
+      }
+    });
+  } catch(e) {}
+  // ob-btn1（次へ）
+  try {
+    const ob1 = document.getElementById('ob-btn1');
+    if (ob1) ob1.addEventListener('click', () => goObStep(2));
+  } catch(e) {}
+  // ob-name 入力
+  try {
+    const obName = document.getElementById('ob-name');
+    if (obName) obName.addEventListener('input', checkObName);
+  } catch(e) {}
 });
 
 /**
@@ -3154,7 +3175,9 @@ function selectObChoice(type) {
   } catch(e) { console.warn("selectObChoice error:", e); }
 }
 function checkObName() {
-  document.getElementById('ob-btn2').disabled = document.getElementById('ob-name').value.trim().length < 2;
+  const btn = document.getElementById('ob-btn2');
+  const inp = document.getElementById('ob-name');
+  if (btn && inp) btn.disabled = inp.value.trim().length < 2;
 }
 
 function selectCkdStage(stage) {
@@ -4515,7 +4538,6 @@ function showPatientDetail(name) {
   const m=document.getElementById('patientModal');
   if (m) m.classList.add('open');
 }
-function showPremiumModal() { showToast('プレミアムプランの詳細は近日公開予定です'); }
 function showTargetModal() {
   const isHealthy = state.userType === 'healthy';
   // モーダルタイトル更新
@@ -7025,7 +7047,7 @@ function parseMedLabel(text) {
 }
 
 // ----- 薬マスター CRUD -----
- {
+function loadMedicines() {
   try {
     const all = JSON.parse(localStorage.getItem(MED_KEY)||'[]');
     // 重複IDを除去（同一IDは最初の1件のみ残す）
