@@ -1800,6 +1800,28 @@ body.is-premium .premium-banner { display: none !important; }
         <div class="settings-title">1日の目標値（担当医の指示）</div>
         <div class="setting-row" onclick="showTargetModal()"><div class="setting-icon">🎯</div><div class="setting-text"><div class="setting-name">目標値を変更する</div><div class="setting-desc" id="s-targets">タンパク質 40g / カリウム 2,000mg / リン 700mg</div></div><div class="setting-arrow">›</div></div>
       </div>
+      <!-- ===== CKD ステージ変更セクション ===== -->
+      <div class="settings-section" id="settings-ckd-section">
+        <div class="settings-title">🫁 CKDステージ・腎臓病ステータス</div>
+        <div style="padding:4px 0 10px;font-size:12px;color:var(--text3);">
+          ステージを変更すると、体重・糖尿病の有無をもとに1日の目標値を自動再計算します。
+        </div>
+        <!-- ステージ選択グリッド -->
+        <div id="settings-ckd-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+          <!-- JS で描画 -->
+        </div>
+        <!-- 現在のステージ詳細 -->
+        <div id="settings-ckd-detail" style="background:var(--surface2);border:1.5px solid var(--accent);border-radius:var(--r);padding:12px;font-size:12px;display:none;">
+          <!-- JS で描画 -->
+        </div>
+        <!-- 再計算ボタン -->
+        <button class="btn btn-primary btn-full" style="margin-top:10px;" onclick="applyNewCkdStage()">
+          ✓ このステージで目標値を再計算・保存
+        </button>
+        <div style="font-size:11px;color:var(--text3);margin-top:6px;text-align:center;">
+          ※ 担当医の指示と異なる場合は「目標値を変更する」で手動調整してください
+        </div>
+      </div>
       <div class="settings-section">
         <div class="settings-title">血糖値計算</div>
         <div class="setting-row" onclick="cycleUserType()"><div class="setting-icon">🩸</div><div class="setting-text"><div class="setting-name">血糖値計算モード</div><div class="setting-desc" id="s-glucose-mode-desc">2型糖尿病モード（糖質×3）</div></div><div style="font-size:18px;color:var(--text3);">›</div></div>
@@ -3429,6 +3451,203 @@ function calcAutoTargets() {
   return { calories:calFinal, protein, potassium, phosphorus, water, salt, fiber: null, fat: null };
 }
 
+// ============================================================
+// ===== 設定ページ：CKDステージ変更パネル =====
+// ============================================================
+
+/** CKDステージ定義（設定UIで使用） */
+const CKD_STAGE_DEFS = [
+  {
+    key: 'ckd1',
+    label: 'G1〜G2 前期',
+    icon: '🟢',
+    gfr: 'GFR 60以上',
+    desc: '軽度の腎機能低下。\n食事制限は比較的緩やか。',
+    proteinRate: '0.8g/標準体重',
+    potassiumLimit: '制限なし（3,500mg目安）',
+    phosphorusLimit: 'タンパク質量に準ずる',
+    saltLimit: '6g未満',
+    waterNote: '特別な制限なし',
+    color: 'var(--green)',
+  },
+  {
+    key: 'ckd2',
+    label: 'G3 中期',
+    icon: '🟡',
+    gfr: 'GFR 30〜59',
+    desc: '中等度の腎機能低下。\nカリウム・リンの管理を強化。',
+    proteinRate: '0.6〜0.8g/標準体重',
+    potassiumLimit: '2,000〜2,500mg/日',
+    phosphorusLimit: 'タンパク質量に準ずる',
+    saltLimit: '6g未満',
+    waterNote: '1,200〜1,500mL/日',
+    color: 'var(--amber)',
+  },
+  {
+    key: 'ckd3',
+    label: 'G4〜G5 後期',
+    icon: '🟠',
+    gfr: 'GFR 15〜29',
+    desc: '高度の腎機能低下。\nすべての栄養素の厳格な管理が必要。',
+    proteinRate: '0.5〜0.6g/標準体重',
+    potassiumLimit: '1,500mg/日',
+    phosphorusLimit: 'タンパク質×15mg以下',
+    saltLimit: '6g未満',
+    waterNote: '前日尿量＋500mL程度',
+    color: 'var(--red)',
+  },
+  {
+    key: 'ckd4',
+    label: '透析期',
+    icon: '🔴',
+    gfr: '透析導入済み',
+    desc: '透析による除水・除毒管理。\n水分・カリウム・リンを最も厳格に制限。',
+    proteinRate: '1.0〜1.2g/標準体重',
+    potassiumLimit: '1,500mg/日以下',
+    phosphorusLimit: 'タンパク質×15mg以下',
+    saltLimit: '6g未満（体重増加管理）',
+    waterNote: '500〜700mL/日（ドライウェイト管理）',
+    color: 'var(--purple)',
+  },
+  {
+    key: 'ckdx',
+    label: 'ステージ不明',
+    icon: '⚪',
+    gfr: '不明',
+    desc: '担当医に確認してください。',
+    proteinRate: '担当医の指示に従う',
+    potassiumLimit: '担当医の指示に従う',
+    phosphorusLimit: '担当医の指示に従う',
+    saltLimit: '6g未満',
+    waterNote: '担当医の指示に従う',
+    color: 'var(--text3)',
+  },
+];
+
+// 設定パネル内で仮選択中のステージ（保存前）
+let _pendingCkdStage = null;
+
+/**
+ * 設定ページのCKDステージ選択グリッドを描画する
+ * navTo('settings') 時に呼ぶ
+ */
+function renderSettingsCkdPanel() {
+  const grid   = document.getElementById('settings-ckd-grid');
+  const detail = document.getElementById('settings-ckd-detail');
+  const sec    = document.getElementById('settings-ckd-section');
+  if (!grid) return;
+
+  // healthyモードはCKDセクション非表示
+  if (state.userType === 'healthy') {
+    if (sec) sec.style.display = 'none';
+    return;
+  }
+  if (sec) sec.style.display = '';
+
+  _pendingCkdStage = _pendingCkdStage || state.ckdStage || 'ckdx';
+
+  grid.innerHTML = CKD_STAGE_DEFS.map(s => {
+    const isCurrent = s.key === state.ckdStage;
+    const isPending = s.key === _pendingCkdStage;
+    return `
+      <div onclick="selectSettingsCkdStage('${s.key}')"
+        style="
+          padding:12px 10px;
+          border-radius:var(--r);
+          border:2px solid ${isPending ? s.color : 'var(--border2)'};
+          background:${isPending ? s.color+'22' : 'var(--surface2)'};
+          cursor:pointer;
+          transition:all 0.15s;
+          position:relative;
+        ">
+        <div style="font-size:20px;margin-bottom:4px;">${s.icon}</div>
+        <div style="font-size:12px;font-weight:700;color:${isPending ? s.color : 'var(--text)'};">${s.label}</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:2px;">${s.gfr}</div>
+        ${isCurrent ? `<div style="position:absolute;top:6px;right:6px;font-size:9px;padding:2px 6px;background:${s.color}33;border:1px solid ${s.color};border-radius:10px;color:${s.color};font-weight:700;">現在</div>` : ''}
+      </div>`;
+  }).join('');
+
+  _renderCkdStageDetail(_pendingCkdStage);
+}
+
+/** グリッドのステージを仮選択 */
+function selectSettingsCkdStage(key) {
+  _pendingCkdStage = key;
+  renderSettingsCkdPanel();
+}
+
+/** 選択中ステージの詳細を描画 */
+function _renderCkdStageDetail(key) {
+  const detail = document.getElementById('settings-ckd-detail');
+  if (!detail) return;
+  const s = CKD_STAGE_DEFS.find(d => d.key === key);
+  if (!s) { detail.style.display = 'none'; return; }
+
+  // 試算（現在の体重・ユーザータイプで）
+  const prevStage = state.ckdStage;
+  state.ckdStage = key;
+  const calc = calcAutoTargets();
+  state.ckdStage = prevStage; // 一時戻し（確定はapplyで）
+
+  detail.style.display = 'block';
+  detail.style.borderColor = s.color;
+  detail.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+      <span style="font-size:22px;">${s.icon}</span>
+      <div>
+        <div style="font-size:14px;font-weight:700;color:${s.color};">${s.label}</div>
+        <div style="font-size:11px;color:var(--text3);">${s.gfr}</div>
+      </div>
+    </div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:10px;white-space:pre-line;">${s.desc}</div>
+    <div style="display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:12px;margin-bottom:10px;">
+      <span style="color:var(--text3);">🥩 タンパク質</span><span style="font-weight:600;">${calc.protein}g/日（${s.proteinRate}）</span>
+      <span style="color:var(--text3);">🧂 塩分</span><span style="font-weight:600;">${calc.salt}g未満/日</span>
+      <span style="color:var(--text3);">🍌 カリウム</span><span style="font-weight:600;">${calc.potassium.toLocaleString()}mg/日（${s.potassiumLimit}）</span>
+      <span style="color:var(--text3);">🦴 リン</span><span style="font-weight:600;">${calc.phosphorus.toLocaleString()}mg/日（${s.phosphorusLimit}）</span>
+      <span style="color:var(--text3);">💧 水分</span><span style="font-weight:600;">${calc.water.toLocaleString()}mL/日（${s.waterNote}）</span>
+    </div>
+    <div style="font-size:10px;color:var(--text3);border-top:1px solid var(--border);padding-top:8px;">
+      ※ 上記は体重 ${parseFloat(state.weight)||60}kg を基準とした自動計算値です。<br>
+      必ず担当医・管理栄養士の指示を優先してください。
+    </div>`;
+}
+
+/**
+ * 仮選択ステージを確定し、目標値を再計算して state・localStorage・ダッシュボードに反映する
+ */
+function applyNewCkdStage() {
+  const key = _pendingCkdStage || state.ckdStage || 'ckdx';
+  const s   = CKD_STAGE_DEFS.find(d => d.key === key);
+  if (!s) return;
+
+  // ステージをstateに確定
+  state.ckdStage = key;
+  localStorage.setItem('renalcare_ckdStage', key);
+
+  // 目標値を再計算
+  const calc = calcAutoTargets();
+  if (!state.targets) state.targets = {};
+  state.targets.calories   = calc.calories   || 2000;
+  state.targets.protein    = calc.protein    || 40;
+  state.targets.potassium  = calc.potassium  || 2000;
+  state.targets.phosphorus = calc.phosphorus || 700;
+  state.targets.water      = calc.water      || 1500;
+  state.targets.salt       = calc.salt       || 6;
+
+  // localStorageにも保存
+  try { saveActiveProfile({ ...state }); } catch(e) {}
+
+  // ダッシュボード・設定UIを即時更新
+  try { applyStateToUI(); } catch(e) {}
+  try { renderSettingsCkdPanel(); } catch(e) {}
+
+  // settings-ckd-grid をリセット
+  _pendingCkdStage = key;
+
+  showToast(`✅ CKD ${s.label} に変更しました\nタンパク質 ${calc.protein}g / カリウム ${calc.potassium}mg / リン ${calc.phosphorus}mg`);
+}
+
 function goObStep(n) {
   // healthy モード: CKDステップ(3)をスキップ
   const isHealthy = state.obType === 'healthy';
@@ -3460,20 +3679,24 @@ function goObStep(n) {
     const weight = document.getElementById('ob-weight')?.value || '—';
     const calc = state.targetMode === 'auto' ? calcAutoTargets() : null;
     const box = document.getElementById('ob-confirm-box');
-    if (box) box.innerHTML = `
-      <div>👤 <strong>${name}</strong>（${genderMap[gender]}・${age}歳）</div>
-      <div>📏 身長 ${height}cm / ⚖️ 体重 ${weight}kg</div>
-      <div>🩺 ${typeMap[state.obType||'normal']}</div>
-      ${!isHealthy ? `<div>🫁 CKD ${stageMap[state.ckdStage||'ckdx']}</div>` : ''}
-      <div style="border-top:1px solid var(--border);margin:8px 0;padding-top:8px;">
-        目標: カロリー ${calc?calc.calories:(document.getElementById('ob-calories')?.value||'—')}kcal /
-        タンパク質 ${calc?calc.protein:(document.getElementById('ob-protein')?.value||'—')}g<br>
-        ${isHealthy
-          ? `塩分 ${calc?calc.salt:(document.getElementById('ob-salt')?.value||'—')}g以下 / 食物繊維 ${calc?calc.fiber:(document.getElementById('ob-fiber')?.value||'—')}g以上`
-          : `カリウム ${calc?calc.potassium:(document.getElementById('ob-potassium')?.value||'—')}mg / リン ${calc?calc.phosphorus:(document.getElementById('ob-phosphorus')?.value||'—')}mg`
-        }
-      </div>`;
-  }
+    if (box) {
+      const ckdRow = !isHealthy ? '<div>🫁 CKD ' + (stageMap[state.ckdStage||'ckdx']||'') + '</div>' : '';
+      const calVal = calc ? calc.calories : (document.getElementById('ob-calories')?.value||'—');
+      const proVal = calc ? calc.protein  : (document.getElementById('ob-protein')?.value||'—');
+      const nutriRow = isHealthy
+        ? '塩分 ' + (calc ? calc.salt : (document.getElementById('ob-salt')?.value||'—')) + 'g以下 / 食物繊維 ' + (calc ? calc.fiber : (document.getElementById('ob-fiber')?.value||'—')) + 'g以上'
+        : 'カリウム ' + (calc ? calc.potassium : (document.getElementById('ob-potassium')?.value||'—')) + 'mg / リン ' + (calc ? calc.phosphorus : (document.getElementById('ob-phosphorus')?.value||'—')) + 'mg';
+      box.innerHTML =
+        '<div>👤 <strong>' + name + '</strong>（' + (genderMap[gender]||gender) + '・' + age + '歳）</div>' +
+        '<div>📏 身長 ' + height + 'cm / ⚖️ 体重 ' + weight + 'kg</div>' +
+        '<div>🩺 ' + (typeMap[state.obType||'normal']||'') + '</div>' +
+        ckdRow +
+        '<div style="border-top:1px solid var(--border);margin:8px 0;padding-top:8px;">' +
+        '目標: カロリー ' + calVal + 'kcal / タンパク質 ' + proVal + 'g<br>' +
+        nutriRow +
+        '</div>';
+    }
+  } // end if(n===5)
 }
 
 function finishOnboarding() {
@@ -4790,7 +5013,7 @@ function navTo(page) {
   }
   if (page==='medicine') { setMedDateToday(); renderMedicineLog(); try{renderMedRegistered();}catch(e){} }
   if (page==='water')    { updateWaterCard(); updateWaterBalance(); }
-  if (page==='settings') { try{_updateBodyDisplay();}catch(e){} }
+  if (page==='settings') { try{_updateBodyDisplay();}catch(e){} try{renderSettingsCkdPanel();}catch(e){} }
 }
 
 // ===== 健康記録 =====
@@ -8094,7 +8317,13 @@ function showEditMedModal(id) {
   body.innerHTML = `
     <div class="form-row" style="margin-top:4px;">
       <label class="form-label">💊 薬の名前</label>
-      <input class="form-input" type="text" id="med-name" value="${med.name||''}" />
+      <div class="drug-suggest-wrap" id="drug-wrap-edit">
+        <input class="form-input" type="text" id="med-name" value="${med.name||''}"
+          oninput="showDrugSuggestEdit()"
+          onkeydown="onDrugKeydownEdit(event)"
+          autocomplete="off" />
+        <div class="drug-suggest-list" id="drug-suggest-edit" style="display:none;"></div>
+      </div>
     </div>
     <div class="form-row">
       <label class="form-label">📦 剤形・規格</label>
@@ -8261,6 +8490,93 @@ function onDrugKeydown(e, cardIdx) {
   items.forEach((el, i) => el.classList.toggle('focused', i === _drugFocusIdx));
 }
 
+// ===== 編集モード（med-name 単体）用オートコンプリート =====
+function showDrugSuggestEdit() {
+  const input = document.getElementById('med-name');
+  const list  = document.getElementById('drug-suggest-edit');
+  if (!input || !list) return;
+  const q = input.value.trim();
+  _drugFocusIdx = -1;
+  if (q.length < 1) { list.style.display = 'none'; return; }
+  const results = searchDrugDB(q);
+  window._drugSuggestCache['edit'] = results;
+  const isExact = results.some(d => d.name === q);
+  let html = results.map((d, i) => `
+    <div class="drug-suggest-item" data-i="${i}"
+      onclick="selectDrugSuggestEdit(${i})" onmousedown="event.preventDefault()">
+      <div class="drug-suggest-name">${d.name}</div>
+      <div class="drug-suggest-meta">
+        ${d.form ? '<span>'+d.form+'</span>' : ''}
+        ${(d.doses && d.doses.length) ? '<span style="color:var(--amber);">'+d.doses.join(' / ')+'</span>' : (d.dose ? '<span>'+d.dose+'</span>' : '')}
+        ${d.freq ? '<span>'+d.freq+'</span>' : ''}
+        <span class="${d.custom ? 'drug-suggest-custom' : 'drug-suggest-cat'}">${d.category||''}</span>
+        ${d.custom ? '<span class="drug-suggest-custom">📖学習済み</span>' : ''}
+      </div>
+      ${d.note ? '<div style="font-size:10px;color:var(--text3);margin-top:2px;">'+d.note+'</div>' : ''}
+    </div>`).join('');
+  if (!isExact && q.length >= 2) {
+    html += `<div class="drug-suggest-item" onclick="selectNewDrugEdit()" onmousedown="event.preventDefault()" style="border-top:1px solid var(--border2);">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-size:16px;">➕</span>
+        <div>
+          <div class="drug-suggest-name">"${q.replace(/</g,'&lt;')}" を新規登録</div>
+          <div class="drug-suggest-meta"><span class="drug-suggest-new">カスタム薬として学習保存</span></div>
+        </div>
+      </div>
+    </div>`;
+  }
+  list.innerHTML = html || '<div style="padding:12px;font-size:12px;color:var(--text3);">候補なし</div>';
+  list.style.display = 'block';
+}
+
+function selectDrugSuggestEdit(resultIdx) {
+  const results = (window._drugSuggestCache || {})['edit'];
+  if (!results || !results[resultIdx]) return;
+  const drug   = results[resultIdx];
+  const nameEl = document.getElementById('med-name');
+  const formEl = document.getElementById('med-form');
+  const listEl = document.getElementById('drug-suggest-edit');
+  if (nameEl) nameEl.value = drug.name;
+  if (formEl && drug.form) formEl.value = drug.form;
+  if (listEl) listEl.style.display = 'none';
+  if (drug.freq) {
+    const freqEl = document.getElementById('med-frequency');
+    if (freqEl) {
+      if (drug.freq.includes('週1')) freqEl.value = 'weekly';
+      else if (drug.freq.includes('月1')) freqEl.value = 'monthly';
+      else if (drug.freq.includes('頓服')) freqEl.value = 'prn';
+      else freqEl.value = 'daily';
+      onEditFreqChange();
+    }
+  }
+  // 用量セット（med-note にデフォルトを補完）
+  if (drug.note && !document.getElementById('med-note')?.value) {
+    document.getElementById('med-note').value = drug.note;
+  }
+}
+
+function selectNewDrugEdit() {
+  const nameEl = document.getElementById('med-name');
+  const listEl = document.getElementById('drug-suggest-edit');
+  if (listEl) listEl.style.display = 'none';
+  if (nameEl && nameEl.value.trim().length >= 2) {
+    learnCustomDrug(nameEl.value.trim(), '', 'カスタム');
+    showToast('📖 "' + nameEl.value.trim() + '" を薬リストに学習しました');
+  }
+}
+
+function onDrugKeydownEdit(e) {
+  const list = document.getElementById('drug-suggest-edit');
+  if (!list || list.style.display === 'none') return;
+  const items = list.querySelectorAll('.drug-suggest-item');
+  if (!items.length) return;
+  if (e.key === 'ArrowDown') { e.preventDefault(); _drugFocusIdx = Math.min(_drugFocusIdx+1, items.length-1); }
+  else if (e.key === 'ArrowUp') { e.preventDefault(); _drugFocusIdx = Math.max(_drugFocusIdx-1, 0); }
+  else if (e.key === 'Enter' && _drugFocusIdx >= 0) { e.preventDefault(); items[_drugFocusIdx].click(); return; }
+  else if (e.key === 'Escape') { list.style.display = 'none'; return; }
+  items.forEach((el, i) => el.classList.toggle('focused', i === _drugFocusIdx));
+}
+
 document.addEventListener('click', function(e) {
   document.querySelectorAll('.drug-suggest-list').forEach(list => {
     if (!list.closest('.drug-suggest-wrap')?.contains(e.target)) list.style.display = 'none';
@@ -8372,6 +8688,22 @@ function deleteMedicine() {
   renderMedicineLog();
   renderHospitalsPanel();
   renderHomeMedcheck();
+}
+
+/**
+ * 薬カード右の🗑ボタンから直接削除（モーダルを開かずに即削除）
+ * @param {string} id   - 薬ID
+ * @param {string} name - 確認ダイアログ表示用の薬名
+ */
+function quickDeleteMed(id, name) {
+  if (!id) return;
+  if (!confirm(`「${name}」を削除しますか？\n服薬記録も削除されます。`)) return;
+  saveMedicines(loadMedicines().filter(m => m.id !== id));
+  saveMedLog(loadMedLog().filter(e => e.medId !== id));
+  showToast(`🗑 ${name} を削除しました`);
+  try { renderMedicineLog();    } catch(e) {}
+  try { renderHospitalsPanel(); } catch(e) {}
+  try { renderHomeMedcheck();   } catch(e) {}
 }
 
 // ----- UI: ページレンダリング -----
@@ -8692,15 +9024,20 @@ function renderHospitalsPanel() {
             const dose = (med.timingDoses && med.timingDoses[t]) || med.doseAmount || '1錠';
             return `${MED_TIMING_ICON[t]||''} ${MED_TIMING_LABEL[t]||t}：${dose}`;
           }).join(' ／ ');
-          return `<div class="hosp-med-row" onclick="showEditMedModal('${med.id}')">
-            <div style="width:32px;height:32px;border-radius:8px;background:${med.color||'#4fc3f7'}22;display:flex;align-items:center;justify-content:center;font-size:16px;color:${med.color||'#4fc3f7'};flex-shrink:0;">💊</div>
-            <div style="flex:1;min-width:0;">
+          return `<div class="hosp-med-row">
+            <div style="width:32px;height:32px;border-radius:8px;background:${med.color||'#4fc3f7'}22;display:flex;align-items:center;justify-content:center;font-size:16px;color:${med.color||'#4fc3f7'};flex-shrink:0;cursor:pointer;" onclick="showEditMedModal('${med.id}')">💊</div>
+            <div style="flex:1;min-width:0;cursor:pointer;" onclick="showEditMedModal('${med.id}')">
               <div style="font-size:13px;font-weight:600;">${med.name}${med.form?'<span style="font-size:11px;color:var(--text3);margin-left:4px;">'+med.form+'</span>':''}</div>
               <div style="font-size:11px;color:var(--text2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${timingStr}</div>
               ${med.note ? `<div style="font-size:11px;color:var(--text3);margin-top:1px;">⚠️ ${med.note}</div>` : ''}
               ${_stockBadgeHTML(med)}
             </div>
-            <div style="font-size:11px;color:var(--text3);flex-shrink:0;">編集 ›</div>
+            <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+              <span style="font-size:11px;color:var(--text3);cursor:pointer;" onclick="showEditMedModal('${med.id}')">編集 ›</span>
+              <button class="btn btn-red btn-sm" style="padding:4px 8px;font-size:11px;border-radius:8px;"
+                onclick="quickDeleteMed('${med.id}','${med.name.replace(/'/g,'&#39;')}')"
+                title="${med.name}を削除">🗑</button>
+            </div>
           </div>`;
         }).join('');
 
