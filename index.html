@@ -424,6 +424,16 @@ html, body {
 }
 /* 検索ラッパーを inline にするため position:relative 補強 */
 .drug-suggest-wrap { position: relative; display: block; }
+/* ===== 健康ステータス選択UI ===== */
+.health-status-choice { display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border-radius:var(--r);border:2px solid var(--border2);background:var(--surface2);cursor:pointer;transition:all 0.15s;position:relative; }
+.health-status-choice:active { transform:scale(0.98); }
+.health-status-choice.selected { border-color:var(--accent);background:rgba(79,195,247,0.1); }
+.hsc-icon { font-size:24px;flex-shrink:0;margin-top:2px; }
+.hsc-body { flex:1;min-width:0; }
+.hsc-name { font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px; }
+.hsc-desc { font-size:11px;color:var(--text3);line-height:1.5; }
+.hsc-check { font-size:16px;color:var(--accent);font-weight:700;flex-shrink:0;opacity:0;transition:opacity 0.15s; }
+.health-status-choice.selected .hsc-check { opacity:1; }
 .hosp-card { background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:14px;overflow:hidden; }
 .hosp-card-header { display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer; }
 .hosp-card-body { padding:12px 16px; }
@@ -1785,7 +1795,7 @@ body.is-premium .premium-banner { display: none !important; }
       <div class="settings-section">
         <div class="settings-title">プロフィール</div>
         <div class="setting-row"><div class="setting-icon">👤</div><div class="setting-text"><div class="setting-name" id="s-name-display">—</div><div class="setting-desc">名前</div></div><div class="setting-arrow">›</div></div>
-        <div class="setting-row"><div class="setting-icon">🩺</div><div class="setting-text"><div class="setting-name" id="s-type-display">—</div><div class="setting-desc" id="s-type-desc">健康ステータス</div></div><div class="setting-arrow">›</div></div>
+        <div class="setting-row" onclick="showHealthStatusModal()" style="cursor:pointer;"><div class="setting-icon">🩺</div><div class="setting-text"><div class="setting-name" id="s-type-display">—</div><div class="setting-desc" id="s-type-desc">タップして変更</div></div><div class="setting-arrow">›</div></div>
         <div class="setting-row" onclick="showBodyMeasurementsModal()" style="cursor:pointer;">
           <div class="setting-icon">📏</div>
           <div class="setting-text">
@@ -2025,6 +2035,60 @@ body.is-premium .premium-banner { display: none !important; }
     <div style="margin-top:12px;">
       <button class="btn btn-ghost btn-full" onclick="closeModal('addMedSearchModal')">キャンセル</button>
     </div>
+  </div>
+</div>
+
+<!-- ===== 健康ステータス変更モーダル ===== -->
+<div class="modal-bg" id="healthStatusModal" onclick="closeModal('healthStatusModal')">
+  <div class="modal" onclick="event.stopPropagation()" style="padding-bottom:max(24px,env(safe-area-inset-bottom));">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🩺 健康ステータスを変更</div>
+    <div style="font-size:12px;color:var(--text3);margin:4px 0 14px;">現在の病態に合ったモードを選択してください。目標値は自動で再計算されます。</div>
+
+    <div id="health-status-choices" style="display:flex;flex-direction:column;gap:8px;">
+
+      <div class="health-status-choice" id="hsc-t2d" onclick="applyHealthStatus('t2d')">
+        <div class="hsc-icon">🩸</div>
+        <div class="hsc-body">
+          <div class="hsc-name">慢性腎不全 ＋ 2型糖尿病</div>
+          <div class="hsc-desc">インスリン抵抗性による糖尿病。最も多いタイプ。CKD管理＋血糖管理（糖質×3換算）</div>
+        </div>
+        <div class="hsc-check" id="hsc-check-t2d">✓</div>
+      </div>
+
+      <div class="health-status-choice" id="hsc-t1d" onclick="applyHealthStatus('t1d')">
+        <div class="hsc-icon">💉</div>
+        <div class="hsc-body">
+          <div class="hsc-name">慢性腎不全 ＋ 1型糖尿病</div>
+          <div class="hsc-desc">インスリン分泌不全による糖尿病。インスリン依存。CKD管理＋血糖管理（糖質×5換算）</div>
+        </div>
+        <div class="hsc-check" id="hsc-check-t1d">✓</div>
+      </div>
+
+      <div class="health-status-choice" id="hsc-normal" onclick="applyHealthStatus('normal')">
+        <div class="hsc-icon">🫁</div>
+        <div class="hsc-body">
+          <div class="hsc-name">慢性腎不全のみ（糖尿病なし）</div>
+          <div class="hsc-desc">CKD管理のみ。タンパク質・カリウム・リンの制限が中心。血糖換算なし。</div>
+        </div>
+        <div class="hsc-check" id="hsc-check-normal">✓</div>
+      </div>
+
+      <div class="health-status-choice" id="hsc-healthy" onclick="applyHealthStatus('healthy')">
+        <div class="hsc-icon">🌿</div>
+        <div class="hsc-body">
+          <div class="hsc-name">健常者（予防・生活習慣ケア）</div>
+          <div class="hsc-desc">腎機能は正常。食生活・体重管理中心。CKD専用の制限項目は非表示になります。</div>
+        </div>
+        <div class="hsc-check" id="hsc-check-healthy">✓</div>
+      </div>
+
+    </div>
+
+    <div style="margin-top:14px;font-size:11px;color:var(--text3);text-align:center;border-top:1px solid var(--border);padding-top:10px;">
+      ※ 目標値は変更後に自動再計算されます。担当医の指示と異なる場合は「目標値を変更する」で調整してください。
+    </div>
+    <button class="btn btn-ghost btn-full" style="margin-top:10px;" onclick="closeModal('healthStatusModal')">キャンセル</button>
   </div>
 </div>
 
@@ -4205,6 +4269,64 @@ function cycleUserType() {
   if (el) el.textContent = mDesc[state.userType];
   applyStateToUI();
   showToast(mDesc[state.userType]+'に変更しました');
+}
+
+// ============================================================
+// ===== 健康ステータス変更モーダル =====
+// ============================================================
+
+/** 設定ページ「健康ステータス」行からモーダルを開く */
+function showHealthStatusModal() {
+  // 現在のステータスをハイライト
+  ['t2d','t1d','normal','healthy'].forEach(key => {
+    const el  = document.getElementById('hsc-' + key);
+    if (el) el.classList.toggle('selected', state.userType === key);
+  });
+  document.getElementById('healthStatusModal').classList.add('open');
+}
+
+/**
+ * 健康ステータスを変更して保存・UI全体へ反映する
+ * @param {string} newType  'healthy' | 'normal' | 't2d' | 't1d'
+ */
+function applyHealthStatus(newType) {
+  const labelMap = {
+    healthy : '🌿 健常者（予防ケア）',
+    normal  : '🫁 慢性腎不全のみ',
+    t2d     : '🩸 慢性腎不全 ＋ 2型糖尿病',
+    t1d     : '💉 慢性腎不全 ＋ 1型糖尿病',
+  };
+  if (!labelMap[newType]) return;
+
+  state.userType    = newType;
+  state.obType      = newType;
+  state.diabetesMode = (newType !== 'normal' && newType !== 'healthy');
+
+  // healthy モードはCKDステージをクリア
+  if (newType === 'healthy') state.ckdStage = null;
+
+  // 目標値を自動再計算
+  const calc = calcAutoTargets();
+  if (!state.targets) state.targets = {};
+  state.targets.calories   = calc.calories   || 2000;
+  state.targets.protein    = calc.protein    || 40;
+  state.targets.potassium  = calc.potassium  || 2000;
+  state.targets.phosphorus = calc.phosphorus || 700;
+  state.targets.water      = calc.water      || 1500;
+  state.targets.salt       = calc.salt       || 6;
+  if (calc.fiber != null) state.targets.fiber = calc.fiber;
+  if (calc.fat   != null) state.targets.fat   = calc.fat;
+
+  // localStorage に保存
+  try { localStorage.setItem('renalcare_userType', newType); } catch(e) {}
+  try { saveActiveProfile({ ...state }); } catch(e) {}
+
+  // UI 全体に反映
+  try { applyStateToUI(); }           catch(e) {}
+  try { renderSettingsCkdPanel(); }   catch(e) {}
+
+  closeModal('healthStatusModal');
+  showToast('✅ ' + labelMap[newType] + ' に変更しました');
 }
 
 function selectMealType(el) {
