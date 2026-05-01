@@ -2105,7 +2105,7 @@ body.is-premium .premium-banner { display: none !important; }
     <div id="med-add-hosp-row" style="margin-top:0;">
       <label class="form-label">🏥 医療機関（共通）</label>
       <select class="form-input" id="med-hospital-select">
-        <option value="">-- 選択してください --</option>
+        <!-- refreshMedHospitalSelect() で動的に構築 -->
       </select>
     </div>
 
@@ -7552,10 +7552,28 @@ function openAddMedModal() {
   document.querySelectorAll('#drug-cat-filter .food-tab').forEach(b => b.classList.remove('active'));
   const allBtn = document.getElementById('drug-cat-all');
   if (allBtn) allBtn.classList.add('active');
+  // ★ drug-sub-hospital を最新データで再構築（モーダルを開くたびに）
+  _refreshDrugSubHospital();
   // 全薬一覧を表示
   renderDrugSuggestions('');
   modal.classList.add('open');
   setTimeout(() => { if (input) input.focus(); }, 300);
+}
+
+/** drug-sub-hospital セレクトを最新の登録医療機関で再構築（共通） */
+function _refreshDrugSubHospital(selectedId) {
+  const hospSel = document.getElementById('drug-sub-hospital');
+  if (!hospSel) return;
+  hospSel.innerHTML = _buildHospitalOptions(selectedId || '').replace(
+    '-- 選択してください --', '-- 選択（任意）--'
+  );
+  hospSel.onchange = function() {
+    if (this.value === '__new__') {
+      this.value = '';
+      closeModal('addMedSearchModal');
+      showAddHospitalModal();
+    }
+  };
 }
 
 /** カテゴリフィルターのタブ切替 */
@@ -7685,16 +7703,8 @@ function selectDrugFromSearch(drugData) {
   document.getElementById('drug-sub-name').textContent = _selectedDrugData.name;
   document.getElementById('drug-sub-cat').textContent  = _selectedDrugData.category || '';
 
-  // 医療機関セレクト
-  const hospSel = document.getElementById('drug-sub-hospital');
-  if (hospSel) {
-    hospSel.innerHTML = '<option value="">-- 選択（任意）--</option>' +
-      loadHospitals().map(h => `<option value="${h.id}">${h.name}${h.dept?' ('+h.dept+')':''}</option>`).join('') +
-      '<option value="__new__">＋ 新しい医療機関を追加...</option>';
-    hospSel.onchange = function() {
-      if (this.value === '__new__') { this.value = ''; closeModal('addMedSearchModal'); showAddHospitalModal(); }
-    };
-  }
+  // 医療機関セレクト（★ 共通関数で最新データを再構築）
+  _refreshDrugSubHospital();
 
   // 用量チップ
   const doseChips = document.getElementById('drug-sub-dose-chips');
@@ -8065,6 +8075,7 @@ function saveHospital() {
   saveHospitals(hospitals);
   closeModal('addHospitalModal');
   refreshMedHospitalSelect();
+  _refreshDrugSubHospital();
   renderHospitalsPanel();
 }
 
@@ -8330,7 +8341,13 @@ function showAddMedModal(presetHospitalId) {
   document.getElementById('med-add-save-row').style.display = 'flex';
   document.getElementById('med-edit-form').style.display   = 'none';
   document.getElementById('med-cards-list').innerHTML = '';
-  // OCR パネルをリセット
+  // ★ 医療機関セレクトを最新データで再構築（登録済み病院を反映）
+  refreshMedHospitalSelect(presetHospitalId || '');
+  // presetHospitalId が指定されていれば選択状態にする
+  if (presetHospitalId) {
+    const sel = document.getElementById('med-hospital-select');
+    if (sel) sel.value = presetHospitalId;
+  }
   // 1枚目のカードを追加
   addMedCard();
   document.getElementById('addMedModal').classList.add('open');
