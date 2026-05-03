@@ -6,8 +6,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0d1420">
-<title>HealthCare — 健康管理・腎臓病食事管理</title>
-<link rel="manifest" href="data:application/json,{"name":"HealthCare","short_name":"HealthCare","display":"standalone","theme_color":"#0a1220","background_color":"#0a1220","icons":[{"src":"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>","sizes":"any","type":"image/svg+xml"}]}">
+<title>RenalCare — 健康管理・腎臓病食事管理</title>
+<link rel="manifest" href="data:application/json,{"name":"RenalCare","short_name":"RenalCare","display":"standalone","theme_color":"#0a1220","background_color":"#0a1220","icons":[{"src":"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>","sizes":"any","type":"image/svg+xml"}]}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Kaisei+Opti:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
@@ -214,7 +214,9 @@ html, body {
 }
 
 .ob-logo { text-align: center; margin-bottom: 20px; margin-top: 16px; }
-.ob-icon { font-size: 56px; display: block; margin-bottom: 12px; animation: float 3s ease-in-out infinite; }
+.ob-title-row { display: flex; align-items: center; justify-content: center; gap: 10px; }
+.ob-icon { display: flex; align-items: center; justify-content: center; line-height: 1; margin-bottom: 0; }
+.ob-icon { display: flex; align-items: center; line-height: 1; }
 
 @keyframes float {
   0%,100% { transform: translateY(0); }
@@ -256,7 +258,7 @@ html, body {
 
 #s-app { flex-direction: column; }
 .app-header { background: var(--bg2); border-bottom: 1px solid var(--border2); padding: 13px 16px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; position: relative; z-index: 10; box-shadow: 0 2px 12px rgba(0,0,0,0.3); }
-.header-logo { font-family: 'Kaisei Opti', serif; font-size: 19px; color: var(--accent); letter-spacing: 1px; font-weight: 700; }
+.header-logo { font-family: 'Kaisei Opti', serif; font-size: 19px; color: var(--accent); letter-spacing: 1px; font-weight: 700; display: flex; align-items: center; }
 .header-user { display: flex; align-items: center; gap: 8px; cursor: pointer; }
 .header-avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--accent-glow); border: 1.5px solid var(--accent); display: flex; align-items: center; justify-content: center; font-size: 16px; }
 .header-name { font-size: 13px; color: var(--text2); }
@@ -616,8 +618,8 @@ body.is-premium .premium-banner { display: none !important; }
 }
 .loading-text { font-size: 14px; color: var(--text2); }
 
-.toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--surface); border: 1px solid var(--border2); border-radius: 24px; padding: 12px 20px; font-size: 13px; z-index: 2000; transition: transform 0.3s ease; box-shadow: var(--shadow); white-space: nowrap; }
-.toast.show { transform: translateX(-50%) translateY(0); }
+.toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--surface); border: 1px solid var(--border2); border-radius: 16px; padding: 12px 20px; font-size: 13px; z-index: 2000; transition: transform 0.3s ease, opacity 0.3s ease; box-shadow: var(--shadow); white-space: pre-line; max-width: 80vw; text-align: center; opacity: 0; pointer-events: none; }
+.toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
 
 ::-webkit-scrollbar { width: 3px; }
 ::-webkit-scrollbar-track { background: transparent; }
@@ -754,9 +756,44 @@ body.is-premium .premium-banner { display: none !important; }
 <!-- ONBOARDING -->
 <div class="screen active" id="s-onboarding">
   <div class="ob-logo">
-    <span class="ob-icon">🌿</span>
-    <div class="ob-title">HealthCare</div>
-    <div class="ob-sub">あなたの健康管理を<br>もっとかんたんに</div>
+    <span class="ob-icon">
+      <svg width="500" height="220" viewBox="150 60 380 160" xmlns="http://www.w3.org/2000/svg">
+          <style>
+            @keyframes rc-bob  { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-14px)} }
+            @keyframes rc-wink { 0%,80%,100%{transform:scaleY(1)} 87%{transform:scaleY(0.08)} }
+            .rc-bob  { animation: rc-bob 2.6s ease-in-out infinite; }
+            .rc-wink { animation: rc-wink 4.5s 1.5s ease-in-out infinite; transform-box:fill-box; transform-origin:50% 50%; }
+          </style>
+          <g class="rc-bob">
+            <path d="M282 82 C260 82 240 99 239 124 C238 150 251 171 272 178 C284 183 299 179 308 170 C319 160 322 143 320 123 C318 101 304 82 282 82 Z" fill="#7dd3fc"/>
+            <ellipse cx="274" cy="105" rx="9" ry="12" fill="white" opacity="0.28"/>
+            <circle cx="281" cy="129" r="10" fill="white"/>
+            <circle cx="282" cy="128" r="6"  fill="#1c3557"/>
+            <circle cx="284" cy="126" r="2"  fill="white"/>
+            <path d="M275 118 Q281 114 288 118" stroke="#1c3557" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+            <ellipse cx="262" cy="141" rx="8" ry="5" fill="#fda4af" opacity="0.6"/>
+            <path d="M274 145 Q281 153 288 145" stroke="#1c3557" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+            <path d="M398 82 C420 82 440 99 441 124 C442 150 429 171 408 178 C396 183 381 179 372 170 C361 160 358 143 360 123 C362 101 376 82 398 82 Z" fill="#93c5fd"/>
+            <ellipse cx="406" cy="105" rx="9" ry="12" fill="white" opacity="0.28"/>
+            <g class="rc-wink">
+              <circle cx="399" cy="129" r="10" fill="white"/>
+              <circle cx="400" cy="128" r="6"  fill="#1c3557"/>
+              <circle cx="402" cy="126" r="2"  fill="white"/>
+            </g>
+            <path d="M392 118 Q398 114 405 118" stroke="#1c3557" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+            <ellipse cx="418" cy="141" rx="8" ry="5" fill="#fda4af" opacity="0.6"/>
+            <path d="M392 145 Q399 153 406 145" stroke="#1c3557" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+            <path d="M320 170 Q340 195 360 170" stroke="#bae6fd" stroke-width="5" fill="none" stroke-linecap="round"/>
+            <path d="M228 70 L230 77 L237 79 L230 81 L228 88 L226 81 L219 79 L226 77 Z" fill="#fde68a" opacity="0.9"/>
+            <path d="M452 66 L454 72 L460 74 L454 76 L452 82 L450 76 L444 74 L450 72 Z" fill="#fde68a" opacity="0.9"/>
+            <circle cx="218" cy="104" r="3"   fill="#c4b5fd" opacity="0.8"/>
+            <circle cx="462" cy="102" r="3"   fill="#c4b5fd" opacity="0.8"/>
+            <circle cx="340" cy="64"  r="3.5" fill="#fda4af" opacity="0.7"/>
+          </g>
+      </svg>
+    </span>
+    <div class="ob-title">RenalCare</div>
+    <div class="ob-sub">腎臓と、ずっと仲よく。</div>
   </div>
   <div class="ob-card fade-in" id="ob-step1">
     <div class="ob-step">ステップ 1 / 4</div>
@@ -898,7 +935,23 @@ body.is-premium .premium-banner { display: none !important; }
 <!-- MAIN APP -->
 <div class="screen" id="s-app">
   <div class="app-header">
-    <div class="header-logo" id="app-header-logo">🌿 HealthCare</div>
+    <div class="header-logo" id="app-header-logo">
+      <svg width="36" height="36" viewBox="0 0 680 560" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;margin-right:6px;flex-shrink:0;">
+        <path d="M282 82 C260 82 240 99 239 124 C238 150 251 171 272 178 C284 183 299 179 308 170 C319 160 322 143 320 123 C318 101 304 82 282 82 Z" fill="#7dd3fc"/>
+        <circle cx="281" cy="129" r="10" fill="white"/>
+        <circle cx="282" cy="128" r="6"  fill="#1c3557"/>
+        <circle cx="284" cy="126" r="2"  fill="white"/>
+        <ellipse cx="262" cy="141" rx="8" ry="5" fill="#fda4af" opacity="0.6"/>
+        <path d="M274 145 Q281 153 288 145" stroke="#1c3557" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+        <path d="M398 82 C420 82 440 99 441 124 C442 150 429 171 408 178 C396 183 381 179 372 170 C361 160 358 143 360 123 C362 101 376 82 398 82 Z" fill="#93c5fd"/>
+        <circle cx="399" cy="129" r="10" fill="white"/>
+        <circle cx="400" cy="128" r="6"  fill="#1c3557"/>
+        <circle cx="402" cy="126" r="2"  fill="white"/>
+        <ellipse cx="418" cy="141" rx="8" ry="5" fill="#fda4af" opacity="0.6"/>
+        <path d="M392 145 Q399 153 406 145" stroke="#1c3557" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+        <path d="M320 170 Q340 195 360 170" stroke="#bae6fd" stroke-width="5" fill="none" stroke-linecap="round"/>
+      </svg>RenalCare
+    </div>
     <div class="header-user" onclick="showUserSwitchModal()" style="cursor:pointer;">
       <div class="header-avatar">👩</div>
       <div>
@@ -3238,7 +3291,7 @@ function applyStateToUI() {
   }
   // ヘッダーロゴ切り替え
   if (el('app-header-logo')) {
-    el('app-header-logo').textContent = isHealthy ? '🌿 HealthCare' : '🫁 RenalCare';
+    // ヘッダーロゴはSVGを維持しつつテキスト部分だけ更新しない（SVGロゴ固定）
   }
   if (el('s-name-display')) el('s-name-display').textContent = state.userName;
   if (el('s-type-display')) {
@@ -7330,7 +7383,17 @@ function showMenuDetail(name) {
 }
 
 let _toastTimer = null;
-function showToast(msg) { const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); if (_toastTimer) clearTimeout(_toastTimer); _toastTimer = setTimeout(()=>{ t.classList.remove('show'); _toastTimer = null; },2500); }
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  if (!t) return;
+  t.innerHTML = (msg || '').replace(/\n/g, '<br>');
+  t.classList.add('show');
+  if (_toastTimer) clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => {
+    t.classList.remove('show');
+    _toastTimer = null;
+  }, 3000);
+}
 
 // ============================================================
 // ===== 薬管理 =====
