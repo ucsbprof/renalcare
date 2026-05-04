@@ -839,85 +839,85 @@ body.is-premium .premium-banner { display: none !important; }
     </div>
   </div>
   <div class="ob-card fade-in" id="ob-step2" style="display:none;">
-    <div class="ob-step">ステップ 2 / 4</div>
-    <div class="ob-question">基本情報を教えてください</div>
-    <div class="form-row"><label class="form-label">お名前</label><input class="ob-name-input" id="ob-name" type="text" placeholder="例：田中 花子" oninput="checkObName()" style="margin-bottom:0;" /></div>
+    <div class="ob-step" data-i18n="ob_step2">ステップ 2 / 4</div>
+    <div class="ob-question" data-i18n="ob_q2">基本情報を教えてください</div>
+    <div class="form-row"><label class="form-label" data-i18n="label_name">お名前</label><input class="ob-name-input" id="ob-name" type="text" data-i18n-placeholder="placeholder_name" placeholder="例：田中 花子" oninput="checkObName()" style="margin-bottom:0;" /></div>
     <div class="form-grid" style="margin:10px 0;">
-      <div class="form-row"><label class="form-label">年齢</label><input class="form-input" id="ob-age" type="number" placeholder="例：65" min="1" max="120" /></div>
-      <div class="form-row"><label class="form-label">性別</label>
+      <div class="form-row"><label class="form-label" data-i18n="label_age">年齢</label><input class="form-input" id="ob-age" type="number" data-i18n-placeholder="placeholder_age" placeholder="例：65" min="1" max="120" /></div>
+      <div class="form-row"><label class="form-label" data-i18n="label_gender">性別</label>
         <select class="form-input" id="ob-gender">
-          <option value="male">男性</option>
-          <option value="female">女性</option>
+          <option value="male" data-i18n="option_male">男性</option>
+          <option value="female" data-i18n="option_female">女性</option>
         </select>
       </div>
-      <div class="form-row"><label class="form-label">身長 (cm)</label><input class="form-input" id="ob-height" type="number" placeholder="例：165" min="100" max="220" /></div>
-      <div class="form-row"><label class="form-label">体重 (kg)</label><input class="form-input" id="ob-weight" type="number" placeholder="例：60" min="20" max="200" /></div>
+      <div class="form-row"><label class="form-label" data-i18n="label_height">身長 (cm)</label><input class="form-input" id="ob-height" type="number" data-i18n-placeholder="placeholder_height" placeholder="例：165" min="100" max="220" /></div>
+      <div class="form-row"><label class="form-label" data-i18n="label_weight">体重 (kg)</label><input class="form-input" id="ob-weight" type="number" data-i18n-placeholder="placeholder_weight" placeholder="例：60" min="20" max="200" /></div>
     </div>
-    <button class="btn btn-primary btn-full" id="ob-btn2" disabled onclick="goObStep(3)">次へ →</button>
-    <div style="margin-top:12px;"><button class="btn btn-ghost btn-full" onclick="goObStep(1)">← 戻る</button></div>
+    <button class="btn btn-primary btn-full" id="ob-btn2" disabled onclick="goObStep(3)" data-i18n="btn_next">次へ →</button>
+    <div style="margin-top:12px;"><button class="btn btn-ghost btn-full" onclick="goObStep(1)" data-i18n="btn_back">← 戻る</button></div>
     <div class="ob-dots"><div class="ob-dot"></div><div class="ob-dot active"></div><div class="ob-dot"></div><div class="ob-dot"></div></div>
   </div>
   <div class="ob-card fade-in" id="ob-step3" style="display:none;">
-    <div class="ob-step">ステップ 3 / 5</div>
-    <div class="ob-question">CKD（腎臓病）の<br>ステージを教えてください</div>
-    <div style="font-size:12px;color:var(--text3);margin-bottom:14px;">※ わからない場合は「不明」を選択してください</div>
+    <div class="ob-step" data-i18n="ob_step3">ステップ 3 / 5</div>
+    <div class="ob-question" data-i18n="ob_q3">CKD（腎臓病）の<br>ステージを教えてください</div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:14px;" data-i18n="ob_ckd_hint">※ わからない場合は「不明」を選択してください</div>
     <div class="ob-choices" style="gap:8px;">
       <div class="ob-choice" id="oc-ckd1" onclick="selectCkdStage('ckd1')">
         <div class="ob-choice-icon" style="font-size:20px;">1️⃣</div>
-        <div class="ob-choice-text"><div class="name" style="font-size:13px;">前期（G1〜G2）</div><div class="desc">GFR 60以上 — 軽度</div></div>
+        <div class="ob-choice-text"><div class="name" style="font-size:13px;" data-i18n="ckd_stage_early">前期（G1〜G2）</div><div class="desc" data-i18n="ckd_stage_early_desc">GFR 60以上 — 軽度</div></div>
       </div>
       <div class="ob-choice" id="oc-ckd2" onclick="selectCkdStage('ckd2')">
         <div class="ob-choice-icon" style="font-size:20px;">2️⃣</div>
-        <div class="ob-choice-text"><div class="name" style="font-size:13px;">中期（G3）</div><div class="desc">GFR 30〜59 — 中等度</div></div>
+        <div class="ob-choice-text"><div class="name" style="font-size:13px;" data-i18n="ckd_stage_mid">中期（G3）</div><div class="desc" data-i18n="ckd_stage_mid_desc">GFR 30〜59 — 中等度</div></div>
       </div>
       <div class="ob-choice" id="oc-ckd3" onclick="selectCkdStage('ckd3')">
         <div class="ob-choice-icon" style="font-size:20px;">3️⃣</div>
-        <div class="ob-choice-text"><div class="name" style="font-size:13px;">後期（G4〜G5）</div><div class="desc">GFR 29以下 — 高度〜末期</div></div>
+        <div class="ob-choice-text"><div class="name" style="font-size:13px;" data-i18n="ckd_stage_late">後期（G4〜G5）</div><div class="desc" data-i18n="ckd_stage_late_desc">GFR 29以下 — 高度〜末期</div></div>
       </div>
       <div class="ob-choice" id="oc-ckd4" onclick="selectCkdStage('ckd4')">
         <div class="ob-choice-icon" style="font-size:20px;">💉</div>
-        <div class="ob-choice-text"><div class="name" style="font-size:13px;">透析期</div><div class="desc">血液透析・腹膜透析</div></div>
+        <div class="ob-choice-text"><div class="name" style="font-size:13px;" data-i18n="ckd_stage_dialysis">透析期</div><div class="desc" data-i18n="ckd_stage_dialysis_desc">血液透析・腹膜透析</div></div>
       </div>
       <div class="ob-choice" id="oc-ckdx" onclick="selectCkdStage('ckdx')">
         <div class="ob-choice-icon" style="font-size:20px;">❓</div>
-        <div class="ob-choice-text"><div class="name" style="font-size:13px;">不明</div><div class="desc">わからない・未検査</div></div>
+        <div class="ob-choice-text"><div class="name" style="font-size:13px;" data-i18n="ckd_stage_unknown">不明</div><div class="desc" data-i18n="ckd_stage_unknown_desc">わからない・未検査</div></div>
       </div>
     </div>
-    <button class="btn btn-primary btn-full" id="ob-btn3" disabled onclick="goObStep(4)">次へ →</button>
-    <div style="margin-top:10px;"><button class="btn btn-ghost btn-full" onclick="goObStep(2)">← 戻る</button></div>
+    <button class="btn btn-primary btn-full" id="ob-btn3" disabled onclick="goObStep(4)" data-i18n="btn_next">次へ →</button>
+    <div style="margin-top:10px;"><button class="btn btn-ghost btn-full" onclick="goObStep(2)" data-i18n="btn_back">← 戻る</button></div>
   </div>
   <div class="ob-card fade-in" id="ob-step4" style="display:none;">
-    <div class="ob-step">ステップ 4 / 5</div>
-    <div class="ob-question">1日の目標値の<br>設定方法を選んでください</div>
+    <div class="ob-step" data-i18n="ob_step4">ステップ 4 / 5</div>
+    <div class="ob-question" data-i18n="ob_q4">1日の目標値の<br>設定方法を選んでください</div>
     <div class="ob-choices" style="gap:10px;margin-bottom:16px;">
       <div class="ob-choice" id="oc-auto" onclick="selectTargetMode('auto')">
         <div class="ob-choice-icon">🤖</div>
-        <div class="ob-choice-text"><div class="name">自動計算（推奨）</div><div class="desc">体格・病期から自動で目標値を計算</div></div>
+        <div class="ob-choice-text"><div class="name" data-i18n="target_auto">自動計算（推奨）</div><div class="desc" data-i18n="target_auto_desc">体格・病期から自動で目標値を計算</div></div>
       </div>
       <div class="ob-choice" id="oc-manual" onclick="selectTargetMode('manual')">
         <div class="ob-choice-icon">✏️</div>
-        <div class="ob-choice-text"><div class="name">手動設定</div><div class="desc">医師・病院から指示された数値を入力</div></div>
+        <div class="ob-choice-text"><div class="name" data-i18n="target_manual">手動設定</div><div class="desc" data-i18n="target_manual_desc">医師・病院から指示された数値を入力</div></div>
       </div>
     </div>
     <!-- 自動計算プレビュー -->
     <div id="ob-auto-preview" style="display:none;background:var(--surface2);border-radius:12px;padding:14px;margin-bottom:14px;font-size:13px;">
-      <div style="font-size:11px;color:var(--accent);font-weight:700;margin-bottom:10px;">📊 推奨目標値（自動計算）</div>
+      <div style="font-size:11px;color:var(--accent);font-weight:700;margin-bottom:10px;" data-i18n="target_auto_preview">📊 推奨目標値（自動計算）</div>
       <div id="ob-auto-values" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;"></div>
-      <div style="font-size:10px;color:var(--text3);margin-top:8px;">※ 日本腎臓学会ガイドラインに基づく目安です。<br>医師の指示がある場合は「手動設定」を選んでください。</div>
+      <div style="font-size:10px;color:var(--text3);margin-top:8px;" data-i18n="target_auto_note">※ 日本腎臓学会ガイドラインに基づく目安です。<br>医師の指示がある場合は「手動設定」を選んでください。</div>
     </div>
     <!-- 手動入力欄 -->
     <div id="ob-manual-inputs" style="display:none;">
       <div class="form-grid" style="margin-bottom:10px;">
-        <div class="form-row"><label class="form-label">カロリー (kcal)</label><input class="form-input" id="ob-calories" type="number" value="1800" /></div>
-        <div class="form-row"><label class="form-label">タンパク質 (g)</label><input class="form-input" id="ob-protein" type="number" value="40" /></div>
-        <div class="form-row"><label class="form-label">カリウム (mg)</label><input class="form-input" id="ob-potassium" type="number" value="2000" /></div>
-        <div class="form-row"><label class="form-label">リン (mg)</label><input class="form-input" id="ob-phosphorus" type="number" value="700" /></div>
-        <div class="form-row"><label class="form-label">水分 (mL)</label><input class="form-input" id="ob-water" type="number" value="1500" /></div>
-        <div class="form-row"><label class="form-label">塩分 (g)</label><input class="form-input" id="ob-salt" type="number" value="6" /></div>
+        <div class="form-row"><label class="form-label" data-i18n="label_calories_kcal">カロリー (kcal)</label><input class="form-input" id="ob-calories" type="number" value="1800" /></div>
+        <div class="form-row"><label class="form-label" data-i18n="label_protein_g">タンパク質 (g)</label><input class="form-input" id="ob-protein" type="number" value="40" /></div>
+        <div class="form-row"><label class="form-label" data-i18n="label_potassium_mg">カリウム (mg)</label><input class="form-input" id="ob-potassium" type="number" value="2000" /></div>
+        <div class="form-row"><label class="form-label" data-i18n="label_phosphorus_mg">リン (mg)</label><input class="form-input" id="ob-phosphorus" type="number" value="700" /></div>
+        <div class="form-row"><label class="form-label" data-i18n="label_water_ml">水分 (mL)</label><input class="form-input" id="ob-water" type="number" value="1500" /></div>
+        <div class="form-row"><label class="form-label" data-i18n="label_salt_g">塩分 (g)</label><input class="form-input" id="ob-salt" type="number" value="6" /></div>
       </div>
     </div>
-    <button class="btn btn-primary btn-full" id="ob-btn4" disabled onclick="goObStep(5)">次へ →</button>
-    <div style="margin-top:10px;"><button class="btn btn-ghost btn-full" onclick="goObStep(state.obType==='healthy'?2:3)">← 戻る</button></div>
+    <button class="btn btn-primary btn-full" id="ob-btn4" disabled onclick="goObStep(5)" data-i18n="btn_next">次へ →</button>
+    <div style="margin-top:10px;"><button class="btn btn-ghost btn-full" onclick="goObStep(state.obType==='healthy'?2:3)" data-i18n="btn_back">← 戻る</button></div>
     <div class="ob-dots"><div class="ob-dot"></div><div class="ob-dot"></div><div class="ob-dot"></div><div class="ob-dot active"></div><div class="ob-dot"></div></div>
   </div>
   <div class="ob-card fade-in" id="ob-step5" style="display:none;">
@@ -1299,40 +1299,40 @@ body.is-premium .premium-banner { display: none !important; }
     <div class="page" id="page-record">
       <div class="page-title-row"><div><div class="page-title" data-i18n="page_record">食事を記録</div><div class="page-sub" data-i18n="page_record_sub">食事内容を入力して記録</div></div></div>
       <div class="card">
-        <div class="card-title">食事の内容</div>
+        <div class="card-title" data-i18n="card_meal_content">食事の内容</div>
         <div style="display:flex;gap:10px;">
           <div class="form-row" style="flex:1;margin-bottom:0;">
-            <label class="form-label">📅 記録する日付</label>
+            <label class="form-label" data-i18n="label_record_date">📅 記録する日付</label>
             <input class="form-input" type="date" id="record-date" />
           </div>
           <div class="form-row" style="flex:1;margin-bottom:0;">
-            <label class="form-label">🕐 食事の時刻</label>
+            <label class="form-label" data-i18n="label_meal_time">🕐 食事の時刻</label>
             <input class="form-input" type="time" id="record-time" />
           </div>
         </div>
         <div class="form-row" style="margin-top:12px;">
-          <label class="form-label">🍽 食事の区分</label>
+          <label class="form-label" data-i18n="label_meal_type">🍽 食事の区分</label>
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;" id="meal-type-selector">
             <div class="meal-type-btn active" data-type="breakfast" onclick="selectMealType(this)">
               <div style="font-size:18px;">🌅</div>
-              <div style="font-size:11px;margin-top:2px;">朝食</div>
+              <div style="font-size:11px;margin-top:2px;" data-i18n="meal_breakfast">朝食</div>
             </div>
             <div class="meal-type-btn" data-type="lunch" onclick="selectMealType(this)">
               <div style="font-size:18px;">☀️</div>
-              <div style="font-size:11px;margin-top:2px;">昼食</div>
+              <div style="font-size:11px;margin-top:2px;" data-i18n="meal_lunch">昼食</div>
             </div>
             <div class="meal-type-btn" data-type="dinner" onclick="selectMealType(this)">
               <div style="font-size:18px;">🌙</div>
-              <div style="font-size:11px;margin-top:2px;">夕食</div>
+              <div style="font-size:11px;margin-top:2px;" data-i18n="meal_dinner">夕食</div>
             </div>
             <div class="meal-type-btn" data-type="snack" onclick="selectMealType(this)">
               <div style="font-size:18px;">🍬</div>
-              <div style="font-size:11px;margin-top:2px;">間食</div>
+              <div style="font-size:11px;margin-top:2px;" data-i18n="meal_snack">間食</div>
             </div>
           </div>
         </div>
-        <div class="form-row"><label class="form-label">料理名・メモ</label><input class="form-input" type="text" id="record-name" placeholder="例：鮭定食、豆腐ハンバーグ" /></div>
-        <button class="btn btn-outline btn-full" onclick="showFoodSearchModalForRecord()" style="margin-bottom:8px;">🔍 献立・食品から栄養成分を追加</button>
+        <div class="form-row"><label class="form-label" data-i18n="label_meal_name">料理名・メモ</label><input class="form-input" type="text" id="record-name" data-i18n-placeholder="placeholder_meal_name" placeholder="例：鮭定食、豆腐ハンバーグ" /></div>
+        <button class="btn btn-outline btn-full" onclick="showFoodSearchModalForRecord()" style="margin-bottom:8px;" data-i18n="btn_food_search">🔍 献立・食品から栄養成分を追加</button>
 
         <!-- 食品DB追加済みリスト（検索で追加した食品が表示される） -->
         <div id="record-fq-added-list" style="margin-bottom:6px;"></div>
@@ -11596,6 +11596,65 @@ function _updateBodyDisplay() {
       ob_choice_t1d: '慢性腎不全＋1型糖尿病',
       ob_choice_t1d_desc: '1型糖尿病あり — 糖質×5',
       ob_doctor_link: '🏥 医療機関の方はこちら',
+      // オンボーディング ステップ2〜4
+      ob_step2: 'ステップ 2 / 4',
+      ob_step3: 'ステップ 3 / 5',
+      ob_step4: 'ステップ 4 / 5',
+      ob_q2: '基本情報を教えてください',
+      ob_q3: 'CKD（腎臓病）の\nステージを教えてください',
+      ob_q4: '1日の目標値の\n設定方法を選んでください',
+      ob_ckd_hint: '※ わからない場合は「不明」を選択してください',
+      // CKDステージ
+      ckd_stage_early: '前期（G1〜G2）',
+      ckd_stage_early_desc: 'GFR 60以上 — 軽度',
+      ckd_stage_mid: '中期（G3）',
+      ckd_stage_mid_desc: 'GFR 30〜59 — 中等度',
+      ckd_stage_late: '後期（G4〜G5）',
+      ckd_stage_late_desc: 'GFR 29以下 — 高度〜末期',
+      ckd_stage_dialysis: '透析期',
+      ckd_stage_dialysis_desc: '血液透析・腹膜透析',
+      ckd_stage_unknown: '不明',
+      ckd_stage_unknown_desc: 'わからない・未検査',
+      // 目標値モード
+      target_auto: '自動計算（推奨）',
+      target_auto_desc: '体格・病期から自動で目標値を計算',
+      target_manual: '手動設定',
+      target_manual_desc: '医師・病院から指示された数値を入力',
+      target_auto_preview: '📊 推奨目標値（自動計算）',
+      target_auto_note: '※ 日本腎臓学会ガイドラインに基づく目安です。医師の指示がある場合は「手動設定」を選んでください。',
+      // フォームラベル
+      label_name: 'お名前',
+      label_age: '年齢',
+      label_gender: '性別',
+      label_height: '身長 (cm)',
+      label_weight: '体重 (kg)',
+      label_record_date: '📅 記録する日付',
+      label_meal_time: '🕐 食事の時刻',
+      label_meal_type: '🍽 食事の区分',
+      label_meal_name: '料理名・メモ',
+      label_calories_kcal: 'カロリー (kcal)',
+      label_protein_g: 'タンパク質 (g)',
+      label_potassium_mg: 'カリウム (mg)',
+      label_phosphorus_mg: 'リン (mg)',
+      label_water_ml: '水分 (mL)',
+      label_salt_g: '塩分 (g)',
+      // プレースホルダー
+      placeholder_name: '例：田中 花子',
+      placeholder_age: '例：65',
+      placeholder_height: '例：165',
+      placeholder_weight: '例：60',
+      placeholder_meal_name: '例：鮭定食、豆腐ハンバーグ',
+      // セレクト オプション
+      option_male: '男性',
+      option_female: '女性',
+      // カードタイトル・ボタン
+      card_meal_content: '食事の内容',
+      btn_food_search: '🔍 献立・食品から栄養成分を追加',
+      // 食事区分
+      meal_breakfast: '朝食',
+      meal_lunch: '昼食',
+      meal_dinner: '夕食',
+      meal_snack: '間食',
       // 利用規約
       terms_title: '利用規約・免責事項',
       terms_sub: 'ご利用前に必ずお読みください',
@@ -11667,6 +11726,65 @@ function _updateBodyDisplay() {
       ob_choice_t1d: 'CKD + Type 1 Diabetes',
       ob_choice_t1d_desc: 'Type 1 diabetes — Carbs ×5',
       ob_doctor_link: '🏥 For healthcare professionals',
+      // Onboarding steps 2-4
+      ob_step2: 'Step 2 / 4',
+      ob_step3: 'Step 3 / 5',
+      ob_step4: 'Step 4 / 5',
+      ob_q2: 'Enter your basic information',
+      ob_q3: 'What is your CKD stage?',
+      ob_q4: 'How would you like to set your daily targets?',
+      ob_ckd_hint: '* Select "Unknown" if you are not sure',
+      // CKD stages
+      ckd_stage_early: 'Early (G1–G2)',
+      ckd_stage_early_desc: 'GFR 60+ — Mild',
+      ckd_stage_mid: 'Middle (G3)',
+      ckd_stage_mid_desc: 'GFR 30–59 — Moderate',
+      ckd_stage_late: 'Late (G4–G5)',
+      ckd_stage_late_desc: 'GFR <30 — Severe to End-stage',
+      ckd_stage_dialysis: 'Dialysis',
+      ckd_stage_dialysis_desc: 'Hemodialysis / Peritoneal dialysis',
+      ckd_stage_unknown: 'Unknown',
+      ckd_stage_unknown_desc: 'Not sure / Not tested',
+      // Target modes
+      target_auto: 'Auto-calculate (Recommended)',
+      target_auto_desc: 'Calculated from your body measurements & stage',
+      target_manual: 'Manual entry',
+      target_manual_desc: 'Enter values prescribed by your doctor',
+      target_auto_preview: '📊 Recommended targets (auto)',
+      target_auto_note: '* Based on Japanese Kidney Society guidelines. Choose manual if your doctor has given specific values.',
+      // Form labels
+      label_name: 'Your Name',
+      label_age: 'Age',
+      label_gender: 'Gender',
+      label_height: 'Height (cm)',
+      label_weight: 'Weight (kg)',
+      label_record_date: '📅 Date',
+      label_meal_time: '🕐 Time',
+      label_meal_type: '🍽 Meal Type',
+      label_meal_name: 'Meal Name / Note',
+      label_calories_kcal: 'Calories (kcal)',
+      label_protein_g: 'Protein (g)',
+      label_potassium_mg: 'Potassium (mg)',
+      label_phosphorus_mg: 'Phosphorus (mg)',
+      label_water_ml: 'Fluid (mL)',
+      label_salt_g: 'Salt (g)',
+      // Placeholders
+      placeholder_name: 'e.g. Jane Smith',
+      placeholder_age: 'e.g. 65',
+      placeholder_height: 'e.g. 165',
+      placeholder_weight: 'e.g. 60',
+      placeholder_meal_name: 'e.g. Grilled salmon, Tofu burger',
+      // Select options
+      option_male: 'Male',
+      option_female: 'Female',
+      // Card titles & buttons
+      card_meal_content: 'Meal Details',
+      btn_food_search: '🔍 Add nutrition from food database',
+      // Meal types
+      meal_breakfast: 'Breakfast',
+      meal_lunch: 'Lunch',
+      meal_dinner: 'Dinner',
+      meal_snack: 'Snack',
       // Terms
       terms_title: 'Terms & Disclaimer',
       terms_sub: 'Please read before using',
@@ -11738,6 +11856,65 @@ function _updateBodyDisplay() {
       ob_choice_t1d: '慢性肾衰竭＋1型糖尿病',
       ob_choice_t1d_desc: '1型糖尿病 — 碳水×5',
       ob_doctor_link: '🏥 医疗机构专用入口',
+      // 引导页步骤2-4
+      ob_step2: '第 2 步 / 共 4 步',
+      ob_step3: '第 3 步 / 共 5 步',
+      ob_step4: '第 4 步 / 共 5 步',
+      ob_q2: '请填写基本信息',
+      ob_q3: 'CKD（慢性肾脏病）分期',
+      ob_q4: '请选择每日目标值的设定方式',
+      ob_ckd_hint: '* 如不清楚请选择「不明」',
+      // CKD分期
+      ckd_stage_early: '早期（G1〜G2）',
+      ckd_stage_early_desc: 'GFR 60以上 — 轻度',
+      ckd_stage_mid: '中期（G3）',
+      ckd_stage_mid_desc: 'GFR 30〜59 — 中度',
+      ckd_stage_late: '晚期（G4〜G5）',
+      ckd_stage_late_desc: 'GFR 29以下 — 重度〜终末期',
+      ckd_stage_dialysis: '透析期',
+      ckd_stage_dialysis_desc: '血液透析·腹膜透析',
+      ckd_stage_unknown: '不明',
+      ckd_stage_unknown_desc: '不清楚·未检查',
+      // 目标值模式
+      target_auto: '自动计算（推荐）',
+      target_auto_desc: '根据体格和病期自动计算目标值',
+      target_manual: '手动设定',
+      target_manual_desc: '输入医生指定的数值',
+      target_auto_preview: '📊 推荐目标值（自动计算）',
+      target_auto_note: '* 基于日本肾脏学会指南。如医生有特定指示，请选择手动设定。',
+      // 表单标签
+      label_name: '姓名',
+      label_age: '年龄',
+      label_gender: '性别',
+      label_height: '身高 (cm)',
+      label_weight: '体重 (kg)',
+      label_record_date: '📅 记录日期',
+      label_meal_time: '🕐 用餐时间',
+      label_meal_type: '🍽 餐食类型',
+      label_meal_name: '餐食名称·备注',
+      label_calories_kcal: '热量 (kcal)',
+      label_protein_g: '蛋白质 (g)',
+      label_potassium_mg: '钾 (mg)',
+      label_phosphorus_mg: '磷 (mg)',
+      label_water_ml: '水分 (mL)',
+      label_salt_g: '盐分 (g)',
+      // 占位符
+      placeholder_name: '例：张三',
+      placeholder_age: '例：65',
+      placeholder_height: '例：165',
+      placeholder_weight: '例：60',
+      placeholder_meal_name: '例：烤鱼套餐、豆腐汉堡',
+      // 下拉选项
+      option_male: '男',
+      option_female: '女',
+      // 卡片标题·按钮
+      card_meal_content: '餐食内容',
+      btn_food_search: '🔍 从食品数据库添加营养信息',
+      // 餐食类型
+      meal_breakfast: '早餐',
+      meal_lunch: '午餐',
+      meal_dinner: '晚餐',
+      meal_snack: '零食',
       // 条款
       terms_title: '使用条款和免责声明',
       terms_sub: '使用前请仔细阅读',
@@ -11809,6 +11986,65 @@ function _updateBodyDisplay() {
       ob_choice_t1d: '만성신부전 + 1형 당뇨',
       ob_choice_t1d_desc: '1형 당뇨병 — 탄수화물 ×5',
       ob_doctor_link: '🏥 의료기관 관계자는 이쪽',
+      // 온보딩 2~4단계
+      ob_step2: '2단계 / 4단계',
+      ob_step3: '3단계 / 5단계',
+      ob_step4: '4단계 / 5단계',
+      ob_q2: '기본 정보를 입력해 주세요',
+      ob_q3: 'CKD(만성신장병) 단계를 알려주세요',
+      ob_q4: '하루 목표값 설정 방법을 선택해 주세요',
+      ob_ckd_hint: '* 모르는 경우 「불명」을 선택하세요',
+      // CKD 단계
+      ckd_stage_early: '초기 (G1~G2)',
+      ckd_stage_early_desc: 'GFR 60 이상 — 경증',
+      ckd_stage_mid: '중기 (G3)',
+      ckd_stage_mid_desc: 'GFR 30~59 — 중등도',
+      ckd_stage_late: '말기 (G4~G5)',
+      ckd_stage_late_desc: 'GFR 29 이하 — 중증~말기',
+      ckd_stage_dialysis: '투석기',
+      ckd_stage_dialysis_desc: '혈액투석·복막투석',
+      ckd_stage_unknown: '불명',
+      ckd_stage_unknown_desc: '모름·미검사',
+      // 목표값 모드
+      target_auto: '자동 계산 (권장)',
+      target_auto_desc: '체형·병기에서 목표값을 자동 계산',
+      target_manual: '수동 설정',
+      target_manual_desc: '의사·병원에서 지시받은 수치 입력',
+      target_auto_preview: '📊 권장 목표값 (자동 계산)',
+      target_auto_note: '* 일본신장학회 가이드라인 기준. 의사 지시가 있는 경우 수동 설정을 선택하세요.',
+      // 폼 레이블
+      label_name: '이름',
+      label_age: '나이',
+      label_gender: '성별',
+      label_height: '키 (cm)',
+      label_weight: '체중 (kg)',
+      label_record_date: '📅 기록 날짜',
+      label_meal_time: '🕐 식사 시간',
+      label_meal_type: '🍽 식사 구분',
+      label_meal_name: '요리명·메모',
+      label_calories_kcal: '칼로리 (kcal)',
+      label_protein_g: '단백질 (g)',
+      label_potassium_mg: '칼륨 (mg)',
+      label_phosphorus_mg: '인 (mg)',
+      label_water_ml: '수분 (mL)',
+      label_salt_g: '염분 (g)',
+      // 플레이스홀더
+      placeholder_name: '예: 홍길동',
+      placeholder_age: '예: 65',
+      placeholder_height: '예: 165',
+      placeholder_weight: '예: 60',
+      placeholder_meal_name: '예: 연어 정식, 두부 햄버그',
+      // 셀렉트 옵션
+      option_male: '남성',
+      option_female: '여성',
+      // 카드 제목·버튼
+      card_meal_content: '식사 내용',
+      btn_food_search: '🔍 식품 DB에서 영양성분 추가',
+      // 식사 구분
+      meal_breakfast: '아침',
+      meal_lunch: '점심',
+      meal_dinner: '저녁',
+      meal_snack: '간식',
       // 약관
       terms_title: '이용약관 및 면책조항',
       terms_sub: '사용 전 반드시 읽어주세요',
@@ -11847,17 +12083,32 @@ function _updateBodyDisplay() {
   // ---- DOM に翻訳を適用 ----
   function applyLang() {
     const lang = getLang();
+    const dict = i18n[lang] || i18n['ja'];
+
+    // テキストコンテンツの翻訳
     document.querySelectorAll('[data-i18n]').forEach(el => {
       const key = el.getAttribute('data-i18n');
-      const text = (i18n[lang] && i18n[lang][key]) || (i18n['ja'][key]) || key;
-      el.textContent = text;
+      const text = dict[key] || i18n['ja'][key] || key;
+      // ボタン・ラベルなど（子要素を持つ場合は firstChild のテキストだけ置換しない）
+      if (el.children.length === 0) {
+        el.textContent = text;
+      } else {
+        // 子要素がある場合はスキップ（innerHTML を壊さないため）
+      }
     });
+
     // placeholder の翻訳
     document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
       const key = el.getAttribute('data-i18n-placeholder');
-      const text = (i18n[lang] && i18n[lang][key]) || (i18n['ja'][key]) || key;
-      el.placeholder = text;
+      el.placeholder = dict[key] || i18n['ja'][key] || key;
     });
+
+    // <option> の翻訳
+    document.querySelectorAll('option[data-i18n]').forEach(el => {
+      const key = el.getAttribute('data-i18n');
+      el.textContent = dict[key] || i18n['ja'][key] || key;
+    });
+
     // 言語ボタンのスタイル更新（設定ページ + オンボーディング）
     ['ja','en','zh','ko'].forEach(l => {
       ['lang-btn-', 'ob-lang-btn-'].forEach(prefix => {
@@ -11874,19 +12125,22 @@ function _updateBodyDisplay() {
         }
       });
     });
+
     // html lang 属性更新
     document.documentElement.lang = lang;
+
     // 広告モーダルのボタンテキストを更新
     const skipBtn = document.getElementById('ad-skip-btn');
-    if (skipBtn && skipBtn.disabled) skipBtn.textContent = (i18n[lang]||i18n.ja).ad_skip_btn;
+    if (skipBtn && skipBtn.disabled) skipBtn.textContent = dict.ad_skip_btn || i18n.ja.ad_skip_btn;
     const countMsg = document.getElementById('ad-countdown-msg');
-    if (countMsg) countMsg.textContent = (i18n[lang]||i18n.ja).ad_countdown_msg;
-    // 利用規約ボタン
+    if (countMsg) countMsg.textContent = dict.ad_countdown_msg || i18n.ja.ad_countdown_msg;
+
+    // 利用規約ボタン（disabled 状態でも textContent を更新）
     const termsBtn = document.getElementById('terms-agree-btn');
-    if (termsBtn) termsBtn.textContent = (i18n[lang]||i18n.ja).terms_agree_btn;
+    if (termsBtn) termsBtn.textContent = dict.terms_agree_btn || i18n.ja.terms_agree_btn;
     const termsHint = document.getElementById('terms-scroll-hint');
     if (termsHint) {
-      termsHint.innerHTML = `<span style="font-size:14px;">↕</span><span>${(i18n[lang]||i18n.ja).terms_scroll_hint}</span>`;
+      termsHint.innerHTML = `<span style="font-size:14px;">↕</span><span>${dict.terms_scroll_hint || i18n.ja.terms_scroll_hint}</span>`;
     }
   }
 
