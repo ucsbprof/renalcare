@@ -1721,8 +1721,8 @@ body.is-premium .premium-banner { display: none !important; }
     <div class="page" id="page-medicine">
       <!-- タブ切り替え -->
       <div style="display:flex;gap:0;margin-bottom:14px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:3px;">
-        <button id="med-tab-timeline" onclick="switchMedTab('timeline')" style="flex:1;padding:8px;border:none;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;background:var(--accent);color:#0d1420;font-family:'Noto Sans JP',sans-serif;">🕐 今日の服薬</button>
-        <button id="med-tab-hospitals" onclick="switchMedTab('hospitals')" style="flex:1;padding:8px;border:none;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;background:transparent;color:var(--text3);font-family:'Noto Sans JP',sans-serif;">🏥 医療機関・処方薬</button>
+        <button id="med-tab-timeline" onclick="switchMedTab('timeline')" style="flex:1;padding:8px;border:none;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;background:var(--accent);color:#0d1420;font-family:'Noto Sans JP',sans-serif;" data-i18n="med_tab_today">🕐 今日の服薬</button>
+        <button id="med-tab-hospitals" onclick="switchMedTab('hospitals')" style="flex:1;padding:8px;border:none;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;background:transparent;color:var(--text3);font-family:'Noto Sans JP',sans-serif;" data-i18n="med_tab_hospitals">🏥 医療機関・処方薬</button>
       </div>
 
       <!-- ===== タイムラインタブ ===== -->
@@ -1730,49 +1730,49 @@ body.is-premium .premium-banner { display: none !important; }
         <!-- 薬追加ボタン（タイムラインタブのヘッダー） -->
         <div style="display:flex;justify-content:flex-end;margin-bottom:10px;">
           <button class="btn btn-primary btn-sm" onclick="openAddMedModal()" style="gap:6px;">
-            <span style="font-size:16px;line-height:1;">＋</span> 薬を追加
+            <span style="font-size:16px;line-height:1;">＋</span> <span data-i18n="btn_add_med">薬を追加</span>
           </button>
         </div>
         <div class="card" style="padding:12px 14px;margin-bottom:10px;">
           <div style="display:flex;align-items:center;gap:10px;">
-            <label class="form-label" style="margin:0;white-space:nowrap;">📅 日付</label>
+            <label class="form-label" style="margin:0;white-space:nowrap;" data-i18n="label_date_record">📅 日付</label>
             <input class="form-input" type="date" id="med-record-date" style="flex:1;" oninput="renderMedicineLog()" />
-            <button class="btn btn-ghost btn-sm" onclick="setMedDateToday()">今日</button>
+            <button class="btn btn-ghost btn-sm" onclick="setMedDateToday()" data-i18n="btn_today">今日</button>
           </div>
         </div>
 
         <!-- ① 毎日の薬 -->
         <div id="med-section-daily" style="display:none;margin-bottom:16px;">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-            <div style="font-size:13px;font-weight:700;color:var(--accent);">💊 毎日の薬</div>
+            <div style="font-size:13px;font-weight:700;color:var(--accent);" data-i18n="med_section_daily">💊 毎日の薬</div>
             <div id="badge-daily" style="font-size:11px;padding:2px 8px;border-radius:10px;"></div>
           </div>
           <div id="med-block-before_breakfast" class="med-time-block">
-            <div class="med-time-header"><span class="med-time-icon">🌅</span><span class="med-time-label">朝食前</span><span class="med-time-badge" id="badge-before_breakfast"></span></div>
+            <div class="med-time-header"><span class="med-time-icon">🌅</span><span class="med-time-label" data-i18n="med_before_breakfast">朝食前</span><span class="med-time-badge" id="badge-before_breakfast"></span></div>
             <div class="med-time-list" id="list-before_breakfast"></div>
           </div>
           <div id="med-block-after_breakfast" class="med-time-block">
-            <div class="med-time-header"><span class="med-time-icon">🌅</span><span class="med-time-label">朝食後</span><span class="med-time-badge" id="badge-after_breakfast"></span></div>
+            <div class="med-time-header"><span class="med-time-icon">🌅</span><span class="med-time-label" data-i18n="med_after_breakfast">朝食後</span><span class="med-time-badge" id="badge-after_breakfast"></span></div>
             <div class="med-time-list" id="list-after_breakfast"></div>
           </div>
           <div id="med-block-before_lunch" class="med-time-block">
-            <div class="med-time-header"><span class="med-time-icon">☀️</span><span class="med-time-label">昼食前</span><span class="med-time-badge" id="badge-before_lunch"></span></div>
+            <div class="med-time-header"><span class="med-time-icon">☀️</span><span class="med-time-label" data-i18n="med_before_lunch">昼食前</span><span class="med-time-badge" id="badge-before_lunch"></span></div>
             <div class="med-time-list" id="list-before_lunch"></div>
           </div>
           <div id="med-block-after_lunch" class="med-time-block">
-            <div class="med-time-header"><span class="med-time-icon">☀️</span><span class="med-time-label">昼食後</span><span class="med-time-badge" id="badge-after_lunch"></span></div>
+            <div class="med-time-header"><span class="med-time-icon">☀️</span><span class="med-time-label" data-i18n="med_after_lunch">昼食後</span><span class="med-time-badge" id="badge-after_lunch"></span></div>
             <div class="med-time-list" id="list-after_lunch"></div>
           </div>
           <div id="med-block-before_dinner" class="med-time-block">
-            <div class="med-time-header"><span class="med-time-icon">🌙</span><span class="med-time-label">夕食前</span><span class="med-time-badge" id="badge-before_dinner"></span></div>
+            <div class="med-time-header"><span class="med-time-icon">🌙</span><span class="med-time-label" data-i18n="med_before_dinner">夕食前</span><span class="med-time-badge" id="badge-before_dinner"></span></div>
             <div class="med-time-list" id="list-before_dinner"></div>
           </div>
           <div id="med-block-after_dinner" class="med-time-block">
-            <div class="med-time-header"><span class="med-time-icon">🌙</span><span class="med-time-label">夕食後</span><span class="med-time-badge" id="badge-after_dinner"></span></div>
+            <div class="med-time-header"><span class="med-time-icon">🌙</span><span class="med-time-label" data-i18n="med_after_dinner">夕食後</span><span class="med-time-badge" id="badge-after_dinner"></span></div>
             <div class="med-time-list" id="list-after_dinner"></div>
           </div>
           <div id="med-block-bedtime" class="med-time-block">
-            <div class="med-time-header"><span class="med-time-icon">🌛</span><span class="med-time-label">就寝前</span><span class="med-time-badge" id="badge-bedtime"></span></div>
+            <div class="med-time-header"><span class="med-time-icon">🌛</span><span class="med-time-label" data-i18n="med_bedtime">就寝前</span><span class="med-time-badge" id="badge-bedtime"></span></div>
             <div class="med-time-list" id="list-bedtime"></div>
           </div>
         </div>
@@ -1780,7 +1780,7 @@ body.is-premium .premium-banner { display: none !important; }
         <!-- ② 定期薬（週1・月1など） -->
         <div id="med-section-periodic" style="display:none;margin-bottom:16px;">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-            <div style="font-size:13px;font-weight:700;color:var(--purple);">📅 定期薬（週1・月1など）</div>
+            <div style="font-size:13px;font-weight:700;color:var(--purple);" data-i18n="med_section_periodic">📅 定期薬（週1・月1など）</div>
           </div>
           <div id="list-periodic"></div>
         </div>
@@ -1788,40 +1788,40 @@ body.is-premium .premium-banner { display: none !important; }
         <!-- ③ 頓服 -->
         <div id="med-section-prn" style="display:none;margin-bottom:16px;">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-            <div style="font-size:13px;font-weight:700;color:var(--amber);">🆘 頓服・症状時のみ</div>
-            <div style="font-size:11px;color:var(--text3);">必要なときだけ服用</div>
+            <div style="font-size:13px;font-weight:700;color:var(--amber);" data-i18n="med_section_prn">🆘 頓服・症状時のみ</div>
+            <div style="font-size:11px;color:var(--text3);" data-i18n="med_prn_note">必要なときだけ服用</div>
           </div>
           <div id="list-prn"></div>
         </div>
 
         <div id="med-no-meds" style="text-align:center;padding:40px 20px;color:var(--text3);">
           <div style="font-size:40px;margin-bottom:10px;">💊</div>
-          <div>まだ薬が登録されていません</div>
-          <div style="font-size:12px;margin-top:6px;">「医療機関・処方薬」タブから登録してください</div>
+          <div data-i18n="med_empty_msg">まだ薬が登録されていません</div>
+          <div style="font-size:12px;margin-top:6px;" data-i18n="med_empty_hint">「医療機関・処方薬」タブから登録してください</div>
         </div>
 
         <!-- 頓服 使用ログモーダル -->
         <div class="modal-bg" id="prnLogModal" onclick="closeModal('prnLogModal')">
           <div class="modal" onclick="event.stopPropagation()" style="max-height:85vh;overflow-y:auto;">
             <div class="modal-handle"></div>
-            <div class="modal-title" id="prnLogModal-title">頓服の使用記録</div>
+            <div class="modal-title" id="prnLogModal-title" data-i18n="prn_log_title">頓服の使用記録</div>
             <input type="hidden" id="prnLog-medId" />
             <div style="margin-top:12px;">
               <div class="form-row">
-                <label class="form-label">🕐 使用した日時</label>
+                <label class="form-label" data-i18n="prn_label_datetime">🕐 使用した日時</label>
                 <input class="form-input" type="datetime-local" id="prnLog-datetime" />
               </div>
               <div class="form-row">
-                <label class="form-label">💊 使用量・回数</label>
-                <input class="form-input" type="text" id="prnLog-amount" placeholder="例：1錠、2回、5mg" />
+                <label class="form-label" data-i18n="prn_label_amount">💊 使用量・回数</label>
+                <input class="form-input" type="text" id="prnLog-amount" data-i18n-placeholder="prn_placeholder_amount" placeholder="例：1錠、2回、5mg" />
               </div>
               <div class="form-row">
-                <label class="form-label">📝 症状・メモ</label>
-                <input class="form-input" type="text" id="prnLog-memo" placeholder="例：頭痛、吐き気、痛み" />
+                <label class="form-label" data-i18n="prn_label_memo">📝 症状・メモ</label>
+                <input class="form-input" type="text" id="prnLog-memo" data-i18n-placeholder="prn_placeholder_memo" placeholder="例：頭痛、吐き気、痛み" />
               </div>
             </div>
-            <button class="btn btn-primary btn-full" style="margin-top:12px;" onclick="savePrnLog()">✓ 使用を記録</button>
-            <button class="btn btn-ghost btn-full" style="margin-top:8px;" onclick="closeModal('prnLogModal')">キャンセル</button>
+            <button class="btn btn-primary btn-full" style="margin-top:12px;" onclick="savePrnLog()" data-i18n="prn_btn_save">✓ 使用を記録</button>
+            <button class="btn btn-ghost btn-full" style="margin-top:8px;" onclick="closeModal('prnLogModal')" data-i18n="btn_cancel">キャンセル</button>
           </div>
         </div>
       </div>
@@ -1829,8 +1829,8 @@ body.is-premium .premium-banner { display: none !important; }
       <!-- ===== 医療機関タブ ===== -->
       <div id="med-panel-hospitals" style="display:none;">
         <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:12px;">
-          <button class="btn btn-outline btn-sm" onclick="showAddHospitalModal()">🏥 医療機関を追加</button>
-          <button class="btn btn-primary btn-sm" onclick="showAddMedModal()">＋ 薬を追加</button>
+          <button class="btn btn-outline btn-sm" onclick="showAddHospitalModal()" data-i18n="btn_add_hospital">🏥 医療機関を追加</button>
+          <button class="btn btn-primary btn-sm" onclick="showAddMedModal()" data-i18n="btn_add_med2">＋ 薬を追加</button>
         </div>
         <div id="med-hospitals-area"></div>
       </div>
@@ -2012,11 +2012,12 @@ body.is-premium .premium-banner { display: none !important; }
 <div class="modal-bg" id="addMedSearchModal" onclick="closeModal('addMedSearchModal')">
   <div class="modal" onclick="event.stopPropagation()" style="max-height:92vh;overflow-y:auto;padding-bottom:max(24px,env(safe-area-inset-bottom));">
     <div class="modal-handle"></div>
-    <div class="modal-title">💊 薬を検索・追加</div>
+    <div class="modal-title" data-i18n="drug_search_title">💊 薬を検索・追加</div>
 
     <!-- 検索バー -->
     <div class="drug-suggest-wrap" style="margin-top:12px;" id="drug-search-outer">
       <input class="form-input" type="text" id="drugSearchInput"
+        data-i18n-placeholder="drug_search_placeholder"
         placeholder="薬の名前を入力（例：フォシーガ、ロケルマ、リクシアナ…）"
         oninput="renderDrugSuggestions(this.value)"
         onkeydown="onDrugSearchKeydown(event)"
@@ -2028,17 +2029,17 @@ body.is-premium .premium-banner { display: none !important; }
 
     <!-- カテゴリフィルター -->
     <div id="drug-cat-filter" style="display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;padding:8px 0 4px;scrollbar-width:none;-webkit-overflow-scrolling:touch;">
-      <button class="food-tab active" id="drug-cat-all" onclick="filterDrugCat('all',this)">すべて</button>
-      <button class="food-tab" onclick="filterDrugCat('インスリン',this)">インスリン</button>
+      <button class="food-tab active" id="drug-cat-all" onclick="filterDrugCat('all',this)" data-i18n="drug_cat_all">すべて</button>
+      <button class="food-tab" onclick="filterDrugCat('インスリン',this)" data-i18n="drug_cat_insulin">インスリン</button>
       <button class="food-tab" onclick="filterDrugCat('GLP-1',this)">GLP-1</button>
       <button class="food-tab" onclick="filterDrugCat('SGLT2',this)">SGLT2</button>
       <button class="food-tab" onclick="filterDrugCat('DPP-4',this)">DPP-4</button>
-      <button class="food-tab" onclick="filterDrugCat('リン吸着',this)">リン吸着</button>
-      <button class="food-tab" onclick="filterDrugCat('カリウム',this)">高K治療</button>
+      <button class="food-tab" onclick="filterDrugCat('リン吸着',this)" data-i18n="drug_cat_phosphate">リン吸着</button>
+      <button class="food-tab" onclick="filterDrugCat('カリウム',this)" data-i18n="drug_cat_potassium">高K治療</button>
       <button class="food-tab" onclick="filterDrugCat('ARB',this)">ARB</button>
-      <button class="food-tab" onclick="filterDrugCat('抗凝固',this)">抗凝固</button>
-      <button class="food-tab" onclick="filterDrugCat('スタチン',this)">スタチン</button>
-      <button class="food-tab" onclick="filterDrugCat('透析',this)">透析専用</button>
+      <button class="food-tab" onclick="filterDrugCat('抗凝固',this)" data-i18n="drug_cat_anticoag">抗凝固</button>
+      <button class="food-tab" onclick="filterDrugCat('スタチン',this)" data-i18n="drug_cat_statin">スタチン</button>
+      <button class="food-tab" onclick="filterDrugCat('透析',this)" data-i18n="drug_cat_dialysis">透析専用</button>
     </div>
 
     <!-- 検索結果リスト -->
@@ -2059,22 +2060,23 @@ body.is-premium .premium-banner { display: none !important; }
 
       <!-- 医療機関 -->
       <div class="form-row" style="margin-bottom:10px;">
-        <label class="form-label">🏥 医療機関</label>
+        <label class="form-label" data-i18n="label_hospital">🏥 医療機関</label>
         <select class="form-input" id="drug-sub-hospital" style="font-size:13px;"></select>
       </div>
 
       <!-- 用量選択 -->
       <div class="form-row" style="margin-bottom:10px;">
-        <label class="form-label">💊 用量</label>
+        <label class="form-label" data-i18n="label_dosage">💊 用量</label>
         <div id="drug-sub-dose-chips" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;"></div>
         <input class="form-input" type="text" id="drug-sub-dose-custom"
+          data-i18n-placeholder="drug_dose_placeholder"
           placeholder="または直接入力（例：1錠、10mg）"
           style="margin-top:6px;font-size:13px;" />
       </div>
 
       <!-- タイミング -->
       <div class="form-row" style="margin-bottom:10px;">
-        <label class="form-label">🕐 服用タイミング（複数可）</label>
+        <label class="form-label" data-i18n="label_timing">🕐 服用タイミング（複数可）</label>
         <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px;" id="drug-sub-timing-rows">
           <!-- JS で描画 -->
         </div>
@@ -2082,42 +2084,42 @@ body.is-premium .premium-banner { display: none !important; }
 
       <!-- 頻度 -->
       <div class="form-row" style="margin-bottom:10px;">
-        <label class="form-label">🔄 服用頻度</label>
+        <label class="form-label" data-i18n="label_frequency">🔄 服用頻度</label>
         <select class="form-input" id="drug-sub-freq" style="font-size:13px;" onchange="onDrugSubFreqChange()">
-          <option value="daily">毎日</option>
-          <option value="dialysis">透析日のみ</option>
-          <option value="weekly">週1回</option>
-          <option value="monthly">月1回</option>
-          <option value="prn">頓服（症状時のみ）</option>
+          <option value="daily" data-i18n="freq_daily">毎日</option>
+          <option value="dialysis" data-i18n="freq_dialysis">透析日のみ</option>
+          <option value="weekly" data-i18n="freq_weekly">週1回</option>
+          <option value="monthly" data-i18n="freq_monthly">月1回</option>
+          <option value="prn" data-i18n="freq_prn">頓服（症状時のみ）</option>
         </select>
       </div>
       <!-- 透析日のみ注記 -->
-      <div id="drug-sub-dialysis-note" style="display:none;font-size:11px;color:var(--purple);background:var(--purple-dim);border:1px solid var(--purple);border-radius:8px;padding:8px 10px;margin-bottom:8px;">
+      <div id="drug-sub-dialysis-note" style="display:none;font-size:11px;color:var(--purple);background:var(--purple-dim);border:1px solid var(--purple);border-radius:8px;padding:8px 10px;margin-bottom:8px;" data-i18n="drug_dialysis_note">
         💉 透析日のみ服用 — 非透析日はスキップされます
       </div>
 
       <!-- 残薬・処方日数 -->
       <div style="display:flex;gap:8px;">
         <div class="form-row" style="flex:1;margin-bottom:0;">
-          <label class="form-label">📦 処方日数</label>
+          <label class="form-label" data-i18n="label_days_supply">📦 処方日数</label>
           <input class="form-input" type="number" min="0" id="drug-sub-days" placeholder="28" style="font-size:13px;" />
         </div>
         <div class="form-row" style="flex:1;margin-bottom:0;">
-          <label class="form-label">💊 残薬数</label>
+          <label class="form-label" data-i18n="label_stock">💊 残薬数</label>
           <input class="form-input" type="number" min="0" id="drug-sub-stock" placeholder="28" style="font-size:13px;" />
         </div>
       </div>
 
       <!-- 保存ボタン -->
       <div style="display:flex;gap:8px;margin-top:14px;">
-        <button class="btn btn-primary" style="flex:1;" onclick="saveNewMedicine()">✓ この薬を登録する</button>
-        <button class="btn btn-outline" onclick="closeDrugSubMenu()">← 戻る</button>
+        <button class="btn btn-primary" style="flex:1;" onclick="saveNewMedicine()" data-i18n="btn_register_med">✓ この薬を登録する</button>
+        <button class="btn btn-outline" onclick="closeDrugSubMenu()" data-i18n="btn_back">← 戻る</button>
       </div>
     </div>
 
     <!-- キャンセル -->
     <div style="margin-top:12px;">
-      <button class="btn btn-ghost btn-full" onclick="closeModal('addMedSearchModal')">キャンセル</button>
+      <button class="btn btn-ghost btn-full" onclick="closeModal('addMedSearchModal')" data-i18n="btn_cancel">キャンセル</button>
     </div>
   </div>
 </div>
@@ -2229,34 +2231,34 @@ body.is-premium .premium-banner { display: none !important; }
 <div class="modal-bg" id="addHospitalModal" onclick="closeModal('addHospitalModal')">
   <div class="modal" onclick="event.stopPropagation()">
     <div class="modal-handle"></div>
-    <div class="modal-title" id="addHospitalModal-title">🏥 医療機関を追加</div>
+    <div class="modal-title" id="addHospitalModal-title" data-i18n="hospital_add_title">🏥 医療機関を追加</div>
     <input type="hidden" id="hosp-edit-id" value="" />
     <div class="form-row" style="margin-top:14px;">
-      <label class="form-label">🏥 医療機関名</label>
-      <input class="form-input" type="text" id="hosp-name" placeholder="例：○○腎臓内科クリニック" />
+      <label class="form-label" data-i18n="label_hospital_name">🏥 医療機関名</label>
+      <input class="form-input" type="text" id="hosp-name" data-i18n-placeholder="placeholder_hospital_name" placeholder="例：○○腎臓内科クリニック" />
     </div>
     <div class="form-row">
-      <label class="form-label">🩺 診療科</label>
-      <input class="form-input" type="text" id="hosp-dept" placeholder="例：腎臓内科、泌尿器科" />
+      <label class="form-label" data-i18n="label_dept">🩺 診療科</label>
+      <input class="form-input" type="text" id="hosp-dept" data-i18n-placeholder="placeholder_dept" placeholder="例：腎臓内科、泌尿器科" />
     </div>
     <div class="form-row">
-      <label class="form-label">📞 電話番号</label>
+      <label class="form-label" data-i18n="label_tel">📞 電話番号</label>
       <input class="form-input" type="tel" id="hosp-tel" placeholder="例：03-1234-5678" />
     </div>
     <div class="form-row">
-      <label class="form-label">📅 次回診察日</label>
+      <label class="form-label" data-i18n="label_next_visit">📅 次回診察日</label>
       <input class="form-input" type="date" id="hosp-next-visit" />
     </div>
     <div class="form-row">
-      <label class="form-label">📝 メモ</label>
-      <input class="form-input" type="text" id="hosp-note" placeholder="例：月1回通院、空腹時採血あり" />
+      <label class="form-label" data-i18n="label_memo">📝 メモ</label>
+      <input class="form-input" type="text" id="hosp-note" data-i18n-placeholder="placeholder_hosp_note" placeholder="例：月1回通院、空腹時採血あり" />
     </div>
     <div style="display:flex;gap:8px;margin-top:14px;">
-      <button class="btn btn-primary" style="flex:1;" onclick="saveHospital()">✓ 保存する</button>
-      <button class="btn btn-outline" onclick="closeModal('addHospitalModal')">キャンセル</button>
+      <button class="btn btn-primary" style="flex:1;" onclick="saveHospital()" data-i18n="btn_save">✓ 保存する</button>
+      <button class="btn btn-outline" onclick="closeModal('addHospitalModal')" data-i18n="btn_cancel">キャンセル</button>
     </div>
     <div id="hosp-edit-delete-btn" style="display:none;margin-top:8px;">
-      <button class="btn btn-red btn-full" onclick="deleteHospital()">🗑 この医療機関を削除する</button>
+      <button class="btn btn-red btn-full" onclick="deleteHospital()" data-i18n="btn_delete_hospital">🗑 この医療機関を削除する</button>
     </div>
   </div>
 </div>
@@ -6848,6 +6850,310 @@ const SEARCH_ALIASES = {
   'かあらげ':   ['唐揚げ'],
   'ぎょうざ':   ['餃子'],
   'はるまき':   ['春巻き'],
+
+  // ===== English keywords =====
+  // Staples
+  'rice':        ['白飯','米類','お粥','おにぎり','チャーハン','もち'],
+  'white rice':  ['白飯'],
+  'brown rice':  ['玄米'],
+  'porridge':    ['お粥','雑炊'],
+  'congee':      ['お粥','雑炊'],
+  'onigiri':     ['おにぎり'],
+  'rice ball':   ['おにぎり'],
+  'mochi':       ['もち','切り餅'],
+  'fried rice':  ['チャーハン'],
+  'bread':       ['パン類','食パン','ロールパン','フランスパン'],
+  'toast':       ['食パン'],
+  'croissant':   ['クロワッサン'],
+  'bagel':       ['ベーグル'],
+  'naan':        ['ナン'],
+  'noodle':      ['麺類','うどん','ラーメン','そば','パスタ','そうめん'],
+  'noodles':     ['麺類','うどん','ラーメン','そば','パスタ','そうめん'],
+  'udon':        ['うどん'],
+  'soba':        ['そば'],
+  'ramen':       ['ラーメン'],
+  'pasta':       ['パスタ','スパゲッティ','マカロニ'],
+  'spaghetti':   ['スパゲッティ'],
+  'macaroni':    ['マカロニ'],
+  'vermicelli':  ['春雨','ビーフン'],
+  'glass noodle':['春雨'],
+  'konjac':      ['こんにゃく','春雨・こんにゃく'],
+  'shirataki':   ['こんにゃく','しらたき'],
+  // Meat
+  'chicken':     ['鶏','鶏むね','鶏もも','ささみ','チキン','唐揚げ','焼き鳥'],
+  'chicken breast':['鶏むね肉'],
+  'chicken thigh':['鶏もも肉'],
+  'pork':        ['豚','豚ロース','豚バラ','豚ひき'],
+  'beef':        ['牛','牛もも','牛ひき'],
+  'ham':         ['ハム'],
+  'bacon':       ['ベーコン'],
+  'sausage':     ['ウインナー','ソーセージ','フランクフルト'],
+  'hamburger':   ['ハンバーグ'],
+  'nugget':      ['チキンナゲット'],
+  'dumpling':    ['餃子','シュウマイ'],
+  'gyoza':       ['餃子'],
+  'tofu':        ['豆腐','湯豆腐','豆腐ハンバーグ'],
+  // Fish & Seafood
+  'fish':        ['魚介類','鮭','鯖','鯛','マグロ','サーモン'],
+  'salmon':      ['鮭','サーモン'],
+  'tuna':        ['マグロ','ツナ'],
+  'mackerel':    ['鯖'],
+  'sea bream':   ['鯛','タイ'],
+  'yellowtail':  ['ぶり','ハマチ'],
+  'squid':       ['イカ'],
+  'octopus':     ['タコ'],
+  'shrimp':      ['エビ','甘エビ','ボタンエビ'],
+  'prawn':       ['エビ'],
+  'scallop':     ['ホタテ'],
+  'crab':        ['カニ'],
+  'clam':        ['あさり','はまぐり'],
+  'oyster':      ['牡蠣'],
+  'roe':         ['いくら','数の子','明太子'],
+  'cod roe':     ['明太子','たらこ'],
+  'fish cake':   ['かまぼこ','はんぺん','ちくわ','さつま揚げ'],
+  'kamaboko':    ['かまぼこ'],
+  // Vegetables
+  'vegetable':   ['野菜類','大根','人参','玉ねぎ','キャベツ','ほうれん草'],
+  'vegetables':  ['野菜類'],
+  'spinach':     ['ほうれん草'],
+  'carrot':      ['人参','ニンジン'],
+  'cabbage':     ['キャベツ'],
+  'onion':       ['玉ねぎ','玉葱'],
+  'radish':      ['大根'],
+  'daikon':      ['大根'],
+  'tomato':      ['トマト'],
+  'cucumber':    ['きゅうり'],
+  'eggplant':    ['なす','ナス'],
+  'potato':      ['じゃがいも','ポテト','ジャガイモ'],
+  'sweet potato':['さつまいも'],
+  'mushroom':    ['きのこ','しいたけ','エリンギ','しめじ','まいたけ'],
+  'corn':        ['とうもろこし','コーン'],
+  'lettuce':     ['レタス'],
+  'broccoli':    ['ブロッコリー'],
+  'pumpkin':     ['かぼちゃ'],
+  'burdock':     ['ごぼう'],
+  'bamboo':      ['たけのこ'],
+  'seaweed':     ['海藻','わかめ','ひじき','のり'],
+  'wakame':      ['わかめ'],
+  'nori':        ['のり','海苔'],
+  // Eggs & Dairy
+  'egg':         ['卵','玉子','目玉焼き','茹で卵','スクランブル','卵焼き'],
+  'eggs':        ['卵','玉子'],
+  'boiled egg':  ['茹で卵'],
+  'fried egg':   ['目玉焼き'],
+  'scrambled':   ['スクランブルエッグ'],
+  'milk':        ['牛乳','乳製品'],
+  'cheese':      ['チーズ'],
+  'yogurt':      ['ヨーグルト'],
+  'butter':      ['バター'],
+  // Soy
+  'soy':         ['豆腐','大豆','納豆','豆乳','みそ'],
+  'tofu':        ['豆腐'],
+  'miso':        ['みそ','味噌'],
+  'natto':       ['納豆'],
+  'edamame':     ['枝豆'],
+  // Fruit
+  'fruit':       ['果物','りんご','バナナ','みかん','いちご','ぶどう'],
+  'apple':       ['りんご'],
+  'banana':      ['バナナ'],
+  'orange':      ['みかん','オレンジ'],
+  'strawberry':  ['いちご'],
+  'grape':       ['ぶどう'],
+  'peach':       ['もも','桃'],
+  'watermelon':  ['すいか'],
+  // Cooked dishes
+  'soup':        ['スープ','味噌汁','汁物','みそ汁'],
+  'miso soup':   ['味噌汁','みそ汁'],
+  'salad':       ['サラダ'],
+  'curry':       ['カレー'],
+  'stew':        ['シチュー'],
+  'fried':       ['炒め','揚げ','から揚げ','フライ'],
+  'grilled':     ['焼き','グリル'],
+  'boiled':      ['茹で','煮'],
+  'steamed':     ['蒸し'],
+  'tempura':     ['天ぷら'],
+  'sushi':       ['寿司','すし','刺身'],
+  'sashimi':     ['刺身','刺し身'],
+  'takoyaki':    ['たこ焼き'],
+  'okonomiyaki': ['お好み焼き'],
+  'teriyaki':    ['照り焼き'],
+  'karaage':     ['唐揚げ'],
+  'sukiyaki':    ['すき焼き'],
+  'shabu':       ['しゃぶしゃぶ'],
+  'nabe':        ['鍋'],
+  'hot pot':     ['鍋'],
+  'yakitori':    ['焼き鳥'],
+  'onsen':       ['温泉卵'],
+  // Snacks & Sweets
+  'snack':       ['菓子類','お菓子','スナック'],
+  'sweet':       ['菓子類','デザート','スイーツ'],
+  'bread roll':  ['ロールパン'],
+  'pudding':     ['プリン'],
+  'ice cream':   ['アイス'],
+  'chocolate':   ['チョコレート','チョコ'],
+  // Drinks
+  'water':       ['水','水分'],
+  'tea':         ['お茶','緑茶','紅茶','麦茶'],
+  'coffee':      ['コーヒー'],
+  'juice':       ['ジュース'],
+  'milk tea':    ['ミルクティー'],
+  // Low protein (medical)
+  'low protein': ['低タンパク'],
+  'low salt':    ['低塩'],
+  'low potassium':['低カリウム','低K'],
+  'kidney':      ['腎臓','低タンパク','腎不全'],
+  'dialysis':    ['透析'],
+
+  // ===== 中文关键词 (Chinese) =====
+  '米饭':    ['白飯','米類'],
+  '白米':    ['白飯'],
+  '糙米':    ['玄米'],
+  '稀饭':    ['お粥'],
+  '粥':      ['お粥','雑炊'],
+  '饭团':    ['おにぎり'],
+  '炒饭':    ['チャーハン'],
+  '面包':    ['パン類'],
+  '吐司':    ['食パン'],
+  '牛角包':  ['クロワッサン'],
+  '面条':    ['麺類','うどん','ラーメン','パスタ'],
+  '乌冬面':  ['うどん'],
+  '拉面':    ['ラーメン'],
+  '荞麦':    ['そば'],
+  '意面':    ['パスタ','スパゲッティ'],
+  '粉丝':    ['春雨'],
+  '魔芋':    ['こんにゃく'],
+  '鸡肉':    ['鶏','鶏むね','鶏もも'],
+  '鸡胸':    ['鶏むね肉'],
+  '鸡腿':    ['鶏もも肉'],
+  '猪肉':    ['豚'],
+  '牛肉':    ['牛'],
+  '火腿':    ['ハム'],
+  '培根':    ['ベーコン'],
+  '香肠':    ['ウインナー','ソーセージ'],
+  '汉堡':    ['ハンバーグ'],
+  '饺子':    ['餃子'],
+  '豆腐':    ['豆腐'],
+  '鱼':      ['魚介類','鮭','鯖'],
+  '三文鱼':  ['鮭','サーモン'],
+  '金枪鱼':  ['マグロ','ツナ'],
+  '虾':      ['エビ'],
+  '鱿鱼':    ['イカ'],
+  '章鱼':    ['タコ'],
+  '扇贝':    ['ホタテ'],
+  '蔬菜':    ['野菜類'],
+  '菠菜':    ['ほうれん草'],
+  '萝卜':    ['大根'],
+  '洋葱':    ['玉ねぎ'],
+  '番茄':    ['トマト'],
+  '西红柿':  ['トマト'],
+  '黄瓜':    ['きゅうり'],
+  '土豆':    ['じゃがいも'],
+  '蘑菇':    ['きのこ'],
+  '海带':    ['海藻','わかめ'],
+  '鸡蛋':    ['卵'],
+  '牛奶':    ['牛乳'],
+  '奶酪':    ['チーズ'],
+  '酸奶':    ['ヨーグルト'],
+  '味噌':    ['みそ','味噌'],
+  '纳豆':    ['納豆'],
+  '水果':    ['果物'],
+  '苹果':    ['りんご'],
+  '香蕉':    ['バナナ'],
+  '橙子':    ['みかん','オレンジ'],
+  '草莓':    ['いちご'],
+  '汤':      ['スープ','みそ汁'],
+  '沙拉':    ['サラダ'],
+  '咖喱':    ['カレー'],
+  '天妇罗':  ['天ぷら'],
+  '寿司':    ['寿司'],
+  '生鱼片':  ['刺身'],
+  '烤鸡串':  ['焼き鳥'],
+  '章鱼烧':  ['たこ焼き'],
+  '低蛋白':  ['低タンパク'],
+  '低盐':    ['低塩'],
+  '水':      ['水','水分'],
+  '茶':      ['お茶'],
+  '咖啡':    ['コーヒー'],
+  '果汁':    ['ジュース'],
+
+  // ===== 한국어 키워드 (Korean) =====
+  '밥':       ['白飯','米類'],
+  '흰밥':     ['白飯'],
+  '현미밥':   ['玄米'],
+  '죽':       ['お粥','雑炊'],
+  '주먹밥':   ['おにぎり'],
+  '볶음밥':   ['チャーハン'],
+  '빵':       ['パン類'],
+  '식빵':     ['食パン'],
+  '크루아상': ['クロワッサン'],
+  '면':       ['麺類','うどん','ラーメン','パスタ'],
+  '우동':     ['うどん'],
+  '라면':     ['ラーメン'],
+  '소바':     ['そば'],
+  '파스타':   ['パスタ'],
+  '당면':     ['春雨'],
+  '곤약':     ['こんにゃく'],
+  '닭고기':   ['鶏'],
+  '닭가슴살': ['鶏むね肉'],
+  '닭다리':   ['鶏もも肉'],
+  '돼지고기': ['豚'],
+  '소고기':   ['牛'],
+  '햄':       ['ハム'],
+  '베이컨':   ['ベーコン'],
+  '소시지':   ['ウインナー','ソーセージ'],
+  '햄버그':   ['ハンバーグ'],
+  '만두':     ['餃子'],
+  '두부':     ['豆腐'],
+  '생선':     ['魚介類'],
+  '연어':     ['鮭','サーモン'],
+  '참치':     ['マグロ','ツナ'],
+  '새우':     ['エビ'],
+  '오징어':   ['イカ'],
+  '문어':     ['タコ'],
+  '가리비':   ['ホタテ'],
+  '야채':     ['野菜類'],
+  '채소':     ['野菜類'],
+  '시금치':   ['ほうれん草'],
+  '무':       ['大根'],
+  '양파':     ['玉ねぎ'],
+  '토마토':   ['トマト'],
+  '오이':     ['きゅうり'],
+  '감자':     ['じゃがいも'],
+  '버섯':     ['きのこ'],
+  '미역':     ['わかめ','海藻'],
+  '달걀':     ['卵'],
+  '계란':     ['卵'],
+  '우유':     ['牛乳'],
+  '치즈':     ['チーズ'],
+  '요구르트': ['ヨーグルト'],
+  '된장':     ['みそ','味噌'],
+  '낫토':     ['納豆'],
+  '과일':     ['果物'],
+  '사과':     ['りんご'],
+  '바나나':   ['バナナ'],
+  '귤':       ['みかん'],
+  '딸기':     ['いちご'],
+  '국':       ['スープ','みそ汁'],
+  '스프':     ['スープ'],
+  '된장국':   ['味噌汁','みそ汁'],
+  '샐러드':   ['サラダ'],
+  '카레':     ['カレー'],
+  '튀김':     ['天ぷら','唐揚げ','揚げ'],
+  '초밥':     ['寿司'],
+  '회':       ['刺身'],
+  '야키토리': ['焼き鳥'],
+  '타코야키': ['たこ焼き'],
+  '저단백':   ['低タンパク'],
+  '저염':     ['低塩'],
+  '물':       ['水','水分'],
+  '차':       ['お茶'],
+  '커피':     ['コーヒー'],
+  '주스':     ['ジュース'],
+  '비빔밥':   ['ビビンバ','低塩ビビンバ'],
+  '삼겹살':   ['豚バラ肉'],
+  '불고기':   ['牛もも肉','焼き肉'],
+  '김치찌개': ['キムチ','低塩純豆腐チゲ'],
+  '순두부':   ['低塩純豆腐チゲ'],
 };
 
 function searchFoodDB(query) {
@@ -6869,15 +7175,20 @@ function searchFoodDB(query) {
   if (q) {
     const qH = toHiragana(q);
     const qK = toKatakana(q);
-    const variants = [q, qH, qK];
+    const qLower = q.toLowerCase();
+    const variants = [q, qH, qK, qLower];
 
-    // エイリアス展開（粉物・こなもの 等の表記ゆれ対応）
+    // エイリアス展開（多言語対応：英語・中国語・韓国語キーワード含む）
     const aliasKeywords = [];
     for (const [alias, targets] of Object.entries(SEARCH_ALIASES)) {
+      const aliasLower = alias.toLowerCase();
       const aliasH = toHiragana(alias);
       const aliasK = toKatakana(alias);
-      if (variants.some(v => v === alias || v === aliasH || v === aliasK ||
-                             alias.includes(v) || v.includes(alias))) {
+      if (
+        variants.some(v => v === aliasLower || v === alias || v === aliasH || v === aliasK ||
+                           aliasLower.includes(v) || v.includes(aliasLower) ||
+                           alias.includes(v) || v.includes(alias))
+      ) {
         aliasKeywords.push(...targets);
       }
     }
@@ -6888,7 +7199,7 @@ function searchFoodDB(query) {
         .replace(/[Ａ-Ｚａ-ｚ０-９]/g, c => String.fromCharCode(c.charCodeAt(0)-0xFEE0));
     }
     const qN = _norm(q), qNH = toHiragana(qN), qNK = toKatakana(qN);
-    const allV = [...new Set([q, qH, qK, qN, qNH, qNK])];
+    const allV = [...new Set([q, qH, qK, qN, qNH, qNK, qLower])];
     foods = base.filter(f => {
       const n = f.name, nN = _norm(n), nH = toHiragana(nN), nK = toKatakana(nN);
       const c = f.cat||'', cN = _norm(c), cH = toHiragana(cN);
@@ -6896,7 +7207,8 @@ function searchFoodDB(query) {
                          c.includes(v)||cN.includes(v)||cH.includes(v))) return true;
       if (aliasKeywords.length>0 && aliasKeywords.some(kw => n.includes(kw)||c.includes(kw))) return true;
       return false;
-    });}
+    });
+  }
   renderFoodResults(foods.slice(0, 100));
 }
 
@@ -7023,26 +7335,32 @@ function editModalSearchFood(query) {
 
   const qH = toHiragana(q);
   const qK = toKatakana(q);
-  const variants = [q, qH, qK];
+  const qLower = q.toLowerCase();
+  const variants = [q, qH, qK, qLower];
 
-  // エイリアス展開（粉物等）
+  // エイリアス展開（多言語対応：英語・中国語・韓国語キーワード含む）
   const aliasKeywords = [];
   for (const [alias, targets] of Object.entries(SEARCH_ALIASES)) {
+    const aliasLower = alias.toLowerCase();
     const aliasH = toHiragana(alias);
     const aliasK = toKatakana(alias);
-    if (variants.some(v => v === alias || v === aliasH || v === aliasK ||
-                           alias.includes(v) || v.includes(alias))) {
+    if (
+      variants.some(v => v === aliasLower || v === alias || v === aliasH || v === aliasK ||
+                         aliasLower.includes(v) || v.includes(aliasLower) ||
+                         alias.includes(v) || v.includes(alias))
+    ) {
       aliasKeywords.push(...targets);
     }
   }
 
   const matched = foodDatabase.filter(f => {
     const name  = f.name;
+    const nameL = name.toLowerCase();
     const nameH = toHiragana(name);
     const nameK = toKatakana(name);
     const catH  = toHiragana(f.cat || '');
     const catK  = toKatakana(f.cat || '');
-    if (variants.some(v => name.includes(v) || nameH.includes(v) || nameK.includes(v) ||
+    if (variants.some(v => name.includes(v) || nameL.includes(v) || nameH.includes(v) || nameK.includes(v) ||
                             (f.cat||'').includes(v) || catH.includes(v) || catK.includes(v))) return true;
     if (aliasKeywords.length > 0 && aliasKeywords.some(kw => name.includes(kw) || (f.cat||'').includes(kw))) return true;
     return false;
@@ -7686,6 +8004,80 @@ let _drugSuggestCache = [];
  * リアルタイム薬検索・候補リスト描画
  * @param {string} query - 検索ワード
  */
+// ===== 薬名多言語エイリアス（英語・中国語・韓国語 → カナ/日本語名） =====
+const DRUG_ALIASES = {
+  // Insulin
+  'novorapid':      'のぼらぴっど', 'insulin aspart':  'のぼらぴっど',
+  'humalog':        'ひゅーまろぐ', 'insulin lispro':  'ひゅーまろぐ',
+  'apidra':         'あぴどら',     'insulin glulisine':'あぴどら',
+  'fiasp':          'ふぃあすぷ',
+  'tresiba':        'とれしーば',   'insulin degludec': 'とれしーば',
+  'lantus':         'らんたす',     'insulin glargine': 'らんたす',
+  'levemir':        'れべみる',     'insulin detemir':  'れべみる',
+  // GLP-1
+  'ozempic':        'おぜんぴっく', 'semaglutide':     'おぜんぴっく',
+  'mounjaro':       'まんじゃろ',   'tirzepatide':     'まんじゃろ',
+  'trulicity':      'とるりしてぃ', 'dulaglutide':     'とるりしてぃ',
+  'victoza':        'びくとーざ',   'liraglutide':     'びくとーざ',
+  'rybelsus':       'りべるさす',
+  // SGLT2
+  'farxiga':        'ふぉしーが',   'dapagliflozin':   'ふぉしーが',   'forxiga': 'ふぉしーが',
+  'jardiance':      'じゃでぃあんす','empagliflozin':  'じゃでぃあんす',
+  'invokana':       'かなぐる',     'canagliflozin':   'かなぐる',
+  // DPP-4
+  'galvus':         'えくあ',       'vildagliptin':    'えくあ',
+  'januvia':        'じゃぬびあ',   'sitagliptin':     'じゃぬびあ',
+  'tradjenta':      'とらぜんた',   'linagliptin':     'とらぜんた',
+  // Phosphate binders
+  'lokelma':        'ろけるま',     'sodium zirconium':'ろけるま',
+  'renvela':        'れんべら',     'sevelamer':       'れんべら',
+  'phosblock':      'ふぉすぶろっく',
+  'fosrenol':       'ふぉすれのーる','lanthanum':       'ふぉすれのーる',
+  // Potassium
+  'veltassa':       'ぱちろまー',   'patiromer':       'ぱちろまー',
+  'kayexalate':     'かいえきされーと',
+  // ARB / ACE
+  'cozaar':         'にゅーろたん',  'losartan':       'にゅーろたん',
+  'diovan':         'でぃおばん',    'valsartan':      'でぃおばん',
+  'micardis':       'みかるでぃす',  'telmisartan':    'みかるでぃす',
+  'olmesartan':     'おるめてっく',
+  // Anticoagulant
+  'xarelto':        'りくしあな',    'rivaroxaban':    'りくしあな',
+  'eliquis':        'えりきゅーす',  'apixaban':       'えりきゅーす',
+  'warfarin':       'わーふぁりん',
+  'pradaxa':        'ぷらざきさ',    'dabigatran':     'ぷらざきさ',
+  // Statins
+  'crestor':        'くれすとーる',  'rosuvastatin':   'くれすとーる',
+  'lipitor':        'りぴとーる',    'atorvastatin':   'りぴとーる',
+  'zocor':          'めばろちん',    'simvastatin':    'めばろちん',
+  'pravastatin':    'めばろちん',
+  // Erythropoietin / Anemia
+  'epoetin':        'えすぽー',      'epo':            'えすぽー',
+  'aranesp':        'あらねすぷ',    'darbepoetin':    'あらねすぷ',
+  'mircera':        'みるせら',
+  'rienso':         'りえんそ',      'iron':           'てつざい',
+  // 中文药名
+  '胰岛素':     'インスリン', '速效胰岛素': 'のぼらぴっど', '长效胰岛素': 'とれしーば',
+  '司美格鲁肽':  'おぜんぴっく', '替泽帕肽': 'まんじゃろ',
+  '达格列净':   'ふぉしーが',  '恩格列净': 'じゃでぃあんす',
+  '西格列汀':   'じゃぬびあ',  '利格列汀': 'とらぜんた',
+  '磷结合剂':   'リン吸着', '碳酸镧':  'ふぉすれのーる',
+  '氯化钠锆':   'ろけるま',   '帕替罗默': 'ぱちろまー',
+  '华法林':     'わーふぁりん','利伐沙班': 'りくしあな', '阿哌沙班': 'えりきゅーす',
+  '他汀':       'スタチン',   '瑞舒伐他汀': 'くれすとーる', '阿托伐他汀': 'りぴとーる',
+  '促红细胞生成素': 'えすぽー', '铁剂': 'てつざい',
+  // 한국어 약명
+  '인슐린':     'インスリン',  '속효성 인슐린': 'のぼらぴっど', '지속형 인슐린': 'とれしーば',
+  '세마글루타이드': 'おぜんぴっく', '티르제파타이드': 'まんじゃろ',
+  '다파글리플로진': 'ふぉしーが', '엠파글리플로진': 'じゃでぃあんす',
+  '시타글립틴': 'じゃぬびあ',  '리나글립틴': 'とらぜんた',
+  '인 결합제':  'リン吸着',   '탄산란타넘': 'ふぉすれのーる',
+  '지르코늄':   'ろけるま',   '파티로머':   'ぱちろまー',
+  '와파린':     'わーふぁりん','리바록사반': 'りくしあな',  '아픽사반': 'えりきゅーす',
+  '스타틴':     'スタチン',   '로수바스타틴': 'くれすとーる','아토르바스타틴': 'りぴとーる',
+  '적혈구생성인자': 'えすぽー','철제':      'てつざい',
+};
+
 function renderDrugSuggestions(query) {
   const list = document.getElementById('drugSuggestList');
   if (!list) return;
@@ -7711,13 +8103,26 @@ function renderDrugSuggestions(query) {
   } else {
     const qH = (typeof toHiragana === 'function') ? toHiragana(q) : q;
     const qK = (typeof toKatakana === 'function') ? toKatakana(q) : q;
+
+    // 多言語エイリアス展開
+    const aliasKana = [];
+    for (const [alias, kana] of Object.entries(DRUG_ALIASES)) {
+      if (alias.toLowerCase().includes(q) || q.includes(alias.toLowerCase()) ||
+          alias.includes(q) || q.includes(alias)) {
+        aliasKana.push(kana.toLowerCase());
+      }
+    }
+
     results = filtered.map(drug => {
       const n = drug.name.toLowerCase();
       const k = (drug.kana || '').toLowerCase();
+      const cat = (drug.category || '').toLowerCase();
       let s = 0;
       if (n.startsWith(q) || k.startsWith(qH) || k.startsWith(q)) s = 100;
       else if (n.includes(q) || k.includes(qH) || k.includes(q) || n.includes(qK)) s = 50;
-      else if ((drug.category || '').toLowerCase().includes(q)) s = 10;
+      else if (cat.includes(q)) s = 10;
+      // エイリアスマッチ
+      if (s === 0 && aliasKana.length > 0 && aliasKana.some(ak => k.includes(ak) || n.includes(ak))) s = 40;
       return { drug, s };
     }).filter(x => x.s > 0).sort((a, b) => b.s - a.s).slice(0, 30).map(x => x.drug);
   }
@@ -11655,6 +12060,70 @@ function _updateBodyDisplay() {
       meal_lunch: '昼食',
       meal_dinner: '夕食',
       meal_snack: '間食',
+      // お薬ページ
+      med_tab_today: '🕐 今日の服薬',
+      med_tab_hospitals: '🏥 医療機関・処方薬',
+      btn_add_med: '薬を追加',
+      btn_add_med2: '＋ 薬を追加',
+      btn_add_hospital: '🏥 医療機関を追加',
+      btn_today: '今日',
+      label_date_record: '📅 日付',
+      med_section_daily: '💊 毎日の薬',
+      med_section_periodic: '📅 定期薬（週1・月1など）',
+      med_section_prn: '🆘 頓服・症状時のみ',
+      med_prn_note: '必要なときだけ服用',
+      med_empty_msg: 'まだ薬が登録されていません',
+      med_empty_hint: '「医療機関・処方薬」タブから登録してください',
+      med_before_breakfast: '朝食前',
+      med_after_breakfast: '朝食後',
+      med_before_lunch: '昼食前',
+      med_after_lunch: '昼食後',
+      med_before_dinner: '夕食前',
+      med_after_dinner: '夕食後',
+      med_bedtime: '就寝前',
+      // 頓服ログ
+      prn_log_title: '頓服の使用記録',
+      prn_label_datetime: '🕐 使用した日時',
+      prn_label_amount: '💊 使用量・回数',
+      prn_label_memo: '📝 症状・メモ',
+      prn_placeholder_amount: '例：1錠、2回、5mg',
+      prn_placeholder_memo: '例：頭痛、吐き気、痛み',
+      prn_btn_save: '✓ 使用を記録',
+      // 薬検索モーダル
+      drug_search_title: '💊 薬を検索・追加',
+      drug_search_placeholder: '薬の名前を入力（例：フォシーガ、ロケルマ…）',
+      drug_cat_all: 'すべて',
+      drug_cat_insulin: 'インスリン',
+      drug_cat_phosphate: 'リン吸着',
+      drug_cat_potassium: '高K治療',
+      drug_cat_anticoag: '抗凝固',
+      drug_cat_statin: 'スタチン',
+      drug_cat_dialysis: '透析専用',
+      label_hospital: '🏥 医療機関',
+      label_dosage: '💊 用量',
+      label_timing: '🕐 服用タイミング（複数可）',
+      label_frequency: '🔄 服用頻度',
+      freq_daily: '毎日',
+      freq_dialysis: '透析日のみ',
+      freq_weekly: '週1回',
+      freq_monthly: '月1回',
+      freq_prn: '頓服（症状時のみ）',
+      drug_dialysis_note: '💉 透析日のみ服用 — 非透析日はスキップされます',
+      label_days_supply: '📦 処方日数',
+      label_stock: '💊 残薬数',
+      drug_dose_placeholder: 'または直接入力（例：1錠、10mg）',
+      btn_register_med: '✓ この薬を登録する',
+      // 医療機関モーダル
+      hospital_add_title: '🏥 医療機関を追加',
+      label_hospital_name: '🏥 医療機関名',
+      label_dept: '🩺 診療科',
+      label_tel: '📞 電話番号',
+      label_next_visit: '📅 次回診察日',
+      label_memo: '📝 メモ',
+      placeholder_hospital_name: '例：○○腎臓内科クリニック',
+      placeholder_dept: '例：腎臓内科、泌尿器科',
+      placeholder_hosp_note: '例：月1回通院、空腹時採血あり',
+      btn_delete_hospital: '🗑 この医療機関を削除する',
       // 利用規約
       terms_title: '利用規約・免責事項',
       terms_sub: 'ご利用前に必ずお読みください',
@@ -11785,6 +12254,70 @@ function _updateBodyDisplay() {
       meal_lunch: 'Lunch',
       meal_dinner: 'Dinner',
       meal_snack: 'Snack',
+      // Medicine page
+      med_tab_today: '🕐 Today\'s Medications',
+      med_tab_hospitals: '🏥 Clinics & Prescriptions',
+      btn_add_med: 'Add Med',
+      btn_add_med2: '＋ Add Med',
+      btn_add_hospital: '🏥 Add Clinic',
+      btn_today: 'Today',
+      label_date_record: '📅 Date',
+      med_section_daily: '💊 Daily Medications',
+      med_section_periodic: '📅 Periodic (Weekly / Monthly)',
+      med_section_prn: '🆘 As-needed (PRN)',
+      med_prn_note: 'Take only when needed',
+      med_empty_msg: 'No medications registered yet',
+      med_empty_hint: 'Add from the "Clinics & Prescriptions" tab',
+      med_before_breakfast: 'Before Breakfast',
+      med_after_breakfast: 'After Breakfast',
+      med_before_lunch: 'Before Lunch',
+      med_after_lunch: 'After Lunch',
+      med_before_dinner: 'Before Dinner',
+      med_after_dinner: 'After Dinner',
+      med_bedtime: 'Bedtime',
+      // PRN log
+      prn_log_title: 'PRN Usage Log',
+      prn_label_datetime: '🕐 Date & Time Used',
+      prn_label_amount: '💊 Amount / Dose',
+      prn_label_memo: '📝 Symptom / Note',
+      prn_placeholder_amount: 'e.g. 1 tablet, 2 times, 5mg',
+      prn_placeholder_memo: 'e.g. headache, nausea, pain',
+      prn_btn_save: '✓ Record Usage',
+      // Drug search modal
+      drug_search_title: '💊 Search & Add Medication',
+      drug_search_placeholder: 'Enter drug name (e.g. Farxiga, Lokelma…)',
+      drug_cat_all: 'All',
+      drug_cat_insulin: 'Insulin',
+      drug_cat_phosphate: 'Phosphate Binder',
+      drug_cat_potassium: 'High-K Treatment',
+      drug_cat_anticoag: 'Anticoagulant',
+      drug_cat_statin: 'Statin',
+      drug_cat_dialysis: 'Dialysis Only',
+      label_hospital: '🏥 Clinic',
+      label_dosage: '💊 Dosage',
+      label_timing: '🕐 Timing (multiple ok)',
+      label_frequency: '🔄 Frequency',
+      freq_daily: 'Daily',
+      freq_dialysis: 'Dialysis days only',
+      freq_weekly: 'Weekly',
+      freq_monthly: 'Monthly',
+      freq_prn: 'As needed (PRN)',
+      drug_dialysis_note: '💉 Dialysis days only — skipped on non-dialysis days',
+      label_days_supply: '📦 Days Supply',
+      label_stock: '💊 Stock Remaining',
+      drug_dose_placeholder: 'or type directly (e.g. 1 tablet, 10mg)',
+      btn_register_med: '✓ Register This Medication',
+      // Hospital modal
+      hospital_add_title: '🏥 Add Clinic',
+      label_hospital_name: '🏥 Clinic Name',
+      label_dept: '🩺 Department',
+      label_tel: '📞 Phone',
+      label_next_visit: '📅 Next Visit',
+      label_memo: '📝 Note',
+      placeholder_hospital_name: 'e.g. City Nephrology Clinic',
+      placeholder_dept: 'e.g. Nephrology, Urology',
+      placeholder_hosp_note: 'e.g. Monthly visit, fasting blood test',
+      btn_delete_hospital: '🗑 Delete This Clinic',
       // Terms
       terms_title: 'Terms & Disclaimer',
       terms_sub: 'Please read before using',
@@ -11915,6 +12448,70 @@ function _updateBodyDisplay() {
       meal_lunch: '午餐',
       meal_dinner: '晚餐',
       meal_snack: '零食',
+      // 药物页面
+      med_tab_today: '🕐 今日用药',
+      med_tab_hospitals: '🏥 医疗机构·处方药',
+      btn_add_med: '添加药物',
+      btn_add_med2: '＋ 添加药物',
+      btn_add_hospital: '🏥 添加医疗机构',
+      btn_today: '今天',
+      label_date_record: '📅 日期',
+      med_section_daily: '💊 每日药物',
+      med_section_periodic: '📅 定期药（每周/每月）',
+      med_section_prn: '🆘 按需服用（PRN）',
+      med_prn_note: '仅在需要时服用',
+      med_empty_msg: '尚未登记药物',
+      med_empty_hint: '请从「医疗机构·处方药」标签添加',
+      med_before_breakfast: '早餐前',
+      med_after_breakfast: '早餐后',
+      med_before_lunch: '午餐前',
+      med_after_lunch: '午餐后',
+      med_before_dinner: '晚餐前',
+      med_after_dinner: '晚餐后',
+      med_bedtime: '睡前',
+      // PRN记录
+      prn_log_title: 'PRN使用记录',
+      prn_label_datetime: '🕐 使用日期时间',
+      prn_label_amount: '💊 用量/次数',
+      prn_label_memo: '📝 症状·备注',
+      prn_placeholder_amount: '例：1片、2次、5mg',
+      prn_placeholder_memo: '例：头痛、恶心、疼痛',
+      prn_btn_save: '✓ 记录使用',
+      // 药物搜索弹窗
+      drug_search_title: '💊 搜索并添加药物',
+      drug_search_placeholder: '输入药名（例：达格列净、Lokelma…）',
+      drug_cat_all: '全部',
+      drug_cat_insulin: '胰岛素',
+      drug_cat_phosphate: '磷结合剂',
+      drug_cat_potassium: '高钾治疗',
+      drug_cat_anticoag: '抗凝血剂',
+      drug_cat_statin: '他汀类',
+      drug_cat_dialysis: '透析专用',
+      label_hospital: '🏥 医疗机构',
+      label_dosage: '💊 用量',
+      label_timing: '🕐 服药时机（可多选）',
+      label_frequency: '🔄 服药频率',
+      freq_daily: '每天',
+      freq_dialysis: '仅透析日',
+      freq_weekly: '每周一次',
+      freq_monthly: '每月一次',
+      freq_prn: '按需服用（PRN）',
+      drug_dialysis_note: '💉 仅透析日服用 — 非透析日跳过',
+      label_days_supply: '📦 处方天数',
+      label_stock: '💊 剩余药量',
+      drug_dose_placeholder: '或直接输入（例：1片、10mg）',
+      btn_register_med: '✓ 登记此药物',
+      // 医疗机构弹窗
+      hospital_add_title: '🏥 添加医疗机构',
+      label_hospital_name: '🏥 机构名称',
+      label_dept: '🩺 科室',
+      label_tel: '📞 电话',
+      label_next_visit: '📅 下次就诊日',
+      label_memo: '📝 备注',
+      placeholder_hospital_name: '例：○○肾脏科门诊',
+      placeholder_dept: '例：肾脏内科、泌尿科',
+      placeholder_hosp_note: '例：每月就诊，需空腹抽血',
+      btn_delete_hospital: '🗑 删除此医疗机构',
       // 条款
       terms_title: '使用条款和免责声明',
       terms_sub: '使用前请仔细阅读',
@@ -12045,6 +12642,70 @@ function _updateBodyDisplay() {
       meal_lunch: '점심',
       meal_dinner: '저녁',
       meal_snack: '간식',
+      // 약 페이지
+      med_tab_today: '🕐 오늘의 복약',
+      med_tab_hospitals: '🏥 의료기관·처방약',
+      btn_add_med: '약 추가',
+      btn_add_med2: '＋ 약 추가',
+      btn_add_hospital: '🏥 의료기관 추가',
+      btn_today: '오늘',
+      label_date_record: '📅 날짜',
+      med_section_daily: '💊 매일 복용약',
+      med_section_periodic: '📅 정기약 (주1·월1 등)',
+      med_section_prn: '🆘 필요시 복용 (PRN)',
+      med_prn_note: '필요할 때만 복용',
+      med_empty_msg: '아직 등록된 약이 없습니다',
+      med_empty_hint: '「의료기관·처방약」 탭에서 등록해 주세요',
+      med_before_breakfast: '아침 식전',
+      med_after_breakfast: '아침 식후',
+      med_before_lunch: '점심 식전',
+      med_after_lunch: '점심 식후',
+      med_before_dinner: '저녁 식전',
+      med_after_dinner: '저녁 식후',
+      med_bedtime: '취침 전',
+      // PRN 기록
+      prn_log_title: 'PRN 사용 기록',
+      prn_label_datetime: '🕐 사용 일시',
+      prn_label_amount: '💊 사용량·횟수',
+      prn_label_memo: '📝 증상·메모',
+      prn_placeholder_amount: '예：1정, 2회, 5mg',
+      prn_placeholder_memo: '예：두통, 메스꺼움, 통증',
+      prn_btn_save: '✓ 사용 기록',
+      // 약 검색 모달
+      drug_search_title: '💊 약 검색 및 추가',
+      drug_search_placeholder: '약 이름 입력 (예: 포시가, 로케르마…)',
+      drug_cat_all: '전체',
+      drug_cat_insulin: '인슐린',
+      drug_cat_phosphate: '인 결합제',
+      drug_cat_potassium: '고칼륨 치료',
+      drug_cat_anticoag: '항응고제',
+      drug_cat_statin: '스타틴',
+      drug_cat_dialysis: '투석 전용',
+      label_hospital: '🏥 의료기관',
+      label_dosage: '💊 용량',
+      label_timing: '🕐 복용 타이밍 (복수 선택 가능)',
+      label_frequency: '🔄 복용 빈도',
+      freq_daily: '매일',
+      freq_dialysis: '투석일만',
+      freq_weekly: '주 1회',
+      freq_monthly: '월 1회',
+      freq_prn: '필요시 복용 (PRN)',
+      drug_dialysis_note: '💉 투석일만 복용 — 비투석일은 건너뜁니다',
+      label_days_supply: '📦 처방 일수',
+      label_stock: '💊 잔여 약량',
+      drug_dose_placeholder: '또는 직접 입력 (예：1정, 10mg)',
+      btn_register_med: '✓ 이 약을 등록',
+      // 의료기관 모달
+      hospital_add_title: '🏥 의료기관 추가',
+      label_hospital_name: '🏥 기관명',
+      label_dept: '🩺 진료과',
+      label_tel: '📞 전화번호',
+      label_next_visit: '📅 다음 진료일',
+      label_memo: '📝 메모',
+      placeholder_hospital_name: '예：○○신장내과 클리닉',
+      placeholder_dept: '예：신장내과, 비뇨기과',
+      placeholder_hosp_note: '예：월 1회 통원, 공복 채혈 있음',
+      btn_delete_hospital: '🗑 이 의료기관 삭제',
       // 약관
       terms_title: '이용약관 및 면책조항',
       terms_sub: '사용 전 반드시 읽어주세요',
