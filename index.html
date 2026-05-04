@@ -1448,27 +1448,20 @@ body.is-premium .premium-banner { display: none !important; }
               <div class="food-cat-chip" data-cat="soup" onclick="toggleFoodCat(this)">せんべい（2枚）</div>
             </div>
           </div>
-          <div class="food-cat-divider"></div>
-          <div class="food-cat-section">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;">
-              <div class="food-cat-label" style="margin-bottom:0;color:var(--accent);">💧 飲物類</div>
-              <div style="display:flex;align-items:center;gap:4px;">
-                <span style="font-size:11px;color:var(--text3);">量:</span>
-                <input type="number" class="portion-gram-input" id="gram-drink" data-group="drink" value="1.0" min="0" max="5" step="0.5" oninput="updateGroupGram('drink')" style="width:58px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:3px 6px;color:var(--text);font-size:13px;text-align:center;" />
-                <span style="font-size:11px;color:var(--text3);">倍</span>
-              </div>
-            </div>
-            <div class="chips" style="margin-bottom:0;">
-              <div class="food-cat-chip" data-cat="drink" onclick="toggleFoodCat(this)">水・お茶（200ml）</div>
-              <div class="food-cat-chip" data-cat="drink" onclick="toggleFoodCat(this)">コーヒー・紅茶（200ml）</div>
-              <div class="food-cat-chip" data-cat="drink" onclick="toggleFoodCat(this)">牛乳（200ml）</div>
-              <div class="food-cat-chip" data-cat="drink" onclick="toggleFoodCat(this)">豆乳（200ml）</div>
-              <div class="food-cat-chip" data-cat="drink" onclick="toggleFoodCat(this)">ジュース（200ml）</div>
-              <div class="food-cat-chip" data-cat="drink" onclick="toggleFoodCat(this)">スポーツドリンク（500ml）</div>
-              <div class="food-cat-chip" data-cat="drink" onclick="toggleFoodCat(this)">ビール（350ml）</div>
-              <div class="food-cat-chip" data-cat="drink" onclick="toggleFoodCat(this)">ノンアルビール（350ml）</div>
-            </div>
+        </div>
+        <!-- 食事推定重量カード -->
+        <div id="meal-weight-estimate-card" style="background:var(--surface2);border:1px solid rgba(252,211,77,0.3);border-radius:var(--rs);padding:12px 14px;margin-top:10px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+            <span style="font-size:15px;">⚖️</span>
+            <span style="font-size:12px;font-weight:700;color:var(--amber);">食事の推定重量（自動計算）</span>
           </div>
+          <div style="display:flex;align-items:baseline;gap:6px;">
+            <span id="meal-est-weight" style="font-family:'JetBrains Mono',monospace;font-size:28px;font-weight:700;color:var(--amber);">—</span>
+            <span style="font-size:13px;color:var(--text3);">g</span>
+            <span id="meal-est-weight-badge" style="font-size:10px;color:var(--text3);margin-left:4px;"></span>
+          </div>
+          <div id="meal-est-weight-detail" style="font-size:11px;color:var(--text3);margin-top:5px;line-height:1.7;"></div>
+          <div style="font-size:10px;color:var(--text3);margin-top:4px;">※ 飲み物は含みません。チップ選択・食品DB追加から自動推定。</div>
         </div>
         <div class="nutrition-preview" id="nutrition-preview">
           <div class="nutrition-preview-title">概算栄養成分（自動計算）</div>
@@ -1564,6 +1557,144 @@ body.is-premium .premium-banner { display: none !important; }
         <div class="pill" onclick="setPill(this,'korean')">🇰🇷 韓国</div>
       </div>
       <div class="menu-grid" id="menuGrid"></div>
+    </div>
+
+    <!-- DRINK RECORD PAGE -->
+    <div class="page" id="page-drink">
+      <div class="page-title-row">
+        <div>
+          <div class="page-title">🥤 飲み物記録</div>
+          <div class="page-sub">飲料の記録・栄養成分表・1日の水分量</div>
+        </div>
+      </div>
+
+      <!-- 今日の水分合計 -->
+      <div class="card" style="border-color:rgba(79,195,247,0.4);">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <div class="card-title" style="margin-bottom:0;">💧 今日の飲み物水分量</div>
+          <div style="font-size:11px;color:var(--text3);">目標 <span id="drink-page-target">1,500</span>mL</div>
+        </div>
+        <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:10px;">
+          <div id="drink-page-total" style="font-family:'JetBrains Mono',monospace;font-size:36px;font-weight:700;color:var(--accent);">0</div>
+          <div style="font-size:14px;color:var(--text2);">mL</div>
+          <div id="drink-page-badge" style="display:none;font-size:11px;padding:3px 8px;border-radius:12px;"></div>
+        </div>
+        <div class="prog-wrap" style="margin-bottom:8px;">
+          <div class="prog-fill pg-blue" id="drink-page-prog" style="width:0%;"></div>
+        </div>
+        <!-- 血糖値への影響（飲料由来） -->
+        <div id="drink-glucose-banner" style="display:none;margin-top:8px;padding:8px 12px;background:var(--amber-dim);border:1px solid rgba(252,211,77,0.3);border-radius:var(--rs);">
+          <div style="font-size:12px;color:var(--amber);">🩸 飲料由来の血糖値上昇（本日）: <span id="drink-glucose-rise" style="font-family:'JetBrains Mono',monospace;font-weight:700;">+0</span> mg/dL 推定</div>
+          <div style="font-size:10px;color:var(--text3);margin-top:2px;">糖分含む飲料（ジュース・スポドリ等）の糖質合計から算出</div>
+        </div>
+      </div>
+
+      <!-- 飲み物を追加 -->
+      <div class="card">
+        <div class="card-title">➕ 飲み物を追加</div>
+        <div style="display:flex;gap:8px;margin-bottom:12px;">
+          <div style="flex:1;">
+            <label class="form-label">🕐 時刻</label>
+            <input class="form-input" type="time" id="drink-time" />
+          </div>
+        </div>
+
+        <!-- クイックチップ -->
+        <div style="margin-bottom:12px;">
+          <div style="font-size:11px;color:var(--text3);margin-bottom:8px;letter-spacing:1px;">よく飲む</div>
+          <div class="chips" id="drink-quick-chips">
+            <div class="food-cat-chip" data-drink="水・白湯（200ml）" data-ml="200" data-carb="0" data-cal="0" onclick="quickSelectDrink(this)">💧 水（200ml）</div>
+            <div class="food-cat-chip" data-drink="緑茶・ほうじ茶（200ml）" data-ml="200" data-carb="0.6" data-cal="4" onclick="quickSelectDrink(this)">🍵 緑茶（200ml）</div>
+            <div class="food-cat-chip" data-drink="コーヒー・ブラック（200ml）" data-ml="200" data-carb="1.4" data-cal="8" onclick="quickSelectDrink(this)">☕ コーヒー（200ml）</div>
+            <div class="food-cat-chip" data-drink="牛乳（200ml）" data-ml="200" data-carb="9.6" data-cal="134" onclick="quickSelectDrink(this)">🥛 牛乳（200ml）</div>
+            <div class="food-cat-chip" data-drink="スポーツドリンク（500ml）" data-ml="500" data-carb="28.5" data-cal="115" onclick="quickSelectDrink(this)">🏃 スポドリ（500ml）</div>
+            <div class="food-cat-chip" data-drink="オレンジジュース（200ml）" data-ml="200" data-carb="19.2" data-cal="84" onclick="quickSelectDrink(this)">🍊 OJジュース（200ml）</div>
+          </div>
+        </div>
+
+        <!-- 選択中の飲み物 -->
+        <div id="drink-selected-area" style="display:none;background:var(--surface2);border:1.5px solid var(--accent);border-radius:var(--rs);padding:12px 14px;margin-bottom:10px;">
+          <div style="font-size:11px;color:var(--accent);font-weight:700;margin-bottom:6px;">選択中</div>
+          <div style="font-size:14px;font-weight:600;color:var(--text);" id="drink-sel-name">—</div>
+          <div style="display:flex;gap:10px;margin-top:8px;flex-wrap:wrap;">
+            <div style="text-align:center;min-width:60px;"><div style="font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:700;color:var(--accent);" id="drink-sel-ml">0</div><div style="font-size:10px;color:var(--text3);">mL</div></div>
+            <div style="text-align:center;min-width:60px;"><div style="font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:700;color:var(--green);" id="drink-sel-cal">0</div><div style="font-size:10px;color:var(--text3);">kcal</div></div>
+            <div style="text-align:center;min-width:60px;"><div style="font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:700;color:var(--amber);" id="drink-sel-carb">0</div><div style="font-size:10px;color:var(--text3);">糖質g</div></div>
+          </div>
+          <!-- 量調整 -->
+          <div style="display:flex;align-items:center;gap:8px;margin-top:10px;">
+            <span style="font-size:12px;color:var(--text3);">量の倍率:</span>
+            <input type="number" id="drink-sel-ratio" value="1.0" min="0.5" max="5" step="0.5"
+              style="width:64px;background:var(--surface);border:1px solid var(--border2);border-radius:6px;padding:4px 8px;color:var(--text);font-size:13px;text-align:center;"
+              oninput="updateDrinkSelPreview()" />
+            <span style="font-size:12px;color:var(--text3);">倍</span>
+          </div>
+        </div>
+
+        <!-- カスタム入力 -->
+        <div style="margin-bottom:10px;">
+          <div style="font-size:11px;color:var(--text3);margin-bottom:8px;letter-spacing:1px;">カスタム入力</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <div><label class="form-label">飲み物名</label><input class="form-input" type="text" id="drink-custom-name" placeholder="例：麦茶" /></div>
+            <div><label class="form-label">水分量 (mL)</label><input class="form-input" type="number" id="drink-custom-ml" placeholder="200" min="0" /></div>
+            <div><label class="form-label">カロリー (kcal)</label><input class="form-input" type="number" id="drink-custom-cal" placeholder="0" min="0" /></div>
+            <div><label class="form-label">糖質 (g)</label><input class="form-input" type="number" id="drink-custom-carb" placeholder="0" min="0" step="0.1" /></div>
+            <div><label class="form-label">タンパク質 (g)</label><input class="form-input" type="number" id="drink-custom-protein" placeholder="0" min="0" step="0.1" /></div>
+            <div><label class="form-label">カリウム (mg)</label><input class="form-input" type="number" id="drink-custom-k" placeholder="0" min="0" /></div>
+          </div>
+        </div>
+
+        <button class="btn btn-primary btn-full" onclick="saveDrinkRecord()">💧 飲み物を記録</button>
+      </div>
+
+      <!-- 今日の飲み物記録一覧 -->
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <div class="card-title" style="margin-bottom:0;">📋 今日の記録</div>
+          <button onclick="clearTodayDrinks()" style="font-size:11px;color:var(--text3);background:none;border:none;cursor:pointer;padding:4px;">🗑 クリア</button>
+        </div>
+        <div id="drink-log-list">
+          <div style="text-align:center;padding:20px;color:var(--text3);font-size:13px;">まだ記録がありません</div>
+        </div>
+        <!-- 本日合計 -->
+        <div id="drink-today-summary" style="display:none;margin-top:10px;padding:10px 12px;background:var(--surface2);border-radius:var(--rs);">
+          <div style="font-size:11px;color:var(--text3);margin-bottom:6px;">本日の飲料合計</div>
+          <div style="display:flex;justify-content:space-around;text-align:center;">
+            <div><div style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;color:var(--accent);" id="dt-total-ml">0</div><div style="font-size:10px;color:var(--text3);">💧水分mL</div></div>
+            <div><div style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;color:var(--green);" id="dt-total-cal">0</div><div style="font-size:10px;color:var(--text3);">kcal</div></div>
+            <div><div style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;color:var(--amber);" id="dt-total-carb">0</div><div style="font-size:10px;color:var(--text3);">糖質g</div></div>
+            <div><div style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;color:var(--text2);" id="dt-total-count">0</div><div style="font-size:10px;color:var(--text3);">回</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 飲み物栄養成分表 -->
+      <div class="card">
+        <div class="card-title">📊 飲み物栄養成分表</div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:10px;">日本食品標準成分表（八訂）参考値</div>
+
+        <!-- カテゴリフィルター -->
+        <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:12px;scrollbar-width:none;">
+          <div class="pill active" onclick="setDrinkTableCat(this,'all')">すべて</div>
+          <div class="pill" onclick="setDrinkTableCat(this,'water')">水・お茶</div>
+          <div class="pill" onclick="setDrinkTableCat(this,'coffee')">コーヒー・紅茶</div>
+          <div class="pill" onclick="setDrinkTableCat(this,'milk')">乳製品</div>
+          <div class="pill" onclick="setDrinkTableCat(this,'juice')">ジュース</div>
+          <div class="pill" onclick="setDrinkTableCat(this,'sports')">スポーツ</div>
+          <div class="pill" onclick="setDrinkTableCat(this,'alcohol')">アルコール</div>
+          <div class="pill" onclick="setDrinkTableCat(this,'other')">その他</div>
+        </div>
+
+        <!-- 表ヘッダー -->
+        <div style="display:grid;grid-template-columns:2fr 0.8fr 0.8fr 0.8fr 0.8fr;gap:4px;padding:6px 8px;background:var(--surface2);border-radius:8px;margin-bottom:4px;">
+          <div style="font-size:10px;color:var(--text3);font-weight:700;">飲み物</div>
+          <div style="font-size:10px;color:var(--accent);text-align:center;font-weight:700;">💧mL</div>
+          <div style="font-size:10px;color:var(--green);text-align:center;font-weight:700;">kcal</div>
+          <div style="font-size:10px;color:var(--amber);text-align:center;font-weight:700;">糖質g</div>
+          <div style="font-size:10px;color:var(--red);text-align:center;font-weight:700;">K mg</div>
+        </div>
+        <div id="drink-nutrition-table" style="max-height:360px;overflow-y:auto;"></div>
+      </div>
     </div>
 
     <!-- HISTORY -->
@@ -1976,10 +2107,10 @@ body.is-premium .premium-banner { display: none !important; }
   </div>
   <div class="bottom-nav">
     <div class="nav-btn active" id="nav-home" onclick="navTo('home')"><div class="nav-icon">🏠</div><div class="nav-label" data-i18n="nav_home">ホーム</div></div>
-    <div class="nav-btn" id="nav-record" onclick="navTo('record')"><div class="nav-icon">✏️</div><div class="nav-label" data-i18n="nav_record">記録</div></div>
+    <div class="nav-btn" id="nav-record" onclick="navTo('record')"><div class="nav-icon">✏️</div><div class="nav-label" data-i18n="nav_record">食事</div></div>
+    <div class="nav-btn" id="nav-drink" onclick="navTo('drink')"><div class="nav-icon">🥤</div><div class="nav-label">飲み物</div></div>
     <div class="nav-btn" id="nav-health" onclick="navTo('health')"><div class="nav-icon">🩺</div><div class="nav-label" data-i18n="nav_health">健康</div></div>
     <div class="nav-btn" id="nav-medicine" onclick="navTo('medicine')"><div class="nav-icon">💊</div><div class="nav-label" data-i18n="nav_medicine">お薬</div></div>
-    <div class="nav-btn" id="nav-history" onclick="navTo('history')"><div class="nav-icon">📊</div><div class="nav-label" data-i18n="nav_history">履歴</div></div>
     <div class="nav-btn" id="nav-settings" onclick="navTo('settings')"><div class="nav-icon">⚙️</div><div class="nav-label" data-i18n="nav_settings">設定</div></div>
   </div>
 </div>
@@ -2841,7 +2972,7 @@ body.is-premium .premium-banner { display: none !important; }
 
         <div class="food-cat-section">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;">
-            <div class="food-cat-label" style="margin-bottom:0;color:var(--accent);">💧 飲物類</div>
+            <div class="food-cat-label" style="margin-bottom:0;color:var(--accent);">💧 飲物類 <span style="font-size:10px;color:var(--text3);">（新規記録は「飲み物」タブから）</span></div>
             <div style="display:flex;align-items:center;gap:4px;">
               <span style="font-size:11px;color:var(--text3);">量:</span>
               <input type="number" class="portion-gram-input" id="edit-gram-drink" data-editgroup="drink" value="1.0" min="0" max="5" step="0.5" oninput="updateEditGroupGram('drink')" style="width:58px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:3px 6px;color:var(--text);font-size:13px;text-align:center;" />
@@ -4540,7 +4671,7 @@ function getGroupPortion(group) {
   return isNaN(val) || val < 0 ? 0 : val;
 }
 
-function toggleFoodCat(el) { el.classList.toggle(FOOD_CAT_CLASS[el.dataset.cat]); updateNutritionPreview(); }
+function toggleFoodCat(el) { el.classList.toggle(FOOD_CAT_CLASS[el.dataset.cat]); updateNutritionPreview(); try{updateMealWeightEstimate();}catch(e){} }
 
 function updateNutritionPreview() {
   const anySelected = ['main','protein','sub','soup','drink'].some(cat => document.querySelector(`.food-cat-chip[data-cat="${cat}"].${FOOD_CAT_CLASS[cat]}`));
@@ -5221,6 +5352,7 @@ function navTo(page) {
   }
   if (page==='medicine') { setMedDateToday(); renderMedicineLog(); try{renderMedRegistered();}catch(e){} }
   if (page==='water')    { updateWaterCard(); updateWaterBalance(); }
+  if (page==='drink')    { try{initDrinkPage();}catch(e){console.warn(e);} }
   if (page==='settings') { try{_updateBodyDisplay();}catch(e){} try{renderSettingsCkdPanel();}catch(e){} }
 }
 
@@ -5759,7 +5891,14 @@ function updateGlucoseGraph() {
     else                      { glucoseBadge.textContent='高め'; glucoseBadge.className='glucose-badge gb-high'; }
   }
   const modeMap = { healthy:'予防ケアモード（健康維持）', normal:'標準モード（糖質×1）', t2d:'2型糖尿病モード（食後2〜3時間で降下）', t1d:'1型糖尿病モード（食後4時間で降下）' };
-  if (modeEl) modeEl.textContent = '📊 ' + (modeMap[type] || '');
+  if (modeEl) {
+    let modeText = '📊 ' + (modeMap[type] || '');
+    try {
+      const { drinkRise } = calcTotalDailyGlucoseRise();
+      if (drinkRise > 0) modeText += ` | 🥤 飲料由来 +${drinkRise}mg/dL`;
+    } catch(e) {}
+    modeEl.textContent = modeText;
+  }
 }
 
 // 食品ごとの水分含有量マップ（ml/100g相当）
@@ -6057,6 +6196,27 @@ function recalcGlucose() {
   } else if (peakRow) {
     peakRow.style.display = 'none';
   }
+}
+
+// 飲み物由来を含む1日の統合血糖値上昇量を返す
+function calcTotalDailyGlucoseRise() {
+  const today = new Date().toDateString();
+  const meals = localLoadMeals().filter(m => new Date(m.recorded_at).toDateString() === today);
+  const drinks = (function(){
+    try { return JSON.parse(localStorage.getItem(DRINK_LOG_KEY)||'[]'); } catch(e){ return []; }
+  })().filter(e => new Date(e.time).toDateString() === today);
+  
+  const fMap = { healthy:1, normal:1, t2d:3, t1d:5 };
+  const factor = fMap[state.userType] || 1;
+  
+  let mealCarb = meals.reduce((s,m) => s + Math.max(0,(m.carb||0)-(m.fiber||0)), 0);
+  let drinkCarb = drinks.reduce((s,e) => s + (e.carb||0), 0);
+  
+  return {
+    mealRise:  Math.round(mealCarb  * factor),
+    drinkRise: Math.round(drinkCarb * factor),
+    totalRise: Math.round((mealCarb + drinkCarb) * factor)
+  };
 }
 
 // ===== HbA1c 推算 =====
@@ -6595,6 +6755,450 @@ const foodDatabase = [
   {name:'餃子・焼き（5個・100g）',       cat:'粉物', cal:195,protein:9.0, carb:21.5,fiber:1.8,k:220,p:115,salt:1.2,water:50 },
   {name:'春巻き（2本・100g）',           cat:'粉物', cal:235,protein:7.5, carb:24.0,fiber:1.5,k:195,p:100,salt:1.0,water:40 },
 ];
+
+
+// ===== 飲み物記録ページ =====
+const DRINK_LOG_KEY = 'renalcare_drink_log_v2';
+
+// 飲み物栄養DBフル版（栄養成分表ページ用）
+const DRINK_NUTRITION_DB = [
+  // 水・お茶
+  {name:'水・白湯（200ml）',        cat:'water',   ml:200, cal:0,   carb:0,    protein:0,   k:0,   fiber:0},
+  {name:'緑茶（200ml）',            cat:'water',   ml:200, cal:4,   carb:0.6,  protein:0.2, k:27,  fiber:0},
+  {name:'ほうじ茶（200ml）',        cat:'water',   ml:200, cal:4,   carb:0.6,  protein:0.2, k:27,  fiber:0},
+  {name:'麦茶（200ml）',            cat:'water',   ml:200, cal:2,   carb:0.4,  protein:0.1, k:14,  fiber:0},
+  {name:'ウーロン茶（200ml）',      cat:'water',   ml:200, cal:2,   carb:0.2,  protein:0.2, k:13,  fiber:0},
+  {name:'紅茶・ストレート（200ml）',cat:'water',   ml:200, cal:4,   carb:0.4,  protein:0.2, k:27,  fiber:0},
+  {name:'炭酸水（350ml）',          cat:'water',   ml:350, cal:0,   carb:0,    protein:0,   k:0,   fiber:0},
+  // コーヒー
+  {name:'コーヒー・ブラック（200ml）',     cat:'coffee', ml:200, cal:8,   carb:1.4,  protein:0.4, k:130, fiber:0},
+  {name:'コーヒー・砂糖ミルク（200ml）',  cat:'coffee', ml:200, cal:56,  carb:9.4,  protein:0.9, k:145, fiber:0},
+  {name:'缶コーヒー・微糖（185ml）',      cat:'coffee', ml:185, cal:28,  carb:5.4,  protein:0.7, k:92,  fiber:0},
+  {name:'カフェラテ（240ml）',            cat:'coffee', ml:240, cal:120, carb:12.0, protein:6.0, k:240, fiber:0},
+  {name:'紅茶・ミルクティー（200ml）',    cat:'coffee', ml:200, cal:36,  carb:5.6,  protein:2.0, k:95,  fiber:0},
+  // 乳製品
+  {name:'牛乳（200ml）',                 cat:'milk', ml:200, cal:134, carb:9.6,  protein:6.6, k:300, fiber:0},
+  {name:'低脂肪乳（200ml）',             cat:'milk', ml:200, cal:92,  carb:11.0, protein:6.8, k:310, fiber:0},
+  {name:'豆乳・無調整（200ml）',         cat:'milk', ml:200, cal:92,  carb:3.0,  protein:7.2, k:230, fiber:0.4},
+  {name:'豆乳・調整（200ml）',           cat:'milk', ml:200, cal:128, carb:10.6, protein:6.4, k:180, fiber:0.2},
+  {name:'ヨーグルト飲料（200ml）',       cat:'milk', ml:200, cal:124, carb:22.0, protein:4.8, k:200, fiber:0},
+  // ジュース
+  {name:'オレンジジュース（200ml）',     cat:'juice', ml:200, cal:84,  carb:19.2, protein:1.4, k:360, fiber:0.4},
+  {name:'りんごジュース（200ml）',       cat:'juice', ml:200, cal:90,  carb:22.6, protein:0.2, k:180, fiber:0.2},
+  {name:'野菜ジュース（200ml）',         cat:'juice', ml:200, cal:34,  carb:7.2,  protein:1.0, k:440, fiber:1.4},
+  {name:'トマトジュース（200ml）',       cat:'juice', ml:200, cal:38,  carb:7.6,  protein:1.6, k:520, fiber:1.0},
+  {name:'コーラ（350ml）',               cat:'juice', ml:350, cal:147, carb:38.5, protein:0,   k:4,   fiber:0},
+  {name:'ぶどうジュース（200ml）',       cat:'juice', ml:200, cal:126, carb:30.6, protein:0.4, k:200, fiber:0},
+  // スポーツ
+  {name:'スポーツドリンク（500ml）',     cat:'sports', ml:500, cal:115, carb:28.5, protein:0,   k:195, fiber:0},
+  {name:'アミノ酸飲料（500ml）',         cat:'sports', ml:500, cal:90,  carb:15.0, protein:5.0, k:100, fiber:0},
+  {name:'経口補水液（500ml）',           cat:'sports', ml:500, cal:50,  carb:12.5, protein:0,   k:390, fiber:0},
+  {name:'エナジードリンク（250ml）',     cat:'sports', ml:250, cal:113, carb:28.0, protein:0,   k:15,  fiber:0},
+  // アルコール
+  {name:'ビール（350ml缶）',             cat:'alcohol', ml:350, cal:140, carb:10.9, protein:1.0, k:105, fiber:0},
+  {name:'ノンアルコールビール（350ml）', cat:'alcohol', ml:350, cal:35,  carb:7.0,  protein:0.4, k:42,  fiber:0},
+  {name:'日本酒（1合・180ml）',          cat:'alcohol', ml:180, cal:196, carb:8.1,  protein:0.7, k:5,   fiber:0},
+  {name:'ワイン・赤（120ml）',           cat:'alcohol', ml:120, cal:88,  carb:2.0,  protein:0.2, k:108, fiber:0},
+  {name:'ワイン・白（120ml）',           cat:'alcohol', ml:120, cal:88,  carb:3.6,  protein:0.1, k:72,  fiber:0},
+  {name:'焼酎・水割り（200ml）',         cat:'alcohol', ml:200, cal:106, carb:0,    protein:0,   k:0,   fiber:0},
+  {name:'梅酒・水割り（100ml）',         cat:'alcohol', ml:100, cal:156, carb:20.7, protein:0.1, k:24,  fiber:0},
+  {name:'チューハイ（350ml）',           cat:'alcohol', ml:350, cal:175, carb:21.0, protein:0.4, k:70,  fiber:0},
+  // その他
+  {name:'甘酒（100ml）',                 cat:'other', ml:100, cal:81,  carb:18.3, protein:1.7, k:14,  fiber:0.4},
+  {name:'ポカリスエット（500ml）',       cat:'other', ml:500, cal:125, carb:31.0, protein:0,   k:200, fiber:0},
+  {name:'コンソメスープ（200ml）',       cat:'other', ml:200, cal:14,  carb:2.2,  protein:0.8, k:220, fiber:0},
+  {name:'味噌汁（1杯・180ml）',          cat:'other', ml:180, cal:32,  carb:3.0,  protein:2.4, k:120, fiber:0.5},
+  {name:'プロテインドリンク（200ml）',   cat:'other', ml:200, cal:100, carb:6.0,  protein:15.0,k:200, fiber:0},
+];
+
+let _selectedDrink = null; // 現在選択中の飲み物
+let _drinkTableCat = 'all'; // 栄養表フィルター
+
+function getTodayDrinkLog() {
+  try {
+    const all = JSON.parse(localStorage.getItem(DRINK_LOG_KEY) || '[]');
+    const today = new Date().toDateString();
+    return all.filter(e => new Date(e.time).toDateString() === today);
+  } catch(e) { return []; }
+}
+
+function getAllDrinkLog() {
+  try { return JSON.parse(localStorage.getItem(DRINK_LOG_KEY) || '[]'); } catch(e) { return []; }
+}
+
+function initDrinkPage() {
+  // 時刻を現在に
+  const now = new Date();
+  const timeEl = document.getElementById('drink-time');
+  if (timeEl) timeEl.value = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  
+  renderDrinkLog();
+  renderDrinkNutritionTable();
+  updateDrinkPageSummary();
+}
+
+function quickSelectDrink(el) {
+  // チップのON/OFF
+  document.querySelectorAll('#drink-quick-chips .food-cat-chip').forEach(c => c.classList.remove('sel-drink'));
+  el.classList.add('sel-drink');
+  
+  _selectedDrink = {
+    name: el.dataset.drink,
+    ml: parseFloat(el.dataset.ml) || 200,
+    cal: parseFloat(el.dataset.cal) || 0,
+    carb: parseFloat(el.dataset.carb) || 0,
+    protein: 0, k: 0
+  };
+  
+  // 栄養DBから詳細取得
+  const dbEntry = DRINK_NUTRITION_DB.find(d => d.name === _selectedDrink.name);
+  if (dbEntry) {
+    _selectedDrink.protein = dbEntry.protein || 0;
+    _selectedDrink.k = dbEntry.k || 0;
+  }
+  
+  updateDrinkSelPreview();
+  const area = document.getElementById('drink-selected-area');
+  if (area) area.style.display = 'block';
+  
+  // カスタム欄をクリア
+  ['drink-custom-name','drink-custom-ml','drink-custom-cal','drink-custom-carb','drink-custom-protein','drink-custom-k'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+}
+
+function updateDrinkSelPreview() {
+  if (!_selectedDrink) return;
+  const ratio = parseFloat(document.getElementById('drink-sel-ratio')?.value) || 1.0;
+  document.getElementById('drink-sel-name').textContent = _selectedDrink.name;
+  document.getElementById('drink-sel-ml').textContent   = Math.round(_selectedDrink.ml * ratio);
+  document.getElementById('drink-sel-cal').textContent  = Math.round(_selectedDrink.cal * ratio);
+  document.getElementById('drink-sel-carb').textContent = ((_selectedDrink.carb || 0) * ratio).toFixed(1);
+}
+
+function saveDrinkRecord() {
+  const timeEl = document.getElementById('drink-time');
+  const now = new Date();
+  let recTime = now.toISOString();
+  if (timeEl?.value) {
+    const [h, m] = timeEl.value.split(':').map(Number);
+    const d = new Date(); d.setHours(h, m, 0, 0);
+    recTime = d.toISOString();
+  }
+  
+  let entry = null;
+  
+  // カスタム入力を優先
+  const customName = document.getElementById('drink-custom-name')?.value.trim();
+  const customMl   = parseFloat(document.getElementById('drink-custom-ml')?.value);
+  if (customName && customMl > 0) {
+    entry = {
+      id: 'drink_' + Date.now(),
+      time: recTime,
+      name: customName,
+      ml: customMl,
+      cal:     parseFloat(document.getElementById('drink-custom-cal')?.value)     || 0,
+      carb:    parseFloat(document.getElementById('drink-custom-carb')?.value)    || 0,
+      protein: parseFloat(document.getElementById('drink-custom-protein')?.value) || 0,
+      k:       parseFloat(document.getElementById('drink-custom-k')?.value)       || 0,
+      source: 'custom'
+    };
+  } else if (_selectedDrink) {
+    const ratio = parseFloat(document.getElementById('drink-sel-ratio')?.value) || 1.0;
+    entry = {
+      id: 'drink_' + Date.now(),
+      time: recTime,
+      name: _selectedDrink.name,
+      ml:      Math.round(_selectedDrink.ml * ratio),
+      cal:     Math.round(_selectedDrink.cal * ratio),
+      carb:    parseFloat((_selectedDrink.carb * ratio).toFixed(1)),
+      protein: parseFloat((_selectedDrink.protein * ratio).toFixed(1)),
+      k:       Math.round((_selectedDrink.k || 0) * ratio),
+      source: 'chip'
+    };
+  }
+  
+  if (!entry) { showToast('⚠ 飲み物を選択または入力してください'); return; }
+  
+  // 保存
+  const all = getAllDrinkLog();
+  all.push(entry);
+  localStorage.setItem(DRINK_LOG_KEY, JSON.stringify(all));
+  
+  // 水分ログにも反映（後方互換）
+  try {
+    const wAll = JSON.parse(localStorage.getItem(WATER_KEY) || '[]');
+    wAll.push({ id: entry.id, time: entry.time, ml: entry.ml, auto: false, drink: true, drink_entry: true });
+    localStorage.setItem(WATER_KEY, JSON.stringify(wAll));
+  } catch(e) {}
+  
+  showToast(`💧 ${entry.name} (${entry.ml}mL) を記録しました`);
+  
+  // リセット
+  _selectedDrink = null;
+  const area = document.getElementById('drink-selected-area');
+  if (area) area.style.display = 'none';
+  document.querySelectorAll('#drink-quick-chips .food-cat-chip').forEach(c => c.classList.remove('sel-drink'));
+  const ratioEl = document.getElementById('drink-sel-ratio');
+  if (ratioEl) ratioEl.value = '1.0';
+  ['drink-custom-name','drink-custom-ml','drink-custom-cal','drink-custom-carb','drink-custom-protein','drink-custom-k'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  
+  renderDrinkLog();
+  updateDrinkPageSummary();
+  updateWaterCard();
+  updateWaterBalance();
+  updateHomeSummary();
+}
+
+function deleteDrinkEntry(id) {
+  if (!confirm('この記録を削除しますか？')) return;
+  const all = getAllDrinkLog().filter(e => e.id !== id);
+  localStorage.setItem(DRINK_LOG_KEY, JSON.stringify(all));
+  // 水分ログからも削除
+  try {
+    const wAll = JSON.parse(localStorage.getItem(WATER_KEY) || '[]').filter(e => e.id !== id);
+    localStorage.setItem(WATER_KEY, JSON.stringify(wAll));
+  } catch(e) {}
+  renderDrinkLog();
+  updateDrinkPageSummary();
+  updateWaterCard(); updateWaterBalance(); updateHomeSummary();
+}
+
+function clearTodayDrinks() {
+  if (!confirm('今日の飲み物記録をすべて削除しますか？')) return;
+  const today = new Date().toDateString();
+  const todayIds = new Set(getAllDrinkLog().filter(e => new Date(e.time).toDateString() === today).map(e => e.id));
+  localStorage.setItem(DRINK_LOG_KEY, JSON.stringify(getAllDrinkLog().filter(e => !todayIds.has(e.id))));
+  try {
+    const wAll = JSON.parse(localStorage.getItem(WATER_KEY) || '[]').filter(e => !todayIds.has(e.id));
+    localStorage.setItem(WATER_KEY, JSON.stringify(wAll));
+  } catch(e) {}
+  renderDrinkLog();
+  updateDrinkPageSummary();
+  updateWaterCard(); updateWaterBalance(); updateHomeSummary();
+}
+
+function renderDrinkLog() {
+  const listEl = document.getElementById('drink-log-list');
+  const summaryEl = document.getElementById('drink-today-summary');
+  if (!listEl) return;
+  
+  const log = getTodayDrinkLog();
+  if (log.length === 0) {
+    listEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text3);font-size:13px;">まだ記録がありません</div>';
+    if (summaryEl) summaryEl.style.display = 'none';
+    return;
+  }
+  
+  let totalMl = 0, totalCal = 0, totalCarb = 0;
+  listEl.innerHTML = [...log].reverse().map(e => {
+    totalMl   += e.ml   || 0;
+    totalCal  += e.cal  || 0;
+    totalCarb += e.carb || 0;
+    const t = new Date(e.time);
+    const timeStr = `${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}`;
+    const carbBadge = (e.carb > 5) ? `<span style="background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber);border-radius:10px;padding:1px 6px;font-size:10px;margin-left:4px;">糖質${e.carb}g</span>` : '';
+    return `<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);">
+      <div style="font-size:22px;">🥤</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;font-weight:600;color:var(--text);">${e.name}${carbBadge}</div>
+        <div style="font-size:11px;color:var(--text3);">${timeStr} — <span style="color:var(--accent);">${e.ml}mL</span> / <span style="color:var(--green);">${e.cal}kcal</span></div>
+      </div>
+      <button onclick="deleteDrinkEntry('${e.id}')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;padding:4px;">🗑</button>
+    </div>`;
+  }).join('');
+  
+  if (summaryEl) {
+    summaryEl.style.display = 'block';
+    document.getElementById('dt-total-ml').textContent   = totalMl;
+    document.getElementById('dt-total-cal').textContent  = totalCal;
+    document.getElementById('dt-total-carb').textContent = totalCarb.toFixed(1);
+    document.getElementById('dt-total-count').textContent = log.length;
+  }
+}
+
+function updateDrinkPageSummary() {
+  const log = getTodayDrinkLog();
+  const totalMl  = log.reduce((s,e) => s + (e.ml||0), 0);
+  const totalCarb = log.reduce((s,e) => s + (e.carb||0), 0);
+  const target = state.targets?.water || 1500;
+  const pct = Math.min(100, Math.round(totalMl / target * 100));
+  
+  const totalEl = document.getElementById('drink-page-total');
+  const progEl  = document.getElementById('drink-page-prog');
+  const badgeEl = document.getElementById('drink-page-badge');
+  const targetEl = document.getElementById('drink-page-target');
+  
+  if (totalEl)  totalEl.textContent  = totalMl.toLocaleString();
+  if (progEl)   progEl.style.width   = pct + '%';
+  if (targetEl) targetEl.textContent = target.toLocaleString();
+  if (badgeEl) {
+    if (pct >= 100)     { badgeEl.style.display='inline-flex'; badgeEl.textContent='✓ 目標達成'; badgeEl.style.background='var(--green-dim)'; badgeEl.style.color='var(--green)'; badgeEl.style.border='1px solid var(--green)'; badgeEl.style.borderRadius='12px'; badgeEl.style.padding='3px 8px'; }
+    else if (pct >= 80) { badgeEl.style.display='inline-flex'; badgeEl.textContent='もう少し！'; badgeEl.style.background='var(--amber-dim)'; badgeEl.style.color='var(--amber)'; badgeEl.style.border='1px solid var(--amber)'; badgeEl.style.borderRadius='12px'; badgeEl.style.padding='3px 8px'; }
+    else badgeEl.style.display='none';
+  }
+  
+  // 飲料由来血糖値上昇
+  const glucoseBanner = document.getElementById('drink-glucose-banner');
+  const glucoseRiseEl = document.getElementById('drink-glucose-rise');
+  if (glucoseBanner && glucoseRiseEl) {
+    const fMap = { healthy:1, normal:1, t2d:3, t1d:5 };
+    const factor = fMap[state.userType] || 1;
+    const rise = Math.round(totalCarb * factor);
+    if (totalCarb > 5) {
+      glucoseBanner.style.display = 'block';
+      glucoseRiseEl.textContent = '+' + rise;
+    } else {
+      glucoseBanner.style.display = 'none';
+    }
+  }
+}
+
+function setDrinkTableCat(el, cat) {
+  document.querySelectorAll('#page-drink .pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  _drinkTableCat = cat;
+  renderDrinkNutritionTable();
+}
+
+function renderDrinkNutritionTable() {
+  const tableEl = document.getElementById('drink-nutrition-table');
+  if (!tableEl) return;
+  
+  const filtered = _drinkTableCat === 'all' ? DRINK_NUTRITION_DB : DRINK_NUTRITION_DB.filter(d => d.cat === _drinkTableCat);
+  
+  tableEl.innerHTML = filtered.map(d => {
+    const highCarb = d.carb > 10;
+    const highK    = d.k > 300;
+    return `<div style="display:grid;grid-template-columns:2fr 0.8fr 0.8fr 0.8fr 0.8fr;gap:4px;padding:9px 8px;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.15s;"
+      onclick="prefillDrinkFromTable('${d.name.replace(/'/g,"\\'")}',${d.ml},${d.cal},${d.carb},${d.protein},${d.k})"
+      onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='transparent'">
+      <div style="font-size:12px;color:var(--text);">${d.name}</div>
+      <div style="font-size:12px;color:var(--accent);text-align:center;font-family:'JetBrains Mono',monospace;">${d.ml}</div>
+      <div style="font-size:12px;color:var(--green);text-align:center;font-family:'JetBrains Mono',monospace;">${d.cal}</div>
+      <div style="font-size:12px;color:${highCarb?'var(--red)':'var(--amber)'};text-align:center;font-family:'JetBrains Mono',monospace;font-weight:${highCarb?700:400};">${d.carb}</div>
+      <div style="font-size:12px;color:${highK?'var(--red)':'var(--text2)'};text-align:center;font-family:'JetBrains Mono',monospace;font-weight:${highK?700:400};">${d.k}</div>
+    </div>`;
+  }).join('');
+}
+
+function prefillDrinkFromTable(name, ml, cal, carb, protein, k) {
+  _selectedDrink = { name, ml, cal, carb, protein, k };
+  
+  // チップのハイライトを解除
+  document.querySelectorAll('#drink-quick-chips .food-cat-chip').forEach(c => c.classList.remove('sel-drink'));
+  
+  const ratioEl = document.getElementById('drink-sel-ratio');
+  if (ratioEl) ratioEl.value = '1.0';
+  updateDrinkSelPreview();
+  
+  const area = document.getElementById('drink-selected-area');
+  if (area) area.style.display = 'block';
+  
+  // カスタム欄もセット
+  document.getElementById('drink-custom-name').value    = name;
+  document.getElementById('drink-custom-ml').value      = ml;
+  document.getElementById('drink-custom-cal').value     = cal;
+  document.getElementById('drink-custom-carb').value    = carb;
+  document.getElementById('drink-custom-protein').value = protein;
+  document.getElementById('drink-custom-k').value       = k;
+  
+  showToast(`✅ ${name} を選択しました`);
+  // ページ上部までスクロール
+  document.getElementById('page-drink').scrollTop = 0;
+}
+
+// 食事の推定重量計算
+const FOOD_WEIGHT_MAP = {
+  // 主食
+  '白米（茶碗1杯）':150, '玄米（茶碗1杯）':150, 'もち（1個）':50, 'おかゆ（1杯）':220,
+  '食パン（1枚）':60, 'うどん（1玉）':250, 'そば（1玉）':200, 'ラーメン（1玉）':200,
+  '焼きそば（1人前）':230, 'スパゲッティ（1人前）':220, '春雨スープ（1人前）':180, '低タンパクご飯（1杯）':150,
+  // タンパク
+  '鶏むね肉（100g）':100, '鶏もも肉（100g）':100, '豚肉（100g）':100, '牛肉（100g）':100,
+  '鮭（1切れ）':80, '鯖（1切れ）':80, 'マグロ刺身（5切れ）':60, 'サーモン刺身（5切れ）':60,
+  'タイ刺身（5切れ）':60, 'ハマチ刺身（5切れ）':60, 'ホタテ刺身（3粒）':60, '甘エビ刺身（5尾）':50,
+  '生ウニ（大さじ2）':30, 'いくら（大さじ1）':15, '卵（1個）':55, '豆腐（半丁）':150, '納豆（1パック）':45,
+  // サブ野菜
+  'キャベツ（小鉢）':60, 'ほうれん草（小鉢）':60, 'トマト（中1個）':150, 'ブロッコリー（小鉢）':60,
+  '玉ねぎ（1/2個）':100, '長ねぎ（1/2本）':50, 'にんじん（煮物）':60, '大根・煮物（小鉢）':80,
+  'じゃがいも（中1個）':110, 'さつまいも（小）':100, 'しいたけ（2枚）':30, 'えのき（1袋）':100,
+  'しめじ（50g）':50, '春雨（乾燥20g）':20, 'こんにゃく（100g）':100, 'しらたき（100g）':100,
+  'もやし（小鉢）':50, '白菜（小鉢）':60,
+  // 汁物・デザート
+  '味噌汁（1杯）':150, 'すまし汁（1杯）':150, 'コンソメスープ（1杯）':150,
+  'みかん（1個）':80, 'りんご（半個）':100, 'バナナ（1本）':100,
+  'いちご（5粒）':70, 'ヨーカン（1切れ）':50, '大福もち（1個）':60,
+  'アイスクリーム（1個）':80, 'プリン（1個）':90, 'せんべい（2枚）':20,
+};
+
+function estimateMealWeight(meal) {
+  if (!meal) return { total: 0, detail: [] };
+  const cats = meal.food_categories || {};
+  const portions = cats._portions || {};
+  let total = 0;
+  const detail = [];
+  
+  ['main','protein','sub','soup'].forEach(group => {
+    const ratio = portions[group] != null ? portions[group] : 1.0;
+    (cats[group] || []).forEach(chipName => {
+      const w = FOOD_WEIGHT_MAP[chipName.trim()];
+      if (w) {
+        const wt = Math.round(w * ratio);
+        total += wt;
+        detail.push({ name: chipName, g: wt });
+      }
+    });
+  });
+  
+  // 食品DBの重量も加算
+  (cats.food_db_selections || meal.food_db_selections || []).forEach(sel => {
+    if ((sel.cat || '') !== '飲み物' && (sel.cat || '') !== 'マイ食品飲料') {
+      const g = sel.gram || sel.weight || 100;
+      const mult = sel.multiplier || 1.0;
+      const wt = Math.round(g * mult);
+      total += wt;
+      detail.push({ name: sel.name || '', g: wt });
+    }
+  });
+  
+  return { total, detail };
+}
+
+// 食事記録フォームの推定重量を更新
+function updateMealWeightEstimate() {
+  const estEl = document.getElementById('meal-est-weight');
+  const detailEl = document.getElementById('meal-est-weight-detail');
+  const badgeEl = document.getElementById('meal-est-weight-badge');
+  if (!estEl) return;
+  
+  // 現在のチップ選択を仮のmealオブジェクトとして渡す
+  const meal = { food_categories: window._currentFoodCats || getSelectedFoodCats() };
+  const { total, detail } = estimateMealWeight(meal);
+  
+  if (total === 0) {
+    estEl.textContent = '—';
+    if (detailEl) detailEl.textContent = '食材チップを選択すると自動計算されます';
+    if (badgeEl) badgeEl.textContent = '';
+  } else {
+    estEl.textContent = total;
+    if (detailEl) {
+      detailEl.innerHTML = detail.map(d => `${d.name}: <strong>${d.g}g</strong>`).join('  ／  ');
+    }
+    if (badgeEl) {
+      if (total < 300)      badgeEl.textContent = '（軽め）';
+      else if (total < 600) badgeEl.textContent = '（普通）';
+      else                  badgeEl.textContent = '（多め）';
+    }
+  }
+  
+  // 食事重量欄にも自動反映（未入力の場合）
+  const fwEl = document.getElementById('record-food-weight');
+  if (fwEl && !fwEl.value && total > 0) fwEl.placeholder = String(total) + '（推定値）';
+}
 
 // ===== 水分記録 =====
 // WATER_KEY はstateの直後（上部）で定義済み
