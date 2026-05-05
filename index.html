@@ -16,8 +16,8 @@
 
 <!-- ===== Google AdSense ===== -->
 <!-- TODO: あなたのAdSenseパブリッシャーIDに置き換えてください -->
-<!-- 例: ca-pub-XXXXXXXXXXXXXXXXX -->
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXXX"
+<!-- 例: ca-pub-3542746381307251 -->
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3542746381307251"
      crossorigin="anonymous"></script>
 
 <style>
@@ -12495,8 +12495,8 @@ function _updateBodyDisplay() {
              data-ad-client と data-ad-slot を取得して下記に設定してください -->
         <ins class="adsbygoogle"
              style="display:block;width:100%;min-height:250px;"
-             data-ad-client="ca-pub-XXXXXXXXXXXXXXXXX"
-             data-ad-slot="XXXXXXXXXX"
+             data-ad-client="ca-pub-3542746381307251"
+             data-ad-slot="1600694183"
              data-ad-format="auto"
              data-full-width-responsive="true"></ins>
         <!-- AdSense未設定時のプレースホルダー（設定後は自動で消えます） -->
@@ -12525,23 +12525,34 @@ function _updateBodyDisplay() {
 
 <script>
 // ============================================================
-// ===== 朝昼夜 時間帯広告システム =====
+// ===== 朝昼夜 時間帯広告システム（1日3回確実収益版）=====
 // ============================================================
 (function() {
-  const AD_KEY = 'renalcare_ad_shown_dates';
+  const AD_KEY      = 'renalcare_ad_shown_dates';
   const SKIP_SECONDS = 5; // スキップ可能になるまでの秒数
 
-  // 時間帯の定義: [開始時, 終了時, 絵文字, ラベル, サブテキスト, ストレージキー]
+  // ── 時間帯の定義 ──────────────────────────────────────
+  // 深夜(0〜5時)は「夜」枠の延長として扱い、朝・昼・夜の3枠を確保
   const AD_SLOTS = [
-    { start: 5,  end: 11, emoji: '☀️',  label: 'おはようございます',   sub: '今日も健康的な一日を！ 🌅',      key: 'morning' },
-    { start: 11, end: 17, emoji: '🌤️', label: 'お昼のお知らせ',        sub: '水分補給は忘れずに 💧',          key: 'noon'    },
-    { start: 17, end: 24, emoji: '🌙',  label: 'お疲れさまでした',      sub: '今日の記録を確認しましょう 📋',   key: 'evening' },
+    { start:  5, end: 11, emoji: '☀️',  label: 'おはようございます',  sub: '今日も健康的な一日を！ 🌅',      key: 'morning' },
+    { start: 11, end: 17, emoji: '🌤️', label: 'お昼のお知らせ',       sub: '水分補給は忘れずに 💧',          key: 'noon'    },
+    { start: 17, end: 29, emoji: '🌙',  label: 'お疲れさまでした',     sub: '今日の記録を確認しましょう 📋',   key: 'evening' },
+    // ※ end:29 = 翌日5時まで（時間は実際には h % 24 で比較）
   ];
 
-  function getTodayKey(slotKey) {
+  // ── 日付キー生成 ─────────────────────────────────────
+  // 深夜0〜4時は「前日の夜」として扱い、夜枠の重複表示を防ぐ
+  function getDateStr(slotKey) {
     const d = new Date();
-    const ds = `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
-    return `${ds}_${slotKey}`;
+    // 深夜0〜4時 かつ evening スロットの場合は前日の日付を使う
+    if (slotKey === 'evening' && d.getHours() < 5) {
+      d.setDate(d.getDate() - 1);
+    }
+    return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+  }
+
+  function getTodayKey(slotKey) {
+    return `${getDateStr(slotKey)}_${slotKey}`;
   }
 
   function wasShownToday(slotKey) {
@@ -12554,52 +12565,79 @@ function _updateBodyDisplay() {
   function markShownToday(slotKey) {
     try {
       const shown = JSON.parse(localStorage.getItem(AD_KEY) || '{}');
-      shown[getTodayKey(slotKey)] = true;
-      // 7日以上前のエントリを削除（容量節約）
+      shown[getTodayKey(slotKey)] = Date.now(); // timestampで記録
+      // 8日以上前のエントリを削除（容量節約）
       const cutoff = new Date();
-      cutoff.setDate(cutoff.getDate() - 7);
+      cutoff.setDate(cutoff.getDate() - 8);
       Object.keys(shown).forEach(k => {
-        const parts = k.split('_');
-        const [y, m, d2] = parts;
-        if (new Date(`${y}-${m}-${d2}`) < cutoff) delete shown[k];
+        const match = k.match(/^(\d{4})-(\d{1,2})-(\d{1,2})_/);
+        if (match) {
+          const entryDate = new Date(+match[1], +match[2]-1, +match[3]);
+          if (entryDate < cutoff) delete shown[k];
+        }
       });
       localStorage.setItem(AD_KEY, JSON.stringify(shown));
     } catch(e) {}
   }
 
+  // ── 現在の時間帯スロットを取得 ────────────────────────
   function getCurrentSlot() {
-    const h = new Date().getHours();
-    return AD_SLOTS.find(s => h >= s.start && h < s.end) || null;
+    let h = new Date().getHours();
+    // 深夜0〜4時は夜スロット（h+24 で end:29 と比較）
+    const hAdj = (h < 5) ? h + 24 : h;
+    return AD_SLOTS.find(s => hAdj >= s.start && hAdj < s.end) || null;
   }
 
+  // ── 次のスロット開始まで何msか計算 ──────────────────────
+  function msUntilNextSlot() {
+    const now  = new Date();
+    const h    = now.getHours();
+    const m    = now.getMinutes();
+    const s    = now.getSeconds();
+    const elapsed = (h * 3600 + m * 60 + s) * 1000;
+
+    // 次のスロット開始時刻（5, 11, 17時）
+    const starts = [5, 11, 17].map(hh => hh * 3600 * 1000);
+    const dayMs  = 24 * 3600 * 1000;
+
+    for (const st of starts) {
+      if (st > elapsed) return st - elapsed;
+    }
+    // 今日の最後のスロットより後 → 翌日5時まで
+    return dayMs - elapsed + 5 * 3600 * 1000;
+  }
+
+  // ── カウントダウン ────────────────────────────────────
   let _countdownTimer = null;
 
   function startCountdown() {
-    const numEl  = document.getElementById('ad-countdown-num');
-    const skipBtn= document.getElementById('ad-skip-btn');
-    const msgEl  = document.getElementById('ad-countdown-msg');
+    const numEl   = document.getElementById('ad-countdown-num');
+    const skipBtn = document.getElementById('ad-skip-btn');
+    const msgEl   = document.getElementById('ad-countdown-msg');
     if (!numEl || !skipBtn) return;
 
     let remaining = SKIP_SECONDS;
-    numEl.textContent = remaining;
-    skipBtn.disabled = true;
+    numEl.textContent  = remaining;
+    skipBtn.disabled   = true;
 
     if (_countdownTimer) clearInterval(_countdownTimer);
     _countdownTimer = setInterval(() => {
       remaining--;
       if (remaining <= 0) {
         clearInterval(_countdownTimer);
-        numEl.textContent = '0';
-        skipBtn.disabled = false;
-        skipBtn.textContent = '✅ 閉じる';
+        _countdownTimer = null;
+        numEl.textContent    = '0';
+        skipBtn.disabled     = false;
+        skipBtn.textContent  = '✅ 閉じる';
         if (msgEl) msgEl.textContent = '';
-        numEl.parentElement.style.display = 'none';
+        if (numEl.parentElement) numEl.parentElement.style.display = 'none';
       } else {
         numEl.textContent = remaining;
       }
     }, 1000);
   }
 
+  // ── モーダルを閉じる ─────────────────────────────────
   window.closeAdModal = function() {
     const overlay = document.getElementById('ad-time-overlay');
     if (!overlay) return;
@@ -12607,63 +12645,105 @@ function _updateBodyDisplay() {
     if (_countdownTimer) { clearInterval(_countdownTimer); _countdownTimer = null; }
   };
 
+  // ── モーダルを表示 ────────────────────────────────────
+  let _adModalShowing = false;
+
   function showAdModal(slot) {
-    // プレミアムユーザーはスキップ
     if (document.body.classList.contains('is-premium')) return;
+    if (_adModalShowing) return; // 多重表示防止
 
     const overlay = document.getElementById('ad-time-overlay');
-    const emojiEl  = document.getElementById('ad-time-emoji');
-    const labelEl  = document.getElementById('ad-time-label');
-    const subEl    = document.getElementById('ad-time-context');
-    const skipBtn  = document.getElementById('ad-skip-btn');
-    const numEl    = document.getElementById('ad-countdown-num');
     if (!overlay) return;
+
+    // 要素を更新
+    const emojiEl = document.getElementById('ad-time-emoji');
+    const labelEl = document.getElementById('ad-time-label');
+    const subEl   = document.getElementById('ad-time-context');
+    const skipBtn = document.getElementById('ad-skip-btn');
+    const numEl   = document.getElementById('ad-countdown-num');
+    const msgEl   = document.getElementById('ad-countdown-msg');
 
     if (emojiEl)  emojiEl.textContent  = slot.emoji;
     if (labelEl)  labelEl.textContent  = slot.label;
     if (subEl)    subEl.textContent    = slot.sub;
     if (skipBtn)  { skipBtn.disabled = true; skipBtn.textContent = '⏭ スキップして続ける'; }
     if (numEl)    numEl.textContent    = SKIP_SECONDS;
-    const msgEl = document.getElementById('ad-countdown-msg');
-    if (msgEl) msgEl.textContent = '閉じるまで';
+    if (msgEl)    msgEl.textContent    = '閉じるまで';
+    // カウントダウン行を再表示（closeAdModal で非表示になることがある）
+    if (numEl && numEl.parentElement) numEl.parentElement.style.display = '';
 
-    // AdSenseの広告ユニットを再読み込み
-    try {
-      (window.adsbygoogle = window.adsbygoogle || []).push({});
-    } catch(e) {}
+    // AdSenseの広告ユニットをプッシュ
+    try { (window.adsbygoogle = window.adsbygoogle || []).push({}); } catch(e) {}
 
-    // プレースホルダーの表示・非表示
-    const ph = document.getElementById('ad-placeholder');
+    // プレースホルダー制御
+    const ph  = document.getElementById('ad-placeholder');
+    const ins = overlay.querySelector('ins.adsbygoogle');
     if (ph) {
-      const ins = overlay.querySelector('ins.adsbygoogle');
-      ph.style.display = (ins && ins.getAttribute('data-adsbygoogle-status') === 'done') ? 'none' : 'flex';
+      ph.style.display = (ins && ins.getAttribute('data-adsbygoogle-status') === 'done')
+        ? 'none' : 'flex';
     }
 
+    // 表示
     overlay.classList.add('open');
+    _adModalShowing = true;
     markShownToday(slot.key);
+
+    // モーダルが閉じられたら _adModalShowing をリセット
+    const observer = new MutationObserver(() => {
+      if (!overlay.classList.contains('open')) {
+        _adModalShowing = false;
+        observer.disconnect();
+      }
+    });
+    observer.observe(overlay, { attributes: true, attributeFilter: ['class'] });
 
     setTimeout(() => startCountdown(), 100);
   }
 
-  function checkAndShowAd() {
+  // ── チェック＆表示 ───────────────────────────────────
+  function checkAndShowAd(delay) {
     const slot = getCurrentSlot();
     if (!slot) return;
     if (wasShownToday(slot.key)) return;
-    // アプリが完全にロードされてから少し待って表示
-    setTimeout(() => showAdModal(slot), 1500);
+    setTimeout(() => showAdModal(slot), delay !== undefined ? delay : 1500);
   }
 
-  // ページロード時に確認
+  // ── 次のスロット開始時刻にタイマーをセット ──────────────
+  let _nextSlotTimer = null;
+
+  function scheduleNextSlotCheck() {
+    if (_nextSlotTimer) clearTimeout(_nextSlotTimer);
+    const ms = msUntilNextSlot();
+    // 次のスロット開始直後（+2秒のバッファ）にチェック
+    _nextSlotTimer = setTimeout(() => {
+      checkAndShowAd(2000);
+      scheduleNextSlotCheck(); // 以降もループ
+    }, ms + 2000);
+  }
+
+  // ── 初期化 ───────────────────────────────────────────
+  function init() {
+    checkAndShowAd(1500);        // ページロード時
+    scheduleNextSlotCheck();     // 次のスロット開始を自動待機
+  }
+
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', checkAndShowAd);
+    document.addEventListener('DOMContentLoaded', init);
   } else {
-    checkAndShowAd();
+    init();
   }
 
-  // ページがフォアグラウンドに戻った時にも確認（スマホのアプリ切り替え対応）
+  // ── フォアグラウンド復帰時（スマホのアプリ切り替え対応）──
   document.addEventListener('visibilitychange', function() {
     if (document.visibilityState === 'visible') {
-      checkAndShowAd();
+      checkAndShowAd(800);       // バックグラウンドから復帰した時
+    }
+  });
+
+  // ── pageshow（iOS Safari の BFCache 対応）────────────
+  window.addEventListener('pageshow', function(e) {
+    if (e.persisted) {
+      checkAndShowAd(800);
     }
   });
 
