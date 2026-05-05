@@ -1047,10 +1047,11 @@ body.is-premium .premium-banner { display: none !important; }
           <div style="font-size:10px;color:var(--text3);" id="water-meal-pct">0%</div>
           <div style="font-size:10px;color:var(--text3);" id="home-water-badge"></div>
         </div>
-        <!-- 内訳ミニ行 -->
+        <!-- 飲料のみ表示（食事水分は体重増加計算に含まれるため除外） -->
         <div style="display:flex;gap:12px;font-size:11px;color:var(--text3);margin-bottom:10px;padding:6px 8px;background:var(--surface2);border-radius:8px;">
-          <span>🍱 食事: <b id="home-water-from-meal" style="color:var(--text2);">0</b>mL</span>
-          <span>🥤 飲物: <b id="home-water-from-drink" style="color:var(--accent);">0</b>mL</span>
+          <span>🥤 飲料: <b id="home-water-from-drink" style="color:var(--accent);">0</b>mL</span>
+          <span style="color:var(--border2);">|</span>
+          <span style="color:var(--text3);">食事の水分は体重増加計算に含まれます</span>
         </div>
         <!-- 体重増加（DW比）インジケーター -->
         <div id="home-dw-block" style="border-top:1px solid var(--border);padding-top:10px;display:none;">
@@ -1095,15 +1096,20 @@ body.is-premium .premium-banner { display: none !important; }
             </linearGradient>
           </defs>
           <rect x="0" y="28" width="340" height="28" fill="rgba(74,222,128,0.06)" rx="2"/>
-          <text x="2" y="26" fill="rgba(74,222,128,0.6)" font-size="7" font-family="monospace">140</text>
-          <text x="2" y="58" fill="rgba(74,222,128,0.6)" font-size="7" font-family="monospace">70</text>
+          <text x="2" y="26" fill="rgba(74,222,128,0.6)" font-size="7" font-family="monospace" id="glucose-y-top">140</text>
+          <text x="2" y="58" fill="rgba(74,222,128,0.6)" font-size="7" font-family="monospace" id="glucose-y-mid">70</text>
           <g id="glucose-graph-lines"></g>
           <g id="glucose-time-labels"></g>
           <g id="glucose-tap-indicator"></g>
           <text id="glucose-empty-msg" x="170" y="45" fill="var(--text3)" font-size="10" text-anchor="middle">食事を記録するとグラフが表示されます</text>
         </svg>
         <div id="glucose-tap-tooltip" style="display:none;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:6px 12px;font-size:12px;margin-top:4px;text-align:center;"></div>
-        <div style="font-size:11px;color:var(--text3);margin-top:6px;" id="home-glucose-mode">—</div>
+        <div style="display:flex;gap:12px;font-size:10px;color:var(--text3);margin-top:4px;flex-wrap:wrap;">
+          <span><svg width="10" height="10"><circle cx="5" cy="5" r="4" fill="var(--accent)" opacity="0.85"/></svg> 食事</span>
+          <span><svg width="10" height="10"><polygon points="5,1 9,5 5,9 1,5" fill="var(--green)" opacity="0.85"/></svg> 飲み物（糖質あり）</span>
+          <span style="margin-left:auto;">食事＋飲料 統合推定</span>
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin-top:4px;" id="home-glucose-mode">—</div>
       </div>
       <!-- HbA1c推算カード -->
       <div class="card" id="hba1c-card" style="border-color:rgba(192,132,252,0.3);">
@@ -1195,14 +1201,14 @@ body.is-premium .premium-banner { display: none !important; }
         <!-- 内訳 -->
         <div style="display:flex;gap:6px;margin-bottom:10px;font-size:12px;">
           <div style="flex:1;background:var(--surface2);border-radius:8px;padding:8px 10px;text-align:center;">
-            <div style="color:var(--text3);margin-bottom:2px;">🍽 食事</div>
-            <div id="water-from-meal" style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--accent);">0</div>
+            <div style="color:var(--text3);margin-bottom:2px;">🥤 飲料</div>
+            <div id="water-from-drink" style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--accent);">0</div>
             <div style="font-size:10px;color:var(--text3);">mL</div>
           </div>
           <div style="flex:1;background:var(--surface2);border-radius:8px;padding:8px 10px;text-align:center;">
-            <div style="color:var(--text3);margin-bottom:2px;">🥤 飲料</div>
-            <div id="water-from-drink" style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--green);">0</div>
-            <div style="font-size:10px;color:var(--text3);">mL</div>
+            <div style="color:var(--text3);margin-bottom:2px;">🍽 食事</div>
+            <div id="water-from-meal" style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--text3);">体重増加側</div>
+            <div style="font-size:10px;color:var(--text3);">に含む</div>
           </div>
         </div>
         <div class="prog-wrap" style="margin-bottom:12px;">
@@ -4803,7 +4809,7 @@ async function saveMeal() {
   const sugar = Math.max(0, carb - fiber);
   const fMap = {normal:1, t2d:3, t1d:5};
   const rise = Math.round(sugar * (fMap[state.userType]||1));
-  if (rise > 0) saveGlucoseLog(rise);
+  // HbA1cログ更新は食事保存完了後にsaveDailyPeakGlucoseで行う
 
   const meal = {
     id: 'meal_'+now.getTime()+'_'+Math.random().toString(36).substr(2,5),
@@ -4872,6 +4878,7 @@ async function saveMeal() {
 
   if (saved) {
     showToast(`✅ 記録しました${waterFromMeal>0?' (水分+'+waterFromMeal+'mL)':''}`);
+    try { saveDailyPeakGlucose(); } catch(e) {}
   } else {
     showToast('⚠️ 保存に失敗しました');
   }
@@ -5003,11 +5010,12 @@ function updateHomeSummary() {
   setNutrBar('nutr-bar-salt', 'nutr-val-salt', 'nutr-max-salt',  totals.salt||0,  state.targets.salt||7,   'g');
   setNutrBar('nutr-bar-fat',  'nutr-val-fat',  'nutr-max-fat',   totals.fat||0,   state.targets.fat||55,   'g');
 
-  // ── 水分カード更新（食事由来 + 飲料ログ合算） ─────────────────────────
+  // ── 水分カード更新（飲料のみ：食事水分は体重増加計算側で扱うため除外） ─────
   const waterLog     = getTodayWaterLog ? getTodayWaterLog() : [];
-  const mealWater    = waterLog.filter(e => e.auto && !e.drink).reduce((s,e) => s+(e.ml||0), 0);
+  // 飲料のみ（drink:true または手動追加）
   const drinkWater   = waterLog.filter(e => (e.auto && e.drink) || !e.auto).reduce((s,e) => s+(e.ml||0), 0);
-  const totalWater   = mealWater + drinkWater;
+  const mealWater    = 0; // 除外
+  const totalWater   = drinkWater;
   const waterTarget  = state.targets.water || 1500;
   const waterPct     = Math.min(100, waterTarget > 0 ? Math.round(totalWater / waterTarget * 100) : 0);
 
@@ -5723,6 +5731,7 @@ function showWaterBalanceInfo() {
   showToast('体重増加量 ＝（食事水分＋飲物＋代謝水）― 尿量 ― 不感蒸泄。増加目安はDW比3〜5%で個人差あり。主治医に確認してください。');
 }
 let _glucosePoints = [];
+let _glucoseMaxG = 220; // グラフ描画時に動的更新
 
 function handleGlucoseTap(event) {
   if (_glucosePoints.length === 0) return;
@@ -5734,24 +5743,22 @@ function handleGlucoseTap(event) {
   const padL = 22, padR = 8, graphW = 340 - padL - padR;
   const xSvg = xRatio * 340;
   const tRatio = Math.max(0, Math.min(1, (xSvg - padL) / graphW));
-  // 最も近いポイントを探す
   const totalMin = _glucosePoints[_glucosePoints.length-1]?.t || 1;
   const targetT = tRatio * totalMin;
   const closest = _glucosePoints.reduce((a,b) => Math.abs(b.t-targetT) < Math.abs(a.t-targetT) ? b : a);
   const h = Math.floor(closest.t / 60);
   const m = String(Math.round(closest.t % 60)).padStart(2,'0');
   const g = Math.round(closest.g);
-  const status = g < 100 ? '正常' : g < 140 ? '良好' : g < 180 ? 'やや高め' : '高め';
-  const color = g < 100 ? '#4ade80' : g < 140 ? '#4ade80' : g < 180 ? '#fcd34d' : '#f87171';
+  const status = g < 100 ? '正常' : g < 140 ? '良好' : g < 180 ? 'やや高め' : g < 250 ? '高め' : '非常に高め';
+  const color  = g < 100 ? '#4ade80' : g < 140 ? '#4ade80' : g < 180 ? '#fcd34d' : '#f87171';
   const tooltip = document.getElementById('glucose-tap-tooltip');
   if (tooltip) {
     tooltip.style.display = 'block';
     tooltip.innerHTML = `<span style="color:var(--text3);">${h}:${m}</span>　<strong style="color:${color};font-size:16px;">${g} mg/dL</strong>　<span style="color:${color};">${status}</span>`;
   }
-  // インジケーターライン更新
   const indicator = document.getElementById('glucose-tap-indicator');
   if (indicator) {
-    const padT=8, padB=12, svgH=80, minG=60, maxG=220, graphH=svgH-padT-padB;
+    const padT=8, padB=12, svgH=80, minG=60, maxG=_glucoseMaxG, graphH=svgH-padT-padB;
     const xOf = t => padL + (t/totalMin)*graphW;
     const yOf = g => padT + graphH - ((g-minG)/(maxG-minG))*graphH;
     indicator.innerHTML = `
@@ -5772,40 +5779,55 @@ const GLUCOSE_CURVE = {
   t1d:    { peak: 75,  duration: 240, fasting: 100 },
 };
 
-function calcGlucoseAtTime(meal, minutesAfterMeal, type) {
+function calcGlucoseAtTime(event, minutesAfterEvent, type) {
+  // event: { carb, fiber } (食事) または { carb } (飲み物)
   const curve = GLUCOSE_CURVE[type] || GLUCOSE_CURVE.normal;
-  const carb = meal.carb || 0;
-  const fiber = meal.fiber || 0;
+  const carb  = event.carb  || 0;
+  const fiber = event.fiber || 0;
   const sugar = Math.max(0, carb - fiber);
-  const fMap = { normal:1, t2d:3, t1d:5 };
-  const rise = sugar * (fMap[type] || 1);
-  if (minutesAfterMeal < 0) return curve.fasting;
-  if (minutesAfterMeal > curve.duration) return curve.fasting;
-  if (minutesAfterMeal <= curve.peak) {
-    // 上昇フェーズ（なめらか）
-    const t = minutesAfterMeal / curve.peak;
+  const fMap  = { normal:1, t2d:3, t1d:5 };
+  const rise  = sugar * (fMap[type] || 1);
+  if (minutesAfterEvent < 0) return curve.fasting;
+  if (minutesAfterEvent > curve.duration) return curve.fasting;
+  if (minutesAfterEvent <= curve.peak) {
+    const t = minutesAfterEvent / curve.peak;
     return curve.fasting + rise * Math.sin(t * Math.PI / 2);
   } else {
-    // 降下フェーズ（指数的に戻る）
-    const t = (minutesAfterMeal - curve.peak) / (curve.duration - curve.peak);
+    const t = (minutesAfterEvent - curve.peak) / (curve.duration - curve.peak);
     return curve.fasting + rise * Math.cos(t * Math.PI / 2);
   }
 }
 
 function updateGlucoseGraph() {
-  const meals = localLoadMeals();
   const today = new Date().toDateString();
-  const todayMeals = meals.filter(m => new Date(m.recorded_at).toDateString() === today && (m.carb || 0) > 0);
 
-  const linesEl = document.getElementById('glucose-graph-lines');
-  const labelsEl = document.getElementById('glucose-time-labels');
-  const emptyMsg = document.getElementById('glucose-empty-msg');
+  // ── 食事イベント（carb > 0 のもの）──────────────────────────────────────
+  const meals = localLoadMeals();
+  const mealEvents = meals
+    .filter(m => new Date(m.recorded_at).toDateString() === today && (m.carb || 0) > 0)
+    .map(m => ({ time: new Date(m.recorded_at), carb: m.carb||0, fiber: m.fiber||0, label:'🍽', isMeal: true }));
+
+  // ── 飲み物イベント（糖質 > 0 のもの）────────────────────────────────────
+  let drinkEvents = [];
+  try {
+    const allDrinks = JSON.parse(localStorage.getItem(DRINK_LOG_KEY) || '[]');
+    drinkEvents = allDrinks
+      .filter(e => new Date(e.time).toDateString() === today && (e.carb || 0) > 0)
+      .map(e => ({ time: new Date(e.time), carb: e.carb||0, fiber: 0, label:'🥤', isMeal: false }));
+  } catch(err) {}
+
+  // 時刻順で結合
+  const allEvents = [...mealEvents, ...drinkEvents].sort((a, b) => a.time - b.time);
+
+  const linesEl    = document.getElementById('glucose-graph-lines');
+  const labelsEl   = document.getElementById('glucose-time-labels');
+  const emptyMsg   = document.getElementById('glucose-empty-msg');
   const glucoseNum = document.getElementById('home-glucose');
   const glucoseBadge = document.getElementById('home-glucose-badge');
-  const modeEl = document.getElementById('home-glucose-mode');
+  const modeEl     = document.getElementById('home-glucose-mode');
   if (!linesEl) return;
 
-  if (todayMeals.length === 0) {
+  if (allEvents.length === 0) {
     linesEl.innerHTML = '';
     if (labelsEl) labelsEl.innerHTML = '';
     if (emptyMsg) emptyMsg.style.display = 'block';
@@ -5815,48 +5837,62 @@ function updateGlucoseGraph() {
   }
   if (emptyMsg) emptyMsg.style.display = 'none';
 
-  const type = state.userType || 'normal';
+  const type  = state.userType || 'normal';
   const curve = GLUCOSE_CURVE[type] || GLUCOSE_CURVE.normal;
-  const now = new Date();
-  const startOfDay = new Date(now); startOfDay.setHours(0,0,0,0);
-  const endOfDay   = new Date(now); endOfDay.setHours(23,59,0,0);
-  const totalMin = (endOfDay - startOfDay) / 60000; // 24時間表示
+  const now   = new Date();
+  const startOfDay = new Date(now); startOfDay.setHours(0, 0, 0, 0);
+  const endOfDay   = new Date(now); endOfDay.setHours(23, 59, 0, 0);
+  const totalMin = (endOfDay - startOfDay) / 60000;
 
-  // SVG座標変換
+  // SVG座標
   const svgW = 340, svgH = 80;
   const padL = 22, padR = 8, padT = 8, padB = 12;
   const graphW = svgW - padL - padR;
   const graphH = svgH - padT - padB;
-  const minG = 60, maxG = 220;
+  const minG = 60;
+  // maxGをデータから動的決定（最低220、上限350）
+  const fMap2 = { normal:1, t2d:3, t1d:5 };
+  const totalRiseEstimate = allEvents.reduce((s, ev) => {
+    const sugar = Math.max(0, (ev.carb||0) - (ev.fiber||0));
+    return s + sugar * (fMap2[type] || 1);
+  }, 0);
+  const maxG = Math.max(220, Math.min(350, Math.ceil((curve.fasting + totalRiseEstimate + 20) / 20) * 20));
+  _glucoseMaxG = maxG; // タップハンドラで共有
   const xOf = (min) => padL + (min / totalMin) * graphW;
   const yOf = (g)   => padT + graphH - ((g - minG) / (maxG - minG)) * graphH;
 
-  // 5分ごとに血糖値を計算
+  // 5分ごとに血糖値を計算（食事＋飲み物を合算）
   const points = [];
   for (let t = 0; t <= totalMin; t += 5) {
     const absTime = new Date(startOfDay.getTime() + t * 60000);
     let glucose = curve.fasting;
-    todayMeals.forEach(m => {
-      const mealTime = new Date(m.recorded_at);
-      const diff = (absTime - mealTime) / 60000;
+    allEvents.forEach(ev => {
+      const diff = (absTime - ev.time) / 60000;
       if (diff >= 0 && diff <= curve.duration) {
-        const delta = calcGlucoseAtTime(m, diff, type) - curve.fasting;
+        const delta = calcGlucoseAtTime(ev, diff, type) - curve.fasting;
         glucose += delta;
       }
     });
     points.push({ t, g: Math.max(minG, Math.min(maxG, glucose)) });
   }
-  _glucosePoints = points; // タップ用にグローバル保存
+  _glucosePoints = points;
 
-  // パスを生成
+  // パス生成
   const pathD = points.map((p, i) => `${i===0?'M':'L'}${xOf(p.t).toFixed(1)},${yOf(p.g).toFixed(1)}`).join(' ');
   const fillD = pathD + ` L${xOf(totalMin)},${yOf(minG)} L${padL},${yOf(minG)} Z`;
 
   // 現在時刻の血糖値
   const nowMin = Math.max(0, Math.min(totalMin, (now - startOfDay) / 60000));
-  const nowPt = points.reduce((a, b) => Math.abs(b.t - nowMin) < Math.abs(a.t - nowMin) ? b : a);
+  const nowPt  = points.reduce((a, b) => Math.abs(b.t - nowMin) < Math.abs(a.t - nowMin) ? b : a);
   const currentG = Math.round(nowPt.g);
 
+  // Y軸ラベルをmaxGに合わせて更新
+  const yTop = document.getElementById('glucose-y-top');
+  const yMid = document.getElementById('glucose-y-mid');
+  if (yTop) yTop.textContent = Math.round((minG + maxG) * 0.67); // 約2/3点
+  if (yMid) yMid.textContent = Math.round((minG + maxG) * 0.33); // 約1/3点
+
+  // グラフ本体
   linesEl.innerHTML = `
     <path d="${fillD}" fill="url(#gGrad)" opacity="0.6"/>
     <path d="${pathD}" fill="none" stroke="#fcd34d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -5864,24 +5900,31 @@ function updateGlucoseGraph() {
     <line x1="${xOf(nowMin).toFixed(1)}" y1="${padT}" x2="${xOf(nowMin).toFixed(1)}" y2="${svgH-padB}" stroke="rgba(252,211,77,0.3)" stroke-width="1" stroke-dasharray="2,2"/>
   `;
 
-  // 食事時刻マーカー
-  todayMeals.forEach(m => {
-    const mMin = (new Date(m.recorded_at) - startOfDay) / 60000;
-    if (mMin >= 0 && mMin <= totalMin) {
-      linesEl.innerHTML += `<circle cx="${xOf(mMin).toFixed(1)}" cy="${yOf(curve.fasting).toFixed(1)}" r="3" fill="var(--accent)" opacity="0.7"/>`;
+  // イベントマーカー（食事＝青丸、飲み物＝水色三角）
+  allEvents.forEach(ev => {
+    const eMin = (ev.time - startOfDay) / 60000;
+    if (eMin >= 0 && eMin <= totalMin) {
+      if (ev.isMeal) {
+        linesEl.innerHTML += `<circle cx="${xOf(eMin).toFixed(1)}" cy="${yOf(curve.fasting).toFixed(1)}" r="3" fill="var(--accent)" opacity="0.85"/>`;
+      } else {
+        // 飲み物は小さなひし形
+        const cx = parseFloat(xOf(eMin).toFixed(1));
+        const cy = parseFloat(yOf(curve.fasting).toFixed(1));
+        linesEl.innerHTML += `<polygon points="${cx},${cy-4} ${cx+3},${cy} ${cx},${cy+4} ${cx-3},${cy}" fill="var(--green)" opacity="0.85"/>`;
+      }
     }
   });
 
-  // 時刻ラベル（0時〜24時、3時間ごと）
+  // 時刻ラベル
   if (labelsEl) {
-    const labels = [0, 3*60, 6*60, 9*60, 12*60, 15*60, 18*60, 21*60, 23*60].filter(t=>t<=totalMin);
-    labelsEl.innerHTML = labels.map(t => {
+    const ticks = [0,3*60,6*60,9*60,12*60,15*60,18*60,21*60,23*60].filter(t=>t<=totalMin);
+    labelsEl.innerHTML = ticks.map(t => {
       const h = Math.round(t/60);
       return `<text x="${xOf(t).toFixed(1)}" y="${svgH}" fill="var(--text3)" font-size="7" text-anchor="middle">${h}時</text>`;
     }).join('');
   }
 
-  // 現在値を表示
+  // 現在値表示
   if (glucoseNum) glucoseNum.textContent = currentG;
   if (glucoseBadge) {
     glucoseBadge.style.display = 'inline-flex';
@@ -5890,13 +5933,12 @@ function updateGlucoseGraph() {
     else if (currentG < 180)  { glucoseBadge.textContent='やや高め'; glucoseBadge.className='glucose-badge gb-warn'; }
     else                      { glucoseBadge.textContent='高め'; glucoseBadge.className='glucose-badge gb-high'; }
   }
-  const modeMap = { healthy:'予防ケアモード（健康維持）', normal:'標準モード（糖質×1）', t2d:'2型糖尿病モード（食後2〜3時間で降下）', t1d:'1型糖尿病モード（食後4時間で降下）' };
+
+  const modeMap = { healthy:'予防ケアモード', normal:'標準モード', t2d:'2型糖尿病モード', t1d:'1型糖尿病モード' };
   if (modeEl) {
-    let modeText = '📊 ' + (modeMap[type] || '');
-    try {
-      const { drinkRise } = calcTotalDailyGlucoseRise();
-      if (drinkRise > 0) modeText += ` | 🥤 飲料由来 +${drinkRise}mg/dL`;
-    } catch(e) {}
+    const mealCount  = mealEvents.length;
+    const drinkCount = drinkEvents.length;
+    let modeText = `📊 ${modeMap[type]||''} | 🍽 ${mealCount}食 ● 🥤 ${drinkCount}杯 ◆ 統合推定`;
     modeEl.textContent = modeText;
   }
 }
@@ -6226,18 +6268,82 @@ function calcTotalDailyGlucoseRise() {
 const HBA1C_KEY = 'renalcare_glucose_log';
 
 function saveGlucoseLog(estimatedRise, fastingOverride) {
-  // fastingOverride: 食前血糖値を直接指定した場合
+  // fastingOverride: 食前血糖値を直接指定した場合（健康記録からの入力）
   const fastingBase = fastingOverride || (state.lastFasting || 100);
-  const postprandial = fastingBase + estimatedRise;
-  // 食前血糖値を記録した場合は基準値として保存
   if (fastingOverride) state.lastFasting = fastingOverride;
+  // 直接指定の場合のみ即時保存（食事・飲み物は saveDailyPeakGlucose に委譲）
+  if (fastingOverride) {
+    try {
+      const log = JSON.parse(localStorage.getItem(HBA1C_KEY) || '[]');
+      log.push({ date: new Date().toISOString(), glucose: fastingBase, rise: 0, fasting: fastingBase, type: 'manual' });
+      const cutoff = new Date(Date.now() - 90 * 86400000).toISOString();
+      localStorage.setItem(HBA1C_KEY, JSON.stringify(log.filter(e => e.date >= cutoff)));
+    } catch(e) {}
+  }
+  // 食事・飲み物のriseは saveDailyPeakGlucose で統合して保存するので直接は保存しない
+}
+
+/**
+ * 今日の食事＋飲み物を合算した推定ピーク血糖値をHbA1cログに保存
+ * グラフ更新後・食事保存後・飲み物保存後に呼ぶ
+ */
+function saveDailyPeakGlucose() {
   try {
+    const today = new Date().toDateString();
+    const type  = state.userType || 'normal';
+    const curve = GLUCOSE_CURVE[type] || GLUCOSE_CURVE.normal;
+    const fMap  = { normal:1, t2d:3, t1d:5 };
+    const factor = fMap[type] || 1;
+    const fasting = state.lastFasting || curve.fasting;
+
+    // 今日の全食事イベント
+    const meals = localLoadMeals().filter(m => new Date(m.recorded_at).toDateString() === today && (m.carb || 0) > 0);
+    // 今日の全飲み物イベント（糖質あり）
+    let drinks = [];
+    try { drinks = JSON.parse(localStorage.getItem(DRINK_LOG_KEY)||'[]').filter(e => new Date(e.time).toDateString() === today && (e.carb||0) > 0); } catch(e) {}
+
+    if (meals.length === 0 && drinks.length === 0) return;
+
+    // 全イベントをまとめて5分刻みでシミュレーション → 今日の最高血糖値を求める
+    const allEvents = [
+      ...meals.map(m => ({ time: new Date(m.recorded_at), carb: m.carb||0, fiber: m.fiber||0 })),
+      ...drinks.map(d => ({ time: new Date(d.time), carb: d.carb||0, fiber: 0 }))
+    ];
+
+    const startOfDay = new Date(); startOfDay.setHours(0,0,0,0);
+    let peakGlucose = fasting;
+    for (let t = 0; t <= 23*60+59; t += 5) {
+      const absTime = new Date(startOfDay.getTime() + t * 60000);
+      let glucose = fasting;
+      allEvents.forEach(ev => {
+        const diff = (absTime - ev.time) / 60000;
+        if (diff >= 0 && diff <= curve.duration) {
+          const sugar = Math.max(0, (ev.carb||0) - (ev.fiber||0));
+          const rise  = sugar * factor;
+          const tRatio = diff <= curve.peak
+            ? Math.sin((diff / curve.peak) * Math.PI / 2)
+            : Math.cos(((diff - curve.peak) / (curve.duration - curve.peak)) * Math.PI / 2);
+          glucose += rise * tRatio;
+        }
+      });
+      if (glucose > peakGlucose) peakGlucose = glucose;
+    }
+    peakGlucose = Math.round(peakGlucose);
+
+    // 今日分エントリを上書き（同じ日付のものを削除して最新値で保存）
     const log = JSON.parse(localStorage.getItem(HBA1C_KEY) || '[]');
-    log.push({ date: new Date().toISOString(), glucose: postprandial, rise: estimatedRise, fasting: fastingBase });
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const filtered = log.filter(e => !e.date.startsWith(todayStr) || e.type === 'manual');
+    filtered.push({
+      date: new Date().toISOString(),
+      glucose: peakGlucose,
+      rise: peakGlucose - fasting,
+      fasting,
+      type: 'auto'
+    });
     const cutoff = new Date(Date.now() - 90 * 86400000).toISOString();
-    const filtered = log.filter(e => e.date >= cutoff);
-    localStorage.setItem(HBA1C_KEY, JSON.stringify(filtered));
-  } catch(e) {}
+    localStorage.setItem(HBA1C_KEY, JSON.stringify(filtered.filter(e => e.date >= cutoff)));
+  } catch(e) { console.warn('[saveDailyPeakGlucose]', e); }
 }
 
 function calcHba1c() {
@@ -6313,7 +6419,7 @@ function updateHba1cCard() {
     const cutoff = new Date(Date.now()-30*86400000).toISOString();
     const recent = log.filter(e=>e.date>=cutoff);
     const avg = Math.round(recent.reduce((s,e)=>s+e.glucose,0)/recent.length);
-    if (labelEl) labelEl.textContent = `30日平均血糖値 約${avg} mg/dL（${recent.length}件の食事記録から算出）`;
+    if (labelEl) labelEl.textContent = `30日平均血糖値 約${avg} mg/dL（${recent.length}件の食事・飲料記録から算出）`;
   } catch(e) {}
 
   // トレンドチャート
@@ -6935,6 +7041,9 @@ function saveDrinkRecord() {
   
   showToast(`💧 ${entry.name} (${entry.ml}mL) を記録しました`);
   
+  // HbA1cログにも飲み物の糖質を反映（食事+飲み物の合算ピークで保存）
+  try { saveDailyPeakGlucose(); } catch(e) {}
+  
   // リセット
   _selectedDrink = null;
   const area = document.getElementById('drink-selected-area');
@@ -7268,10 +7377,20 @@ function resetTodayWater() {
 
 function updateWaterCard() {
   const log = getTodayWaterLog();
-  // 食事水分（auto:true, drink:false）と飲物（auto:true, drink:true または auto:false）を分離
-  const mealWater  = log.filter(e => e.auto && !e.drink).reduce((s,e) => s+(e.ml||0), 0);
+  // ── 飲料のみカウント（食事由来の水分は体重増加計算側で扱うため除外）──
+  const mealWater  = 0; // 食事水分は水分摂取表示から除外
   const drinkWater = log.filter(e => (e.auto && e.drink) || !e.auto).reduce((s,e) => s+(e.ml||0), 0);
-  const total = mealWater + drinkWater;
+  // 新しい飲み物ログ(DRINK_LOG_KEY)からも加算
+  const drinkLog2Total = (function() {
+    try {
+      const today = new Date().toDateString();
+      const all = JSON.parse(localStorage.getItem(DRINK_LOG_KEY)||'[]');
+      // WATER_KEYにも保存しているので重複しないよう drink_entry フラグがないものだけ
+      // ただしDRINK_LOG_KEYからは既にWATER_KEYに保存しているのでここでは足さない
+      return 0;
+    } catch(e) { return 0; }
+  })();
+  const total = drinkWater;
   const target = state.targets?.water || 1500;
   const pct = Math.min(100, Math.round(total / target * 100));
 
@@ -7321,18 +7440,19 @@ function updateWaterCard() {
 
 /** ホーム水分カードとDW比ブロックをピンポイント更新（updateHomeSummary の重い処理を回避） */
 function _syncHomeWaterCard(total, mealWater, drinkWater, target, pct) {
+  // totalは飲料のみの値
   const wEl  = document.getElementById('m-water-meal');
   const lEl  = document.getElementById('limit-water');
   const pEl  = document.getElementById('prog-water-meal');
   const pcEl = document.getElementById('water-meal-pct');
   const bEl  = document.getElementById('home-water-badge');
-  const fmEl = document.getElementById('home-water-from-meal');
+  const fmEl = document.getElementById('home-water-from-meal'); // 非表示化済み
   const fdEl = document.getElementById('home-water-from-drink');
   if (wEl)  wEl.textContent  = total.toLocaleString();
   if (lEl)  lEl.textContent  = (target||1500).toLocaleString();
   if (pEl)  pEl.style.width  = (pct||0) + '%';
   if (pcEl) pcEl.textContent = (pct||0) + '%';
-  if (fmEl) fmEl.textContent = (mealWater||0).toLocaleString();
+  if (fmEl) fmEl.textContent = '—'; // 食事水分は表示しない
   if (fdEl) fdEl.textContent = (drinkWater||0).toLocaleString();
   if (bEl) {
     if      (pct >= 100) { bEl.textContent = '✓ 目標達成'; bEl.style.color = 'var(--green)'; }
