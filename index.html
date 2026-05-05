@@ -3346,6 +3346,8 @@ function runDataMigration() {
         calories: 0, protein: 0, carb: 0, fiber: 0,
         fat: 0, salt: 0, potassium: 0, phosphorus: 0, water: 0,
       };
+      // user_idがない旧データに現在のユーザーUIDを付与
+      const currentUid = state.uid || getUserId();
       let changed = false;
       const migrated = meals.map(m => {
         if (!m || typeof m !== 'object') { changed = true; return null; }
@@ -3354,6 +3356,8 @@ function runDataMigration() {
           if (m[k] === undefined || m[k] === null) { m[k] = v; dirty = true; }
         }
         if (!m.recorded_at) { m.recorded_at = new Date().toISOString(); dirty = true; }
+        // user_idがない旧データに現在のユーザーIDを付与
+        if (!m.user_id) { m.user_id = currentUid; dirty = true; }
         if (dirty) changed = true;
         return m;
       }).filter(Boolean);
@@ -3583,7 +3587,14 @@ function deleteUserAndData(uid) {
 function switchUser(uid) {
   setActiveUid(uid);
   const profile = getAllProfiles().find(p => p.uid === uid);
-  if (profile) { loadProfile(profile); showToast(`✓ ${profile.userName}に切り替えました`); closeModal('userSwitchModal'); }
+  if (profile) {
+    loadProfile(profile);
+    // UI全体を完全リフレッシュ（前ユーザーのデータが残らないよう）
+    try { refreshAll(); } catch(e) {}
+    try { renderHistory(); } catch(e) {}
+    showToast(`✓ ${profile.userName}に切り替えました`);
+    closeModal('userSwitchModal');
+  }
 }
 
 function addNewUser() {
@@ -4325,7 +4336,23 @@ function showMealDetail(meal) {
     </div>`;
   // 削除ボタンにIDをセット
   const delBtn = document.getElementById('mealDetailDeleteBtn');
-  if (delBtn) delBtn.onclick = () => { closeModal('mealDetailModal'); deleteMealConfirm(meal.id); };
+  if (delBtn) {
+    // 古いイベントリスナーをクリア
+    const newDelBtn = delBtn.cloneNode(true);
+    delBtn.parentNode.replaceChild(newDelBtn, delBtn);
+    newDelBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      if (!confirm('この記録を削除しますか？')) return;
+      closeModal('mealDetailModal');
+      if (localDeleteMeal(meal.id)) {
+        showToast('🗑 記録を削除しました');
+        renderHistory();
+        updateHomeSummary();
+      } else {
+        showToast('⚠ 削除できませんでした');
+      }
+    });
+  }
   document.getElementById('mealDetailModal').classList.add('open');
 }
 
@@ -4950,8 +4977,12 @@ function localLoadMeals() {
   try {
     const raw = JSON.parse(localStorage.getItem('renalcare_meals') || '[]');
     if (!Array.isArray(raw)) return [];
+    const currentUid = state.uid || getUserId();
     return raw.map(m => {
       if (!m || typeof m !== 'object') return null;
+      // ユーザーIDが設定されているデータは現在のユーザーのみ返す
+      // user_idがない旧データは後方互換のため含める
+      if (m.user_id && m.user_id !== currentUid) return null;
       // フィールド補完（旧データ対応）
       return {
         calories:   m.calories   ?? 0,
