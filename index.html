@@ -1205,11 +1205,6 @@ body.is-premium .premium-banner { display: none !important; }
             <div id="water-from-drink" style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--accent);">0</div>
             <div style="font-size:10px;color:var(--text3);">mL</div>
           </div>
-          <div style="flex:1;background:var(--surface2);border-radius:8px;padding:8px 10px;text-align:center;">
-            <div style="color:var(--text3);margin-bottom:2px;">🍽 食事</div>
-            <div id="water-from-meal" style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--text3);">体重増加側</div>
-            <div style="font-size:10px;color:var(--text3);">に含む</div>
-          </div>
         </div>
         <div class="prog-wrap" style="margin-bottom:12px;">
           <div class="prog-fill pg-blue" id="prog-water" style="width:0%;transition:width 0.6s ease;"></div>
@@ -2505,18 +2500,36 @@ body.is-premium .premium-banner { display: none !important; }
 
       <!-- 招待コード -->
       <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
-        <div style="font-size:12px;color:var(--text3);text-align:center;margin-bottom:8px;">招待コード・特別コードをお持ちの方</div>
-        <!-- 体験済み警告（hasTrialEverUsed()がtrueの時に表示） -->
+        <div style="font-size:12px;font-weight:600;color:var(--text2);text-align:center;margin-bottom:4px;">🎟 招待コード・ライセンスコード</div>
+        <div style="font-size:11px;color:var(--text3);text-align:center;margin-bottom:10px;">コードの種類によって有効期間が異なります</div>
+
+        <!-- コード種類バッジ -->
+        <div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-bottom:12px;">
+          <span style="font-size:10px;padding:3px 9px;border-radius:20px;border:1px solid var(--border2);color:var(--text2);background:var(--surface2);">1ヶ月</span>
+          <span style="font-size:10px;padding:3px 9px;border-radius:20px;border:1px solid var(--border2);color:var(--text2);background:var(--surface2);">3ヶ月</span>
+          <span style="font-size:10px;padding:3px 9px;border-radius:20px;border:1px solid var(--border2);color:var(--text2);background:var(--surface2);">半年</span>
+          <span style="font-size:10px;padding:3px 9px;border-radius:20px;border:1px solid var(--border2);color:var(--text2);background:var(--surface2);">1年</span>
+          <span style="font-size:10px;padding:3px 9px;border-radius:20px;border:1px solid rgba(192,132,252,0.5);color:var(--purple);background:rgba(192,132,252,0.1);font-weight:700;">✨ 永久</span>
+        </div>
+
+        <!-- 体験済み警告 -->
         <div id="invite-code-trial-warn" style="display:none;font-size:12px;color:var(--amber);background:var(--amber-dim);border:1px solid var(--amber);border-radius:8px;padding:8px 10px;margin-bottom:8px;"></div>
+
         <div style="display:flex;gap:8px;">
           <input class="form-input" type="text" id="invite-code-input"
-            placeholder="招待コードを入力" style="flex:1;text-transform:uppercase;letter-spacing:1px;"
-            oninput="this.value=this.value.toUpperCase()" />
+            placeholder="コードを入力（例：WELCOME2025）"
+            style="flex:1;text-transform:uppercase;letter-spacing:1.5px;font-weight:600;"
+            oninput="this.value=this.value.toUpperCase();_previewCode(this.value)"
+            onkeydown="if(event.key==='Enter')applyInviteCode()" />
           <button class="btn btn-outline btn-sm" onclick="applyInviteCode()" style="white-space:nowrap;">適用</button>
         </div>
+
+        <!-- コードプレビュー（入力中にリアルタイム表示） -->
+        <div id="invite-code-preview" style="display:none;margin-top:6px;padding:8px 10px;border-radius:8px;background:var(--surface2);border:1px solid var(--border2);font-size:12px;"></div>
+
         <div id="invite-code-result" style="margin-top:6px;font-size:12px;"></div>
-        <div style="font-size:10px;color:var(--text3);margin-top:5px;line-height:1.6;">
-          ※ 招待コードによる無料体験は1端末1回限りです。コードの使い回しはできません。
+        <div style="font-size:10px;color:var(--text3);margin-top:6px;line-height:1.7;">
+          ⚠ 各コードは1人1回限り有効です。同じコードの2回使用・複数端末での使い回しはできません。
         </div>
       </div>
 
@@ -4209,7 +4222,6 @@ async function renderHistory() {
                 <span style="font-size:10px;color:${waterColor};background:${waterColor}22;padding:1px 6px;border-radius:10px;border:1px solid ${waterColor}40;">${waterMl >= limits.water ? '✓ 目標達成' : `目標 ${limits.water}mL`}</span>
               </div>
               <div style="display:flex;gap:12px;font-size:11px;color:var(--text3);padding-left:2px;">
-                <span>🍱 食事から: <b style="color:var(--text2);">${waterData.meal.toLocaleString()}mL</b></span>
                 <span>🥤 飲み物: <b style="color:var(--accent);">${waterData.drink.toLocaleString()}mL</b></span>
               </div>
             </div>
@@ -4227,15 +4239,14 @@ async function renderHistory() {
       <!-- 各食事カード -->
       ${dayMeals.sort((a,b) => new Date(a.recorded_at)-new Date(b.recorded_at)).map(m => {
         const timeStr = `${new Date(m.recorded_at).getHours()}:${String(new Date(m.recorded_at).getMinutes()).padStart(2,'0')}`;
-        const mealJson = JSON.stringify(m).replace(/"/g,'&quot;');
-        // 食品カテゴリの内容をチップ表示
-        const cats = m.food_categories || {};
+        const mealId  = m.id || '';
+        // 食品カテゴリチップ
+        const cats      = m.food_categories || {};
         const catColors = { main:'var(--accent)', protein:'var(--green)', sub:'var(--purple)', soup:'var(--amber)', drink:'var(--accent)' };
         const catEmoji  = { main:'🍚', protein:'🥩', sub:'🥦', soup:'🍵', drink:'💧' };
-        const allChips = ['main','protein','sub','soup','drink'].flatMap(group => {
-          const items = cats[group] || [];
-          return items.map(name => `<span style="font-size:10px;padding:2px 7px;border-radius:14px;background:${catColors[group]}18;color:${catColors[group]};border:1px solid ${catColors[group]}33;white-space:nowrap;">${catEmoji[group]} ${name}</span>`);
-        });
+        const allChips  = ['main','protein','sub','soup','drink'].flatMap(group =>
+          (cats[group]||[]).map(name => `<span style="font-size:10px;padding:2px 7px;border-radius:14px;background:${catColors[group]}18;color:${catColors[group]};border:1px solid ${catColors[group]}33;white-space:nowrap;">${catEmoji[group]} ${name}</span>`)
+        );
         const chipsHtml = allChips.length ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:7px;">${allChips.join('')}</div>` : '';
         return `<div class="card" style="margin-bottom:6px;">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
@@ -4257,14 +4268,27 @@ async function renderHistory() {
           </div>
           <!-- 編集・削除ボタン（常時表示） -->
           <div style="display:flex;gap:8px;margin-top:10px;border-top:1px solid var(--border);padding-top:10px;">
-            <button class="btn btn-ghost btn-sm" style="flex:1;" onclick="event.stopPropagation();showMealDetail(${mealJson})">🔍 詳細</button>
-            <button class="btn btn-ghost btn-sm" style="flex:1;color:var(--accent);border-color:var(--accent);" onclick="event.stopPropagation();openEditModal(${mealJson})">✏️ 編集</button>
-            <button class="btn btn-sm" style="flex:1;background:var(--red-dim);color:var(--red);border:1px solid var(--red);" onclick="event.stopPropagation();deleteMealConfirm('${m.id}')">🗑 削除</button>
+            <button class="btn btn-ghost btn-sm" style="flex:1;"
+              onclick="event.stopPropagation();_historyDetail('${mealId}')">🔍 詳細</button>
+            <button class="btn btn-ghost btn-sm" style="flex:1;color:var(--accent);border-color:var(--accent);"
+              onclick="event.stopPropagation();_historyEdit('${mealId}')">✏️ 編集</button>
+            <button class="btn btn-sm" style="flex:1;background:var(--red-dim);color:var(--red);border:1px solid var(--red);"
+              onclick="event.stopPropagation();deleteMealConfirm('${mealId}')">🗑 削除</button>
           </div>
         </div>`;
       }).join('')}
     </div>`;
   }).join('');
+}
+
+// 履歴画面：IDからmealを取得して詳細・編集を開く
+function _historyDetail(id) {
+  const meal = localLoadMeals().find(m => m.id === id);
+  if (meal) showMealDetail(meal);
+}
+function _historyEdit(id) {
+  const meal = localLoadMeals().find(m => m.id === id);
+  if (meal) openEditModal(meal);
 }
 
 function deleteMealConfirm(id) {
@@ -5041,11 +5065,10 @@ function updateHomeSummary() {
   setNutrBar('nutr-bar-salt', 'nutr-val-salt', 'nutr-max-salt',  totals.salt||0,  state.targets.salt||7,   'g');
   setNutrBar('nutr-bar-fat',  'nutr-val-fat',  'nutr-max-fat',   totals.fat||0,   state.targets.fat||55,   'g');
 
-  // ── 水分カード更新（飲料のみ：食事水分は体重増加計算側で扱うため除外） ─────
+  // ── 水分カード更新（飲料のみ） ─────────────────────────────────────
   const waterLog     = getTodayWaterLog ? getTodayWaterLog() : [];
-  // 飲料のみ（drink:true または手動追加）
   const drinkWater   = waterLog.filter(e => (e.auto && e.drink) || !e.auto).reduce((s,e) => s+(e.ml||0), 0);
-  const mealWater    = 0; // 除外
+  const mealWater    = 0;
   const totalWater   = drinkWater;
   const waterTarget  = state.targets.water || 1500;
   const waterPct     = Math.min(100, waterTarget > 0 ? Math.round(totalWater / waterTarget * 100) : 0);
@@ -5055,14 +5078,12 @@ function updateHomeSummary() {
   const progWaterEl  = document.getElementById('prog-water-meal');
   const waterPctEl   = document.getElementById('water-meal-pct');
   const waterBadgeEl = document.getElementById('home-water-badge');
-  const fromMealEl   = document.getElementById('home-water-from-meal');
   const fromDrinkEl  = document.getElementById('home-water-from-drink');
 
   if (waterMealEl)  waterMealEl.textContent  = totalWater.toLocaleString();
   if (limitWaterEl) limitWaterEl.textContent = waterTarget.toLocaleString();
   if (progWaterEl)  progWaterEl.style.width  = waterPct + '%';
   if (waterPctEl)   waterPctEl.textContent   = waterPct + '%';
-  if (fromMealEl)   fromMealEl.textContent   = mealWater.toLocaleString();
   if (fromDrinkEl)  fromDrinkEl.textContent  = drinkWater.toLocaleString();
 
   // プログレスバーの色を水分率に応じて変更
@@ -5088,10 +5109,8 @@ function updateHomeSummary() {
     const urineRecs  = (typeof getTodayHealthRecords === 'function') ? getTodayHealthRecords('urine') : [];
     const urineTotal = urineRecs.reduce((s,r) => s+(r.vol||0), 0);
     const insVal     = insensible ? insensible.total : 0;
-    // 透析患者は食事重量も加算
-    const foodWeightG = (state.ckdStage === 'ckd4')
-      ? todayMeals.reduce((s,m) => s+(m.food_weight||0), 0)
-      : 0;
+    // 食事重量（全ユーザー対象）
+    const foodWeightG = todayMeals.reduce((s,m) => s+(m.food_weight||0), 0);
     const balanceG   = (totalWater + metabolic + foodWeightG) - urineTotal - insVal;
 
     const wbValEl  = document.getElementById('home-wb-val');
@@ -7408,19 +7427,8 @@ function resetTodayWater() {
 
 function updateWaterCard() {
   const log = getTodayWaterLog();
-  // ── 飲料のみカウント（食事由来の水分は体重増加計算側で扱うため除外）──
-  const mealWater  = 0; // 食事水分は水分摂取表示から除外
+  const mealWater  = 0;
   const drinkWater = log.filter(e => (e.auto && e.drink) || !e.auto).reduce((s,e) => s+(e.ml||0), 0);
-  // 新しい飲み物ログ(DRINK_LOG_KEY)からも加算
-  const drinkLog2Total = (function() {
-    try {
-      const today = new Date().toDateString();
-      const all = JSON.parse(localStorage.getItem(DRINK_LOG_KEY)||'[]');
-      // WATER_KEYにも保存しているので重複しないよう drink_entry フラグがないものだけ
-      // ただしDRINK_LOG_KEYからは既にWATER_KEYに保存しているのでここでは足さない
-      return 0;
-    } catch(e) { return 0; }
-  })();
   const total = drinkWater;
   const target = state.targets?.water || 1500;
   const pct = Math.min(100, Math.round(total / target * 100));
@@ -7430,13 +7438,11 @@ function updateWaterCard() {
   const badgeEl   = document.getElementById('water-badge');
   const targetEl  = document.getElementById('water-target-label');
   const logListEl = document.getElementById('water-log-list');
-  const mealEl    = document.getElementById('water-from-meal');
   const drinkEl   = document.getElementById('water-from-drink');
 
   if (totalEl)  totalEl.textContent  = total.toLocaleString();
   if (progEl)   progEl.style.width   = pct + '%';
   if (targetEl) targetEl.textContent = target.toLocaleString();
-  if (mealEl)   mealEl.textContent   = mealWater.toLocaleString();
   if (drinkEl)  drinkEl.textContent  = drinkWater.toLocaleString();
 
   if (badgeEl) {
@@ -7477,13 +7483,11 @@ function _syncHomeWaterCard(total, mealWater, drinkWater, target, pct) {
   const pEl  = document.getElementById('prog-water-meal');
   const pcEl = document.getElementById('water-meal-pct');
   const bEl  = document.getElementById('home-water-badge');
-  const fmEl = document.getElementById('home-water-from-meal'); // 非表示化済み
   const fdEl = document.getElementById('home-water-from-drink');
   if (wEl)  wEl.textContent  = total.toLocaleString();
   if (lEl)  lEl.textContent  = (target||1500).toLocaleString();
   if (pEl)  pEl.style.width  = (pct||0) + '%';
   if (pcEl) pcEl.textContent = (pct||0) + '%';
-  if (fmEl) fmEl.textContent = '—'; // 食事水分は表示しない
   if (fdEl) fdEl.textContent = (drinkWater||0).toLocaleString();
   if (bEl) {
     if      (pct >= 100) { bEl.textContent = '✓ 目標達成'; bEl.style.color = 'var(--green)'; }
@@ -11293,11 +11297,26 @@ const STRIPE_PRICE_YEARLY    = 'price_yearly_5800jpy';
 
 // invite = 期限付き体験コード（TRIAL_FLG対象）/ admin = 無期限
 const VALID_INVITE_CODES = {
-  'RENALCARE2024': { type:'invite', months:1,  label:'招待コード（1ヶ月）' },
-  'WELCOME2025':   { type:'invite', months:3,  label:'ウェルカムコード（3ヶ月）' },
-  'HOSPITAL2025':  { type:'invite', months:12, label:'医療機関提携コード（1年）' },
-  'RC_ADMIN_2025': { type:'admin',  months:0,  label:'管理者コード（無期限）' },
-  'MASTER_UNLOCK': { type:'admin',  months:0,  label:'マスターコード（無期限）' },
+  // ===== 1ヶ月コード =====
+  'RENALCARE2024':  { type:'invite', months:1,  label:'招待コード（1ヶ月）' },
+  'TRIAL1M':        { type:'invite', months:1,  label:'お試しコード（1ヶ月）' },
+
+  // ===== 3ヶ月コード =====
+  'WELCOME2025':    { type:'invite', months:3,  label:'ウェルカムコード（3ヶ月）' },
+  'TRIAL3M':        { type:'invite', months:3,  label:'体験コード（3ヶ月）' },
+
+  // ===== 半年（6ヶ月）コード =====
+  'HALFYEAR2025':   { type:'invite', months:6,  label:'半年コード（6ヶ月）' },
+  'TRIAL6M':        { type:'invite', months:6,  label:'体験コード（6ヶ月）' },
+
+  // ===== 1年コード =====
+  'HOSPITAL2025':   { type:'invite', months:12, label:'医療機関提携コード（1年）' },
+  'ANNUAL2025':     { type:'invite', months:12, label:'年間コード（1年）' },
+
+  // ===== 永久コード（admin型 = 無期限） =====
+  'RC_ADMIN_2025':  { type:'admin',  months:0,  label:'管理者コード（永久）' },
+  'MASTER_UNLOCK':  { type:'admin',  months:0,  label:'マスターコード（永久）' },
+  'LIFETIME2025':   { type:'admin',  months:0,  label:'永久ライセンスコード' },
 };
 
 // ─── ストレージ読み書き ───────────────────────────────────
@@ -11366,6 +11385,23 @@ function _startPremiumWatcher() {
   _premiumCheckRafId = requestAnimationFrame(tick);
 }
 
+// ─── 有効期限ラベル生成（共通） ──────────────────────────
+function _buildExpireLabel(p) {
+  if (!p) return '—';
+  if (p.type === 'admin' || p.months === 0) {
+    return '✨ 永久ライセンス（' + (p.label || '特別コード') + '）';
+  }
+  if (!p.expiresAt) return '—';
+  const d      = new Date(p.expiresAt);
+  const remain = Math.ceil((d.getTime() - Date.now()) / 86400000);
+  const dateStr= d.getFullYear() + '/' + (d.getMonth()+1) + '/' + d.getDate();
+  const period = p.months === 1 ? '1ヶ月' :
+                 p.months === 3 ? '3ヶ月' :
+                 p.months === 6 ? '半年' :
+                 p.months === 12 ? '1年' : (p.months + 'ヶ月');
+  return `${dateStr} まで（${period}・残り${remain}日）`;
+}
+
 // ─── UI 更新 ─────────────────────────────────────────────
 function applyPremiumUI() {
   const active = isPremiumActive();
@@ -11376,16 +11412,7 @@ function applyPremiumUI() {
   const expireLabel   = document.getElementById('settings-premium-expire');
   if (upgradeBanner) upgradeBanner.style.display = active ? 'none' : '';
   if (activeBanner)  activeBanner.style.display  = active ? '' : 'none';
-  if (expireLabel && p) {
-    if (p.type === 'admin') {
-      expireLabel.textContent = '無期限（' + (p.label||'特別コード') + '）';
-    } else if (p.expiresAt) {
-      const d = new Date(p.expiresAt);
-      const remain = Math.ceil((d.getTime() - Date.now()) / 86400000);
-      expireLabel.textContent =
-        d.getFullYear() + '/' + (d.getMonth()+1) + '/' + d.getDate() + '（残り' + remain + '日）';
-    }
-  }
+  if (expireLabel && p) expireLabel.textContent = _buildExpireLabel(p);
 }
 
 // ─── プレミアムモーダルを開く ────────────────────────────
@@ -11397,18 +11424,14 @@ function showPremiumModal() {
   if (active && p) {
     const expEl  = document.getElementById('premium-expire-label');
     const planEl = document.getElementById('premium-plan-label');
-    if (expEl) {
-      if (p.type === 'admin') {
-        expEl.textContent = '無期限（' + (p.label||'特別コード') + '）';
-      } else if (p.expiresAt) {
-        const d = new Date(p.expiresAt);
-        const remain = Math.ceil((d.getTime() - Date.now()) / 86400000);
-        expEl.textContent =
-          d.getFullYear() + '/' + (d.getMonth()+1) + '/' + d.getDate() + '（残り' + remain + '日）';
-      }
-    }
+    if (expEl) expEl.textContent = _buildExpireLabel(p);
     if (planEl) {
-      const planNames = { monthly:'月払いプラン（\u00a5580/月）', yearly:'年払いプラン（\u00a55,800/年）', invite:'招待コード', admin:'特別コード' };
+      const planNames = {
+        monthly: '月払いプラン（¥580/月）',
+        yearly:  '年払いプラン（¥5,800/年）',
+        invite:  '招待コード・ライセンスコード',
+        admin:   '永久ライセンス'
+      };
       planEl.textContent = planNames[p.planType || p.type] || '';
     }
   }
@@ -11418,6 +11441,42 @@ function showPremiumModal() {
   if (res) res.innerHTML = '';
   _updateTrialWarning();
   document.getElementById('premiumModal').classList.add('open');
+}
+
+// ─── コード入力中プレビュー ───────────────────────────────
+function _previewCode(raw) {
+  const code    = (raw || '').trim().toUpperCase();
+  const preview = document.getElementById('invite-code-preview');
+  if (!preview) return;
+  if (!code) { preview.style.display = 'none'; return; }
+
+  const data = VALID_INVITE_CODES[code];
+  if (!data) {
+    preview.style.display = '';
+    preview.innerHTML = '<span style="color:var(--text3);">— 入力中…</span>';
+    return;
+  }
+
+  const periodLabel = data.months === 0 ? '✨ 永久' :
+                      data.months === 1 ? '1ヶ月' :
+                      data.months === 3 ? '3ヶ月' :
+                      data.months === 6 ? '半年（6ヶ月）' :
+                      data.months === 12 ? '1年' :
+                      data.months + 'ヶ月';
+
+  const color = data.months === 0 ? 'var(--purple)' :
+                data.months >= 12  ? 'var(--amber)'  :
+                'var(--green)';
+
+  preview.style.display = '';
+  preview.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span style="font-size:16px;">${data.months === 0 ? '✨' : '🎟'}</span>
+      <div>
+        <div style="font-weight:600;color:${color};">${data.label}</div>
+        <div style="color:var(--text2);margin-top:2px;">有効期間：<strong style="color:${color};">${periodLabel}</strong></div>
+      </div>
+    </div>`;
 }
 
 function _updateTrialWarning() {
@@ -11663,10 +11722,17 @@ async function applyInviteCode() {
   );
 
   if (applyBtn) { applyBtn.disabled = false; applyBtn.textContent = '適用'; }
-  setResult('✅ ' + codeData.label + ' が適用されました！', true);
+
+  const periodLabel = codeData.months === 0  ? '永久' :
+                      codeData.months === 1  ? '1ヶ月' :
+                      codeData.months === 3  ? '3ヶ月' :
+                      codeData.months === 6  ? '半年（6ヶ月）' :
+                      codeData.months === 12 ? '1年' : codeData.months + 'ヶ月';
+
+  setResult('✅ ' + codeData.label + ' が適用されました！広告が非表示になります。', true);
   showToast(codeData.months === 0
-    ? '🎉 無期限プレミアムが有効になりました！'
-    : '🎉 ' + codeData.label + ' プレミアムが有効になりました！');
+    ? '🎉 永久ライセンスが有効になりました！'
+    : '🎉 プレミアム（' + periodLabel + '）が有効になりました！');
 
   setTimeout(() => {
     document.getElementById('premium-upgrade-view').style.display = 'none';
