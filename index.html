@@ -4824,9 +4824,9 @@ function resetFoodCats() { document.querySelectorAll('.food-cat-chip').forEach(c
 function resetRecord() {
   window._currentPhotoBase64 = null;
   ['record-name','record-calories','record-protein','record-carb','record-fiber','record-potassium','record-phosphorus','record-salt','record-water','record-food-weight'].forEach(id => { const el = document.getElementById(id); if (el) el.value=''; });
-  // 透析患者のみ食事重量フィールドを表示
+  // 全ユーザーで食事重量フィールドを表示
   const fwRow = document.getElementById('record-food-weight-row');
-  if (fwRow) fwRow.style.display = (state.ckdStage === 'ckd4') ? '' : 'none';
+  if (fwRow) fwRow.style.display = '';
   // 日付・時刻をリセット
   const dateEl = document.getElementById('record-date');
   if (dateEl) { const d = new Date(); dateEl.value = d.toISOString().slice(0, 10); }
@@ -4874,7 +4874,7 @@ async function saveMeal() {
     phosphorus: parseFloat(document.getElementById('record-phosphorus')?.value)||0,
     salt: parseFloat(document.getElementById('record-salt')?.value)||0,
     water: parseFloat(document.getElementById('record-water')?.value)||0,
-    food_weight: (state.ckdStage === 'ckd4') ? (parseFloat(document.getElementById('record-food-weight')?.value)||0) : 0,
+    food_weight: parseFloat(document.getElementById('record-food-weight')?.value)||0,
     meal_type: document.getElementById('record-meal-type')?.value||'breakfast',
     food_categories: getSelectedFoodCats(),
     recorded_at: (() => {
@@ -5406,7 +5406,7 @@ function navTo(page) {
   if (page==='record') {
     initRecordDate();
     const fwRow = document.getElementById('record-food-weight-row');
-    if (fwRow) fwRow.style.display = (state.ckdStage === 'ckd4') ? '' : 'none';
+    if (fwRow) fwRow.style.display = '';
   }
   if (page==='medicine') { setMedDateToday(); renderMedicineLog(); try{renderMedRegistered();}catch(e){} }
   if (page==='water')    { updateWaterCard(); updateWaterBalance(); }
