@@ -4918,13 +4918,12 @@ async function saveMeal() {
     salt: parseFloat(document.getElementById('record-salt')?.value)||0,
     water: 0,
     food_weight: (function() {
-      // getSelectedFoodCatsから直接計算（最も確実）
-      const cats = getSelectedFoodCats();
-      const auto = estimateMealWeight({ food_categories: cats }).total || 0;
-      if (auto > 0) return auto;
-      // フォールバック：hidden fieldの値
-      const fwEl = document.getElementById('record-food-weight');
-      return parseFloat(fwEl?.value) || 0;
+      try {
+        const cats = getSelectedFoodCats();
+        return (typeof estimateMealWeight === 'function')
+          ? (estimateMealWeight({ food_categories: cats }).total || 0)
+          : 0;
+      } catch(e) { return 0; }
     })(),
     meal_type: document.getElementById('record-meal-type')?.value||'breakfast',
     food_categories: getSelectedFoodCats(),
@@ -5055,10 +5054,8 @@ function localLoadMeals() {
     const currentUid = state.uid || getUserId();
     return raw.map(m => {
       if (!m || typeof m !== 'object') return null;
-      // ユーザーIDが設定されているデータは現在のユーザーのみ返す
-      // user_idがない旧データは後方互換のため含める
+      // user_idがない旧データ、または現在ユーザーのデータのみ返す
       if (m.user_id && m.user_id !== currentUid) return null;
-      // フィールド補完（旧データ対応）
       return {
         calories:   m.calories   ?? 0,
         protein:    m.protein    ?? 0,
@@ -5068,6 +5065,7 @@ function localLoadMeals() {
         phosphorus: m.phosphorus ?? 0,
         salt:       m.salt       ?? 0,
         water:      m.water      ?? 0,
+        food_weight:m.food_weight ?? 0,
         ...m,
         recorded_at: m.recorded_at || new Date().toISOString(),
       };
@@ -5752,10 +5750,8 @@ function updateWaterBalance() {
   const urineTotal = urineRecs.reduce((s, r) => s + (r.vol || 0), 0);
   const insVal     = insensible ? insensible.total : 0;
 
-  // 体重増加量（mL ≒ g）
-  // 透析患者は食事重量もそのまま体重増加に加算
+  // 食事重量（全ユーザー対象）
   const foodWeightG = (() => {
-    if (state.ckdStage !== 'ckd4') return 0;
     const allMealsForWeight = localLoadMeals ? localLoadMeals() : [];
     const todayStr2 = new Date().toDateString();
     return allMealsForWeight
@@ -5771,17 +5767,15 @@ function updateWaterBalance() {
   set('wb-intake',     intake);
   set('wb-urine',      urineTotal);
   set('wb-insensible', insVal);
-  // 食事重量（透析患者のみ表示）
+  // 食事重量（全ユーザー表示）
   const fwRowEl = document.getElementById('wb-food-weight-row');
   const fwEl    = document.getElementById('wb-food-weight');
-  if (fwRowEl) fwRowEl.style.display = (state.ckdStage === 'ckd4') ? '' : 'none';
+  if (fwRowEl) fwRowEl.style.display = '';
   if (fwEl)    fwEl.textContent = foodWeightG.toLocaleString() + ' g';
   // 計算式ラベル更新
   const formulaEl = document.getElementById('wb-formula-label');
   if (formulaEl) {
-    formulaEl.textContent = state.ckdStage === 'ckd4'
-      ? '（食事水分 ＋ 飲物 ＋ 代謝水 ＋ 食事重量）― 尿量 ― 不感蒸泄'
-      : '（食事水分 ＋ 飲物 ＋ 代謝水）― 尿量 ― 不感蒸泄';
+    formulaEl.textContent = '（飲物 ＋ 代謝水 ＋ 食事重量）― 尿量 ― 不感蒸泄';
   }
   // 代謝水の表示（要素があれば）
   const metaEl = document.getElementById('wb-metabolic');
