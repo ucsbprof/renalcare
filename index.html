@@ -7911,6 +7911,164 @@ const SEARCH_ALIASES = {
   '순두부':   ['低塩純豆腐チゲ'],
 };
 
+// ===== 多言語食品名マップ =====
+// キー：日本語名の先頭部分（完全一致不要）、値：{en, zh, ko}
+const FOOD_NAME_MAP = {
+  // 米類
+  '白飯（茶碗1杯・150g）':        { en:'White rice (1 bowl, 150g)',       zh:'白米饭（1碗·150g）',    ko:'흰밥（1공기·150g）' },
+  '白飯（大盛り・220g）':          { en:'White rice (large, 220g)',         zh:'白米饭（大碗·220g）',   ko:'흰밥（대·220g）' },
+  '玄米ご飯（茶碗1杯・150g）':    { en:'Brown rice (1 bowl, 150g)',        zh:'糙米饭（1碗·150g）',    ko:'현미밥（1공기·150g）' },
+  '低タンパクご飯（150g）':        { en:'Low-protein rice (150g)',          zh:'低蛋白米饭（150g）',    ko:'저단백밥（150g）' },
+  'お粥（茶碗1杯・220g）':         { en:'Rice porridge (1 bowl, 220g)',     zh:'稀饭（1碗·220g）',      ko:'죽（1공기·220g）' },
+  'おにぎり・梅（1個・100g）':     { en:'Rice ball – Ume (1pc, 100g)',      zh:'梅子饭团（1个·100g）',  ko:'매실 주먹밥（1개·100g）' },
+  'おにぎり・鮭（1個・100g）':     { en:'Rice ball – Salmon (1pc, 100g)',   zh:'三文鱼饭团（1个·100g）',ko:'연어 주먹밥（1개·100g）' },
+  'もち（1個・50g）':              { en:'Mochi rice cake (1pc, 50g)',       zh:'麻薯（1个·50g）',       ko:'떡（1개·50g）' },
+  'チャーハン（1人前・200g）':     { en:'Fried rice (1 serving, 200g)',     zh:'炒饭（1人份·200g）',    ko:'볶음밥（1인분·200g）' },
+  // パン類
+  '食パン（1枚・60g）':            { en:'Toast bread (1 slice, 60g)',       zh:'吐司（1片·60g）',       ko:'식빵（1장·60g）' },
+  'ロールパン（1個・30g）':        { en:'Dinner roll (1pc, 30g)',           zh:'小餐包（1个·30g）',     ko:'롤빵（1개·30g）' },
+  'クロワッサン（1個・40g）':      { en:'Croissant (1pc, 40g)',             zh:'牛角包（1个·40g）',     ko:'크루아상（1개·40g）' },
+  'フランスパン（2切れ・60g）':    { en:'Baguette (2 slices, 60g)',         zh:'法棍面包（2片·60g）',   ko:'바게트（2조각·60g）' },
+  'ベーグル（1個・100g）':         { en:'Bagel (1pc, 100g)',               zh:'贝果（1个·100g）',      ko:'베이글（1개·100g）' },
+  'ナン（1枚・80g）':              { en:'Naan (1pc, 80g)',                  zh:'印度烤饼（1张·80g）',   ko:'난（1장·80g）' },
+  // 麺類
+  'うどん・茹で（1玉・200g）':     { en:'Udon noodles, boiled (200g)',      zh:'乌冬面·煮熟（200g）',   ko:'우동·삶은 것（200g）' },
+  'そば・茹で（1玉・180g）':       { en:'Soba noodles, boiled (180g)',      zh:'荞麦面·煮熟（180g）',   ko:'소바·삶은 것（180g）' },
+  'ラーメン・茹で（1玉・200g）':   { en:'Ramen noodles, boiled (200g)',     zh:'拉面·煮熟（200g）',     ko:'라면·삶은 것（200g）' },
+  'スパゲッティ・茹で（1人前・200g）':{ en:'Spaghetti, boiled (200g)',      zh:'意大利面·煮熟（200g）', ko:'스파게티·삶은 것（200g）' },
+  '焼きそば（1人前・200g）':       { en:'Yakisoba noodles (200g)',          zh:'日式炒面（200g）',      ko:'야키소바（200g）' },
+  // 肉類
+  '鶏むね肉・焼き（100g）':        { en:'Chicken breast, grilled (100g)',   zh:'鸡胸肉·烤（100g）',     ko:'닭가슴살·구이（100g）' },
+  '鶏もも肉・焼き（100g）':        { en:'Chicken thigh, grilled (100g)',    zh:'鸡腿肉·烤（100g）',     ko:'닭다리살·구이（100g）' },
+  'ささみ・茹で（100g）':          { en:'Chicken tenderloin, boiled (100g)',zh:'鸡柳·煮（100g）',       ko:'닭안심·삶은 것（100g）' },
+  '豚ロース・焼き（100g）':        { en:'Pork loin, grilled (100g)',        zh:'猪里脊·烤（100g）',     ko:'돼지 등심·구이（100g）' },
+  '豚バラ・焼き（100g）':          { en:'Pork belly, grilled (100g)',       zh:'猪五花·烤（100g）',     ko:'삼겹살·구이（100g）' },
+  '牛もも・焼き（100g）':          { en:'Beef round, grilled (100g)',       zh:'牛腿肉·烤（100g）',     ko:'소 넓적다리·구이（100g）' },
+  'ハンバーグ（1個・120g）':       { en:'Hamburger steak (1pc, 120g)',      zh:'汉堡牛排（1个·120g）',  ko:'함박스테이크（1개·120g）' },
+  'ウインナー（2本・40g）':        { en:'Sausage (2pcs, 40g)',              zh:'香肠（2根·40g）',       ko:'소시지（2개·40g）' },
+  'ベーコン（2枚・40g）':          { en:'Bacon (2 strips, 40g)',            zh:'培根（2片·40g）',       ko:'베이컨（2장·40g）' },
+  'ハム（2枚・40g）':              { en:'Ham (2 slices, 40g)',              zh:'火腿（2片·40g）',       ko:'햄（2장·40g）' },
+  '唐揚げ（3個・90g）':            { en:'Karaage fried chicken (3pcs, 90g)',zh:'日式炸鸡（3个·90g）',   ko:'가라아게（3개·90g）' },
+  '餃子・焼き（5個・100g）':       { en:'Pan-fried gyoza (5pcs, 100g)',     zh:'煎饺（5个·100g）',      ko:'군만두（5개·100g）' },
+  // 魚介類
+  '鮭・焼き（1切れ・80g）':        { en:'Salmon, grilled (1 fillet, 80g)', zh:'三文鱼·烤（80g）',      ko:'연어·구이（80g）' },
+  'マグロ・刺身（5切れ・80g）':    { en:'Tuna sashimi (5 slices, 80g)',     zh:'金枪鱼生鱼片（80g）',   ko:'참치 회（80g）' },
+  '鯖・焼き（1切れ・80g）':        { en:'Mackerel, grilled (80g)',          zh:'鲭鱼·烤（80g）',        ko:'고등어·구이（80g）' },
+  'エビ・ゆで（5尾・80g）':        { en:'Shrimp, boiled (5pcs, 80g)',       zh:'虾·水煮（5只·80g）',    ko:'새우·삶은 것（5마리·80g）' },
+  'イカ・焼き（100g）':            { en:'Squid, grilled (100g)',            zh:'鱿鱼·烤（100g）',       ko:'오징어·구이（100g）' },
+  'ホタテ・焼き（2個・80g）':      { en:'Scallop, grilled (2pcs, 80g)',     zh:'扇贝·烤（2个·80g）',    ko:'가리비·구이（2개·80g）' },
+  'かまぼこ（3切れ・60g）':        { en:'Fish cake (3 slices, 60g)',        zh:'鱼糕（3片·60g）',       ko:'어묵（3조각·60g）' },
+  // 豆腐・大豆
+  '木綿豆腐（100g）':              { en:'Firm tofu (100g)',                 zh:'老豆腐（100g）',        ko:'두부（100g）' },
+  '絹豆腐（100g）':                { en:'Silken tofu (100g)',               zh:'嫩豆腐（100g）',        ko:'순두부（100g）' },
+  '納豆（1パック・50g）':          { en:'Natto fermented soybeans (50g)',   zh:'纳豆（1盒·50g）',       ko:'낫토（1팩·50g）' },
+  '枝豆（50g）':                   { en:'Edamame (50g)',                    zh:'毛豆（50g）',           ko:'에다마메（50g）' },
+  // 野菜類
+  '大根・煮（100g）':              { en:'Daikon radish, simmered (100g)',   zh:'萝卜·炖（100g）',       ko:'무·조림（100g）' },
+  'にんじん・煮（50g）':           { en:'Carrot, simmered (50g)',           zh:'胡萝卜·炖（50g）',      ko:'당근·조림（50g）' },
+  '玉ねぎ・炒め（100g）':          { en:'Onion, sautéed (100g)',            zh:'洋葱·炒（100g）',       ko:'양파·볶음（100g）' },
+  'キャベツ・生（100g）':          { en:'Cabbage, raw (100g)',              zh:'卷心菜·生（100g）',     ko:'양배추·생（100g）' },
+  'ほうれん草・茹で（100g）':      { en:'Spinach, boiled (100g)',           zh:'菠菜·煮（100g）',       ko:'시금치·삶은 것（100g）' },
+  'トマト（中1個・150g）':         { en:'Tomato (1 medium, 150g)',          zh:'番茄（中1个·150g）',    ko:'토마토（중간1개·150g）' },
+  'きゅうり（1本・100g）':         { en:'Cucumber (1pc, 100g)',             zh:'黄瓜（1根·100g）',      ko:'오이（1개·100g）' },
+  'ブロッコリー・茹で（80g）':     { en:'Broccoli, boiled (80g)',           zh:'西兰花·煮（80g）',      ko:'브로콜리·삶은 것（80g）' },
+  'じゃがいも・茹で（100g）':      { en:'Potato, boiled (100g)',            zh:'土豆·煮（100g）',       ko:'감자·삶은 것（100g）' },
+  'かぼちゃ・煮（100g）':          { en:'Pumpkin, simmered (100g)',         zh:'南瓜·炖（100g）',       ko:'호박·조림（100g）' },
+  'レタス（100g）':                { en:'Lettuce (100g)',                   zh:'生菜（100g）',          ko:'양상추（100g）' },
+  'なす・炒め（100g）':            { en:'Eggplant, sautéed (100g)',         zh:'茄子·炒（100g）',       ko:'가지·볶음（100g）' },
+  'しいたけ・焼き（50g）':         { en:'Shiitake mushroom, grilled (50g)', zh:'香菇·烤（50g）',        ko:'표고버섯·구이（50g）' },
+  'わかめ・生（10g）':             { en:'Wakame seaweed (10g)',             zh:'裙带菜·生（10g）',      ko:'미역·생（10g）' },
+  // 卵・乳製品
+  '卵・ゆで（1個・50g）':          { en:'Boiled egg (1pc, 50g)',            zh:'水煮蛋（1个·50g）',     ko:'삶은 달걀（1개·50g）' },
+  '卵・目玉焼き（1個）':           { en:'Fried egg, sunny-side up (1pc)',   zh:'荷包蛋（1个）',         ko:'달걀 프라이（1개）' },
+  '卵・スクランブル（1個）':       { en:'Scrambled egg (1pc)',              zh:'炒鸡蛋（1个）',         ko:'스크램블 에그（1개）' },
+  '牛乳（200ml）':                 { en:'Milk (200ml)',                     zh:'牛奶（200ml）',         ko:'우유（200ml）' },
+  'チーズ（1枚・18g）':            { en:'Cheese slice (1pc, 18g)',          zh:'奶酪片（1片·18g）',     ko:'치즈（1장·18g）' },
+  'ヨーグルト・無糖（100g）':      { en:'Plain yogurt, unsweetened (100g)', zh:'原味酸奶（100g）',      ko:'무가당 요구르트（100g）' },
+  // 果物
+  'りんご（1/2個・120g）':         { en:'Apple (1/2 pc, 120g)',             zh:'苹果（半个·120g）',     ko:'사과（반 개·120g）' },
+  'バナナ（1本・100g）':           { en:'Banana (1pc, 100g)',               zh:'香蕉（1根·100g）',      ko:'바나나（1개·100g）' },
+  'みかん（1個・80g）':            { en:'Mandarin orange (1pc, 80g)',       zh:'橘子（1个·80g）',       ko:'귤（1개·80g）' },
+  'いちご（5粒・80g）':            { en:'Strawberry (5pcs, 80g)',           zh:'草莓（5粒·80g）',       ko:'딸기（5개·80g）' },
+  'ぶどう（10粒・100g）':          { en:'Grapes (10pcs, 100g)',             zh:'葡萄（10粒·100g）',     ko:'포도（10알·100g）' },
+  'もも（1/2個・120g）':           { en:'Peach (1/2 pc, 120g)',             zh:'桃子（半个·120g）',     ko:'복숭아（반 개·120g）' },
+  // 汁物・スープ
+  '味噌汁・わかめ（1杯）':         { en:'Miso soup with wakame (1 bowl)',   zh:'裙带菜味噌汤（1碗）',   ko:'미역 된장국（1그릇）' },
+  '味噌汁・豆腐（1杯）':           { en:'Miso soup with tofu (1 bowl)',     zh:'豆腐味噌汤（1碗）',     ko:'두부 된장국（1그릇）' },
+  'コンソメスープ（1杯）':         { en:'Consommé soup (1 bowl)',           zh:'清汤（1碗）',           ko:'콩소메 수프（1그릇）' },
+  // その他
+  'サラダ・グリーン（100g）':      { en:'Green salad (100g)',               zh:'绿色沙拉（100g）',      ko:'그린 샐러드（100g）' },
+  'カレーライス（1人前）':         { en:'Curry rice (1 serving)',           zh:'咖喱饭（1人份）',       ko:'카레라이스（1인분）' },
+  'シチュー（1人前）':             { en:'Stew (1 serving)',                 zh:'烩菜（1人份）',         ko:'스튜（1인분）' },
+  '天ぷら・盛り合わせ（100g）':    { en:'Tempura assorted (100g)',          zh:'天妇罗拼盘（100g）',    ko:'튀김 모듬（100g）' },
+  '刺身・盛り合わせ（100g）':      { en:'Sashimi assorted (100g)',          zh:'生鱼片拼盘（100g）',    ko:'회 모듬（100g）' },
+  '寿司・にぎり（1貫）':           { en:'Nigiri sushi (1pc)',               zh:'握寿司（1貫）',         ko:'니기리 스시（1개）' },
+  '焼き鳥（1本・30g）':            { en:'Yakitori skewer (1pc, 30g)',       zh:'烤鸡串（1串·30g）',     ko:'야키토리（1꼬치·30g）' },
+  'たこ焼き（6個・150g）':         { en:'Takoyaki octopus balls (6pcs)',    zh:'章鱼烧（6个·150g）',    ko:'타코야키（6개·150g）' },
+  'お好み焼き（1枚・200g）':       { en:'Okonomiyaki pancake (1pc, 200g)', zh:'大阪烧（1张·200g）',    ko:'오코노미야키（1장·200g）' },
+};
+
+// ブラウザ言語コードを取得（ユーザー設定言語を優先）
+function getUILang() {
+  // ユーザーがアプリ内で選択した言語を最優先
+  try {
+    const saved = localStorage.getItem('renalcare_lang');
+    if (saved && ['ja','en','zh','ko'].includes(saved)) return saved;
+  } catch(e) {}
+  // フォールバック：ブラウザ言語
+  const lang = (navigator.language || navigator.userLanguage || 'ja').toLowerCase();
+  if (lang.startsWith('zh')) return 'zh';
+  if (lang.startsWith('ko')) return 'ko';
+  if (lang.startsWith('ja')) return 'ja';
+  return 'en';
+}
+
+// 食品名を表示言語に変換
+function translateFoodName(jaName) {
+  const lang = getUILang();
+  if (lang === 'ja') return jaName;
+  // 完全一致
+  if (FOOD_NAME_MAP[jaName] && FOOD_NAME_MAP[jaName][lang]) {
+    return FOOD_NAME_MAP[jaName][lang];
+  }
+  // 先頭部分一致（括弧なしの短縮名でもヒット）
+  for (const [key, val] of Object.entries(FOOD_NAME_MAP)) {
+    if (jaName.startsWith(key.split('（')[0]) && val[lang]) {
+      return val[lang];
+    }
+  }
+  return jaName; // マップにない場合はそのまま
+}
+
+// カテゴリ名の多言語対応
+const CAT_NAME_MAP = {
+  '米類':            { en:'Rice',            zh:'米饭类',    ko:'밥류' },
+  'パン類':          { en:'Bread',           zh:'面包类',    ko:'빵류' },
+  '麺類':            { en:'Noodles',         zh:'面条类',    ko:'면류' },
+  '春雨・こんにゃく':{ en:'Glass Noodles / Konjac', zh:'粉丝·魔芋', ko:'당면·곤약' },
+  '肉類':            { en:'Meat',            zh:'肉类',      ko:'육류' },
+  '魚介類':          { en:'Seafood',         zh:'海鲜类',    ko:'해산물' },
+  '豆腐・大豆':      { en:'Tofu & Soy',      zh:'豆腐·大豆', ko:'두부·대두' },
+  '野菜類':          { en:'Vegetables',      zh:'蔬菜类',    ko:'채소류' },
+  '卵・乳製品':      { en:'Eggs & Dairy',    zh:'蛋·乳制品', ko:'달걀·유제품' },
+  '果物':            { en:'Fruits',          zh:'水果类',    ko:'과일류' },
+  '汁物・スープ':    { en:'Soups',           zh:'汤类',      ko:'국·수프' },
+  '低タンパク':      { en:'Low Protein',     zh:'低蛋白',    ko:'저단백' },
+  '菓子類':          { en:'Snacks & Sweets', zh:'零食·甜点', ko:'과자·디저트' },
+  '調味料':          { en:'Seasonings',      zh:'调味料',    ko:'양념류' },
+  '惣菜':            { en:'Side Dishes',     zh:'熟食·小菜', ko:'반찬' },
+  '飲み物':          { en:'Drinks',          zh:'饮料类',    ko:'음료류' },
+  'マイ食品':        { en:'My Foods',        zh:'我的食品',  ko:'내 음식' },
+  'その他':          { en:'Other',           zh:'其他',      ko:'기타' },
+  '粉物':            { en:'Flour Dishes',    zh:'粉类食品',  ko:'가루 요리' },
+};
+
+function translateCatName(jaCat) {
+  const lang = getUILang();
+  if (lang === 'ja') return jaCat;
+  return (CAT_NAME_MAP[jaCat] && CAT_NAME_MAP[jaCat][lang]) ? CAT_NAME_MAP[jaCat][lang] : jaCat;
+}
+
 function searchFoodDB(query) {
   const results = document.getElementById('foodSearchResults');
   if (!results) return;
@@ -7971,18 +8129,25 @@ function renderFoodResults(foods) {
   const results = document.getElementById('foodSearchResults');
   if (!results) return;
   if (foods.length === 0) {
-    results.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text3);">見つかりませんでした<br><span style="font-size:11px;">別のカテゴリーまたはキーワードで検索してください</span></div>';
+    const lang = getUILang();
+    const notFound = {
+      ja: '見つかりませんでした<br><span style="font-size:11px;">別のカテゴリーまたはキーワードで検索してください</span>',
+      en: 'No results found<br><span style="font-size:11px;">Try a different category or keyword</span>',
+      zh: '未找到结果<br><span style="font-size:11px;">请尝试其他分类或关键词</span>',
+      ko: '결과를 찾을 수 없습니다<br><span style="font-size:11px;">다른 카테고리 또는 키워드로 검색해 보세요</span>',
+    };
+    results.innerHTML = `<div style="text-align:center;padding:24px;color:var(--text3);">${notFound[lang]||notFound.en}</div>`;
     return;
   }
   const grouped = {};
   foods.forEach(f => { const cat = f.cat||'その他'; if (!grouped[cat]) grouped[cat]=[]; grouped[cat].push(f); });
   results.innerHTML = Object.entries(grouped).map(([cat, items]) => `
-    <div style="padding:6px 12px;background:var(--surface2);font-size:11px;font-weight:700;color:var(--accent);letter-spacing:.05em;position:sticky;top:0;">${cat}</div>
+    <div style="padding:6px 12px;background:var(--surface2);font-size:11px;font-weight:700;color:var(--accent);letter-spacing:.05em;position:sticky;top:0;">${translateCatName(cat)}</div>
     ${items.map(f => `<div onclick='selectFood(${JSON.stringify({name:f.name,cat:f.cat||'',cal:f.cal||0,protein:f.protein||0,carb:f.carb||0,fiber:f.fiber||0,k:f.k||0,p:f.p||0,water:f.water||0}).replace(/'/g,"&#39;")})'
       style="padding:11px 12px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;align-items:center;">
       <div>
-        <div style="font-size:14px;font-weight:600;">${f.name}</div>
-        <div style="font-size:11px;color:var(--text3);margin-top:2px;">${f.cal||0}kcal・P${f.protein||0}g・K${f.k||0}mg・リン${f.p||0}mg${f.water?'・💧'+f.water+'mL':''}</div>
+        <div style="font-size:14px;font-weight:600;">${translateFoodName(f.name)}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px;">${f.cal||0}kcal・P${f.protein||0}g・K${f.k||0}mg・P${f.p||0}mg${f.water?'・💧'+f.water+'mL':''}</div>
       </div>
       <div style="color:var(--accent);font-size:20px;padding-left:8px;flex-shrink:0;">＋</div>
     </div>`).join('')}
@@ -8123,7 +8288,9 @@ function editModalSearchFood(query) {
 
   if (matched.length === 0) {
     resultsEl.style.display = '';
-    resultsEl.innerHTML = '<div style="padding:12px;color:var(--text3);font-size:12px;text-align:center;">見つかりませんでした</div>';
+    const lang = getUILang();
+    const notFound = { ja:'見つかりませんでした', en:'No results found', zh:'未找到结果', ko:'결과 없음' };
+    resultsEl.innerHTML = `<div style="padding:12px;color:var(--text3);font-size:12px;text-align:center;">${notFound[lang]||notFound.en}</div>`;
     return;
   }
 
@@ -8141,9 +8308,9 @@ function editModalSearchFood(query) {
       onmouseover="this.style.background='var(--surface)'"
       onmouseout="this.style.background=''">
       <div>
-        <div style="font-size:13px;font-weight:600;">${f.name}</div>
+        <div style="font-size:13px;font-weight:600;">${translateFoodName(f.name)}</div>
         <div style="font-size:11px;color:var(--text3);margin-top:1px;">
-          ${f.cal||0}kcal・P${f.protein||0}g・K${f.k||0}mg・リン${f.p||0}mg
+          ${f.cal||0}kcal・P${f.protein||0}g・K${f.k||0}mg・P${f.p||0}mg
         </div>
       </div>
       <div style="color:var(--accent);font-size:18px;padding-left:8px;flex-shrink:0;">＋</div>
@@ -8833,6 +9000,107 @@ const DRUG_ALIASES = {
   '적혈구생성인자': 'えすぽー','철제':      'てつざい',
 };
 
+// ===== 薬カテゴリ名 多言語マップ =====
+const DRUG_CAT_MAP = {
+  'インスリン（超速効型）':       { en:'Insulin (Rapid-acting)',         zh:'胰岛素（超速效型）',    ko:'인슐린（초속효형）' },
+  'インスリン（持効型）':          { en:'Insulin (Long-acting)',          zh:'胰岛素（长效型）',      ko:'인슐린（지속형）' },
+  'インスリン（混合型）':          { en:'Insulin (Mixed)',                zh:'胰岛素（混合型）',      ko:'인슐린（혼합형）' },
+  'GLP-1受容体作動薬':            { en:'GLP-1 Receptor Agonist',        zh:'GLP-1受体激动剂',       ko:'GLP-1 수용체 작용제' },
+  'GLP-1/GIP受容体作動薬':        { en:'GLP-1/GIP Receptor Agonist',    zh:'GLP-1/GIP受体激动剂',   ko:'GLP-1/GIP 수용체 작용제' },
+  'GLP-1受容体作動薬(経口)':      { en:'GLP-1 Agonist (Oral)',          zh:'GLP-1激动剂（口服）',   ko:'GLP-1 작용제（경구）' },
+  'SGLT2阻害薬':                  { en:'SGLT2 Inhibitor',               zh:'SGLT2抑制剂',           ko:'SGLT2 억제제' },
+  'DPP-4阻害薬':                  { en:'DPP-4 Inhibitor',               zh:'DPP-4抑制剂',           ko:'DPP-4 억제제' },
+  'ビグアナイド':                  { en:'Biguanide (Metformin)',          zh:'双胍类',                ko:'비구아나이드' },
+  'イメグリミン':                  { en:'Imeglimin',                     zh:'伊美格列明',            ko:'이메글리민' },
+  'α-GI阻害薬':                   { en:'Alpha-glucosidase Inhibitor',   zh:'α-葡萄糖苷酶抑制剂',   ko:'α-글루코시다제 억제제' },
+  'SU薬':                         { en:'Sulfonylurea',                   zh:'磺酰脲类',              ko:'설포닐우레아' },
+  'リン吸着薬（透析）':            { en:'Phosphate Binder (Dialysis)',   zh:'磷结合剂（透析）',      ko:'인 결합제（투석）' },
+  'リン吸着薬':                    { en:'Phosphate Binder',              zh:'磷结合剂',              ko:'인 결합제' },
+  '高K血症治療薬':                 { en:'Hyperkalemia Treatment',        zh:'高钾血症治疗药',        ko:'고칼륨혈증 치료제' },
+  'アルカリ化薬（CKD）':           { en:'Alkalizing Agent (CKD)',        zh:'碱化剂（CKD）',         ko:'알칼리화제（CKD）' },
+  'アルカリ化薬':                  { en:'Alkalizing Agent',              zh:'碱化剂',                ko:'알칼리화제' },
+  '腎性貧血治療薬（透析）':        { en:'Renal Anemia (Dialysis)',       zh:'肾性贫血药（透析）',    ko:'신성 빈혈 치료제（투석）' },
+  '腎性貧血治療薬':                { en:'Renal Anemia Treatment',        zh:'肾性贫血治疗药',        ko:'신성 빈혈 치료제' },
+  '尿酸降下薬':                    { en:'Uric Acid Lowering',            zh:'降尿酸药',              ko:'요산 저하제' },
+  '尿酸降下薬（尿酸排泄促進）':    { en:'Uricosuric Agent',              zh:'促尿酸排泄药',          ko:'요산 배설 촉진제' },
+  'ARB':                           { en:'ARB (Angiotensin Receptor Blocker)', zh:'血管紧张素受体拮抗剂', ko:'ARB（안지오텐신 수용체 차단제）' },
+  'ACE阻害薬':                     { en:'ACE Inhibitor',                 zh:'ACE抑制剂',             ko:'ACE 억제제' },
+  'カルシウム拮抗薬':              { en:'Calcium Channel Blocker',       zh:'钙离子拮抗剂',          ko:'칼슘 채널 차단제' },
+  'ARNi（心不全）':                { en:'ARNi (Heart Failure)',          zh:'ARNi（心力衰竭）',      ko:'ARNi（심부전）' },
+  'βブロッカー（心不全）':         { en:'Beta-blocker (Heart Failure)',  zh:'β受体阻滞剂（心衰）',   ko:'베타차단제（심부전）' },
+  'βブロッカー':                   { en:'Beta-blocker',                  zh:'β受体阻滞剂',           ko:'베타차단제' },
+  '抗凝固薬（DOAC）':              { en:'Anticoagulant (DOAC)',          zh:'抗凝血药（DOAC）',      ko:'항응고제（DOAC）' },
+  '抗凝固薬（ビタミンK拮抗）':     { en:'Anticoagulant (VKA/Warfarin)', zh:'抗凝血药（维生素K拮抗）', ko:'항응고제（비타민K 길항）' },
+  '抗血小板薬':                    { en:'Antiplatelet',                  zh:'抗血小板药',            ko:'항혈소판제' },
+  'スタチン':                      { en:'Statin',                        zh:'他汀类',                ko:'스타틴' },
+  'PCSK9阻害薬':                   { en:'PCSK9 Inhibitor',               zh:'PCSK9抑制剂',           ko:'PCSK9 억제제' },
+  'PPI（胃酸抑制）':               { en:'PPI (Proton Pump Inhibitor)',   zh:'质子泵抑制剂',          ko:'PPI（양성자 펌프 억제제）' },
+  'H2ブロッカー':                  { en:'H2 Blocker',                    zh:'H2受体阻断剂',          ko:'H2 차단제' },
+  'カスタム':                      { en:'Custom',                        zh:'自定义',                ko:'사용자 정의' },
+  'その他':                        { en:'Other',                         zh:'其他',                  ko:'기타' },
+};
+
+// 薬の剤形名 多言語マップ
+const DRUG_FORM_MAP = {
+  '錠剤':      { en:'Tablet',      zh:'片剂',    ko:'정제' },
+  'カプセル':  { en:'Capsule',     zh:'胶囊',    ko:'캡슐' },
+  '散剤':      { en:'Powder',      zh:'散剂',    ko:'산제' },
+  'チュアブル錠':{ en:'Chewable',  zh:'咀嚼片',  ko:'저작정' },
+  '注射':      { en:'Injection',   zh:'注射',    ko:'주사' },
+  '注射ペン':  { en:'Injection pen',zh:'注射笔', ko:'주사 펜' },
+  '注射シリンジ':{ en:'Syringe',   zh:'注射器',  ko:'주사기' },
+  'OD錠':      { en:'OD Tablet',   zh:'口腔崩解片',ko:'구강붕해정' },
+  'ゼリー剤':  { en:'Jelly',       zh:'果冻剂',  ko:'젤리제' },
+};
+
+// 薬の服用頻度 多言語マップ
+const DRUG_FREQ_MAP = {
+  '毎食直前':           { en:'Before each meal',      zh:'每餐前',        ko:'매식 직전' },
+  '毎食前':             { en:'Before meals',           zh:'餐前',          ko:'식전' },
+  '毎食後':             { en:'After meals',            zh:'餐后',          ko:'식후' },
+  '1日1回':             { en:'Once daily',             zh:'每日1次',       ko:'1일 1회' },
+  '1日2回':             { en:'Twice daily',            zh:'每日2次',       ko:'1일 2회' },
+  '1日3回':             { en:'Three times daily',      zh:'每日3次',       ko:'1일 3회' },
+  '1日1回（朝食前）':   { en:'Once daily (before breakfast)', zh:'每日1次（早餐前）', ko:'1일 1회（아침식전）' },
+  '1日1回（夕食後）':   { en:'Once daily (after dinner)', zh:'每日1次（晚餐后）', ko:'1일 1회（저녁식후）' },
+  '週1回':              { en:'Once weekly',            zh:'每周1次',       ko:'주 1회' },
+  '2週に1回':           { en:'Every 2 weeks',          zh:'每2周1次',      ko:'2주에 1회' },
+  '月1回':              { en:'Once monthly',           zh:'每月1次',       ko:'월 1회' },
+  '週2〜3回（透析時）': { en:'2-3×/week (dialysis)',  zh:'每周2-3次（透析时）', ko:'주 2~3회（투석 시）' },
+};
+
+function translateDrugCat(jaCat) {
+  const lang = getUILang();
+  if (lang === 'ja') return jaCat;
+  return (DRUG_CAT_MAP[jaCat] && DRUG_CAT_MAP[jaCat][lang]) ? DRUG_CAT_MAP[jaCat][lang] : jaCat;
+}
+
+function translateDrugForm(jaForm) {
+  const lang = getUILang();
+  if (lang === 'ja') return jaForm;
+  // 先頭一致
+  for (const [key, val] of Object.entries(DRUG_FORM_MAP)) {
+    if ((jaForm || '').startsWith(key) && val[lang]) return val[lang];
+  }
+  return jaForm;
+}
+
+function translateDrugFreq(jaFreq) {
+  const lang = getUILang();
+  if (lang === 'ja') return jaFreq;
+  return (DRUG_FREQ_MAP[jaFreq] && DRUG_FREQ_MAP[jaFreq][lang]) ? DRUG_FREQ_MAP[jaFreq][lang] : jaFreq;
+}
+
+function translateDrugTag(jaTag) {
+  const lang = getUILang();
+  if (lang === 'ja') return jaTag;
+  const tagMap = {
+    '透析': { en:'Dialysis', zh:'透析', ko:'투석' },
+    'カスタム': { en:'Custom', zh:'自定义', ko:'사용자 정의' },
+  };
+  return (tagMap[jaTag] && tagMap[jaTag][lang]) ? tagMap[jaTag][lang] : jaTag;
+}
+
 function renderDrugSuggestions(query) {
   const list = document.getElementById('drugSuggestList');
   if (!list) return;
@@ -8887,14 +9155,33 @@ function renderDrugSuggestions(query) {
 
   if (results.length === 0) {
     const safeQ = (query||'').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const lang = getUILang();
+    const noResultMsg = {
+      ja: `「${safeQ}」に一致する薬が見つかりません`,
+      en: `No medication found for "${safeQ}"`,
+      zh: `未找到"${safeQ}"相关药物`,
+      ko: `"${safeQ}"에 해당하는 약을 찾을 수 없습니다`,
+    };
+    const tryOtherMsg = {
+      ja: '別のキーワードや一般名で検索してみてください',
+      en: 'Try a different keyword or generic name',
+      zh: '请尝试其他关键词或通用名',
+      ko: '다른 키워드나 일반명으로 검색해 보세요',
+    };
+    const registerMsg = {
+      ja: `＋「${safeQ}」をそのまま登録`,
+      en: `＋ Register "${safeQ}" as-is`,
+      zh: `＋ 直接注册"${safeQ}"`,
+      ko: `＋ "${safeQ}"을 그대로 등록`,
+    };
     list.innerHTML = `
       <div style="padding:24px 16px;text-align:center;color:var(--text3);">
         <div style="font-size:28px;margin-bottom:8px;">🔍</div>
-        <div style="font-size:13px;">「${safeQ}」に一致する薬が見つかりません</div>
-        <div style="font-size:11px;margin-top:6px;color:var(--text3);">別のキーワードや一般名で検索してみてください</div>
+        <div style="font-size:13px;">${noResultMsg[lang]||noResultMsg.en}</div>
+        <div style="font-size:11px;margin-top:6px;color:var(--text3);">${tryOtherMsg[lang]||tryOtherMsg.en}</div>
         <button class="btn btn-outline btn-sm" style="margin-top:12px;"
           onclick="selectDrugFromSearch({name:'${safeQ}',category:'カスタム',form:'',doses:[],freq:''})">
-          ＋「${safeQ}」をそのまま登録
+          ${registerMsg[lang]||registerMsg.en}
         </button>
       </div>`;
     return;
@@ -8910,18 +9197,18 @@ function renderDrugSuggestions(query) {
 
   let html = '';
   for (const [cat, items] of Object.entries(groups)) {
-    html += `<div style="padding:6px 12px 2px;font-size:10px;font-weight:700;letter-spacing:1px;color:var(--accent);background:var(--surface2);border-bottom:1px solid var(--border);">${cat}</div>`;
+    html += `<div style="padding:6px 12px 2px;font-size:10px;font-weight:700;letter-spacing:1px;color:var(--accent);background:var(--surface2);border-bottom:1px solid var(--border);">${translateDrugCat(cat)}</div>`;
     items.forEach(({ d, i }) => {
       const doseStr    = (d.doses && d.doses.length) ? d.doses.join(' / ') : (d.dose || '');
-      const dialysisTag= d.dialysis ? `<span class="drug-suggest-cat" style="background:rgba(206,147,252,0.15);border-color:var(--purple);color:var(--purple);">透析</span>` : '';
-      const customTag  = d.custom   ? `<span class="drug-suggest-custom">カスタム</span>` : '';
+      const dialysisTag= d.dialysis ? `<span class="drug-suggest-cat" style="background:rgba(206,147,252,0.15);border-color:var(--purple);color:var(--purple);">${translateDrugTag('透析')}</span>` : '';
+      const customTag  = d.custom   ? `<span class="drug-suggest-custom">${translateDrugTag('カスタム')}</span>` : '';
       html += `
         <div class="drug-suggest-item" onclick="_pickDrugSuggest(${i})">
           <div class="drug-suggest-name">${_highlightMatch(d.name, q)}</div>
           <div class="drug-suggest-meta">
-            <span>${d.form || ''}</span>
+            <span>${translateDrugForm(d.form || '')}</span>
             ${doseStr ? `<span style="color:var(--amber);">${doseStr}</span>` : ''}
-            ${d.freq   ? `<span style="color:var(--text3);">${d.freq}</span>` : ''}
+            ${d.freq   ? `<span style="color:var(--text3);">${translateDrugFreq(d.freq)}</span>` : ''}
             ${dialysisTag}${customTag}
             ${d.note   ? `<span style="color:var(--green);">${d.note}</span>` : ''}
           </div>
