@@ -1450,20 +1450,6 @@ body.is-premium .premium-banner { display: none !important; }
             </div>
           </div>
         </div>
-        <!-- 食事推定重量カード -->
-        <div id="meal-weight-estimate-card" style="background:var(--surface2);border:1px solid rgba(252,211,77,0.3);border-radius:var(--rs);padding:12px 14px;margin-top:10px;">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-            <span style="font-size:15px;">⚖️</span>
-            <span style="font-size:12px;font-weight:700;color:var(--amber);">食事の推定重量（自動計算）</span>
-          </div>
-          <div style="display:flex;align-items:baseline;gap:6px;">
-            <span id="meal-est-weight" style="font-family:'JetBrains Mono',monospace;font-size:28px;font-weight:700;color:var(--amber);">—</span>
-            <span style="font-size:13px;color:var(--text3);">g</span>
-            <span id="meal-est-weight-badge" style="font-size:10px;color:var(--text3);margin-left:4px;"></span>
-          </div>
-          <div id="meal-est-weight-detail" style="font-size:11px;color:var(--text3);margin-top:5px;line-height:1.7;"></div>
-          <div style="font-size:10px;color:var(--text3);margin-top:4px;">※ 飲み物は含みません。チップ選択・食品DB追加から自動推定。</div>
-        </div>
         <div class="nutrition-preview" id="nutrition-preview">
           <div class="nutrition-preview-title">概算栄養成分（自動計算）</div>
           <div class="nutrition-preview-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:6px;">
@@ -1492,7 +1478,6 @@ body.is-premium .premium-banner { display: none !important; }
             <div><div style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;color:var(--accent);" id="sum-protein">0</div><div style="font-size:10px;color:var(--text3);">P(g)</div></div>
             <div><div style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;color:var(--amber);" id="sum-k">0</div><div style="font-size:10px;color:var(--text3);">K(mg)</div></div>
             <div><div style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;color:var(--red);" id="sum-p">0</div><div style="font-size:10px;color:var(--text3);">リン(mg)</div></div>
-            <div><div style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;color:var(--accent);" id="sum-water">0</div><div style="font-size:10px;color:var(--text3);">💧水分(mL)</div></div>
           </div>
         </div>
         <div class="form-grid">
@@ -1503,21 +1488,21 @@ body.is-premium .premium-banner { display: none !important; }
           <div class="form-row"><label class="form-label">カリウム (mg)</label><input class="form-input" type="number" id="record-potassium" placeholder="0" oninput="this.dataset.manualEdit='1';updateRecordNutrSummary()" /></div>
           <div class="form-row"><label class="form-label">リン (mg)</label><input class="form-input" type="number" id="record-phosphorus" placeholder="0" oninput="this.dataset.manualEdit='1';updateRecordNutrSummary()" /></div>
           <div class="form-row"><label class="form-label">🧂 塩分 (g)</label><input class="form-input" type="number" id="record-salt" placeholder="0" step="0.1" oninput="this.dataset.manualEdit='1';updateRecordNutrSummary()" /></div>
-          <div class="form-row" style="grid-column:1/-1;"><label class="form-label" style="display:flex;align-items:center;gap:5px;"><span style="width:8px;height:8px;border-radius:50%;background:var(--accent);display:inline-block;"></span>💧 水分量 (mL) <span style="font-size:10px;color:var(--text3);margin-left:2px;">食品・飲み物の水分含有量</span></label><input class="form-input" type="number" id="record-water" placeholder="0" min="0" oninput="this.dataset.manualEdit='1';updateRecordNutrSummary()" /></div>
-          <!-- ▼ 透析患者のみ表示：食事重量 -->
+          <!-- 食事の重量（自動計算・読み取り専用） -->
           <div class="form-row" style="grid-column:1/-1;" id="record-food-weight-row">
             <label class="form-label" style="display:flex;align-items:center;gap:5px;">
               <span style="width:8px;height:8px;border-radius:50%;background:var(--amber);display:inline-block;"></span>
               🍱 食事の重量 (g)
-              <span style="font-size:10px;color:var(--text3);margin-left:2px;">食べた食事の総重量（体重増加に加算）</span>
+              <span style="font-size:10px;color:var(--text3);margin-left:2px;">食材チップ・食品DBから自動計算</span>
             </label>
-            <input class="form-input" type="number" id="record-food-weight" placeholder="0" min="0"
-              style="border-color:rgba(252,211,77,0.4);"
-              oninput="updateRecordNutrSummary()" />
-            <div style="font-size:11px;color:var(--text3);margin-top:5px;line-height:1.6;">
-              💡 透析患者は食事の重量がそのまま体重増加につながります。<br>
-              食べた食事の合計重量をグラムで入力してください（例：ご飯150g＋おかず200g＝350g）
+            <div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
+              <div style="flex:1;background:var(--surface2);border:1px solid rgba(252,211,77,0.4);border-radius:var(--ri);padding:10px 12px;font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:700;color:var(--amber);">
+                <span id="meal-est-weight">—</span> <span style="font-size:12px;color:var(--text3);">g</span>
+                <span id="meal-est-weight-badge" style="font-size:11px;color:var(--text3);margin-left:6px;"></span>
+              </div>
             </div>
+            <div id="meal-est-weight-detail" style="font-size:11px;color:var(--text3);margin-top:5px;line-height:1.8;"></div>
+            <input type="hidden" id="record-food-weight" />
           </div>
         </div>
         <!-- 推定最大血糖値 -->
@@ -4827,6 +4812,15 @@ function resetRecord() {
   // 全ユーザーで食事重量フィールドを表示
   const fwRow = document.getElementById('record-food-weight-row');
   if (fwRow) fwRow.style.display = '';
+  // 推定重量表示をリセット
+  const estEl = document.getElementById('meal-est-weight');
+  const detailEl = document.getElementById('meal-est-weight-detail');
+  const badgeEl = document.getElementById('meal-est-weight-badge');
+  if (estEl) estEl.textContent = '—';
+  if (detailEl) detailEl.textContent = '食材チップ・食品DBを選択すると自動計算されます';
+  if (badgeEl) badgeEl.textContent = '';
+  const fwHidden = document.getElementById('record-food-weight');
+  if (fwHidden) fwHidden.value = '0';
   // 日付・時刻をリセット
   const dateEl = document.getElementById('record-date');
   if (dateEl) { const d = new Date(); dateEl.value = d.toISOString().slice(0, 10); }
@@ -4874,7 +4868,15 @@ async function saveMeal() {
     phosphorus: parseFloat(document.getElementById('record-phosphorus')?.value)||0,
     salt: parseFloat(document.getElementById('record-salt')?.value)||0,
     water: parseFloat(document.getElementById('record-water')?.value)||0,
-    food_weight: parseFloat(document.getElementById('record-food-weight')?.value)||0,
+    food_weight: (function() {
+      // まずhidden fieldの値（updateMealWeightEstimateが設定）を使う
+      const fwEl = document.getElementById('record-food-weight');
+      const fwVal = parseFloat(fwEl?.value) || 0;
+      if (fwVal > 0) return fwVal;
+      // フォールバック：estimateMealWeightで計算
+      const cats = getSelectedFoodCats();
+      return estimateMealWeight({ food_categories: cats }).total || 0;
+    })(),
     meal_type: document.getElementById('record-meal-type')?.value||'breakfast',
     food_categories: getSelectedFoodCats(),
     recorded_at: (() => {
@@ -7329,34 +7331,32 @@ function estimateMealWeight(meal) {
 
 // 食事記録フォームの推定重量を更新
 function updateMealWeightEstimate() {
-  const estEl = document.getElementById('meal-est-weight');
+  const estEl    = document.getElementById('meal-est-weight');
   const detailEl = document.getElementById('meal-est-weight-detail');
-  const badgeEl = document.getElementById('meal-est-weight-badge');
+  const badgeEl  = document.getElementById('meal-est-weight-badge');
+  const fwEl     = document.getElementById('record-food-weight'); // hidden input
   if (!estEl) return;
-  
+
   // 現在のチップ選択を仮のmealオブジェクトとして渡す
   const meal = { food_categories: window._currentFoodCats || getSelectedFoodCats() };
   const { total, detail } = estimateMealWeight(meal);
-  
+
   if (total === 0) {
     estEl.textContent = '—';
-    if (detailEl) detailEl.textContent = '食材チップを選択すると自動計算されます';
-    if (badgeEl) badgeEl.textContent = '';
+    if (detailEl) detailEl.textContent = '食材チップ・食品DBを選択すると自動計算されます';
+    if (badgeEl)  badgeEl.textContent  = '';
+    if (fwEl)     fwEl.value           = '0';
   } else {
     estEl.textContent = total;
     if (detailEl) {
       detailEl.innerHTML = detail.map(d => `${d.name}: <strong>${d.g}g</strong>`).join('  ／  ');
     }
     if (badgeEl) {
-      if (total < 300)      badgeEl.textContent = '（軽め）';
-      else if (total < 600) badgeEl.textContent = '（普通）';
-      else                  badgeEl.textContent = '（多め）';
+      badgeEl.textContent = total < 300 ? '（軽め）' : total < 600 ? '（普通）' : '（多め）';
     }
+    // 自動計算値をそのまま保存用フィールドに反映
+    if (fwEl) fwEl.value = String(total);
   }
-  
-  // 食事重量欄にも自動反映（未入力の場合）
-  const fwEl = document.getElementById('record-food-weight');
-  if (fwEl && !fwEl.value && total > 0) fwEl.placeholder = String(total) + '（推定値）';
 }
 
 // ===== 水分記録 =====
