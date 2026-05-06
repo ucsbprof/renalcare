@@ -4092,16 +4092,39 @@ async function renderHistory() {
   const list = document.getElementById('historyList');
   if (!list) return;
   list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text3);">読み込み中...</div>';
-  let meals = localLoadMeals();
+
+  // ローカル全データ（user_idフィルタなし）
+  let meals = [];
+  try {
+    const raw = JSON.parse(localStorage.getItem('renalcare_meals') || '[]');
+    const currentUid = state.uid || getUserId();
+    meals = (Array.isArray(raw) ? raw : []).filter(m => {
+      if (!m || typeof m !== 'object') return false;
+      // user_idがない旧データも含める、または現在のユーザーのデータ
+      return !m.user_id || m.user_id === currentUid;
+    }).map(m => ({
+      calories:0, protein:0, carb:0, fiber:0, potassium:0,
+      phosphorus:0, salt:0, water:0, food_weight:0,
+      ...m,
+      recorded_at: m.recorded_at || new Date().toISOString(),
+    }));
+    meals.sort((a,b) => new Date(b.recorded_at) - new Date(a.recorded_at));
+  } catch(e) { meals = []; }
+
+  // リモートデータとマージ
   try {
     const remoteMeals = await dbLoadMeals();
     if (remoteMeals && remoteMeals.length > 0) {
       const localIds = new Set(meals.map(m => m.id));
       remoteMeals.forEach(rm => { if (!localIds.has(rm.id) && rm.id) meals.push(rm); });
-      meals.sort((a, b) => new Date(b.recorded_at) - new Date(a.recorded_at));
+      meals.sort((a,b) => new Date(b.recorded_at) - new Date(a.recorded_at));
     }
   } catch(e) {}
-  if (!meals || meals.length === 0) { list.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text3);">まだ記録がありません</div>'; return; }
+
+  if (!meals || meals.length === 0) {
+    list.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text3);">まだ記録がありません</div>';
+    return;
+  }
 
   const grouped = {};
   meals.forEach(m => { const dateKey = new Date(m.recorded_at).toDateString(); if (!grouped[dateKey]) grouped[dateKey] = []; grouped[dateKey].push(m); });
@@ -4267,19 +4290,38 @@ async function renderHistory() {
 }
 
 // 履歴画面：IDからmealを取得して詳細・編集を開く
-function _historyDetail(id) {
-  const meal = localLoadMeals().find(m => m.id === id);
-  if (meal) showMealDetail(meal);
+function _getMealById(id) {
+  try {
+    const raw = JSON.parse(localStorage.getItem('renalcare_meals') || '[]');
+    return (Array.isArray(raw) ? raw : []).find(m => m && m.id === id) || null;
+  } catch(e) { return null; }
 }
+
+function _historyDetail(id) {
+  const meal = _getMealById(id);
+  if (meal) showMealDetail(meal);
+  else showToast('⚠ 記録が見つかりません');
+}
+
 function _historyEdit(id) {
-  const meal = localLoadMeals().find(m => m.id === id);
-  if (meal) openEditModal(meal);
+  const meal = _getMealById(id);
+  if (!meal) { showToast('⚠ 記録が見つかりません'); return; }
+  openEditModal(meal);
 }
 
 function deleteMealConfirm(id) {
   if (!confirm('この記録を削除しますか？')) return;
-  if (localDeleteMeal(id)) { showToast('🗑 記録を削除しました'); renderHistory(); updateHomeSummary(); }
-  else showToast('⚠ 削除できませんでした');
+  // localStorageから直接削除（user_idフィルタなし）
+  try {
+    const raw = JSON.parse(localStorage.getItem('renalcare_meals') || '[]');
+    const filtered = raw.filter(m => m && m.id !== id);
+    localStorage.setItem('renalcare_meals', JSON.stringify(filtered));
+    showToast('🗑 記録を削除しました');
+    renderHistory();
+    updateHomeSummary();
+  } catch(e) {
+    showToast('⚠ 削除できませんでした');
+  }
 }
 
 function showMealDetail(meal) {
@@ -4486,10 +4528,9 @@ function openEditModal(meal) {
 
 function saveEditMeal() {
   const id = document.getElementById('edit-id').value;
+  if (!id) { showToast('⚠ 記録IDが見つかりません'); return; }
   const dtVal = document.getElementById('edit-datetime').value;
-  // 編集モーダル用の食品DBリストを food_categories に統合
   const editCats = getEditSelectedFoodCats();
-  // 既存の food_db_selections と今回追加分をマージ
   const existingFqSels = (window._editingMeal?.food_categories?.food_db_selections) || [];
   editCats.food_db_selections = [
     ...existingFqSels,
@@ -4508,13 +4549,21 @@ function saveEditMeal() {
     food_categories: editCats,
     recorded_at:     dtVal ? new Date(dtVal).toISOString() : (window._editingMeal?.recorded_at||new Date().toISOString())
   };
-  if (localUpdateMeal(id, updated)) {
+  // localStorageから直接更新（user_idフィルタなし）
+  try {
+    const raw = JSON.parse(localStorage.getItem('renalcare_meals') || '[]');
+    const idx = raw.findIndex(m => m && m.id === id);
+    if (idx === -1) { showToast('⚠ 記録が見つかりません'); return; }
+    raw[idx] = { ...raw[idx], ...updated };
+    localStorage.setItem('renalcare_meals', JSON.stringify(raw));
     _editFqSelections = [];
     showToast('✅ 記録を更新しました');
     closeModal('editModal');
-    refreshAll();
+    renderHistory();
+    updateHomeSummary();
+  } catch(e) {
+    showToast('⚠ 更新できませんでした');
   }
-  else showToast('⚠ 更新できませんでした');
 }
 
 function closeModal(id) { const el = document.getElementById(id); if (el) el.classList.remove('open'); }
@@ -4808,7 +4857,7 @@ function resetFoodCats() { document.querySelectorAll('.food-cat-chip').forEach(c
 
 function resetRecord() {
   window._currentPhotoBase64 = null;
-  ['record-name','record-calories','record-protein','record-carb','record-fiber','record-potassium','record-phosphorus','record-salt','record-water','record-food-weight'].forEach(id => { const el = document.getElementById(id); if (el) el.value=''; });
+  ['record-name','record-calories','record-protein','record-carb','record-fiber','record-potassium','record-phosphorus','record-salt','record-food-weight'].forEach(id => { const el = document.getElementById(id); if (el) el.value=''; });
   // 全ユーザーで食事重量フィールドを表示
   const fwRow = document.getElementById('record-food-weight-row');
   if (fwRow) fwRow.style.display = '';
@@ -4842,7 +4891,7 @@ function resetRecord() {
   resetFoodCats();
   _fqSelections = []; // 食品DB選択リストもリセット
   renderRecordFqList(); // 追加済みリスト表示もクリア
-  ['record-calories','record-protein','record-carb','record-fiber','record-potassium','record-phosphorus','record-salt','record-water'].forEach(id => { const el=document.getElementById(id); if (el) delete el.dataset.manualEdit; });
+  ['record-calories','record-protein','record-carb','record-fiber','record-potassium','record-phosphorus','record-salt'].forEach(id => { const el=document.getElementById(id); if (el) delete el.dataset.manualEdit; });
   const preview = document.getElementById('nutrition-preview');
   if (preview) preview.classList.remove('visible');
 }
@@ -4867,15 +4916,15 @@ async function saveMeal() {
     potassium: parseFloat(document.getElementById('record-potassium')?.value)||0,
     phosphorus: parseFloat(document.getElementById('record-phosphorus')?.value)||0,
     salt: parseFloat(document.getElementById('record-salt')?.value)||0,
-    water: parseFloat(document.getElementById('record-water')?.value)||0,
+    water: 0,
     food_weight: (function() {
-      // まずhidden fieldの値（updateMealWeightEstimateが設定）を使う
-      const fwEl = document.getElementById('record-food-weight');
-      const fwVal = parseFloat(fwEl?.value) || 0;
-      if (fwVal > 0) return fwVal;
-      // フォールバック：estimateMealWeightで計算
+      // getSelectedFoodCatsから直接計算（最も確実）
       const cats = getSelectedFoodCats();
-      return estimateMealWeight({ food_categories: cats }).total || 0;
+      const auto = estimateMealWeight({ food_categories: cats }).total || 0;
+      if (auto > 0) return auto;
+      // フォールバック：hidden fieldの値
+      const fwEl = document.getElementById('record-food-weight');
+      return parseFloat(fwEl?.value) || 0;
     })(),
     meal_type: document.getElementById('record-meal-type')?.value||'breakfast',
     food_categories: getSelectedFoodCats(),
