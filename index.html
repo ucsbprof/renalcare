@@ -264,12 +264,12 @@ html, body {
 .header-name { font-size: 13px; color: var(--text2); }
 .app-content { flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; padding-bottom: 80px; }
 
-.bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg2); border-top: 1px solid var(--border2); display: flex; padding: 8px 0 max(8px, env(safe-area-inset-bottom)); z-index: 100; box-shadow: 0 -2px 16px rgba(0,0,0,0.3); }
-.nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 0; cursor: pointer; transition: all 0.2s; color: var(--text3); position: relative; }
+.bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg2); border-top: 1px solid var(--border2); display: flex; padding: 6px 0 max(6px, env(safe-area-inset-bottom)); z-index: 100; box-shadow: 0 -2px 16px rgba(0,0,0,0.3); }
+.nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 0; cursor: pointer; transition: all 0.2s; color: var(--text3); position: relative; }
 .nav-btn.active { color: var(--accent); }
-.nav-btn .nav-icon { font-size: 23px; line-height: 1; }
-.nav-btn .nav-label { font-size: 10px; font-weight: 600; letter-spacing: 0.3px; }
-.nav-btn.active::before { content: ''; position: absolute; top: -8px; left: 50%; transform: translateX(-50%); width: 32px; height: 3px; background: var(--accent); border-radius: 0 0 3px 3px; }
+.nav-btn .nav-icon { font-size: 19px; line-height: 1; }
+.nav-btn .nav-label { font-size: 9px; font-weight: 600; letter-spacing: 0.2px; }
+.nav-btn.active::before { content: ''; position: absolute; top: -6px; left: 50%; transform: translateX(-50%); width: 28px; height: 3px; background: var(--accent); border-radius: 0 0 3px 3px; }
 
 .page { display: none; padding: 16px; }
 .page.active { display: block; }
@@ -1688,12 +1688,44 @@ body.is-premium .premium-banner { display: none !important; }
 
     <!-- HISTORY -->
     <div class="page" id="page-history">
-      <div class="page-title-row"><div><div class="page-title" data-i18n="page_history">記録履歴</div><div class="page-sub" data-i18n="page_history_sub">食事・水分・血糖の日別記録</div></div></div>
-      <div class="period-selector">
-        <div class="period-btn active" onclick="setPeriod(this,'week')">週間</div>
-        <div class="period-btn" onclick="setPeriod(this,'month')">月間</div>
-        <div class="period-btn" onclick="setPeriod(this,'3month')">3ヶ月</div>
+      <!-- ヘッダー -->
+      <div class="page-title-row" style="margin-bottom:14px;">
+        <div>
+          <div class="page-title">📋 記録履歴</div>
+          <div class="page-sub">食事・水分・薬・健康データの日別記録</div>
+        </div>
       </div>
+
+      <!-- 日付ナビゲーション（スライド式） -->
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:10px 12px;">
+        <button onclick="historyShiftDate(-1)" style="width:34px;height:34px;border-radius:50%;background:var(--surface2);border:1px solid var(--border2);color:var(--text2);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.2s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border2)'">‹</button>
+        <div style="flex:1;text-align:center;">
+          <div id="hist-date-label" style="font-size:15px;font-weight:700;color:var(--text);line-height:1.2;">今日</div>
+          <div id="hist-date-sub" style="font-size:11px;color:var(--text3);margin-top:2px;"></div>
+        </div>
+        <button onclick="historyShiftDate(1)" id="hist-next-btn" style="width:34px;height:34px;border-radius:50%;background:var(--surface2);border:1px solid var(--border2);color:var(--text2);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.2s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border2)'">›</button>
+      </div>
+
+      <!-- 日付ピッカー（カレンダー） -->
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+        <label style="font-size:12px;color:var(--text3);flex-shrink:0;">📅 日付を指定：</label>
+        <input type="date" id="hist-date-picker"
+          style="flex:1;background:var(--surface2);border:1.5px solid var(--border2);border-radius:var(--rs);padding:8px 12px;color:var(--text);font-size:13px;font-family:'Noto Sans JP',sans-serif;outline:none;transition:border-color 0.2s;"
+          onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border2)'"
+          onchange="historyPickDate(this.value)" />
+        <button onclick="historyGoToday()" style="padding:8px 12px;background:var(--accent-glow);border:1.5px solid var(--accent);border-radius:var(--rs);color:var(--accent);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">今日</button>
+      </div>
+
+      <!-- データフィルター -->
+      <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:14px;scrollbar-width:none;" id="hist-filter-row">
+        <div class="pill active" onclick="historySetFilter('all',this)" data-filter="all">すべて</div>
+        <div class="pill" onclick="historySetFilter('meal',this)" data-filter="meal">🍽 食事</div>
+        <div class="pill" onclick="historySetFilter('water',this)" data-filter="water">💧 水分</div>
+        <div class="pill" onclick="historySetFilter('medicine',this)" data-filter="medicine">💊 お薬</div>
+        <div class="pill" onclick="historySetFilter('health',this)" data-filter="health">🩺 健康</div>
+      </div>
+
+      <!-- 日別コンテンツ -->
       <div id="historyList" class="stagger"></div>
     </div>
 
@@ -2097,6 +2129,7 @@ body.is-premium .premium-banner { display: none !important; }
   <div class="bottom-nav">
     <div class="nav-btn active" id="nav-home" onclick="navTo('home')"><div class="nav-icon">🏠</div><div class="nav-label" data-i18n="nav_home">ホーム</div></div>
     <div class="nav-btn" id="nav-record" onclick="navTo('record')"><div class="nav-icon">✏️</div><div class="nav-label" data-i18n="nav_record">食事</div></div>
+    <div class="nav-btn" id="nav-history" onclick="navTo('history')"><div class="nav-icon">📋</div><div class="nav-label">履歴</div></div>
     <div class="nav-btn" id="nav-drink" onclick="navTo('drink')"><div class="nav-icon">🥤</div><div class="nav-label">飲み物</div></div>
     <div class="nav-btn" id="nav-health" onclick="navTo('health')"><div class="nav-icon">🩺</div><div class="nav-label" data-i18n="nav_health">健康</div></div>
     <div class="nav-btn" id="nav-medicine" onclick="navTo('medicine')"><div class="nav-icon">💊</div><div class="nav-label" data-i18n="nav_medicine">お薬</div></div>
@@ -4091,53 +4124,165 @@ function calcAvgGlucose(records) {
   return Math.round(vals.reduce((a,b) => a+b, 0) / vals.length);
 }
 
+// ===== 履歴ページ 状態管理 =====
+let _histDate     = new Date();          // 現在表示中の日付
+let _histFilter   = 'all';              // 'all' | 'meal' | 'water' | 'medicine' | 'health'
+
+// 日付を指定した日にジャンプ
+function historyPickDate(dateStr) {
+  if (!dateStr) return;
+  const parts = dateStr.split('-');
+  const d = new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]));
+  _histDate = d;
+  renderHistory();
+}
+
+// 前後の日にスライド
+function historyShiftDate(delta) {
+  const d = new Date(_histDate);
+  d.setDate(d.getDate() + delta);
+  // 未来日は移動しない
+  if (d > new Date()) return;
+  _histDate = d;
+  renderHistory();
+}
+
+// 今日に戻る
+function historyGoToday() {
+  _histDate = new Date();
+  renderHistory();
+}
+
+// フィルター切り替え
+function historySetFilter(filter, el) {
+  _histFilter = filter;
+  document.querySelectorAll('#hist-filter-row .pill').forEach(p => p.classList.remove('active'));
+  if (el) el.classList.add('active');
+  renderHistoryContent();
+}
+
 async function renderHistory() {
+  // 日付UIを更新
+  _updateHistoryDateUI();
+  renderHistoryContent();
+}
+
+function _updateHistoryDateUI() {
+  const now   = new Date();
+  const isToday     = _histDate.toDateString() === now.toDateString();
+  const isYesterday = _histDate.toDateString() === new Date(now - 86400000).toDateString();
+  const days = ['日','月','火','水','木','金','土'];
+  const label = isToday ? '今日' : isYesterday ? '昨日' :
+    `${_histDate.getFullYear()}年${_histDate.getMonth()+1}月${_histDate.getDate()}日`;
+  const sub = `${_histDate.getMonth()+1}月${_histDate.getDate()}日（${days[_histDate.getDay()]}）`;
+
+  const labelEl = document.getElementById('hist-date-label');
+  const subEl   = document.getElementById('hist-date-sub');
+  const nextBtn = document.getElementById('hist-next-btn');
+  const picker  = document.getElementById('hist-date-picker');
+
+  if (labelEl) { labelEl.textContent = label; labelEl.style.color = isToday ? 'var(--accent)' : 'var(--text)'; }
+  if (subEl)   subEl.textContent = isToday ? `${_histDate.getFullYear()}年${sub}` : '';
+  // 未来は移動不可（グレーアウト）
+  const tomorrow = new Date(now); tomorrow.setDate(now.getDate()+1);
+  if (nextBtn) {
+    const isTodayOrFuture = _histDate >= new Date(now.toDateString());
+    nextBtn.style.opacity  = isTodayOrFuture ? '0.3' : '1';
+    nextBtn.style.cursor   = isTodayOrFuture ? 'not-allowed' : 'pointer';
+  }
+  // ピッカーの値を合わせる
+  if (picker) {
+    const yyyy = _histDate.getFullYear();
+    const mm   = String(_histDate.getMonth()+1).padStart(2,'0');
+    const dd   = String(_histDate.getDate()).padStart(2,'0');
+    picker.value = `${yyyy}-${mm}-${dd}`;
+    // 未来は選択不可
+    const tYYYY = now.getFullYear(), tMM = String(now.getMonth()+1).padStart(2,'0'), tDD = String(now.getDate()).padStart(2,'0');
+    picker.max = `${tYYYY}-${tMM}-${tDD}`;
+  }
+}
+
+function renderHistoryContent() {
   const list = document.getElementById('historyList');
   if (!list) return;
-  list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text3);">読み込み中...</div>';
+  const dateKey = _histDate.toDateString();
+  const days = ['日','月','火','水','木','金','土'];
+  const prof  = getActiveProfile();
+  const limits = prof?.targets
+    ? { cal: prof.targets.calories||1800, protein: prof.targets.protein||40, potassium: prof.targets.potassium||2000, phosphorus: prof.targets.phosphorus||700, water: prof.targets.water||1500 }
+    : { cal:1800, protein:40, potassium:2000, phosphorus:700, water:1500 };
 
-  // ローカル全データ（user_idフィルタなし）
+  // ── 食事データ ──
   let meals = [];
   try {
     const raw = JSON.parse(localStorage.getItem('renalcare_meals') || '[]');
-    meals = (Array.isArray(raw) ? raw : []).filter(m => m && typeof m === 'object').map(m => ({
-      calories:0, protein:0, carb:0, fiber:0, potassium:0,
-      phosphorus:0, salt:0, water:0, food_weight:0,
-      ...m,
-      recorded_at: m.recorded_at || new Date().toISOString(),
-    }));
-    meals.sort((a,b) => new Date(b.recorded_at) - new Date(a.recorded_at));
-  } catch(e) { meals = []; }
-
-  // リモートデータとマージ
-  try {
-    const remoteMeals = await dbLoadMeals();
-    if (remoteMeals && remoteMeals.length > 0) {
-      const localIds = new Set(meals.map(m => m.id));
-      remoteMeals.forEach(rm => { if (!localIds.has(rm.id) && rm.id) meals.push(rm); });
-      meals.sort((a,b) => new Date(b.recorded_at) - new Date(a.recorded_at));
-    }
+    meals = (Array.isArray(raw) ? raw : [])
+      .filter(m => m && typeof m === 'object' && new Date(m.recorded_at||0).toDateString() === dateKey)
+      .map(m => ({ calories:0, protein:0, carb:0, fiber:0, potassium:0, phosphorus:0, salt:0, water:0, ...m }))
+      .sort((a,b) => new Date(a.recorded_at) - new Date(b.recorded_at));
   } catch(e) {}
 
-  if (!meals || meals.length === 0) {
-    list.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text3);">まだ記録がありません</div>';
+  // ── 水分データ ──
+  let waterLogs = [];
+  try {
+    const wAll = JSON.parse(localStorage.getItem(WATER_KEY) || '[]');
+    waterLogs = (Array.isArray(wAll) ? wAll : [])
+      .filter(e => e && new Date(e.time||0).toDateString() === dateKey)
+      .sort((a,b) => new Date(a.time) - new Date(b.time));
+  } catch(e) {}
+
+  // ── 薬ログ ──
+  let medLogs = [];
+  let medMaster = [];
+  try {
+    const mAll = JSON.parse(localStorage.getItem(MED_LOG_KEY) || '[]');
+    medLogs = (Array.isArray(mAll) ? mAll : [])
+      .filter(e => e && new Date(e.time||e.taken_at||0).toDateString() === dateKey)
+      .sort((a,b) => new Date(a.time||a.taken_at) - new Date(b.time||b.taken_at));
+    medMaster = JSON.parse(localStorage.getItem(MED_KEY) || '[]');
+  } catch(e) {}
+
+  // medcheck_logからも取得
+  let medCheckLogs = [];
+  try {
+    const mcAll = JSON.parse(localStorage.getItem(MEDCHECK_KEY) || '[]');
+    const yyyy = _histDate.getFullYear(), mm = String(_histDate.getMonth()+1).padStart(2,'0'), dd = String(_histDate.getDate()).padStart(2,'0');
+    const dateStr = `${yyyy}-${mm}-${dd}`;
+    const dayCheck = (Array.isArray(mcAll) ? mcAll : []).find(e => e && e.date === dateStr);
+    if (dayCheck && Array.isArray(dayCheck.entries)) medCheckLogs = dayCheck.entries;
+  } catch(e) {}
+
+  // ── 健康データ ──
+  let healthLogs = [];
+  try {
+    const hAll = JSON.parse(localStorage.getItem(HEALTH_KEY) || '[]');
+    healthLogs = (Array.isArray(hAll) ? hAll : [])
+      .filter(e => e && new Date(e.time||0).toDateString() === dateKey)
+      .sort((a,b) => new Date(a.time) - new Date(b.time));
+  } catch(e) {}
+
+  // ── データ有無チェック ──
+  const hasMeal  = meals.length > 0;
+  const hasWater = waterLogs.length > 0;
+  const hasMed   = medLogs.length > 0 || medCheckLogs.length > 0;
+  const hasHealth= healthLogs.length > 0;
+  const hasAny   = hasMeal || hasWater || hasMed || hasHealth;
+
+  if (!hasAny) {
+    list.innerHTML = `<div style="text-align:center;padding:48px 24px;">
+      <div style="font-size:48px;margin-bottom:12px;opacity:0.4;">📭</div>
+      <div style="font-size:14px;color:var(--text3);">この日の記録はありません</div>
+      <div style="font-size:12px;color:var(--text3);margin-top:6px;">記録タブから入力してください</div>
+    </div>`;
     return;
   }
 
-  const grouped = {};
-  meals.forEach(m => { const dateKey = new Date(m.recorded_at).toDateString(); if (!grouped[dateKey]) grouped[dateKey] = []; grouped[dateKey].push(m); });
   const mealTypeLabel = { breakfast:'🌅 朝食', lunch:'☀️ 昼食', dinner:'🌙 夕食', snack:'🍬 間食', meal:'食事' };
-  const days = ['日','月','火','水','木','金','土'];
-  const now = new Date();
 
-  list.innerHTML = Object.entries(grouped).sort((a,b) => new Date(b[0]) - new Date(a[0])).map(([dateKey, dayMeals]) => {
-    const d = new Date(dateKey);
-    const isToday = d.toDateString() === now.toDateString();
-    const isYesterday = d.toDateString() === new Date(now - 86400000).toDateString();
-    const dateLabel = isToday ? '今日' : isYesterday ? '昨日' : `${d.getMonth()+1}月${d.getDate()}日（${days[d.getDay()]}）`;
-
-    // 1日合計栄養
-    const dayTotal = dayMeals.reduce((acc, m) => {
+  // ── 日サマリーカード（食事のみ、食事がある場合） ──
+  let summaryHtml = '';
+  if (hasMeal && (_histFilter === 'all' || _histFilter === 'meal')) {
+    const dayTotal = meals.reduce((acc, m) => {
       acc.calories   += m.calories||0;
       acc.protein    += m.protein||0;
       acc.potassium  += m.potassium||0;
@@ -4145,117 +4290,73 @@ async function renderHistory() {
       acc.salt       += m.salt||0;
       return acc;
     }, { calories:0, protein:0, potassium:0, phosphorus:0, salt:0 });
-
-    const prof = getActiveProfile();
-    const limits = prof ? { cal: prof.calories||1800, protein: prof.protein||40, potassium: prof.potassium||2000, phosphorus: prof.phosphorus||700, water: prof.water||1500 } : { cal:1800, protein:40, potassium:2000, phosphorus:700, water:1500 };
-
-    // 水分量（内訳付き）
     const waterData  = getWaterBreakdownForDate(dateKey);
     const waterMl    = waterData.total;
     const waterColor = waterMl >= limits.water ? 'var(--green)' : waterMl >= limits.water * 0.7 ? 'var(--accent)' : 'var(--text3)';
-
-    // 血糖値
     const glucoseRecs = getGlucoseForDate(dateKey);
-    const avgGlucose = calcAvgGlucose(glucoseRecs);
-    let glucoseHtml = '';
-    if (avgGlucose !== null) {
-      const gc = avgGlucose < 70 ? 'var(--accent)' : avgGlucose <= 140 ? 'var(--green)' : avgGlucose <= 180 ? 'var(--amber)' : 'var(--red)';
-      const gl = avgGlucose < 70 ? '低血糖注意' : avgGlucose <= 140 ? '正常範囲' : avgGlucose <= 180 ? '要注意' : '高血糖';
-      glucoseHtml = `<div style="display:flex;align-items:center;gap:6px;">
-        <span style="font-size:11px;color:var(--text3);">🩸 平均血糖</span>
-        <span style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:${gc};">${avgGlucose}</span>
-        <span style="font-size:10px;color:var(--text3);">mg/dL</span>
-        <span style="font-size:10px;color:${gc};background:${gc}22;padding:1px 6px;border-radius:10px;border:1px solid ${gc};">${gl}</span>
-      </div>`;
-    }
-
-    // 栄養バー関数
+    const avgGlucose  = calcAvgGlucose(glucoseRecs);
     const bar = (val, max, color) => {
       const pct = Math.min(100, Math.round(val/max*100));
-      const barColor = pct >= 100 ? 'var(--red)' : pct >= 85 ? 'var(--amber)' : color;
+      const bc  = pct >= 100 ? 'var(--red)' : pct >= 85 ? 'var(--amber)' : color;
       return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
-        <div style="width:72px;font-size:11px;color:var(--text3);flex-shrink:0;">${Math.round(val)}<span style="font-size:9px;"> / ${max}</span></div>
+        <div style="width:80px;font-size:11px;color:var(--text3);flex-shrink:0;">${Math.round(val)}<span style="font-size:9px;"> / ${max}</span></div>
         <div style="flex:1;height:5px;background:var(--surface2);border-radius:3px;overflow:hidden;">
-          <div style="width:${pct}%;height:100%;background:${barColor};border-radius:3px;transition:width 0.4s;"></div>
+          <div style="width:${pct}%;height:100%;background:${bc};border-radius:3px;"></div>
         </div>
-        <div style="font-size:10px;color:${barColor};width:28px;text-align:right;">${pct}%</div>
+        <div style="font-size:10px;color:${bc};width:28px;text-align:right;">${pct}%</div>
       </div>`;
     };
-
-    return `<div style="margin-bottom:14px;">
-      <!-- 日付ヘッダー -->
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 4px 8px;">
-        <div style="font-size:14px;font-weight:700;color:${isToday?'var(--accent)':'var(--text)'};">${dateLabel}</div>
-        <div style="font-size:11px;color:var(--text3);">${dayMeals.length}食</div>
+    summaryHtml = `<div style="background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r);padding:14px;margin-bottom:12px;">
+      <div style="font-size:10px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px;">📊 本日の合計栄養</div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+        <span style="font-size:11px;color:var(--green);">🔥 カロリー</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--green);">${Math.round(dayTotal.calories)} kcal</span>
       </div>
-
-      <!-- 1日サマリーカード -->
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:8px;">
-        <div style="font-size:10px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px;">📊 1日の合計</div>
-
-        <!-- 栄養バー群 -->
-        <div style="margin-bottom:10px;">
-          <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
-            <span style="font-size:11px;color:var(--green);">🔥 カロリー</span>
-            <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--green);">${Math.round(dayTotal.calories)} kcal</span>
-          </div>
-          ${bar(dayTotal.calories, limits.cal, 'var(--green)')}
-          <div style="display:flex;justify-content:space-between;margin-top:6px;margin-bottom:5px;">
-            <span style="font-size:11px;color:var(--accent);">🥩 タンパク質</span>
-            <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent);">${Math.round(dayTotal.protein*10)/10} g</span>
-          </div>
-          ${bar(dayTotal.protein, limits.protein, 'var(--accent)')}
-          <div style="display:flex;justify-content:space-between;margin-top:6px;margin-bottom:5px;">
-            <span style="font-size:11px;color:var(--amber);">⚡ カリウム</span>
-            <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--amber);">${Math.round(dayTotal.potassium)} mg</span>
-          </div>
-          ${bar(dayTotal.potassium, limits.potassium, 'var(--amber)')}
-          <div style="display:flex;justify-content:space-between;margin-top:6px;margin-bottom:5px;">
-            <span style="font-size:11px;color:var(--red);">🦴 リン</span>
-            <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--red);">${Math.round(dayTotal.phosphorus)} mg</span>
-          </div>
-          ${bar(dayTotal.phosphorus, limits.phosphorus, 'var(--red)')}
-        </div>
-
-        <!-- 水分量 & 血糖値 -->
-        <div style="border-top:1px solid var(--border);padding-top:10px;display:flex;flex-direction:column;gap:8px;">
-          <div style="display:flex;align-items:center;justify-content:space-between;">
-            <div style="flex:1;">
-              <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
-                <span style="font-size:11px;color:var(--text3);">💧 水分量合計</span>
-                <span style="font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;color:${waterColor};">${waterMl.toLocaleString()}</span>
-                <span style="font-size:10px;color:var(--text3);">mL</span>
-                <span style="font-size:10px;color:${waterColor};background:${waterColor}22;padding:1px 6px;border-radius:10px;border:1px solid ${waterColor}40;">${waterMl >= limits.water ? '✓ 目標達成' : `目標 ${limits.water}mL`}</span>
-              </div>
-              <div style="display:flex;gap:12px;font-size:11px;color:var(--text3);padding-left:2px;">
-                <span>🥤 飲み物: <b style="color:var(--accent);">${waterData.drink.toLocaleString()}mL</b></span>
-              </div>
-            </div>
-            <div style="flex-shrink:0;margin-left:10px;">
-              <div style="height:6px;width:80px;background:var(--surface2);border-radius:3px;overflow:hidden;">
-                <div style="width:${Math.min(100,Math.round(waterMl/limits.water*100))}%;height:100%;background:${waterColor};border-radius:3px;"></div>
-              </div>
-              <div style="font-size:9px;color:var(--text3);text-align:right;margin-top:2px;">${Math.min(100,Math.round(waterMl/limits.water*100))}%</div>
-            </div>
-          </div>
-          ${avgGlucose !== null ? glucoseHtml : '<div style="font-size:11px;color:var(--text3);">🩸 血糖値の記録なし</div>'}
-        </div>
+      ${bar(dayTotal.calories, limits.cal, 'var(--green)')}
+      <div style="display:flex;justify-content:space-between;margin-top:6px;margin-bottom:4px;">
+        <span style="font-size:11px;color:var(--accent);">🥩 タンパク質</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent);">${Math.round(dayTotal.protein*10)/10} g</span>
       </div>
+      ${bar(dayTotal.protein, limits.protein, 'var(--accent)')}
+      <div style="display:flex;justify-content:space-between;margin-top:6px;margin-bottom:4px;">
+        <span style="font-size:11px;color:var(--amber);">⚡ カリウム</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--amber);">${Math.round(dayTotal.potassium)} mg</span>
+      </div>
+      ${bar(dayTotal.potassium, limits.potassium, 'var(--amber)')}
+      <div style="display:flex;justify-content:space-between;margin-top:6px;margin-bottom:4px;">
+        <span style="font-size:11px;color:var(--red);">🦴 リン</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--red);">${Math.round(dayTotal.phosphorus)} mg</span>
+      </div>
+      ${bar(dayTotal.phosphorus, limits.phosphorus, 'var(--red)')}
+      ${waterMl > 0 ? `<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);display:flex;align-items:center;gap:6px;">
+        <span style="font-size:11px;color:var(--text3);">💧 水分量</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:${waterColor};">${waterMl.toLocaleString()}</span>
+        <span style="font-size:10px;color:var(--text3);">mL</span>
+        <span style="font-size:10px;color:${waterColor};background:${waterColor}22;padding:1px 6px;border-radius:10px;border:1px solid ${waterColor}40;">${waterMl >= limits.water ? '✓ 目標達成' : `目標 ${limits.water}mL`}</span>
+      </div>` : ''}
+      ${avgGlucose !== null ? `<div style="margin-top:8px;display:flex;align-items:center;gap:6px;">
+        <span style="font-size:11px;color:var(--text3);">🩸 平均血糖</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:${avgGlucose<=140?'var(--green)':avgGlucose<=180?'var(--amber)':'var(--red)'};">${avgGlucose} mg/dL</span>
+      </div>` : ''}
+    </div>`;
+  }
 
-      <!-- 各食事カード -->
-      ${dayMeals.sort((a,b) => new Date(a.recorded_at)-new Date(b.recorded_at)).map(m => {
-        const timeStr = `${new Date(m.recorded_at).getHours()}:${String(new Date(m.recorded_at).getMinutes()).padStart(2,'0')}`;
+  // ── 食事カードHTML ──
+  let mealsHtml = '';
+  if ((_histFilter === 'all' || _histFilter === 'meal') && hasMeal) {
+    const catColors = { main:'var(--accent)', protein:'var(--green)', sub:'var(--purple)', soup:'var(--amber)', drink:'var(--accent)' };
+    const catEmoji  = { main:'🍚', protein:'🥩', sub:'🥦', soup:'🍵', drink:'💧' };
+    mealsHtml = `<div style="margin-bottom:18px;">
+      <div style="font-size:11px;color:var(--text3);letter-spacing:1.5px;font-weight:700;margin-bottom:8px;padding:0 2px;">🍽 食事の記録</div>
+      ${meals.map(m => {
         const mealId  = m.id || '';
-        // 食品カテゴリチップ
-        const cats      = m.food_categories || {};
-        const catColors = { main:'var(--accent)', protein:'var(--green)', sub:'var(--purple)', soup:'var(--amber)', drink:'var(--accent)' };
-        const catEmoji  = { main:'🍚', protein:'🥩', sub:'🥦', soup:'🍵', drink:'💧' };
-        const allChips  = ['main','protein','sub','soup','drink'].flatMap(group =>
-          (cats[group]||[]).map(name => `<span style="font-size:10px;padding:2px 7px;border-radius:14px;background:${catColors[group]}18;color:${catColors[group]};border:1px solid ${catColors[group]}33;white-space:nowrap;">${catEmoji[group]} ${name}</span>`)
+        const timeStr = `${new Date(m.recorded_at).getHours()}:${String(new Date(m.recorded_at).getMinutes()).padStart(2,'0')}`;
+        const cats    = m.food_categories || {};
+        const allChips = ['main','protein','sub','soup','drink'].flatMap(g =>
+          (cats[g]||[]).map(name => `<span style="font-size:10px;padding:2px 7px;border-radius:14px;background:${catColors[g]}18;color:${catColors[g]};border:1px solid ${catColors[g]}33;white-space:nowrap;">${catEmoji[g]} ${name}</span>`)
         );
-        const chipsHtml = allChips.length ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:7px;">${allChips.join('')}</div>` : '';
-        return `<div class="card" style="margin-bottom:6px;">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+        return `<div class="card" style="margin-bottom:8px;">
+          <div style="display:flex;align-items:flex-start;gap:8px;">
             <div style="flex:1;min-width:0;">
               <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:6px;">
                 <span style="font-weight:600;font-size:14px;">${m.dish_name||'食事'}</span>
@@ -4266,25 +4367,182 @@ async function renderHistory() {
                 <span style="font-size:12px;color:var(--green);">🔥 ${Math.round(m.calories||0)} kcal</span>
                 <span style="font-size:12px;color:var(--accent);">P: ${Math.round((m.protein||0)*10)/10}g</span>
                 <span style="font-size:12px;color:var(--amber);">K: ${Math.round(m.potassium||0)}mg</span>
-                <span style="font-size:12px;color:var(--red);">リン: ${Math.round(m.phosphorus||0)}mg</span>
+                <span style="font-size:12px;color:var(--red);">P: ${Math.round(m.phosphorus||0)}mg</span>
                 ${m.salt ? `<span style="font-size:12px;color:var(--purple);">塩: ${m.salt}g</span>` : ''}
               </div>
-              ${chipsHtml}
+              ${allChips.length ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:7px;">${allChips.join('')}</div>` : ''}
             </div>
           </div>
-          <!-- 編集・削除ボタン（常時表示） -->
           <div style="display:flex;gap:8px;margin-top:10px;border-top:1px solid var(--border);padding-top:10px;">
-            <button class="btn btn-ghost btn-sm" style="flex:1;"
-              onclick="event.stopPropagation();_historyDetail('${mealId}')">🔍 詳細</button>
-            <button class="btn btn-ghost btn-sm" style="flex:1;color:var(--accent);border-color:var(--accent);"
-              onclick="event.stopPropagation();_historyEdit('${mealId}')">✏️ 編集</button>
-            <button class="btn btn-sm" style="flex:1;background:var(--red-dim);color:var(--red);border:1px solid var(--red);"
-              onclick="event.stopPropagation();deleteMealConfirm('${mealId}')">🗑 削除</button>
+            <button class="btn btn-ghost btn-sm" style="flex:1;" onclick="event.stopPropagation();_historyDetail('${mealId}')">🔍 詳細</button>
+            <button class="btn btn-ghost btn-sm" style="flex:1;color:var(--accent);border-color:var(--accent);" onclick="event.stopPropagation();_historyEdit('${mealId}')">✏️ 編集</button>
+            <button class="btn btn-sm" style="flex:1;background:var(--red-dim);color:var(--red);border:1px solid var(--red);" onclick="event.stopPropagation();deleteMealConfirm('${mealId}')">🗑 削除</button>
           </div>
         </div>`;
       }).join('')}
     </div>`;
-  }).join('');
+  }
+
+  // ── 水分カードHTML ──
+  let waterHtml = '';
+  if ((_histFilter === 'all' || _histFilter === 'water') && hasWater) {
+    const totalMl = waterLogs.reduce((s, e) => s + (e.ml||0), 0);
+    waterHtml = `<div style="margin-bottom:18px;">
+      <div style="font-size:11px;color:var(--text3);letter-spacing:1.5px;font-weight:700;margin-bottom:8px;padding:0 2px;">💧 水分の記録 <span style="font-size:12px;color:var(--accent);font-family:'JetBrains Mono',monospace;margin-left:8px;">${totalMl.toLocaleString()} mL</span></div>
+      <div class="card" style="padding:12px;">
+        ${waterLogs.map(e => {
+          const t = new Date(e.time);
+          const timeStr = `${t.getHours()}:${String(t.getMinutes()).padStart(2,'0')}`;
+          const icon = e.drink ? '🥤' : '🍵';
+          const label = e.source || (e.drink ? '飲み物' : '食事由来');
+          const wid = e.id || (e.time + e.ml);
+          return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);">
+            <span style="font-size:20px;">${icon}</span>
+            <div style="flex:1;">
+              <div style="font-size:13px;font-weight:500;">${label}</div>
+              <div style="font-size:11px;color:var(--text3);">🕐 ${timeStr}${e.auto ? ' · 自動' : ''}</div>
+            </div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:var(--accent);">${e.ml}<span style="font-size:10px;color:var(--text3);"> mL</span></div>
+            <button onclick="deleteWaterLogEntry('${wid}')" style="padding:4px 8px;background:var(--red-dim);color:var(--red);border:1px solid var(--red);border-radius:8px;font-size:11px;cursor:pointer;">🗑</button>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }
+
+  // ── 薬カードHTML ──
+  let medHtml = '';
+  if ((_histFilter === 'all' || _histFilter === 'medicine') && hasMed) {
+    let medItems = '';
+    // medcheck_log（服薬チェック）を表示
+    if (medCheckLogs.length > 0) {
+      medItems += medCheckLogs.map(entry => {
+        const med = (Array.isArray(medMaster) ? medMaster : []).find(m => m && m.id === entry.medId);
+        const name = med ? med.name : (entry.medId || 'お薬');
+        const status = entry.status === 'taken' ? { label:'✓ 服薬済', color:'var(--green)' } : { label:'✕ スキップ', color:'var(--red)' };
+        const t = entry.time ? new Date(entry.time) : null;
+        const timeStr = t ? `${t.getHours()}:${String(t.getMinutes()).padStart(2,'0')}` : entry.slotKey || '';
+        return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);">
+          <span style="font-size:20px;">💊</span>
+          <div style="flex:1;">
+            <div style="font-size:13px;font-weight:500;">${name}</div>
+            <div style="font-size:11px;color:var(--text3);">🕐 ${timeStr}</div>
+          </div>
+          <span style="font-size:11px;color:${status.color};background:${status.color}22;padding:2px 8px;border-radius:10px;border:1px solid ${status.color}44;">${status.label}</span>
+        </div>`;
+      }).join('');
+    } else if (medLogs.length > 0) {
+      medItems += medLogs.map(e => {
+        const med = (Array.isArray(medMaster) ? medMaster : []).find(m => m && m.id === (e.med_id||e.medId));
+        const name = med ? med.name : (e.name || 'お薬');
+        const t = new Date(e.time||e.taken_at||0);
+        const timeStr = `${t.getHours()}:${String(t.getMinutes()).padStart(2,'0')}`;
+        return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);">
+          <span style="font-size:20px;">💊</span>
+          <div style="flex:1;">
+            <div style="font-size:13px;font-weight:500;">${name}</div>
+            <div style="font-size:11px;color:var(--text3);">🕐 ${timeStr}</div>
+          </div>
+          <span style="font-size:11px;color:var(--green);background:var(--green-dim);padding:2px 8px;border-radius:10px;border:1px solid var(--green)44;">✓ 服薬済</span>
+        </div>`;
+      }).join('');
+    }
+    if (medItems) {
+      medHtml = `<div style="margin-bottom:18px;">
+        <div style="font-size:11px;color:var(--text3);letter-spacing:1.5px;font-weight:700;margin-bottom:8px;padding:0 2px;">💊 お薬の記録</div>
+        <div class="card" style="padding:12px;">${medItems}</div>
+      </div>`;
+    }
+  }
+
+  // ── 健康データHTML ──
+  let healthHtml = '';
+  if ((_histFilter === 'all' || _histFilter === 'health') && hasHealth) {
+    const typeLabel = {
+      glucose: '🩸 血糖値', bp: '❤️ 血圧', urine: '🚽 尿量', exercise: '🏃 運動', weight: '⚖️ 体重'
+    };
+    const timingLabel = {
+      before_breakfast:'朝食前', after_breakfast:'朝食後', before_lunch:'昼食前',
+      after_lunch:'昼食後', before_dinner:'夕食前', after_dinner:'夕食後', bedtime:'就寝前',
+      morning:'朝', evening:'夕', other:'その他',
+      walk:'ウォーキング', run:'ランニング', bike:'自転車', swim:'水泳', stretch:'ストレッチ', rehab:'リハビリ'
+    };
+    healthHtml = `<div style="margin-bottom:18px;">
+      <div style="font-size:11px;color:var(--text3);letter-spacing:1.5px;font-weight:700;margin-bottom:8px;padding:0 2px;">🩺 健康の記録</div>
+      <div class="card" style="padding:12px;">
+        ${healthLogs.map(e => {
+          const t = new Date(e.time||0);
+          const timeStr = `${t.getHours()}:${String(t.getMinutes()).padStart(2,'0')}`;
+          const label = typeLabel[e.type] || e.type;
+          let valueHtml = '';
+          if (e.type === 'glucose') {
+            const parts = [];
+            if (e.before) parts.push(`食前: <b>${e.before}</b>`);
+            if (e.after)  parts.push(`食後: <b>${e.after}</b>`);
+            valueHtml = parts.join(' / ') + ' mg/dL';
+            if (e.timing) valueHtml += ` <span style="font-size:10px;color:var(--text3);">(${timingLabel[e.timing]||e.timing})</span>`;
+          } else if (e.type === 'bp') {
+            valueHtml = `<b>${e.sys||'—'}/${e.dia||'—'}</b> mmHg`;
+            if (e.pulse) valueHtml += ` 脈: <b>${e.pulse}</b> bpm`;
+          } else if (e.type === 'urine') {
+            valueHtml = `<b>${e.vol||0}</b> mL`;
+            const cLabel = {clear:'透明', yellow:'黄色', dark:'濃い黄色', orange:'オレンジ', red:'赤', foam:'泡立ち'};
+            if (e.color) valueHtml += ` · ${cLabel[e.color]||e.color}`;
+          } else if (e.type === 'exercise') {
+            valueHtml = `${timingLabel[e.exercise_type]||e.exercise_type||'運動'} · <b>${e.duration_min||e.minutes||0}</b>分`;
+          } else if (e.type === 'weight') {
+            valueHtml = `<b>${e.kg}</b> kg`;
+          }
+          const hid = e.id || e.time;
+          return `<div style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);">
+            <div style="flex:1;">
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">
+                <span style="font-size:13px;font-weight:600;">${label}</span>
+                <span style="font-size:10px;color:var(--text3);">🕐 ${timeStr}</span>
+              </div>
+              <div style="font-size:13px;color:var(--text2);">${valueHtml}</div>
+            </div>
+            <button onclick="deleteHealthRecord('${hid}')" style="padding:4px 8px;background:var(--red-dim);color:var(--red);border:1px solid var(--red);border-radius:8px;font-size:11px;cursor:pointer;flex-shrink:0;">🗑</button>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }
+
+  // 全て組み合わせて表示
+  list.innerHTML = summaryHtml + mealsHtml + waterHtml + medHtml + healthHtml;
+}
+
+// 水分ログ個別削除
+function deleteWaterLogEntry(entryId) {
+  if (!confirm('この水分記録を削除しますか？')) return;
+  try {
+    const all = JSON.parse(localStorage.getItem(WATER_KEY) || '[]');
+    // id または (time+ml) で特定
+    const filtered = all.filter(e => {
+      const eid = e.id || (e.time + e.ml);
+      return String(eid) !== String(entryId);
+    });
+    localStorage.setItem(WATER_KEY, JSON.stringify(filtered));
+    showToast('🗑 水分記録を削除しました');
+    renderHistoryContent();
+    updateWaterCard();
+  } catch(e) { showToast('⚠ 削除できませんでした'); }
+}
+
+// 健康データ個別削除
+function deleteHealthRecord(recordId) {
+  if (!confirm('この健康記録を削除しますか？')) return;
+  try {
+    const all = JSON.parse(localStorage.getItem(HEALTH_KEY) || '[]');
+    const filtered = all.filter(e => {
+      const eid = e.id || e.time;
+      return String(eid) !== String(recordId);
+    });
+    localStorage.setItem(HEALTH_KEY, JSON.stringify(filtered));
+    showToast('🗑 健康記録を削除しました');
+    renderHistoryContent();
+  } catch(e) { showToast('⚠ 削除できませんでした'); }
 }
 
 // 履歴画面：IDからmealを取得して詳細・編集を開く
@@ -4315,7 +4573,7 @@ function deleteMealConfirm(id) {
     const filtered = raw.filter(m => m && m.id !== id);
     localStorage.setItem('renalcare_meals', JSON.stringify(filtered));
     showToast('🗑 記録を削除しました');
-    renderHistory();
+    renderHistoryContent();
     updateHomeSummary();
   } catch(e) {
     showToast('⚠ 削除できませんでした');
@@ -4557,7 +4815,7 @@ function saveEditMeal() {
     _editFqSelections = [];
     showToast('✅ 記録を更新しました');
     closeModal('editModal');
-    renderHistory();
+    renderHistoryContent();
     updateHomeSummary();
   } catch(e) {
     showToast('⚠ 更新できませんでした');
