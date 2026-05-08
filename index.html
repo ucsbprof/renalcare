@@ -1047,11 +1047,9 @@ body.is-premium .premium-banner { display: none !important; }
           <div style="font-size:10px;color:var(--text3);" id="water-meal-pct">0%</div>
           <div style="font-size:10px;color:var(--text3);" id="home-water-badge"></div>
         </div>
-        <!-- 飲料のみ表示（食事水分は体重増加計算に含まれるため除外） -->
+        <!-- 飲料のみ表示 -->
         <div style="display:flex;gap:12px;font-size:11px;color:var(--text3);margin-bottom:10px;padding:6px 8px;background:var(--surface2);border-radius:8px;">
           <span>🥤 飲料: <b id="home-water-from-drink" style="color:var(--accent);">0</b>mL</span>
-          <span style="color:var(--border2);">|</span>
-          <span style="color:var(--text3);">食事の水分は体重増加計算に含まれます</span>
         </div>
         <!-- 体重増加（DW比）インジケーター -->
         <div id="home-dw-block" style="border-top:1px solid var(--border);padding-top:10px;display:none;">
@@ -1062,6 +1060,11 @@ body.is-premium .premium-banner { display: none !important; }
               <span style="font-size:11px;color:var(--text2);">g</span>
               <span id="home-wb-kg" style="font-size:10px;color:var(--text3);margin-left:2px;"></span>
             </div>
+          </div>
+          <!-- 食事重量内訳 -->
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--text3);margin-top:4px;">
+            <span>🍱 食事重量</span>
+            <span id="home-food-weight-val" style="font-family:'JetBrains Mono',monospace;color:var(--amber);font-weight:600;">0 g</span>
           </div>
           <!-- DW比バー -->
           <div style="margin-top:6px;">
@@ -4097,12 +4100,7 @@ async function renderHistory() {
   let meals = [];
   try {
     const raw = JSON.parse(localStorage.getItem('renalcare_meals') || '[]');
-    const currentUid = state.uid || getUserId();
-    meals = (Array.isArray(raw) ? raw : []).filter(m => {
-      if (!m || typeof m !== 'object') return false;
-      // user_idがない旧データも含める、または現在のユーザーのデータ
-      return !m.user_id || m.user_id === currentUid;
-    }).map(m => ({
+    meals = (Array.isArray(raw) ? raw : []).filter(m => m && typeof m === 'object').map(m => ({
       calories:0, protein:0, carb:0, fiber:0, potassium:0,
       phosphorus:0, salt:0, water:0, food_weight:0,
       ...m,
@@ -4948,37 +4946,20 @@ async function saveMeal() {
   dbSaveMeal(meal).catch(()=>{});
 
   // 水分連動：①手動入力water ②食品DB由来（マイ食品water含む）③チップ推計
-  const manualWater = meal.water || 0;
+  // 飲料のみ水分ログに追加（食事からの水分は加算しない）
   const waterResult = estimateWaterFromMeal(meal);
-  // 食事タイプが飲み物かどうか（飲み物登録時はdrink扱いにして体重増加計算に反映）
-  const mealIsDrink = (meal.meal_type === 'drink') ||
-    ((meal.food_categories?.food_db_selections || []).every(s => (s.cat||'') === '飲み物'));
   try {
-    const all = JSON.parse(localStorage.getItem(WATER_KEY)||'[]');
-    if (manualWater > 0) {
-      // 手動入力：食事タイプで drink/food を自動判別
-      all.push({ time: meal.recorded_at, ml: manualWater, auto: false,
-                 drink: mealIsDrink, source: meal.dish_name||'食事' });
-    } else {
-      if (waterResult.food > 0) {
-        all.push({ time: meal.recorded_at, ml: waterResult.food, auto: true, drink: false, source: meal.dish_name||'食事' });
-      }
-      if (waterResult.drink > 0) {
-        all.push({ time: meal.recorded_at, ml: waterResult.drink, auto: true, drink: true, source: meal.dish_name||'飲物' });
-      }
-    }
-    const hasWater = manualWater > 0 || waterResult.food > 0 || waterResult.drink > 0;
-    if (hasWater) {
+    if (waterResult.drink > 0) {
+      const all = JSON.parse(localStorage.getItem(WATER_KEY)||'[]');
+      all.push({ time: meal.recorded_at, ml: waterResult.drink, auto: true, drink: true, source: meal.dish_name||'飲物' });
       localStorage.setItem(WATER_KEY, JSON.stringify(all));
-      // リアルタイムで水分カード・体重増加予測を更新
       updateWaterCard();
       updateWaterBalance();
     }
   } catch(e) { console.error('[saveMeal] water log error:', e); }
-  const waterFromMeal = manualWater || waterResult.total;
 
   if (saved) {
-    showToast(`✅ 記録しました${waterFromMeal>0?' (水分+'+waterFromMeal+'mL)':''}`);
+    showToast('✅ 記録しました');
     try { saveDailyPeakGlucose(); } catch(e) {}
   } else {
     showToast('⚠️ 保存に失敗しました');
@@ -5051,21 +5032,18 @@ function localLoadMeals() {
   try {
     const raw = JSON.parse(localStorage.getItem('renalcare_meals') || '[]');
     if (!Array.isArray(raw)) return [];
-    const currentUid = state.uid || getUserId();
     return raw.map(m => {
       if (!m || typeof m !== 'object') return null;
-      // user_idがない旧データ、または現在ユーザーのデータのみ返す
-      if (m.user_id && m.user_id !== currentUid) return null;
       return {
-        calories:   m.calories   ?? 0,
-        protein:    m.protein    ?? 0,
-        carb:       m.carb       ?? 0,
-        fiber:      m.fiber      ?? 0,
-        potassium:  m.potassium  ?? 0,
-        phosphorus: m.phosphorus ?? 0,
-        salt:       m.salt       ?? 0,
-        water:      m.water      ?? 0,
-        food_weight:m.food_weight ?? 0,
+        calories:    m.calories    ?? 0,
+        protein:     m.protein     ?? 0,
+        carb:        m.carb        ?? 0,
+        fiber:       m.fiber       ?? 0,
+        potassium:   m.potassium   ?? 0,
+        phosphorus:  m.phosphorus  ?? 0,
+        salt:        m.salt        ?? 0,
+        water:       m.water       ?? 0,
+        food_weight: m.food_weight ?? 0,
         ...m,
         recorded_at: m.recorded_at || new Date().toISOString(),
       };
@@ -5173,6 +5151,9 @@ function updateHomeSummary() {
 
     if (wbValEl) wbValEl.textContent = (balanceG >= 0 ? '+' : '') + balanceG.toLocaleString();
     if (wbKgEl)  wbKgEl.textContent  = '≒ ' + (balanceG >= 0 ? '+' : '') + (balanceG/1000).toFixed(2) + ' kg';
+    // 食事重量内訳を更新
+    const homeFwEl = document.getElementById('home-food-weight-val');
+    if (homeFwEl) homeFwEl.textContent = foodWeightG.toLocaleString() + ' g';
 
     // DW比計算
     const dw3g = bw * 0.03 * 1000; // g単位
@@ -6246,58 +6227,39 @@ function estimateFoodDBWater(food) {
 // 食事全体の水分を { food: mL, drink: mL, total: mL } で返す
 // drink = 飲物チップ由来、food = 食材・汁物・DBなど
 function estimateWaterFromMeal(meal) {
-  let foodWater = 0;
   let drinkWater = 0;
   const cats = meal.food_categories || {};
   const portions = cats._portions || {};
 
-  // 1〜3: チップ選択から推定（倍率を考慮）
-  ['drink','soup','main','protein','sub'].forEach(group => {
-    const ratio = portions[group] != null ? portions[group] : 1.0;
-    (cats[group] || []).forEach(chipName => {
-      const trimmed = chipName.trim();
-      const mapped = FOOD_WATER_MAP[trimmed];
-      let ml = 0;
-      if (mapped != null) {
-        ml = mapped * ratio;
-      } else if (group === 'drink') {
-        const mlMatch = trimmed.match(/(\d+)\s*ml/i);
-        ml = (mlMatch ? parseInt(mlMatch[1]) : 200) * ratio;
-      }
-      if (group === 'drink') {
-        drinkWater += ml;
-      } else {
-        foodWater += ml;
-      }
-    });
+  // drinkチップのみ水分を計算（soup・main・protein・subは除外）
+  const ratio = portions['drink'] != null ? portions['drink'] : 1.0;
+  (cats['drink'] || []).forEach(chipName => {
+    const trimmed = chipName.trim();
+    const mapped = FOOD_WATER_MAP[trimmed];
+    let ml = 0;
+    if (mapped != null) {
+      ml = mapped * ratio;
+    } else {
+      // ml表記があればそれを使う、なければ200ml
+      const mlMatch = trimmed.match(/(\d+)\s*ml/i);
+      ml = (mlMatch ? parseInt(mlMatch[1]) : 200) * ratio;
+    }
+    drinkWater += ml;
   });
 
-  // 4: 食品DBから選択した食品（飲み物カテゴリはdrinkWater、それ以外はfoodWater）
-  // マイ食品に water フィールドが明示されている場合はそちらを優先
+  // 食品DBの飲み物カテゴリのみ
   (cats.food_db_selections || meal.food_db_selections || []).forEach(sel => {
-    let wml;
+    if ((sel.cat || '') !== '飲み物' && (sel.cat || '') !== 'マイ食品飲料') return;
+    let wml = 0;
     if (sel.water != null && sel.water > 0) {
-      // マイ食品の水分量フィールドを倍率で換算
-      const ratio = sel.multiplier || 1.0;
-      wml = Math.round(sel.water * ratio);
+      wml = Math.round(sel.water * (sel.multiplier || 1.0));
     } else {
       wml = estimateFoodDBWater(sel);
     }
-    if ((sel.cat || '') === '飲み物' || (sel.cat || '') === 'マイ食品飲料') {
-      drinkWater += wml;
-    } else {
-      foodWater += wml;
-    }
+    drinkWater += wml;
   });
 
-  // 5: フォールバック（食事ありだが計算できない場合）
-  // カロリーが入力されているか、料理名がデフォルト以外で入力されている場合は最低200mLを計上
-  const hasContent = (meal.calories || 0) > 0 || ((meal.dish_name || '').trim() !== '' && (meal.dish_name || '').trim() !== '記録');
-  if ((foodWater + drinkWater) === 0 && hasContent) {
-    foodWater = 200;
-  }
-
-  return { food: Math.round(foodWater), drink: Math.round(drinkWater), total: Math.round(foodWater + drinkWater) };
+  return { food: 0, drink: Math.round(drinkWater), total: Math.round(drinkWater) };
 }
 
 // 後方互換：数値だけ必要な箇所用
@@ -7546,18 +7508,21 @@ function _syncHomeWaterCard(total, mealWater, drinkWater, target, pct) {
   const insensible = (typeof calcInsensibleLoss === 'function') ? calcInsensibleLoss() : null;
   const todayMeals2 = (typeof localLoadMeals === 'function') ? localLoadMeals().filter(m => new Date(m.recorded_at).toDateString() === new Date().toDateString()) : [];
   const kcal2 = todayMeals2.reduce((s,m) => s+(m.calories||0), 0);
+  const fw2   = todayMeals2.reduce((s,m) => s+(m.food_weight||0), 0);
   const meta2 = kcal2 > 0 ? Math.round(kcal2*0.12) : Math.round(bw*2.5);
   const urine2 = (typeof getTodayHealthRecords === 'function') ? getTodayHealthRecords('urine').reduce((s,r)=>s+(r.vol||0),0) : 0;
   const ins2   = insensible ? insensible.total : 0;
-  const bal2   = (total + meta2) - urine2 - ins2;
+  const bal2   = (total + meta2 + fw2) - urine2 - ins2;
   const dw3g   = bw * 0.03 * 1000;
   const dw5g   = bw * 0.05 * 1000;
   const vEl = document.getElementById('home-wb-val');
   const kEl = document.getElementById('home-wb-kg');
   const bBar= document.getElementById('home-dw-bar');
   const wEl2= document.getElementById('home-wb-warn');
+  const fwEl2 = document.getElementById('home-food-weight-val');
   if (vEl) { vEl.textContent = (bal2>=0?'+':'')+bal2.toLocaleString(); vEl.style.color = bal2>dw5g?'var(--red)':bal2>dw3g?'var(--amber)':'var(--green)'; }
   if (kEl) kEl.textContent = '≒ '+(bal2>=0?'+':'')+(bal2/1000).toFixed(2)+' kg';
+  if (fwEl2) fwEl2.textContent = fw2.toLocaleString() + ' g';
   if (bBar) { bBar.style.width = Math.min(110,dw5g>0?bal2/dw5g*100:0)+'%'; bBar.style.background=bal2>dw5g?'var(--red)':bal2>dw3g?'var(--amber)':'var(--green)'; }
   if (wEl2) {
     if      (bal2>dw5g) { wEl2.style.display='block'; wEl2.style.background='var(--red-dim)';   wEl2.style.color='var(--red)';   wEl2.style.border='1px solid rgba(248,113,113,0.3)'; wEl2.textContent='⚠ 体重増加量がDW×5%を超えています'; }
