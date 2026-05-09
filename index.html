@@ -5152,6 +5152,36 @@ function resetRecord() {
   if (preview) preview.classList.remove('visible');
 }
 
+// ===== グローバルエラーキャッチ（デバッグ用） =====
+window.onerror = function(msg, src, line, col, err) {
+  console.error('[GLOBAL ERROR]', msg, 'line:', line, 'col:', col, err);
+  // 画面にも表示
+  try {
+    let dbgEl = document.getElementById('_debug_overlay');
+    if (!dbgEl) {
+      dbgEl = document.createElement('div');
+      dbgEl.id = '_debug_overlay';
+      dbgEl.style.cssText = 'position:fixed;bottom:80px;left:8px;right:8px;background:#1a1a2e;border:2px solid #ef5350;border-radius:10px;padding:12px;font-size:11px;color:#ef5350;z-index:9999;max-height:160px;overflow-y:auto;font-family:monospace;white-space:pre-wrap;';
+      document.body.appendChild(dbgEl);
+    }
+    dbgEl.textContent += `❌ ${msg}\n  line:${line} col:${col}\n  ${src}\n\n`;
+  } catch(e2) {}
+  return false;
+};
+window.addEventListener('unhandledrejection', function(e) {
+  console.error('[UNHANDLED PROMISE]', e.reason);
+  try {
+    let dbgEl = document.getElementById('_debug_overlay');
+    if (!dbgEl) {
+      dbgEl = document.createElement('div');
+      dbgEl.id = '_debug_overlay';
+      dbgEl.style.cssText = 'position:fixed;bottom:80px;left:8px;right:8px;background:#1a1a2e;border:2px solid #ef5350;border-radius:10px;padding:12px;font-size:11px;color:#ef5350;z-index:9999;max-height:160px;overflow-y:auto;font-family:monospace;white-space:pre-wrap;';
+      document.body.appendChild(dbgEl);
+    }
+    dbgEl.textContent += `⚠ Promise: ${e.reason}\n\n`;
+  } catch(e2) {}
+});
+
 async function saveMeal() {
   const now = new Date();
   const carb = parseFloat(document.getElementById('record-carb')?.value)||0;
