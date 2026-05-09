@@ -2136,15 +2136,6 @@ body.is-premium .premium-banner { display: none !important; }
     <div class="nav-btn" id="nav-settings" onclick="navTo('settings')"><div class="nav-icon">⚙️</div><div class="nav-label" data-i18n="nav_settings">設定</div></div>
   </div>
 
-  <!-- 診断パネル（デバッグ用） -->
-  <div id="_diag_panel" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.92);z-index:99999;overflow-y:auto;padding:16px;font-family:monospace;font-size:11px;color:#ccc;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-      <span style="font-size:15px;font-weight:700;color:#4fc3f7;">🔍 診断パネル</span>
-      <button onclick="document.getElementById('_diag_panel').style.display='none'" style="background:#ef5350;color:#fff;border:none;border-radius:8px;padding:6px 14px;cursor:pointer;font-size:13px;">✕ 閉じる</button>
-    </div>
-    <div id="_diag_content" style="white-space:pre-wrap;line-height:1.6;"></div>
-  </div>
-  <button id="_diag_btn" onclick="runDiag()" style="position:fixed;top:8px;right:8px;z-index:9998;background:#1a237e;color:#90caf9;border:1px solid #4fc3f7;border-radius:20px;padding:4px 10px;font-size:10px;cursor:pointer;opacity:0.7;">🔍診断</button>
 </div>
 <div class="screen" id="s-doctor">
   <div class="app-header"><div class="header-logo">🏥 医療機関ダッシュボード</div><button class="btn btn-outline btn-sm" onclick="showScreen('s-onboarding')">← 戻る</button></div>
@@ -4132,6 +4123,12 @@ function calcAvgGlucose(records) {
   return Math.round(vals.reduce((a,b) => a+b, 0) / vals.length);
 }
 
+// ローカル日付を "YYYY-MM-DD" 形式で返す（toISOString()はUTCなので日本時間と最大9時間ズレる問題を防ぐ）
+function localDateStr(d) {
+  const dt = d || new Date();
+  return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+}
+
 // ===== 履歴ページ 状態管理 =====
 let _histDate     = new Date();          // 現在表示中の日付
 let _histFilter   = 'all';              // 'all' | 'meal' | 'water' | 'medicine' | 'health'
@@ -4200,13 +4197,8 @@ function _updateHistoryDateUI() {
   }
   // ピッカーの値を合わせる
   if (picker) {
-    const yyyy = _histDate.getFullYear();
-    const mm   = String(_histDate.getMonth()+1).padStart(2,'0');
-    const dd   = String(_histDate.getDate()).padStart(2,'0');
-    picker.value = `${yyyy}-${mm}-${dd}`;
-    // 未来は選択不可
-    const tYYYY = now.getFullYear(), tMM = String(now.getMonth()+1).padStart(2,'0'), tDD = String(now.getDate()).padStart(2,'0');
-    picker.max = `${tYYYY}-${tMM}-${tDD}`;
+    picker.value = localDateStr(_histDate);
+    picker.max   = localDateStr(now);
   }
 }
 
@@ -4254,8 +4246,7 @@ function renderHistoryContent() {
   let medCheckLogs = [];
   try {
     const mcAll = JSON.parse(localStorage.getItem(MEDCHECK_KEY) || '[]');
-    const yyyy = _histDate.getFullYear(), mm = String(_histDate.getMonth()+1).padStart(2,'0'), dd = String(_histDate.getDate()).padStart(2,'0');
-    const dateStr = `${yyyy}-${mm}-${dd}`;
+    const dateStr = localDateStr(_histDate);
     const dayCheck = (Array.isArray(mcAll) ? mcAll : []).find(e => e && e.date === dateStr);
     if (dayCheck && Array.isArray(dayCheck.entries)) medCheckLogs = dayCheck.entries;
   } catch(e) {}
@@ -4912,7 +4903,11 @@ function initRecordDate() {
   const el = document.getElementById('record-date');
   if (el && !el.value) {
     const d = new Date();
-    el.value = d.toISOString().slice(0, 10);
+    // toISOString()はUTCなので、ローカル日付を直接取得する
+    const yyyy = d.getFullYear();
+    const mm   = String(d.getMonth() + 1).padStart(2, '0');
+    const dd   = String(d.getDate()).padStart(2, '0');
+    el.value = `${yyyy}-${mm}-${dd}`;
   }
   // 時刻が未入力なら現在時刻をセット
   const timeEl = document.getElementById('record-time');
@@ -5136,7 +5131,7 @@ function resetRecord() {
   if (fwHidden) fwHidden.value = '0';
   // 日付・時刻をリセット
   const dateEl = document.getElementById('record-date');
-  if (dateEl) { const d = new Date(); dateEl.value = d.toISOString().slice(0, 10); }
+  if (dateEl) { dateEl.value = localDateStr(); }
   const timeEl = document.getElementById('record-time');
   if (timeEl) { const d = new Date(); timeEl.value = `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; }
   // 食事区分を朝食にリセット
@@ -5160,157 +5155,7 @@ function resetRecord() {
   if (preview) preview.classList.remove('visible');
 }
 
-// ===== グローバルエラーキャッチ（デバッグ用） =====
-window.onerror = function(msg, src, line, col, err) {
-  console.error('[GLOBAL ERROR]', msg, 'line:', line, 'col:', col, err);
-  // 画面にも表示
-  try {
-    let dbgEl = document.getElementById('_debug_overlay');
-    if (!dbgEl) {
-      dbgEl = document.createElement('div');
-      dbgEl.id = '_debug_overlay';
-      dbgEl.style.cssText = 'position:fixed;bottom:80px;left:8px;right:8px;background:#1a1a2e;border:2px solid #ef5350;border-radius:10px;padding:12px;font-size:11px;color:#ef5350;z-index:9999;max-height:160px;overflow-y:auto;font-family:monospace;white-space:pre-wrap;';
-      document.body.appendChild(dbgEl);
-    }
-    dbgEl.textContent += `❌ ${msg}\n  line:${line} col:${col}\n  ${src}\n\n`;
-  } catch(e2) {}
-  return false;
-};
-window.addEventListener('unhandledrejection', function(e) {
-  console.error('[UNHANDLED PROMISE]', e.reason);
-  try {
-    let dbgEl = document.getElementById('_debug_overlay');
-    if (!dbgEl) {
-      dbgEl = document.createElement('div');
-      dbgEl.id = '_debug_overlay';
-      dbgEl.style.cssText = 'position:fixed;bottom:80px;left:8px;right:8px;background:#1a1a2e;border:2px solid #ef5350;border-radius:10px;padding:12px;font-size:11px;color:#ef5350;z-index:9999;max-height:160px;overflow-y:auto;font-family:monospace;white-space:pre-wrap;';
-      document.body.appendChild(dbgEl);
-    }
-    dbgEl.textContent += `⚠ Promise: ${e.reason}\n\n`;
-  } catch(e2) {}
-});
-
-// ===== 診断関数 =====
-function runDiag() {
-  const panel  = document.getElementById('_diag_panel');
-  const content= document.getElementById('_diag_content');
-  if (!panel || !content) return;
-  panel.style.display = 'block';
-
-  let out = '';
-
-  // 1. localStorage内の食事データ
-  try {
-    const meals = JSON.parse(localStorage.getItem('renalcare_meals') || '[]');
-    out += `【食事データ (renalcare_meals)】\n`;
-    out += `  件数: ${meals.length}\n`;
-    if (meals.length > 0) {
-      out += `  最新3件:\n`;
-      meals.slice(0, 3).forEach((m, i) => {
-        out += `    [${i}] id:${m.id||'?'} name:${m.dish_name||'?'} at:${m.recorded_at||'?'} cal:${m.calories||0}\n`;
-      });
-    } else {
-      out += `  → データなし！\n`;
-    }
-  } catch(e) { out += `【食事データ】エラー: ${e}\n`; }
-
-  // 2. 今日の食事
-  const today = new Date().toDateString();
-  try {
-    const meals = JSON.parse(localStorage.getItem('renalcare_meals') || '[]');
-    const todayM = meals.filter(m => m && new Date(m.recorded_at||0).toDateString() === today);
-    out += `\n【今日(${today})の食事】\n  件数: ${todayM.length}\n`;
-    todayM.forEach((m,i) => {
-      out += `  [${i}] ${m.dish_name||'?'} at:${m.recorded_at}\n`;
-    });
-  } catch(e) { out += `【今日の食事】エラー: ${e}\n`; }
-
-  // 3. state確認
-  out += `\n【state】\n`;
-  out += `  uid: "${state.uid||'(空)'}"\n`;
-  out += `  userType: "${state.userType||'(空)'}"\n`;
-  out += `  userName: "${state.userName||'(空)'}"\n`;
-  out += `  targets: cal=${state.targets?.calories} prot=${state.targets?.protein}\n`;
-
-  // 4. activeProfile確認
-  try {
-    const prof = getActiveProfile();
-    out += `\n【activeProfile】\n`;
-    out += prof
-      ? `  uid: ${prof.uid} name: ${prof.userName}\n  targets: ${JSON.stringify(prof.targets||{}).substring(0,100)}\n`
-      : `  → null（プロフィール未設定）\n`;
-  } catch(e) { out += `\n【activeProfile】エラー: ${e}\n`; }
-
-  // 5. getActiveUid
-  try {
-    const uid = getActiveUid();
-    out += `\n【getActiveUid()】: "${uid||'(空)'}"\n`;
-  } catch(e) { out += `\n【getActiveUid()】エラー: ${e}\n`; }
-
-  // 6. 水分データ
-  try {
-    const water = JSON.parse(localStorage.getItem(WATER_KEY) || '[]');
-    const todayW = water.filter(e => e && new Date(e.time||0).toDateString() === today);
-    out += `\n【水分データ (WATER_KEY)】全${water.length}件、今日${todayW.length}件\n`;
-  } catch(e) { out += `\n【水分データ】エラー: ${e}\n`; }
-
-  // 7. 健康データ
-  try {
-    const health = JSON.parse(localStorage.getItem(HEALTH_KEY) || '[]');
-    out += `\n【健康データ (HEALTH_KEY)】全${health.length}件\n`;
-  } catch(e) { out += `\n【健康データ】エラー: ${e}\n`; }
-
-  // 8. localStorageの全キー
-  out += `\n【localStorageキー一覧】\n`;
-  for (let i = 0; i < localStorage.length; i++) {
-    const k = localStorage.key(i);
-    try {
-      const v = localStorage.getItem(k);
-      out += `  ${k}: ${v.length}文字\n`;
-    } catch(e) {}
-  }
-
-  // 9. 現在のアクティブページ
-  const activePage = document.querySelector('.page.active');
-  out += `\n【現在のアクティブページ】: ${activePage?.id || 'none'}\n`;
-
-  // 10. home-meals要素確認
-  const homeMealsEl = document.getElementById('home-meals');
-  out += `\n【home-meals要素】: ${homeMealsEl ? '存在・中身='+homeMealsEl.innerHTML.substring(0,80) : '存在しない！'}\n`;
-
-  // 11. テスト保存
-  out += `\n【テスト: saveMeal相当の処理】\n`;
-  try {
-    const testMeal = {
-      id: 'TEST_'+Date.now(),
-      dish_name: 'テスト記録',
-      calories: 300,
-      protein: 10,
-      potassium: 200,
-      phosphorus: 100,
-      salt: 1,
-      water: 0,
-      food_weight: 150,
-      meal_type: 'lunch',
-      food_categories: {},
-      recorded_at: new Date().toISOString()
-    };
-    const beforeCount = JSON.parse(localStorage.getItem('renalcare_meals')||'[]').length;
-    const saved = localSaveMeal(testMeal);
-    const afterCount  = JSON.parse(localStorage.getItem('renalcare_meals')||'[]').length;
-    out += `  localSaveMeal result: ${saved}\n`;
-    out += `  件数変化: ${beforeCount} → ${afterCount}\n`;
-    // 削除しておく
-    const cleaned = JSON.parse(localStorage.getItem('renalcare_meals')||'[]').filter(m => m.id !== testMeal.id);
-    localStorage.setItem('renalcare_meals', JSON.stringify(cleaned));
-    out += `  テストデータ削除完了\n`;
-  } catch(e) { out += `  エラー: ${e}\n`; }
-
-  content.textContent = out;
-}
-
 async function saveMeal() {
-  console.log('[saveMeal] 開始');
   const now = new Date();
   const carb = parseFloat(document.getElementById('record-carb')?.value)||0;
   const fiber = parseFloat(document.getElementById('record-fiber')?.value)||0;
@@ -5358,13 +5203,8 @@ async function saveMeal() {
       return now.toISOString();
     })()
   };
-  console.log('[saveMeal] meal object:', JSON.stringify(meal).substring(0,200));
   const saved = localSaveMeal(meal);
-  console.log('[saveMeal] localSaveMeal result:', saved);
-  const ls_check = JSON.parse(localStorage.getItem('renalcare_meals')||'[]');
-  console.log('[saveMeal] localStorage meals count after save:', ls_check.length);
-
-  // 水分連動：①手動入力water ②食品DB由来（マイ食品water含む）③チップ推計
+  dbSaveMeal(meal).catch(()=>{});
   // 飲料のみ水分ログに追加（食事からの水分は加算しない）
   const waterResult = estimateWaterFromMeal(meal);
   try {
@@ -6808,7 +6648,7 @@ function saveDailyPeakGlucose() {
 
     // 今日分エントリを上書き（同じ日付のものを削除して最新値で保存）
     const log = JSON.parse(localStorage.getItem(HBA1C_KEY) || '[]');
-    const todayStr = new Date().toISOString().slice(0, 10);
+    const todayStr = localDateStr();
     const filtered = log.filter(e => !e.date.startsWith(todayStr) || e.type === 'manual');
     filtered.push({
       date: new Date().toISOString(),
@@ -9842,7 +9682,7 @@ function saveNewMedicine() {
     note:        _selectedDrugData.note || '',
     daysSupply,
     stock,
-    prescDate:   new Date().toISOString().slice(0, 10),
+    prescDate:   localDateStr(),
     createdAt:   new Date().toISOString(),
   };
 
@@ -10820,7 +10660,7 @@ function quickDeleteMed(id, name) {
 // ----- UI: ページレンダリング -----
 function setMedDateToday() {
   const el = document.getElementById('med-record-date');
-  if (el) { el.value = new Date().toISOString().slice(0,10); renderMedicineLog(); }
+  if (el) { el.value = localDateStr(); renderMedicineLog(); }
 }
 
 // ── 頓服ログ（localStorage） ──
@@ -10879,7 +10719,7 @@ function isPeriodicDueToday(med, dateStr) {
 
 function renderMedicineLog() {
   const dateEl  = document.getElementById('med-record-date');
-  const dateStr = dateEl ? dateEl.value : new Date().toISOString().slice(0,10);
+  const dateStr = dateEl ? dateEl.value : localDateStr();
   const meds    = loadMedicines();
   const howLabel = { water:'水で服用', food:'食べ物と一緒', chew:'噛んで服用', dissolve:'口で溶かす', sublingual:'舌下', other:'その他' };
   const WEEKDAY_NAMES = ['月','火','水','木','金','土','日'];
