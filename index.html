@@ -1064,7 +1064,10 @@ body.is-premium .premium-banner { display: none !important; }
           <!-- 食事重量内訳 -->
           <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--text3);margin-top:4px;">
             <span>🍱 食事重量</span>
-            <span id="home-food-weight-val" style="font-family:'JetBrains Mono',monospace;color:var(--amber);font-weight:600;">0 g</span>
+            <div style="display:flex;align-items:baseline;gap:4px;">
+              <span id="home-food-weight-val" style="font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:700;color:var(--amber);">0</span>
+              <span style="font-size:11px;color:var(--text2);">g</span>
+            </div>
           </div>
           <!-- DW比バー -->
           <div style="margin-top:6px;">
@@ -5412,7 +5415,7 @@ function updateHomeSummary() {
     if (wbKgEl)  wbKgEl.textContent  = '≒ ' + (balanceG >= 0 ? '+' : '') + (balanceG/1000).toFixed(2) + ' kg';
     // 食事重量内訳を更新
     const homeFwEl = document.getElementById('home-food-weight-val');
-    if (homeFwEl) homeFwEl.textContent = foodWeightG.toLocaleString() + ' g';
+    if (homeFwEl) homeFwEl.textContent = foodWeightG.toLocaleString();
 
     // DW比計算
     const dw3g = bw * 0.03 * 1000; // g単位
@@ -7781,7 +7784,7 @@ function _syncHomeWaterCard(total, mealWater, drinkWater, target, pct) {
   const fwEl2 = document.getElementById('home-food-weight-val');
   if (vEl) { vEl.textContent = (bal2>=0?'+':'')+bal2.toLocaleString(); vEl.style.color = bal2>dw5g?'var(--red)':bal2>dw3g?'var(--amber)':'var(--green)'; }
   if (kEl) kEl.textContent = '≒ '+(bal2>=0?'+':'')+(bal2/1000).toFixed(2)+' kg';
-  if (fwEl2) fwEl2.textContent = fw2.toLocaleString() + ' g';
+  if (fwEl2) fwEl2.textContent = fw2.toLocaleString();
   if (bBar) { bBar.style.width = Math.min(110,dw5g>0?bal2/dw5g*100:0)+'%'; bBar.style.background=bal2>dw5g?'var(--red)':bal2>dw3g?'var(--amber)':'var(--green)'; }
   if (wEl2) {
     if      (bal2>dw5g) { wEl2.style.display='block'; wEl2.style.background='var(--red-dim)';   wEl2.style.color='var(--red)';   wEl2.style.border='1px solid rgba(248,113,113,0.3)'; wEl2.textContent='⚠ 体重増加量がDW×5%を超えています'; }
