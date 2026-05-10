@@ -746,6 +746,213 @@ body.is-premium .premium-banner { display: none !important; }
   background: var(--green); border-color: var(--green); color: #fff;
 }
 .terms-version { font-size: 10px; color: var(--text3); margin-top: 8px; text-align: right; }
+
+/* ===== 🔥 ストリークバナー ===== */
+#streak-banner {
+  display:none;
+  align-items:center;
+  gap:10px;
+  background:linear-gradient(135deg,rgba(253,217,106,0.18),rgba(255,123,123,0.12));
+  border:1.5px solid rgba(253,217,106,0.45);
+  border-radius:var(--r);
+  padding:10px 14px;
+  margin-bottom:12px;
+  animation:fadeIn 0.4s ease;
+}
+#streak-banner.show { display:flex; }
+.streak-fire { font-size:26px; line-height:1; flex-shrink:0; }
+.streak-body { flex:1; }
+.streak-num {
+  font-family:'JetBrains Mono',monospace;
+  font-size:22px; font-weight:800; color:var(--amber); line-height:1;
+  display:inline-block;
+}
+.streak-label { font-size:12px; color:var(--text2); margin-top:1px; }
+.streak-badge {
+  font-size:10px; padding:2px 8px; border-radius:20px;
+  background:var(--amber-dim); color:var(--amber);
+  border:1px solid rgba(253,217,106,0.5); font-weight:700;
+  white-space:nowrap; flex-shrink:0;
+}
+
+/* ===== 💉 透析カウントダウンカード ===== */
+#dialysis-countdown-card {
+  display:none;
+  border-color:rgba(192,132,252,0.4);
+  margin-bottom:12px;
+}
+#dialysis-countdown-card.show { display:block; }
+.dialysis-days-big {
+  font-family:'JetBrains Mono',monospace;
+  font-size:46px; font-weight:800; color:var(--purple); line-height:1;
+}
+.dialysis-days-unit { font-size:16px; color:var(--text2); margin-left:4px; }
+.dialysis-weight-pace {
+  display:flex; align-items:center; justify-content:space-between;
+  background:var(--surface2); border-radius:10px; padding:10px 14px;
+  margin-top:10px;
+}
+.pace-label { font-size:11px; color:var(--text3); }
+.pace-val { font-family:'JetBrains Mono',monospace; font-size:16px; font-weight:700; }
+.pace-ok   { color:var(--green); }
+.pace-warn { color:var(--amber); }
+.pace-over { color:var(--red); }
+
+/* ===== 🗂 折りたたみカード ===== */
+.collapsible-card { }
+.collapsible-toggle {
+  display:flex; align-items:center; justify-content:space-between;
+  cursor:pointer; user-select:none; -webkit-user-select:none;
+}
+.collapsible-arrow {
+  font-size:14px; color:var(--text3); transition:transform 0.25s ease;
+  flex-shrink:0; margin-left:8px;
+}
+.collapsible-arrow.open { transform:rotate(180deg); }
+.collapsible-body {
+  overflow:hidden;
+  max-height:0;
+  transition:max-height 0.35s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease;
+  opacity:0;
+}
+.collapsible-body.open {
+  max-height:2000px;
+  opacity:1;
+}
+
+/* ===== ⚡ よく使う食品ショートカット ===== */
+#quick-foods-section {
+  margin-bottom:8px;
+  display:none;
+}
+#quick-foods-section.show { display:block; }
+.quick-foods-title {
+  font-size:11px; color:var(--accent); font-weight:700;
+  letter-spacing:1.2px; margin-bottom:8px;
+  display:flex; align-items:center; gap:6px;
+}
+.quick-food-chips {
+  display:flex; flex-wrap:wrap; gap:6px;
+}
+.quick-food-chip {
+  display:flex; align-items:center; gap:5px;
+  padding:6px 11px; border-radius:20px;
+  background:rgba(79,195,247,0.1);
+  border:1.5px solid rgba(79,195,247,0.35);
+  color:var(--accent); font-size:12px; font-weight:600;
+  cursor:pointer; transition:all 0.15s;
+  white-space:nowrap;
+}
+.quick-food-chip:active { transform:scale(0.94); }
+.quick-food-chip:hover { background:rgba(79,195,247,0.2); border-color:var(--accent); }
+.quick-food-count {
+  font-size:10px; color:var(--text3);
+  background:var(--surface2); border-radius:10px;
+  padding:1px 5px;
+}
+
+/* ===== 履歴カレンダー ===== */
+#hist-calendar {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 14px;
+  margin-bottom: 14px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.cal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 12px;
+}
+.cal-month-label {
+  font-family: 'Kaisei Opti', serif;
+  font-size: 16px; font-weight: 700; color: var(--text);
+}
+.cal-nav-btn {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: var(--surface2); border: 1px solid var(--border2);
+  color: var(--text2); font-size: 16px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s; flex-shrink: 0;
+}
+.cal-nav-btn:hover { border-color: var(--accent); color: var(--accent); }
+.cal-nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.cal-weekdays {
+  display: grid; grid-template-columns: repeat(7, 1fr);
+  margin-bottom: 4px;
+}
+.cal-weekday {
+  text-align: center; font-size: 10px; font-weight: 700;
+  color: var(--text3); padding: 2px 0; letter-spacing: 0.5px;
+}
+.cal-weekday.sun { color: #ff7b7b; }
+.cal-weekday.sat { color: var(--accent); }
+.cal-grid {
+  display: grid; grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+}
+.cal-cell {
+  aspect-ratio: 1;
+  border-radius: 8px;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.15s;
+  border: 1.5px solid transparent;
+  min-height: 38px;
+  padding: 2px 0;
+}
+.cal-cell:active { transform: scale(0.92); }
+.cal-cell.empty { cursor: default; pointer-events: none; }
+.cal-cell.other-month { opacity: 0.25; pointer-events: none; }
+.cal-cell.has-record { background: var(--surface2); }
+.cal-cell.has-record:hover { border-color: var(--border2); }
+.cal-cell.selected {
+  background: var(--accent-glow) !important;
+  border-color: var(--accent) !important;
+}
+.cal-cell.today .cal-day-num {
+  color: var(--accent);
+  font-weight: 800;
+}
+.cal-cell.today::after {
+  content: '';
+  position: absolute;
+  bottom: 4px;
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.cal-cell.sunday .cal-day-num { color: #ff8a8a; }
+.cal-cell.saturday .cal-day-num { color: #7dd3fc; }
+.cal-day-num {
+  font-size: 12px; font-weight: 600; color: var(--text2);
+  line-height: 1;
+}
+.cal-cell.has-record .cal-day-num { color: var(--text); }
+.cal-dots {
+  display: flex; gap: 2px; margin-top: 3px;
+  flex-wrap: wrap; justify-content: center;
+  max-width: 28px;
+}
+.cal-dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  flex-shrink: 0;
+}
+.cal-dot-meal   { background: var(--accent); }
+.cal-dot-water  { background: #60e0ff; }
+.cal-dot-med    { background: var(--green); }
+.cal-dot-health { background: var(--amber); }
+.cal-legend {
+  display: flex; gap: 10px; margin-top: 10px;
+  flex-wrap: wrap; justify-content: center;
+}
+.cal-legend-item {
+  display: flex; align-items: center; gap: 4px;
+  font-size: 10px; color: var(--text3);
+}
 </style>
 </head>
 <body>
@@ -982,6 +1189,40 @@ body.is-premium .premium-banner { display: none !important; }
         </div>
         <button class="btn btn-primary btn-sm" onclick="navTo('record')" style="padding:10px 16px;font-size:13px;" data-i18n="btn_record">✏️ 記録する</button>
       </div>
+
+      <!-- 🔥 連続記録ストリークバナー -->
+      <div id="streak-banner">
+        <div class="streak-fire">🔥</div>
+        <div class="streak-body">
+          <div><span class="streak-num" id="streak-num">0</span><span style="font-size:13px;color:var(--text2);margin-left:4px;">日連続記録中！</span></div>
+          <div class="streak-label" id="streak-label">素晴らしい継続力です</div>
+        </div>
+        <div class="streak-badge" id="streak-badge">🏆</div>
+      </div>
+
+      <!-- 💉 透析カウントダウンカード -->
+      <div class="card" id="dialysis-countdown-card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <div class="card-title" style="margin-bottom:0;color:var(--purple);">💉 次の透析まで</div>
+          <div style="font-size:10px;color:var(--text3);cursor:pointer;" onclick="navTo('settings')">⚙️ 曜日設定</div>
+        </div>
+        <div style="display:flex;align-items:baseline;gap:4px;margin-bottom:6px;">
+          <div class="dialysis-days-big" id="dialysis-days-num">—</div>
+          <div class="dialysis-days-unit" id="dialysis-days-label">日後</div>
+        </div>
+        <div style="font-size:12px;color:var(--text2);margin-bottom:10px;" id="dialysis-next-date">次回透析日: —</div>
+        <!-- 体重増加ペース -->
+        <div class="dialysis-weight-pace" id="dialysis-pace-row">
+          <div>
+            <div class="pace-label">このペースでの透析前体重増加</div>
+            <div style="font-size:10px;color:var(--text3);margin-top:2px;">現在の推定増加量 ÷ 残り日数で予測</div>
+          </div>
+          <div style="text-align:right;">
+            <div class="pace-val" id="dialysis-pace-val">— g</div>
+            <div style="font-size:10px;color:var(--text3);margin-top:2px;" id="dialysis-pace-hint">—</div>
+          </div>
+        </div>
+      </div>
       <div class="metrics-row stagger" id="home-metrics">
         <div class="metric-card m-green">
           <div class="metric-glow" style="background:var(--green-dim)"></div>
@@ -1055,9 +1296,8 @@ body.is-premium .premium-banner { display: none !important; }
         <div id="home-dw-block" style="border-top:1px solid var(--border);padding-top:10px;display:none;">
           <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
             <div style="font-size:11px;color:var(--text3);flex-shrink:0;">⚖️ 推定体重増加量</div>
-            <div style="display:flex;align-items:baseline;gap:4px;flex-shrink:0;">
-              <span id="home-wb-val" style="font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:700;color:var(--green);">0</span>
-              <span style="font-size:11px;color:var(--text2);">g</span>
+            <div style="display:flex;align-items:baseline;gap:3px;flex-shrink:0;white-space:nowrap;">
+              <span id="home-wb-val" style="font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:700;color:var(--green);">0</span><span style="font-size:11px;color:var(--text2);">g</span>
             </div>
           </div>
           <div style="margin-top:2px;text-align:right;">
@@ -1120,16 +1360,20 @@ body.is-premium .premium-banner { display: none !important; }
         <div style="font-size:11px;color:var(--text3);margin-top:4px;" id="home-glucose-mode">—</div>
       </div>
       <!-- HbA1c推算カード -->
-      <div class="card" id="hba1c-card" style="border-color:rgba(192,132,252,0.3);">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
-          <div class="card-title" style="margin-bottom:0;">推算 HbA1c</div>
-          <div style="font-size:10px;color:var(--text3);cursor:pointer;" onclick="showHba1cInfo()">ℹ️ 計算方法</div>
+      <div class="card collapsible-card" id="hba1c-card" style="border-color:rgba(192,132,252,0.3);">
+        <div class="collapsible-toggle" onclick="toggleCollapsible(this)">
+          <div style="display:flex;align-items:center;gap:10px;flex:1;">
+            <div class="card-title" style="margin-bottom:0;">推算 HbA1c</div>
+            <div id="hba1c-badge" style="font-size:11px;padding:4px 10px;border-radius:20px;font-weight:600;display:none;"></div>
+          </div>
+          <div style="display:flex;align-items:baseline;gap:4px;margin-right:6px;">
+            <div id="hba1c-val" style="font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:700;color:var(--purple);line-height:1;">—</div>
+            <div style="font-size:12px;color:var(--text2);">%</div>
+          </div>
+          <div class="collapsible-arrow">▼</div>
         </div>
-        <div style="display:flex;align-items:baseline;gap:10px;margin:8px 0;">
-          <div id="hba1c-val" style="font-family:'JetBrains Mono',monospace;font-size:42px;font-weight:700;color:var(--purple);line-height:1;">—</div>
-          <div style="font-size:14px;color:var(--text2);">%</div>
-          <div id="hba1c-badge" style="font-size:11px;padding:4px 10px;border-radius:20px;font-weight:600;display:none;"></div>
-        </div>
+        <div class="collapsible-body" style="margin-top:10px;">
+        <div style="font-size:10px;color:var(--accent);cursor:pointer;text-align:right;margin-bottom:6px;" onclick="showHba1cInfo()">ℹ️ 計算方法</div>
         <div id="hba1c-avg-label" style="font-size:12px;color:var(--text3);margin-bottom:10px;">食事記録が蓄積されると計算されます（目安：3日〜）</div>
         <!-- 30日間トレンドバー -->
         <div id="hba1c-trend-wrap" style="display:none;">
@@ -1146,6 +1390,7 @@ body.is-premium .premium-banner { display: none !important; }
           </div>
         </div>
         <div style="font-size:10px;color:var(--text3);margin-top:8px;line-height:1.6;">※ Nathan式（国際標準）による概算値です。実際の血液検査とは差異があります。医師の検査結果と必ず照合してください。</div>
+        </div><!-- /.collapsible-body -->
       </div>
 
       <!-- 今日の服薬状況カード -->
@@ -1174,8 +1419,13 @@ body.is-premium .premium-banner { display: none !important; }
           <div class="meal-item" style="opacity:0.5;border:1px dashed var(--border);" onclick="navTo('record')"><div class="meal-emoji" style="font-size:20px;">＋</div><div class="meal-info"><div class="meal-name" style="color:var(--text3)">夕食を記録する</div><div class="meal-time">タップして記録</div></div></div>
         </div>
       </div>
-      <div class="card">
-        <div class="card-title">栄養管理 詳細</div>
+      <div class="card collapsible-card">
+        <div class="collapsible-toggle" onclick="toggleCollapsible(this)">
+          <div class="card-title" style="margin-bottom:0;">栄養管理 詳細</div>
+          <div class="collapsible-arrow">▼</div>
+        </div>
+        <div class="collapsible-body" style="margin-top:0;padding-top:0;">
+          <div style="height:12px;"></div>
         <!-- CKD専用指標 -->
         <div class="nutr-row ckd-only"><div class="nutr-name">カリウム</div><div class="nutr-bar"><div class="prog-wrap" style="margin:0"><div class="prog-fill pg-amber" id="nutr-bar-k" style="width:0%"></div></div></div><div class="nutr-val" style="color:var(--amber)" id="nutr-val-k">—</div><div class="nutr-max">/ <span id="nutr-max-k">2,000</span></div></div>
         <div class="nutr-row ckd-only"><div class="nutr-name">リン</div><div class="nutr-bar"><div class="prog-wrap" style="margin:0"><div class="prog-fill pg-red" id="nutr-bar-p" style="width:0%"></div></div></div><div class="nutr-val" style="color:var(--red)" id="nutr-val-p">—</div><div class="nutr-max">/ <span id="nutr-max-p">700</span></div></div>
@@ -1185,14 +1435,20 @@ body.is-premium .premium-banner { display: none !important; }
         <div class="nutr-row healthy-only" style="display:none;"><div class="nutr-name">食物繊維</div><div class="nutr-bar"><div class="prog-wrap" style="margin:0"><div class="prog-fill pg-green" id="nutr-bar-fiber" style="width:0%"></div></div></div><div class="nutr-val" style="color:var(--green)" id="nutr-val-fiber">—</div><div class="nutr-max">/ <span id="nutr-max-fiber">21</span>g</div></div>
         <div class="nutr-row healthy-only" style="display:none;"><div class="nutr-name">塩分</div><div class="nutr-bar"><div class="prog-wrap" style="margin:0"><div class="prog-fill" id="nutr-bar-salt" style="width:0%;background:var(--purple);"></div></div></div><div class="nutr-val" style="color:var(--purple)" id="nutr-val-salt">—</div><div class="nutr-max">/ <span id="nutr-max-salt">7</span>g</div></div>
         <div class="nutr-row healthy-only" style="display:none;"><div class="nutr-name">脂質</div><div class="nutr-bar"><div class="prog-wrap" style="margin:0"><div class="prog-fill pg-amber" id="nutr-bar-fat" style="width:0%"></div></div></div><div class="nutr-val" style="color:var(--amber)" id="nutr-val-fat">—</div><div class="nutr-max">/ <span id="nutr-max-fat">55</span>g</div></div>
+        </div><!-- /.collapsible-body -->
       </div>
       <!-- 健常者モード: 今日の予防アドバイスカード -->
-      <div class="card healthy-only" id="home-prevention-card" style="display:none;border-color:rgba(74,222,128,0.3);margin-bottom:12px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-          <div class="card-title" style="margin-bottom:0;color:var(--green);">🌿 今日の予防チェック</div>
-          <div id="home-prevention-score" style="font-size:12px;color:var(--green);font-weight:700;padding:3px 10px;background:var(--green-dim);border-radius:12px;border:1px solid var(--green);"></div>
+      <div class="card healthy-only collapsible-card" id="home-prevention-card" style="display:none;border-color:rgba(74,222,128,0.3);margin-bottom:12px;">
+        <div class="collapsible-toggle" onclick="toggleCollapsible(this)">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex:1;">
+            <div class="card-title" style="margin-bottom:0;color:var(--green);">🌿 今日の予防チェック</div>
+            <div id="home-prevention-score" style="font-size:12px;color:var(--green);font-weight:700;padding:3px 10px;background:var(--green-dim);border-radius:12px;border:1px solid var(--green);"></div>
+          </div>
+          <div class="collapsible-arrow open">▼</div>
         </div>
+        <div class="collapsible-body open" style="margin-top:10px;">
         <div id="home-prevention-list" style="display:flex;flex-direction:column;gap:6px;"></div>
+        </div><!-- /.collapsible-body -->
       </div>
 
       <!-- 水分摂取カード -->
@@ -1342,6 +1598,12 @@ body.is-premium .premium-banner { display: none !important; }
         </div>
         <div class="form-row"><label class="form-label" data-i18n="label_meal_name">料理名・メモ</label><input class="form-input" type="text" id="record-name" data-i18n-placeholder="placeholder_meal_name" placeholder="例：鮭定食、豆腐ハンバーグ" /></div>
         <button class="btn btn-outline btn-full" onclick="showFoodSearchModalForRecord()" style="margin-bottom:8px;" data-i18n="btn_food_search">🔍 献立・食品から栄養成分を追加</button>
+
+        <!-- ⚡ よく使う食品ショートカット -->
+        <div id="quick-foods-section">
+          <div class="quick-foods-title">⚡ よく使う食品（タップで即追加）</div>
+          <div class="quick-food-chips" id="quick-food-chips"></div>
+        </div>
 
         <!-- 食品DB追加済みリスト（検索で追加した食品が表示される） -->
         <div id="record-fq-added-list" style="margin-bottom:6px;"></div>
@@ -1698,6 +1960,31 @@ body.is-premium .premium-banner { display: none !important; }
         <div>
           <div class="page-title">📋 記録履歴</div>
           <div class="page-sub">食事・水分・薬・健康データの日別記録</div>
+        </div>
+      </div>
+
+      <!-- ★ 記録カレンダー -->
+      <div id="hist-calendar">
+        <div class="cal-header">
+          <button class="cal-nav-btn" id="cal-prev-btn" onclick="calShiftMonth(-1)">‹</button>
+          <div class="cal-month-label" id="cal-month-label">2025年1月</div>
+          <button class="cal-nav-btn" id="cal-next-btn" onclick="calShiftMonth(1)">›</button>
+        </div>
+        <div class="cal-weekdays">
+          <div class="cal-weekday sun">日</div>
+          <div class="cal-weekday">月</div>
+          <div class="cal-weekday">火</div>
+          <div class="cal-weekday">水</div>
+          <div class="cal-weekday">木</div>
+          <div class="cal-weekday">金</div>
+          <div class="cal-weekday sat">土</div>
+        </div>
+        <div class="cal-grid" id="cal-grid"></div>
+        <div class="cal-legend">
+          <div class="cal-legend-item"><div class="cal-dot cal-dot-meal"></div>食事</div>
+          <div class="cal-legend-item"><div class="cal-dot cal-dot-water"></div>水分</div>
+          <div class="cal-legend-item"><div class="cal-dot cal-dot-med"></div>お薬</div>
+          <div class="cal-legend-item"><div class="cal-dot cal-dot-health"></div>健康</div>
         </div>
       </div>
 
@@ -2072,6 +2359,23 @@ body.is-premium .premium-banner { display: none !important; }
         <div style="font-size:11px;color:var(--text3);margin-top:6px;text-align:center;">
           ※ 担当医の指示と異なる場合は「目標値を変更する」で手動調整してください
         </div>
+      </div>
+
+      <!-- ===== 透析スケジュール設定 ===== -->
+      <div class="settings-section" id="settings-dialysis-section" style="display:none;">
+        <div class="settings-title">💉 透析スケジュール</div>
+        <div style="font-size:12px;color:var(--text3);padding:4px 0 12px;">透析曜日を設定すると、ホームに「次の透析まで○日」が表示されます。</div>
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:12px;" id="dialysis-day-selector">
+          <div class="dial-day-btn" data-day="0" onclick="toggleDialysisDay(this)" style="text-align:center;padding:8px 4px;border-radius:10px;border:1.5px solid var(--border2);background:var(--surface2);color:var(--text3);font-size:13px;cursor:pointer;transition:all 0.15s;">日</div>
+          <div class="dial-day-btn" data-day="1" onclick="toggleDialysisDay(this)" style="text-align:center;padding:8px 4px;border-radius:10px;border:1.5px solid var(--border2);background:var(--surface2);color:var(--text3);font-size:13px;cursor:pointer;transition:all 0.15s;">月</div>
+          <div class="dial-day-btn" data-day="2" onclick="toggleDialysisDay(this)" style="text-align:center;padding:8px 4px;border-radius:10px;border:1.5px solid var(--border2);background:var(--surface2);color:var(--text3);font-size:13px;cursor:pointer;transition:all 0.15s;">火</div>
+          <div class="dial-day-btn" data-day="3" onclick="toggleDialysisDay(this)" style="text-align:center;padding:8px 4px;border-radius:10px;border:1.5px solid var(--border2);background:var(--surface2);color:var(--text3);font-size:13px;cursor:pointer;transition:all 0.15s;">水</div>
+          <div class="dial-day-btn" data-day="4" onclick="toggleDialysisDay(this)" style="text-align:center;padding:8px 4px;border-radius:10px;border:1.5px solid var(--border2);background:var(--surface2);color:var(--text3);font-size:13px;cursor:pointer;transition:all 0.15s;">木</div>
+          <div class="dial-day-btn" data-day="5" onclick="toggleDialysisDay(this)" style="text-align:center;padding:8px 4px;border-radius:10px;border:1.5px solid var(--border2);background:var(--surface2);color:var(--text3);font-size:13px;cursor:pointer;transition:all 0.15s;">金</div>
+          <div class="dial-day-btn" data-day="6" onclick="toggleDialysisDay(this)" style="text-align:center;padding:8px 4px;border-radius:10px;border:1.5px solid var(--border2);background:var(--surface2);color:var(--text3);font-size:13px;cursor:pointer;transition:all 0.15s;">土</div>
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:8px;">選択中: <span id="dialysis-days-selected" style="color:var(--purple);font-weight:700;">なし</span></div>
+        <button class="btn btn-primary btn-full btn-sm" onclick="saveDialysisDays()">💾 透析曜日を保存</button>
       </div>
       <div class="settings-section">
         <div class="settings-title">血糖値計算</div>
@@ -3331,6 +3635,9 @@ document.addEventListener('DOMContentLoaded', () => {
     initRecordDate();
     renderLinkedClinicsSettings();
     renderHomeMedcheck();
+    // 新機能: 起動時にストリーク・透析カウントダウンを初期化
+    try { updateStreakBanner(); } catch(e){}
+    try { updateDialysisCountdown(); } catch(e){}
     // マイ食品はsearchFoodDB呼び出し時に毎回反映されるため起動時ロード不要
     // プレミアム状態を適用（起動時に即時チェック + rAF 連続監視）
     checkPremiumExpiry();
@@ -4129,9 +4436,402 @@ function calcAvgGlucose(records) {
 }
 
 // ローカル日付を "YYYY-MM-DD" 形式で返す（toISOString()はUTCなので日本時間と最大9時間ズレる問題を防ぐ）
+// ============================================================
+// ===== 🔥 連続記録ストリーク =====
+// ============================================================
+function calcStreak() {
+  const meals = [];
+  try { meals.push(...(JSON.parse(localStorage.getItem('renalcare_meals')||'[]')||[])); } catch(e){}
+  const waterLogs = [];
+  try { waterLogs.push(...(JSON.parse(localStorage.getItem(WATER_KEY)||'[]')||[])); } catch(e){}
+
+  const recordedDays = new Set();
+  meals.forEach(m => { if(m&&m.recorded_at) recordedDays.add(localDateStr(new Date(m.recorded_at))); });
+  waterLogs.forEach(w => { if(w&&w.time) recordedDays.add(localDateStr(new Date(w.time))); });
+
+  let streak = 0;
+  const d = new Date();
+  // 今日に記録があれば今日からカウント、なければ昨日から
+  let checkDate = recordedDays.has(localDateStr(d)) ? new Date(d) : new Date(d.setDate(d.getDate()-1));
+  while(true) {
+    if(recordedDays.has(localDateStr(checkDate))) {
+      streak++;
+      checkDate.setDate(checkDate.getDate()-1);
+    } else break;
+  }
+  return streak;
+}
+
+function updateStreakBanner() {
+  const banner = document.getElementById('streak-banner');
+  const numEl  = document.getElementById('streak-num');
+  const labelEl= document.getElementById('streak-label');
+  const badgeEl= document.getElementById('streak-badge');
+  if (!banner) return;
+
+  const streak = calcStreak();
+  if (streak < 2) { banner.classList.remove('show'); return; }
+
+  numEl.textContent = streak;
+  if      (streak >= 30) { labelEl.textContent='1ヶ月連続！伝説の記録です🎖️'; badgeEl.textContent='🥇 伝説'; }
+  else if (streak >= 14) { labelEl.textContent='2週間連続！素晴らしい習慣です'; badgeEl.textContent='💎 ダイヤ'; }
+  else if (streak >= 7)  { labelEl.textContent='1週間連続！継続は力なり'; badgeEl.textContent='🏆 週間達成'; }
+  else if (streak >= 3)  { labelEl.textContent='いい調子です！続けましょう'; badgeEl.textContent='🔥 連続中'; }
+  else                   { labelEl.textContent='記録を続けましょう！'; badgeEl.textContent='📈 スタート'; }
+  banner.classList.add('show');
+}
+
+// ============================================================
+// ===== 💉 透析カウントダウン =====
+// ============================================================
+const DIALYSIS_DAYS_KEY = 'renalcare_dialysis_days'; // 例: [1,3,5] = 月水金
+
+function saveDialysisDays() {
+  const selected = [];
+  document.querySelectorAll('.dial-day-btn').forEach(btn => {
+    if (btn.classList.contains('dial-selected')) selected.push(parseInt(btn.dataset.day));
+  });
+  localStorage.setItem(DIALYSIS_DAYS_KEY, JSON.stringify(selected));
+  showToast('💉 透析曜日を保存しました');
+  updateDialysisCountdown();
+}
+
+function toggleDialysisDay(btn) {
+  btn.classList.toggle('dial-selected');
+  if (btn.classList.contains('dial-selected')) {
+    btn.style.borderColor = 'var(--purple)';
+    btn.style.background  = 'var(--purple-dim)';
+    btn.style.color       = 'var(--purple)';
+    btn.style.fontWeight  = '700';
+  } else {
+    btn.style.borderColor = 'var(--border2)';
+    btn.style.background  = 'var(--surface2)';
+    btn.style.color       = 'var(--text3)';
+    btn.style.fontWeight  = '';
+  }
+  const labels = ['日','月','火','水','木','金','土'];
+  const sel = [];
+  document.querySelectorAll('.dial-day-btn').forEach(b => {
+    if(b.classList.contains('dial-selected')) sel.push(labels[parseInt(b.dataset.day)]);
+  });
+  const selEl = document.getElementById('dialysis-days-selected');
+  if (selEl) selEl.textContent = sel.length ? sel.join('・') + '曜日' : 'なし';
+}
+
+function initDialysisDaySelector() {
+  const saved = [];
+  try { saved.push(...(JSON.parse(localStorage.getItem(DIALYSIS_DAYS_KEY)||'[]')||[])); } catch(e){}
+  document.querySelectorAll('.dial-day-btn').forEach(btn => {
+    if (saved.includes(parseInt(btn.dataset.day))) {
+      btn.classList.add('dial-selected');
+      btn.style.borderColor = 'var(--purple)';
+      btn.style.background  = 'var(--purple-dim)';
+      btn.style.color       = 'var(--purple)';
+      btn.style.fontWeight  = '700';
+    }
+  });
+  const labels = ['日','月','火','水','木','金','土'];
+  const selEl = document.getElementById('dialysis-days-selected');
+  if (selEl) {
+    const names = saved.map(d=>labels[d]);
+    selEl.textContent = names.length ? names.join('・') + '曜日' : 'なし';
+  }
+}
+
+function getNextDialysisDate() {
+  let days = [];
+  try { days = JSON.parse(localStorage.getItem(DIALYSIS_DAYS_KEY)||'[]') || []; } catch(e){}
+  if (!days.length) return null;
+
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  for (let i = 1; i <= 7; i++) {
+    const candidate = new Date(today);
+    candidate.setDate(today.getDate() + i);
+    if (days.includes(candidate.getDay())) return candidate;
+  }
+  return null;
+}
+
+function updateDialysisCountdown() {
+  const card    = document.getElementById('dialysis-countdown-card');
+  const daysEl  = document.getElementById('dialysis-days-num');
+  const labelEl = document.getElementById('dialysis-days-label');
+  const dateEl  = document.getElementById('dialysis-next-date');
+  const paceEl  = document.getElementById('dialysis-pace-val');
+  const hintEl  = document.getElementById('dialysis-pace-hint');
+  if (!card) return;
+
+  // 透析患者 & 曜日設定済みのみ表示
+  const isDialysis = state.userType === 'dialysis' || state.ckdStage === 'ckd4';
+  let days = [];
+  try { days = JSON.parse(localStorage.getItem(DIALYSIS_DAYS_KEY)||'[]') || []; } catch(e){}
+  if (!isDialysis || !days.length) { card.classList.remove('show'); return; }
+
+  const nextDate = getNextDialysisDate();
+  if (!nextDate) { card.classList.remove('show'); return; }
+
+  const today = new Date(); today.setHours(0,0,0,0);
+  const diffDays = Math.round((nextDate - today) / 86400000);
+  const weekdays = ['日','月','火','水','木','金','土'];
+  const mm = nextDate.getMonth()+1, dd = nextDate.getDate(), dow = weekdays[nextDate.getDay()];
+
+  if (daysEl)  daysEl.textContent  = diffDays === 0 ? '今日' : diffDays;
+  if (labelEl) labelEl.textContent = diffDays === 0 ? '透析日です！' : '日後';
+  if (dateEl)  dateEl.textContent  = `次回透析日: ${mm}/${dd}（${dow}）`;
+
+  // 体重増加ペース予測
+  if (paceEl && hintEl) {
+    try {
+      // wb-result から現在の推定増加量を取得
+      const wbEl = document.getElementById('wb-result');
+      const currentG = wbEl ? parseInt(wbEl.textContent.replace(/,/g,'')) || 0 : 0;
+      const dw = parseFloat(state.weight || 60) * 1000; // g換算
+
+      if (diffDays > 0 && currentG >= 0) {
+        // 今日の増加が毎日続いた場合の透析直前の推定
+        // 現在の1日分の増加量（透析後1日目として概算）
+        const estimatedTotal = currentG * diffDays; // 簡易推定
+        const pct = dw > 0 ? (estimatedTotal / dw * 100) : 0;
+
+        paceEl.textContent = estimatedTotal.toLocaleString() + 'g';
+        const paceClass = pct > 5 ? 'pace-over' : pct > 3 ? 'pace-warn' : 'pace-ok';
+        paceEl.className = 'pace-val ' + paceClass;
+        hintEl.textContent = `DW比 約${pct.toFixed(1)}% — ${pct > 5 ? '⚠ 過体重リスク' : pct > 3 ? '注意域' : '良好範囲'}`;
+      } else {
+        paceEl.textContent = '—';
+        paceEl.className = 'pace-val';
+        hintEl.textContent = '今日の水分記録を追加すると表示';
+      }
+    } catch(e) { paceEl.textContent='—'; }
+  }
+
+  card.classList.add('show');
+}
+
+// ============================================================
+// ===== 🗂 折りたたみカード =====
+// ============================================================
+function toggleCollapsible(toggleEl) {
+  const arrow = toggleEl.querySelector('.collapsible-arrow');
+  const body  = toggleEl.parentElement.querySelector('.collapsible-body');
+  if (!arrow || !body) return;
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  arrow.classList.toggle('open', !isOpen);
+}
+
+// ============================================================
+// ===== ⚡ よく使う食品ショートカット =====
+// ============================================================
+function buildQuickFoods() {
+  const section = document.getElementById('quick-foods-section');
+  const chips   = document.getElementById('quick-food-chips');
+  if (!section || !chips) return;
+
+  // 過去の食事記録から食品DBで追加したものの頻度を集計
+  let meals = [];
+  try { meals = JSON.parse(localStorage.getItem('renalcare_meals')||'[]') || []; } catch(e){}
+
+  const freq = {};
+  meals.forEach(m => {
+    if (!m) return;
+    // FQ追加食品 (fqItems) があれば集計
+    if (Array.isArray(m.fqItems)) {
+      m.fqItems.forEach(item => {
+        if (item && item.name) {
+          freq[item.name] = (freq[item.name]||0) + 1;
+        }
+      });
+    }
+    // 料理名自体も軽く記録（2回以上使用）
+    if (m.name && m.name.length > 1) {
+      const key = '__meal__' + m.name;
+      freq[key] = (freq[key]||0) + 1;
+    }
+  });
+
+  // 頻度順ソート、上位8件
+  const top = Object.entries(freq)
+    .filter(([,c]) => c >= 2)
+    .sort((a,b) => b[1]-a[1])
+    .slice(0,8);
+
+  if (!top.length) { section.classList.remove('show'); return; }
+
+  chips.innerHTML = '';
+  top.forEach(([key, count]) => {
+    const isMealName = key.startsWith('__meal__');
+    const label = isMealName ? key.replace('__meal__','') : key;
+    const chip = document.createElement('div');
+    chip.className = 'quick-food-chip';
+    chip.innerHTML = `${isMealName?'🍽':'🔍'} ${label}<span class="quick-food-count">${count}回</span>`;
+    chip.addEventListener('click', () => {
+      if (isMealName) {
+        // 料理名をフィールドに自動入力
+        const nameEl = document.getElementById('record-name');
+        if (nameEl) { nameEl.value = label; nameEl.focus(); }
+        showToast(`📝 「${label}」を入力しました`);
+      } else {
+        // 食品DB検索を自動入力
+        showFoodSearchModalForRecord();
+        setTimeout(() => {
+          const searchEl = document.getElementById('fq-search-input') || document.querySelector('#foodSearchModal input');
+          if (searchEl) { searchEl.value = label; searchEl.dispatchEvent(new Event('input')); }
+        }, 300);
+      }
+    });
+    chips.appendChild(chip);
+  });
+
+  section.classList.add('show');
+}
+
 function localDateStr(d) {
   const dt = d || new Date();
   return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+}
+
+// ===== 履歴カレンダー =====
+let _calYear  = new Date().getFullYear();
+let _calMonth = new Date().getMonth(); // 0-indexed
+
+// 全データの「記録がある日」をまとめてスキャン
+function _buildRecordMap() {
+  const map = {}; // key: "YYYY-MM-DD" → { meal, water, med, health }
+
+  const addDot = (dateStr, type) => {
+    if (!dateStr) return;
+    if (!map[dateStr]) map[dateStr] = { meal:false, water:false, med:false, health:false };
+    map[dateStr][type] = true;
+  };
+
+  // 食事
+  try {
+    (JSON.parse(localStorage.getItem('renalcare_meals') || '[]') || []).forEach(m => {
+      if (m && m.recorded_at) addDot(localDateStr(new Date(m.recorded_at)), 'meal');
+    });
+  } catch(e) {}
+
+  // 水分
+  try {
+    (JSON.parse(localStorage.getItem(WATER_KEY) || '[]') || []).forEach(w => {
+      if (w && w.time) addDot(localDateStr(new Date(w.time)), 'water');
+    });
+  } catch(e) {}
+
+  // 薬ログ
+  try {
+    (JSON.parse(localStorage.getItem(MED_LOG_KEY) || '[]') || []).forEach(m => {
+      const t = m && (m.time || m.taken_at);
+      if (t) addDot(localDateStr(new Date(t)), 'med');
+    });
+  } catch(e) {}
+
+  // medcheck_log
+  try {
+    (JSON.parse(localStorage.getItem(MEDCHECK_KEY) || '[]') || []).forEach(e => {
+      if (e && e.date) addDot(e.date, 'med');
+    });
+  } catch(e) {}
+
+  // 健康ログ
+  try {
+    (JSON.parse(localStorage.getItem(HEALTH_KEY) || '[]') || []).forEach(h => {
+      if (h && h.date) addDot(h.date, 'health');
+      else if (h && h.time) addDot(localDateStr(new Date(h.time)), 'health');
+    });
+  } catch(e) {}
+
+  return map;
+}
+
+function renderCalendar() {
+  const grid = document.getElementById('cal-grid');
+  const label = document.getElementById('cal-month-label');
+  const nextBtn = document.getElementById('cal-next-btn');
+  if (!grid || !label) return;
+
+  const now = new Date();
+  const today = localDateStr(now);
+
+  label.textContent = `${_calYear}年${_calMonth + 1}月`;
+
+  // 未来月は進めない
+  const isCurrentOrFuture = (_calYear > now.getFullYear()) ||
+    (_calYear === now.getFullYear() && _calMonth >= now.getMonth());
+  if (nextBtn) {
+    nextBtn.disabled = isCurrentOrFuture;
+    nextBtn.style.opacity = isCurrentOrFuture ? '0.3' : '1';
+  }
+
+  const map = _buildRecordMap();
+  const selectedStr = localDateStr(_histDate);
+
+  // 月の初日・末日
+  const firstDay = new Date(_calYear, _calMonth, 1);
+  const lastDay  = new Date(_calYear, _calMonth + 1, 0);
+  const startDow = firstDay.getDay(); // 0=Sun
+
+  grid.innerHTML = '';
+
+  // 前月の空白セル
+  for (let i = 0; i < startDow; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'cal-cell empty';
+    grid.appendChild(cell);
+  }
+
+  // 日付セル
+  for (let d = 1; d <= lastDay.getDate(); d++) {
+    const dateStr = `${_calYear}-${String(_calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const dow = new Date(_calYear, _calMonth, d).getDay();
+    const rec = map[dateStr];
+
+    const cell = document.createElement('div');
+    let cls = 'cal-cell';
+    if (rec)          cls += ' has-record';
+    if (dateStr === today)       cls += ' today';
+    if (dateStr === selectedStr) cls += ' selected';
+    if (dow === 0) cls += ' sunday';
+    if (dow === 6) cls += ' saturday';
+    cell.className = cls;
+
+    // 未来の日はタップ不可
+    const isFuture = dateStr > today;
+    if (isFuture) { cell.style.opacity = '0.3'; cell.style.pointerEvents = 'none'; }
+
+    // 日番号
+    const num = document.createElement('div');
+    num.className = 'cal-day-num';
+    num.textContent = d;
+    cell.appendChild(num);
+
+    // ドット
+    if (rec) {
+      const dots = document.createElement('div');
+      dots.className = 'cal-dots';
+      if (rec.meal)   { const dot = document.createElement('div'); dot.className = 'cal-dot cal-dot-meal';   dots.appendChild(dot); }
+      if (rec.water)  { const dot = document.createElement('div'); dot.className = 'cal-dot cal-dot-water';  dots.appendChild(dot); }
+      if (rec.med)    { const dot = document.createElement('div'); dot.className = 'cal-dot cal-dot-med';    dots.appendChild(dot); }
+      if (rec.health) { const dot = document.createElement('div'); dot.className = 'cal-dot cal-dot-health'; dots.appendChild(dot); }
+      cell.appendChild(dots);
+    }
+
+    cell.addEventListener('click', () => {
+      historyPickDate(dateStr);
+      renderCalendar(); // 選択状態を更新
+    });
+
+    grid.appendChild(cell);
+  }
+}
+
+function calShiftMonth(delta) {
+  _calMonth += delta;
+  if (_calMonth < 0)  { _calMonth = 11; _calYear--; }
+  if (_calMonth > 11) { _calMonth = 0;  _calYear++; }
+  renderCalendar();
 }
 
 // ===== 履歴ページ 状態管理 =====
@@ -4172,6 +4872,10 @@ function historySetFilter(filter, el) {
 }
 
 async function renderHistory() {
+  // カレンダーの表示月を選択中の日付に合わせる
+  _calYear  = _histDate.getFullYear();
+  _calMonth = _histDate.getMonth();
+  renderCalendar();
   // 日付UIを更新
   _updateHistoryDateUI();
   renderHistoryContent();
@@ -5514,6 +6218,9 @@ function updateHomeSummary() {
   updateGlucoseGraph();
   updateWaterCard();
   updatePreventionCard();
+  // 新機能: ストリーク・透析カウントダウン
+  try { updateStreakBanner(); } catch(e){}
+  try { updateDialysisCountdown(); } catch(e){}
 }
 
 /**
@@ -5701,11 +6408,22 @@ function navTo(page) {
     initRecordDate();
     const fwRow = document.getElementById('record-food-weight-row');
     if (fwRow) fwRow.style.display = '';
+    try { buildQuickFoods(); } catch(e){}
   }
   if (page==='medicine') { setMedDateToday(); renderMedicineLog(); try{renderMedRegistered();}catch(e){} }
   if (page==='water')    { updateWaterCard(); updateWaterBalance(); }
   if (page==='drink')    { try{initDrinkPage();}catch(e){console.warn(e);} }
-  if (page==='settings') { try{_updateBodyDisplay();}catch(e){} try{renderSettingsCkdPanel();}catch(e){} }
+  if (page==='settings') {
+    try{_updateBodyDisplay();}catch(e){}
+    try{renderSettingsCkdPanel();}catch(e){}
+    // 透析設定セクションの表示制御
+    const dialSec = document.getElementById('settings-dialysis-section');
+    if (dialSec) {
+      const isDialysis = state.userType === 'dialysis' || state.ckdStage === 'ckd4';
+      dialSec.style.display = isDialysis ? '' : 'none';
+      if (isDialysis) try{ initDialysisDaySelector(); }catch(e){}
+    }
+  }
 }
 
 // ===== 健康記録 =====
@@ -13141,7 +13859,7 @@ function _updateBodyDisplay() {
     <div class="ad-time-header">
       <span class="ad-time-emoji" id="ad-time-emoji">☀️</span>
       <span class="ad-time-label" id="ad-time-label">おはようございます</span>
-      <button class="ad-time-close-btn" id="ad-close-x" onclick="closeAdModal()" title="閉じる">✕</button>
+      <button class="ad-time-close-btn" id="ad-close-x" onclick="closeAdModal()" title="閉じる" disabled style="opacity:0.3;cursor:not-allowed;">✕</button>
     </div>
     <div class="ad-time-body">
       <div class="ad-label-small" style="margin-bottom:8px;">ADVERTISEMENT</div>
@@ -13269,12 +13987,14 @@ function _updateBodyDisplay() {
   function startCountdown() {
     const numEl   = document.getElementById('ad-countdown-num');
     const skipBtn = document.getElementById('ad-skip-btn');
+    const closeX  = document.getElementById('ad-close-x');
     const msgEl   = document.getElementById('ad-countdown-msg');
     if (!numEl || !skipBtn) return;
 
     let remaining = SKIP_SECONDS;
     numEl.textContent  = remaining;
     skipBtn.disabled   = true;
+    if (closeX) { closeX.disabled = true; closeX.style.opacity = '0.3'; closeX.style.cursor = 'not-allowed'; }
 
     if (_countdownTimer) clearInterval(_countdownTimer);
     _countdownTimer = setInterval(() => {
@@ -13287,6 +14007,7 @@ function _updateBodyDisplay() {
         skipBtn.textContent  = '✅ 閉じる';
         if (msgEl) msgEl.textContent = '';
         if (numEl.parentElement) numEl.parentElement.style.display = 'none';
+        if (closeX) { closeX.disabled = false; closeX.style.opacity = ''; closeX.style.cursor = ''; }
       } else {
         numEl.textContent = remaining;
       }
@@ -13325,6 +14046,9 @@ function _updateBodyDisplay() {
     if (skipBtn)  { skipBtn.disabled = true; skipBtn.textContent = '⏭ スキップして続ける'; }
     if (numEl)    numEl.textContent    = SKIP_SECONDS;
     if (msgEl)    msgEl.textContent    = '閉じるまで';
+    // ✕ボタンもカウントダウン中は無効化
+    const closeX = document.getElementById('ad-close-x');
+    if (closeX) { closeX.disabled = true; closeX.style.opacity = '0.3'; closeX.style.cursor = 'not-allowed'; }
     // カウントダウン行を再表示（closeAdModal で非表示になることがある）
     if (numEl && numEl.parentElement) numEl.parentElement.style.display = '';
 
@@ -13379,7 +14103,15 @@ function _updateBodyDisplay() {
 
   // ── 初期化 ───────────────────────────────────────────
   function init() {
-    checkAndShowAd(1500);        // ページロード時
+    // 起動時は必ず広告を表示（セッションごとに1回は必須視聴）
+    const slot = getCurrentSlot();
+    if (slot) {
+      setTimeout(() => showAdModal(slot), 1500);
+    } else {
+      // スロット外の時間帯でもフォールバック広告を表示
+      const fallback = { emoji: '🌿', label: 'RenalCare', sub: '健康管理を続けましょう 💪', key: 'fallback' };
+      setTimeout(() => showAdModal(fallback), 1500);
+    }
     scheduleNextSlotCheck();     // 次のスロット開始を自動待機
   }
 
