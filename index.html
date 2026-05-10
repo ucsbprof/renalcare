@@ -15,8 +15,7 @@
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js" defer></script>
 
 <!-- ===== Google AdSense ===== -->
-<!-- TODO: あなたのAdSenseパブリッシャーIDに置き換えてください -->
-<!-- 例: ca-pub-3542746381307251 -->
+<!-- パブリッシャーID: ca-pub-3542746381307251 -->
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3542746381307251"
      crossorigin="anonymous"></script>
 
@@ -3454,8 +3453,11 @@ body.is-premium .premium-banner { display: none !important; }
 
 <!-- 薬追加・編集モーダル --><script>
 // ===== SUPABASE =====
+// ⚠️ セキュリティ重要: SUPABASE_KEY は anon key のみを使用し、
+// Supabase ダッシュボードで Row Level Security (RLS) を必ず有効化してください。
+// service_role キーは絶対にフロントエンドに置かないでください。
 const SUPABASE_URL = 'https://jndutodslomhfoterrbb.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_ekRnlsdMwKthxJv0VEg3vw_tBKc7EIj';
+const SUPABASE_KEY = 'sb_publishable_ekRnlsdMwKthxJv0VEg3vw_tBKc7EIj'; // anon key のみ可
 
 async function dbSaveMeal(meal) {
   try {
@@ -3522,12 +3524,11 @@ const MED_SCHEDULE_KEY= 'renalcare_med_schedule';   // {medId: [slotKey, ...]} o
 // ===== INIT =====
 document.addEventListener('DOMContentLoaded', () => {
   // ── 【最優先】初期化（エラーが起きても必ず続行） ──────────────────────
-  // terms-overlayを確実に非表示にする（最優先）
+  // 広告オーバーレイとローディングを確実に非表示にする
   (function() {
-    const ov = document.getElementById('terms-overlay');
     const ad = document.getElementById('ad-time-overlay');
     const lo = document.getElementById('loadingOverlay');
-    if (ov) { ov.style.cssText = 'display:none!important;pointer-events:none!important;visibility:hidden!important;'; }
+    // terms-overlay は initTermsCheck() が制御するため、ここでは触らない
     if (ad) { ad.style.cssText = 'display:none!important;pointer-events:none!important;visibility:hidden!important;'; }
     if (lo) { lo.style.display = 'none'; }
   })();
@@ -7257,7 +7258,7 @@ function recalcGlucose() {
   const lMap={healthy:'予防ケアモード：糖質×1',normal:'標準モード：糖質×1',t2d:'2型糖尿病モード：糖質×3',t1d:'1型糖尿病モード：糖質×5'};
   const rise=Math.round(sugar*(fMap[state.userType]||1));
   const glucoseEl=document.getElementById('ai-glucose-result');
-  if (glucoseEl) { const div=glucoseEl.querySelector('div:not(.alert-title)'); if (div) div.innerHTML=`糖質${sugar}g → <strong>推定 +${rise} mg/dL</strong>（${lMap[state.userType]||lMap.normal}）`; }
+  if (glucoseEl) { const div=glucoseEl.querySelector('div:not(.alert-title)'); if (div) div.innerHTML=`糖質${sugar}g → <strong>推定 +${rise} mg/dL</strong>（${lMap[state.userType]||lMap.normal}）<br><span style="font-size:10px;color:var(--text3);">※ 参考値。個人差が大きく医学的根拠とはなりません。</span>`; }
 
   // 栄養成分欄の推定最大血糖値
   const peakRow = document.getElementById('peak-glucose-row');
@@ -7272,7 +7273,7 @@ function recalcGlucose() {
     else if (peak < 180) { peakVal.style.color='var(--amber)'; peakRow.style.background='var(--amber-dim)'; peakRow.style.borderColor='rgba(252,211,77,0.3)'; }
     else                 { peakVal.style.color='var(--red)';   peakRow.style.background='var(--red-dim)';   peakRow.style.borderColor='rgba(248,113,113,0.3)'; }
     const status = peak < 140 ? '✓ 良好（140未満）' : peak < 180 ? '⚠ やや高め（140〜180）' : '⚠ 高め（180超）';
-    if (peakDetail) peakDetail.innerHTML = `食後${curve.peak}分頃にピーク予測 — ${status}（空腹時基礎値 ${curve.fasting} + 上昇 ${rise}）`;
+    if (peakDetail) peakDetail.innerHTML = `食後${curve.peak}分頃にピーク予測 — ${status}（空腹時基礎値 ${curve.fasting} + 上昇 ${rise}）<br><span style="font-size:10px;color:var(--text3);">※ 参考値。固定係数による簡易推定のため、個人差が大きく医学的診断に使用しないでください。</span>`;
     peakRow.style.display = 'block';
   } else if (peakRow) {
     peakRow.style.display = 'none';
@@ -12078,7 +12079,7 @@ function renderClinicLinkedList() {
 // ===== 利用規約同意管理 =====
 // ============================================================
 const TERMS_KEY         = 'renalcare_terms_agreed';
-const TERMS_VERSION     = '1.2'; // 規約バージョン（更新時に上げると再同意を求める）
+const TERMS_VERSION     = '2.0'; // 規約バージョン（規約文書第2.0版に合わせて修正）
 
 /** 同意済みかどうかを判定 */
 function hasAgreedToTerms() {
@@ -12107,19 +12108,22 @@ function saveTermsAgreement() {
 let _termsScrolledToEnd = false;
 let _termsChecked       = false;
 
-/** 起動時: 利用規約チェック（強制表示なし・設定から任意閲覧） */
+/** 起動時: 利用規約チェック（未同意または旧バージョンの場合は強制表示） */
 function initTermsCheck() {
-  // 起動時の強制表示を廃止（UX改善）
-  // 利用規約は設定画面「利用規約・免責事項を確認」から閲覧可能
-  const overlay = document.getElementById('terms-overlay');
-  if (overlay) {
-    overlay.style.display = 'none';
-    overlay.style.pointerEvents = 'none';
-    overlay.style.visibility = 'hidden';
-    overlay.classList.remove('visible');
+  if (!hasAgreedToTerms()) {
+    // 未同意・旧バージョンの場合は利用規約を表示して明示的な同意を求める
+    // （医療系アプリとして法的要件を満たすため自動同意は廃止）
+    const overlay = document.getElementById('terms-overlay');
+    if (overlay) {
+      overlay.style.display = 'flex';
+      overlay.style.pointerEvents = 'auto';
+      overlay.style.visibility = 'visible';
+      overlay.classList.add('visible');
+    }
+    _termsScrolledToEnd = false;
+    _termsChecked = false;
+    _updateTermsBtn();
   }
-  // 自動的に同意済みとして記録（任意利用のため）
-  if (!hasAgreedToTerms()) saveTermsAgreement();
 }
 
 /** 利用規約オーバーレイを表示（viewOnly=trueなら同意済みでも閲覧可） */
@@ -12205,7 +12209,7 @@ function _updateTermsBtn() {
   btn.style.transform = ok ? '' : '';
 }
 
-/** 同意ボタン押下: フラグ保存 → オーバーレイを非表示 */
+/** 同意ボタン押下: フラグ保存 → オーバーレイを非表示 → 次の画面へ */
 function agreeToTerms() {
   if (!_termsScrolledToEnd || !_termsChecked) return;
   saveTermsAgreement();
@@ -12218,6 +12222,15 @@ function agreeToTerms() {
       overlay.style.pointerEvents = 'none';
       overlay.style.visibility = 'hidden';
       overlay.classList.remove('visible');
+      // 同意後: プロフィールがあればアプリへ、なければオンボーディングへ
+      const profile = getActiveProfile ? getActiveProfile() : null;
+      if (profile) {
+        showScreen('s-app');
+        navTo('home');
+      } else {
+        showScreen('s-onboarding');
+        if (typeof goObStep === 'function') goObStep(1);
+      }
     }, 400);
   }
   showToast('✅ 利用規約への同意を記録しました。ご利用いただきありがとうございます。');
@@ -12281,33 +12294,19 @@ const PREMIUM_KEY       = 'renalcare_premium';
 const PREMIUM_CODE_HIST = 'renalcare_used_codes';   // ① 使用済みコード履歴
 const PREMIUM_TRIAL_FLG = 'renalcare_trial_used';   // ② 招待コード体験済みフラグ
 
-const STRIPE_PUBLISHABLE_KEY = 'pk_live_XXXXXXXXXXXXXXXXXXXXXXXX';
+// ⚠️ TODO: 本番用 Stripe 公開鍵に置き換えてください（Stripe ダッシュボードから取得）
+// 例: pk_live_51XXXXXXXXXXXXXXXXXXXXXXXX...
+const STRIPE_PUBLISHABLE_KEY = 'pk_live_XXXXXXXXXXXXXXXXXXXXXXXX'; // 要設定
 const STRIPE_PRICE_MONTHLY   = 'price_monthly_580jpy';
 const STRIPE_PRICE_YEARLY    = 'price_yearly_5800jpy';
 
 // invite = 期限付き体験コード（TRIAL_FLG対象）/ admin = 無期限
-const VALID_INVITE_CODES = {
-  // ===== 1ヶ月コード =====
-  'RENALCARE2024':  { type:'invite', months:1,  label:'招待コード（1ヶ月）' },
-  'TRIAL1M':        { type:'invite', months:1,  label:'お試しコード（1ヶ月）' },
-
-  // ===== 3ヶ月コード =====
-  'WELCOME2025':    { type:'invite', months:3,  label:'ウェルカムコード（3ヶ月）' },
-  'TRIAL3M':        { type:'invite', months:3,  label:'体験コード（3ヶ月）' },
-
-  // ===== 半年（6ヶ月）コード =====
-  'HALFYEAR2025':   { type:'invite', months:6,  label:'半年コード（6ヶ月）' },
-  'TRIAL6M':        { type:'invite', months:6,  label:'体験コード（6ヶ月）' },
-
-  // ===== 1年コード =====
-  'HOSPITAL2025':   { type:'invite', months:12, label:'医療機関提携コード（1年）' },
-  'ANNUAL2025':     { type:'invite', months:12, label:'年間コード（1年）' },
-
-  // ===== 永久コード（admin型 = 無期限） =====
-  'RC_ADMIN_2025':  { type:'admin',  months:0,  label:'管理者コード（永久）' },
-  'MASTER_UNLOCK':  { type:'admin',  months:0,  label:'マスターコード（永久）' },
-  'LIFETIME2025':   { type:'admin',  months:0,  label:'永久ライセンスコード' },
-};
+// ⚠️ セキュリティ重要:
+// 招待コードはフロントエンドに置かず、サーバーサイド (Supabase Edge Function) で検証してください。
+// クライアント側の事前チェックは廃止し、すべての検証を applyInviteCode() 内の
+// Supabase API コール（ガード②以降）に委ねます。
+// Supabase の invite_codes テーブルにコードを登録し、RLS で保護してください。
+const VALID_INVITE_CODES = {}; // フロントエンドにコードを置かない（サーバー側で検証）
 
 // ─── ストレージ読み書き ───────────────────────────────────
 function loadPremiumState() {
@@ -12434,39 +12433,15 @@ function showPremiumModal() {
 }
 
 // ─── コード入力中プレビュー ───────────────────────────────
+// ※ コード定義はサーバー側のみで管理するため、入力中のプレビューは簡易表示のみ
 function _previewCode(raw) {
   const code    = (raw || '').trim().toUpperCase();
   const preview = document.getElementById('invite-code-preview');
   if (!preview) return;
   if (!code) { preview.style.display = 'none'; return; }
-
-  const data = VALID_INVITE_CODES[code];
-  if (!data) {
-    preview.style.display = '';
-    preview.innerHTML = '<span style="color:var(--text3);">— 入力中…</span>';
-    return;
-  }
-
-  const periodLabel = data.months === 0 ? '✨ 永久' :
-                      data.months === 1 ? '1ヶ月' :
-                      data.months === 3 ? '3ヶ月' :
-                      data.months === 6 ? '半年（6ヶ月）' :
-                      data.months === 12 ? '1年' :
-                      data.months + 'ヶ月';
-
-  const color = data.months === 0 ? 'var(--purple)' :
-                data.months >= 12  ? 'var(--amber)'  :
-                'var(--green)';
-
+  // コード定義はサーバー側のみで確認 → 入力中は中立表示
   preview.style.display = '';
-  preview.innerHTML = `
-    <div style="display:flex;align-items:center;gap:8px;">
-      <span style="font-size:16px;">${data.months === 0 ? '✨' : '🎟'}</span>
-      <div>
-        <div style="font-weight:600;color:${color};">${data.label}</div>
-        <div style="color:var(--text2);margin-top:2px;">有効期間：<strong style="color:${color};">${periodLabel}</strong></div>
-      </div>
-    </div>`;
+  preview.innerHTML = `<span style="color:var(--text3);">「${code}」— 適用ボタンで確認</span>`;
 }
 
 function _updateTrialWarning() {
@@ -12586,22 +12561,15 @@ async function applyInviteCode() {
 
   if (!code) { showToast('コードを入力してください'); return; }
 
-  // ──────────────────────────────────────────────
-  // ガード①: クライアント側でコードの存在確認（高速チェック）
-  // ──────────────────────────────────────────────
-  const codeData = VALID_INVITE_CODES[code];
-  if (!codeData) {
-    setResult('❌ 無効なコードです', false);
-    showToast('⚠ 無効なコードです');
-    return;
-  }
-
-  // 無期限プレミアムに invite コードを重ねる場合はスキップ
+  // 無期限プレミアムにさらに重ねる場合はスキップ
   const current = loadPremiumState();
-  if (current && current.type === 'admin' && codeData.type !== 'admin') {
+  if (current && current.type === 'admin') {
     setResult('✅ すでに無期限プレミアムが有効です', true);
     return;
   }
+
+  // ※ ガード①のクライアント側コード存在確認は廃止。
+  //    コードの正当性はサーバー（Supabase）のみで検証します。
 
   // ──────────────────────────────────────────────
   // ガード②: Supabase でサーバー側の使用済みチェック（改ざん不可能）
@@ -12633,42 +12601,57 @@ async function applyInviteCode() {
       return;
     }
 
-    // ── チェック B: invite型の場合、同じユーザーが過去に招待コードを使っていないか ──
-    if (codeData.type === 'invite') {
-      const checkUserRes = await fetch(
-        `${SUPABASE_URL}/rest/v1/invite_code_uses?user_id=eq.${encodeURIComponent(userId)}&select=id,code&limit=1`,
-        { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
-      );
-
-      if (!checkUserRes.ok) throw new Error('network_error');
-      const userRows = await checkUserRes.json();
-
-      if (userRows.length > 0) {
-        setResult('🚫 無料体験は1アカウント1回限りです。別のコードでも再利用はできません。', false);
-        showToast('⚠ 招待コードは1回限りです');
-        setTrialUsed(); // ローカルにも記録
-        revokeForViolation('サーバー確認済み：同一ユーザーによる招待コード複数使用試行: ' + code);
-        if (applyBtn) { applyBtn.disabled = false; applyBtn.textContent = '適用'; }
-        return;
-      }
+    // ── チェック B: 同じユーザーが過去に招待コードを使っていないか ──
+    const checkUserRes = await fetch(
+      `${SUPABASE_URL}/rest/v1/invite_code_uses?user_id=eq.${encodeURIComponent(userId)}&select=id,code&limit=1`,
+      { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
+    );
+    if (!checkUserRes.ok) throw new Error('network_error');
+    const userRows = await checkUserRes.json();
+    if (userRows.length > 0) {
+      setResult('🚫 無料体験は1アカウント1回限りです。別のコードでも再利用はできません。', false);
+      showToast('⚠ 招待コードは1回限りです');
+      setTrialUsed();
+      revokeForViolation('サーバー確認済み：同一ユーザーによる招待コード複数使用試行: ' + code);
+      if (applyBtn) { applyBtn.disabled = false; applyBtn.textContent = '適用'; }
+      return;
     }
 
-  } catch(e) {
-    // ネットワークエラー時はオフラインフォールバック（ローカルチェックのみ）
-    console.warn('Supabase check failed, falling back to local check:', e);
+    // ── チェック C: サーバーからコード定義を取得（コードの有効性・種別をサーバーで確認） ──
+    // ⚠️ Supabase の invite_codes テーブルに { code, type, months, label } を登録し RLS で保護してください。
+    const codeDefRes = await fetch(
+      `${SUPABASE_URL}/rest/v1/invite_codes?code=eq.${encodeURIComponent(code)}&select=type,months,label&limit=1`,
+      { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
+    );
+    if (!codeDefRes.ok) throw new Error('network_error');
+    const codeDefRows = await codeDefRes.json();
+    if (!codeDefRows || codeDefRows.length === 0) {
+      setResult('❌ 無効なコードです', false);
+      showToast('⚠ 無効なコードです');
+      if (applyBtn) { applyBtn.disabled = false; applyBtn.textContent = '適用'; }
+      return;
+    }
+    const codeData = codeDefRows[0];
 
+  } catch(e) {
+    // ネットワークエラー時はオフラインフォールバック（ローカルキャッシュのみ）
+    console.warn('Supabase check failed, falling back to local check:', e);
     if (loadUsedCodes().has(code)) {
       setResult('🚫 このコードはすでに使用済みです', false);
       showToast('⚠ このコードはすでに使用済みです');
       if (applyBtn) { applyBtn.disabled = false; applyBtn.textContent = '適用'; }
       return;
     }
-    if (codeData.type === 'invite' && hasTrialEverUsed()) {
+    if (hasTrialEverUsed()) {
       setResult('🚫 無料体験は1回限りです', false);
       showToast('⚠ 無料体験は1回限りです');
       if (applyBtn) { applyBtn.disabled = false; applyBtn.textContent = '適用'; }
       return;
     }
+    // オフライン時はコードデータが取得できないため処理中断
+    setResult('⚠ オフラインのためコードを確認できません。ネットワーク接続を確認してください。', false);
+    if (applyBtn) { applyBtn.disabled = false; applyBtn.textContent = '適用'; }
+    return;
   }
 
   // ──────────────────────────────────────────────
@@ -12697,11 +12680,16 @@ async function applyInviteCode() {
     // 書き込み失敗時でもローカルには記録してプレミアム付与
   }
 
-  // ──────────────────────────────────────────────
   // ローカルにも使用済み記録（二重防衛）
-  // ──────────────────────────────────────────────
   markCodeUsed(code);
-  if (codeData.type === 'invite') setTrialUsed();
+  if (codeData && codeData.type === 'invite') setTrialUsed();
+
+  // codeData が取得できていない場合（tryブロックの途中でエラーの場合）は安全のため中断
+  if (!codeData) {
+    setResult('⚠ コード情報の取得に失敗しました。再度お試しください。', false);
+    if (applyBtn) { applyBtn.disabled = false; applyBtn.textContent = '適用'; }
+    return;
+  }
 
   // プレミアム有効化
   activatePremium(
@@ -12719,7 +12707,7 @@ async function applyInviteCode() {
                       codeData.months === 6  ? '半年（6ヶ月）' :
                       codeData.months === 12 ? '1年' : codeData.months + 'ヶ月';
 
-  setResult('✅ ' + codeData.label + ' が適用されました！広告が非表示になります。', true);
+  setResult('✅ ' + (codeData.label || 'プレミアム') + ' が適用されました！広告が非表示になります。', true);
   showToast(codeData.months === 0
     ? '🎉 永久ライセンスが有効になりました！'
     : '🎉 プレミアム（' + periodLabel + '）が有効になりました！');
