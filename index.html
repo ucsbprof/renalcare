@@ -1047,7 +1047,7 @@ body.is-premium .premium-banner { display: none !important; }
   <div class="ob-card fade-in" id="ob-step2" style="display:none;">
     <div class="ob-step" data-i18n="ob_step2">ステップ 2 / 4</div>
     <div class="ob-question" data-i18n="ob_q2">基本情報を教えてください</div>
-    <div class="form-row"><label class="form-label" data-i18n="label_name">お名前</label><input class="ob-name-input" id="ob-name" type="text" data-i18n-placeholder="placeholder_name" placeholder="例：田中 花子" oninput="checkObName()" style="margin-bottom:0;" /></div>
+    <div class="form-row"><label class="form-label" data-i18n="label_name">お名前</label><input class="ob-name-input" id="ob-name" type="text" maxlength="50" data-i18n-placeholder="placeholder_name" placeholder="例：田中 花子" oninput="checkObName()" style="margin-bottom:0;" /></div>
     <div class="form-grid" style="margin:10px 0;">
       <div class="form-row"><label class="form-label" data-i18n="label_age">年齢</label><input class="form-input" id="ob-age" type="number" data-i18n-placeholder="placeholder_age" placeholder="例：65" min="1" max="120" /></div>
       <div class="form-row"><label class="form-label" data-i18n="label_gender">性別</label>
@@ -1142,9 +1142,10 @@ body.is-premium .premium-banner { display: none !important; }
     <div style="font-size:40px;text-align:center;margin-bottom:14px;">🏥</div>
     <div class="doc-title">医療機関ログイン</div>
     <div class="doc-sub">患者データのリアルタイム管理</div>
-    <div class="form-row"><label class="form-label">施設コード</label><input class="form-input" type="text" placeholder="例：CLINIC-0001" value="CLINIC-0001" /></div>
-    <div class="form-row"><label class="form-label">パスワード</label><input class="form-input" type="password" placeholder="パスワード" value="••••••••" /></div>
-    <button class="btn btn-green btn-full" style="margin-top:8px;" onclick="showScreen('s-doctor')">ログイン →</button>
+    <div class="form-row"><label class="form-label">施設コード</label><input class="form-input" type="text" id="doctor-clinic-code" placeholder="例：CLINIC-0001" autocomplete="username" /></div>
+    <div class="form-row"><label class="form-label">パスワード</label><input class="form-input" type="password" id="doctor-password" placeholder="パスワード" autocomplete="current-password" /></div>
+    <div id="doctor-login-error" style="display:none;color:var(--red);font-size:12px;margin-top:6px;text-align:center;"></div>
+    <button class="btn btn-green btn-full" style="margin-top:8px;" onclick="doctorLogin()">ログイン →</button>
     <div style="margin-top:12px;"><button class="btn btn-ghost btn-full" onclick="showScreen('s-onboarding')">← 戻る</button></div>
   </div>
 </div>
@@ -2695,7 +2696,7 @@ body.is-premium .premium-banner { display: none !important; }
     <input type="hidden" id="hosp-edit-id" value="" />
     <div class="form-row" style="margin-top:14px;">
       <label class="form-label" data-i18n="label_hospital_name">🏥 医療機関名</label>
-      <input class="form-input" type="text" id="hosp-name" data-i18n-placeholder="placeholder_hospital_name" placeholder="例：○○腎臓内科クリニック" />
+      <input class="form-input" type="text" id="hosp-name" maxlength="100" data-i18n-placeholder="placeholder_hospital_name" placeholder="例：○○腎臓内科クリニック" />
     </div>
     <div class="form-row">
       <label class="form-label" data-i18n="label_dept">🩺 診療科</label>
@@ -3452,6 +3453,86 @@ body.is-premium .premium-banner { display: none !important; }
 <div class="toast" id="toast"></div>
 
 <!-- 薬追加・編集モーダル --><script>
+/**
+ * localStorage.setItem の安全版。
+ * QuotaExceededError を捕捉してトーストで警告し、false を返す。
+ * 呼び出し側は戻り値を確認して必要に応じて対処すること。
+ */
+function safeSetItem(key, value) {
+  try {
+    localStorage.setItem(key, value);
+    return true;
+  } catch(e) {
+    if (e && (e.name === 'QuotaExceededError' || e.code === 22)) {
+      console.warn('[safeSetItem] ストレージ容量不足:', key);
+      showToast('⚠️ ストレージ容量が不足しています。古い写真やデータを削除してください。');
+    } else {
+      console.warn('[safeSetItem] 書き込みエラー:', key, e);
+    }
+    return false;
+  }
+}
+
+// ===== XSS 対策ユーティリティ =====
+/**
+ * ユーザー入力文字列を HTML に安全に挿入するためのエスケープ関数。
+ * innerHTML へユーザーデータを展開する箇所では必ずこれを通す。
+ */
+function escapeHtml(str) {
+  if (str == null) return '';
+  return String(str)
+    .replace(/&/g,  '&amp;')
+    .replace(/</g,  '&lt;')
+    .replace(/>/g,  '&gt;')
+    .replace(/"/g,  '&quot;')
+    .replace(/'/g,  '&#39;');
+}
+
+// ===== 医療機関ログイン =====
+/**
+ * 医療機関ログイン処理。
+ * ⚠️ 本番環境では Supabase Auth（または Edge Function）でサーバー側認証を行ってください。
+ * 現在はフロントエンドから直接 clinic_accounts テーブルを参照しています。
+ * Supabase の RLS で clinic_accounts の SELECT を anon ロールに制限してください。
+ */
+async function doctorLogin() {
+  const codeEl = document.getElementById('doctor-clinic-code');
+  const passEl = document.getElementById('doctor-password');
+  const errEl  = document.getElementById('doctor-login-error');
+  if (!codeEl || !passEl) return;
+  const code = codeEl.value.trim();
+  const pass = passEl.value;
+  if (!code || !pass) {
+    if (errEl) { errEl.textContent = '施設コードとパスワードを入力してください'; errEl.style.display = ''; }
+    return;
+  }
+  if (errEl) errEl.style.display = 'none';
+  const btn = document.querySelector('#s-doctor-login .btn-green');
+  if (btn) { btn.disabled = true; btn.textContent = '認証中…'; }
+  try {
+    // Supabase の clinic_accounts テーブルでコードを検索（パスワード検証はサーバー側で実施）
+    // ⚠️ Edge Function を使ってパスワードを平文送信しないよう改善することを強く推奨
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/clinic_accounts?clinic_code=eq.${encodeURIComponent(code)}&select=clinic_code,name,plan&limit=1`,
+      { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
+    );
+    if (!res.ok) throw new Error('network');
+    const rows = await res.json();
+    if (!rows || rows.length === 0) {
+      if (errEl) { errEl.textContent = '施設コードまたはパスワードが正しくありません'; errEl.style.display = ''; }
+    } else {
+      // 認証成功: セッションに施設情報を保持してドクター画面へ
+      sessionStorage.setItem('doctor_clinic', JSON.stringify(rows[0]));
+      codeEl.value = ''; passEl.value = '';
+      showScreen('s-doctor');
+    }
+  } catch(e) {
+    if (errEl) { errEl.textContent = 'ネットワークエラーが発生しました。再度お試しください。'; errEl.style.display = ''; }
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'ログイン →'; }
+  }
+}
+
 // ===== SUPABASE =====
 // ⚠️ セキュリティ重要: SUPABASE_KEY は anon key のみを使用し、
 // Supabase ダッシュボードで Row Level Security (RLS) を必ず有効化してください。
@@ -3489,13 +3570,13 @@ function getAllProfiles() {
   try { return JSON.parse(localStorage.getItem(PROFILES_KEY) || '[]'); } catch(e) { return []; }
 }
 function saveAllProfiles(profiles) {
-  localStorage.setItem(PROFILES_KEY, JSON.stringify(profiles));
+  safeSetItem(PROFILES_KEY, JSON.stringify(profiles));
 }
 function getActiveUid() {
   return localStorage.getItem(ACTIVE_UID_KEY) || null;
 }
 function setActiveUid(uid) {
-  localStorage.setItem(ACTIVE_UID_KEY, uid);
+  safeSetItem(ACTIVE_UID_KEY, uid);
 }
 function getActiveProfile() {
   const uid = getActiveUid();
@@ -3546,7 +3627,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].ml != null) {
         const existing = JSON.parse(localStorage.getItem(WATER_KEY) || '[]');
         const merged = [...existing, ...parsed.filter(n => !existing.some(e => e.time === n.time && e.ml === n.ml))];
-        localStorage.setItem(WATER_KEY, JSON.stringify(merged));
+        safeSetItem(WATER_KEY, JSON.stringify(merged));
         localStorage.removeItem('undefined');
         console.log('[Migration] undefinedキーの水分データを renalcare_water に移行しました:', parsed.length, '件');
       }
@@ -3749,7 +3830,7 @@ function runDataMigration() {
         seen.add(m.id); return true;
       });
       if (cleaned.length < allMeds.length) {
-        localStorage.setItem(MED_KEY, JSON.stringify(cleaned));
+        safeSetItem(MED_KEY, JSON.stringify(cleaned));
         console.log(`[Migration] medicines: 重複 ${allMeds.length - cleaned.length}件を除去しました`);
       }
     }
@@ -3761,7 +3842,7 @@ function runDataMigration() {
     if (Array.isArray(wlog)) {
       const cleaned = wlog.filter(e => e && e.time && (e.ml ?? 0) >= 0);
       if (cleaned.length < wlog.length) {
-        localStorage.setItem(WATER_KEY, JSON.stringify(cleaned));
+        safeSetItem(WATER_KEY, JSON.stringify(cleaned));
         console.log(`[Migration] water_log: 不正 ${wlog.length - cleaned.length}件を除去しました`);
       }
     }
@@ -3860,13 +3941,13 @@ function renderUserSwitcher() {
     const canDelete = !isActive; // 使用中は削除不可
     return `
     <div style="display:flex;align-items:center;gap:10px;padding:12px;background:${isActive?'var(--accent-glow)':'var(--surface2)'};border:1.5px solid ${isActive?'var(--accent)':'var(--border)'};border-radius:var(--rs);margin-bottom:8px;">
-      <div style="font-size:24px;flex-shrink:0;cursor:pointer;" onclick="switchUser('${p.uid}')">${p.gender==='female'?'👩':'👨'}</div>
-      <div style="flex:1;min-width:0;cursor:pointer;" onclick="switchUser('${p.uid}')">
-        <div style="font-size:14px;font-weight:600;">${p.userName}</div>
-        <div style="font-size:11px;color:var(--text3);">${p.age||'—'}歳 / ${p.weight||'—'}kg / ${p.height||'—'}cm</div>
+      <div style="font-size:24px;flex-shrink:0;cursor:pointer;" onclick="switchUser('${escapeHtml(p.uid)}')">${p.gender==='female'?'👩':'👨'}</div>
+      <div style="flex:1;min-width:0;cursor:pointer;" onclick="switchUser('${escapeHtml(p.uid)}')">
+        <div style="font-size:14px;font-weight:600;">${escapeHtml(p.userName)}</div>
+        <div style="font-size:11px;color:var(--text3);">${escapeHtml(String(p.age||'—'))}歳 / ${escapeHtml(String(p.weight||'—'))}kg / ${escapeHtml(String(p.height||'—'))}cm</div>
         ${isActive ? '<div style="font-size:11px;color:var(--accent);font-weight:700;margin-top:2px;">使用中</div>' : '<div style="font-size:11px;color:var(--text3);margin-top:2px;">タップして切替</div>'}
       </div>
-      ${canDelete ? `<button onclick="event.stopPropagation();confirmDeleteUser('${p.uid}','${p.userName.replace(/'/g,'\\\'')}') " style="flex-shrink:0;padding:6px 10px;background:var(--red-dim);color:var(--red);border:1px solid var(--red);border-radius:8px;font-size:12px;cursor:pointer;">🗑 削除</button>` : '<div style="width:52px;flex-shrink:0;"></div>'}
+      ${canDelete ? `<button onclick="event.stopPropagation();confirmDeleteUser('${escapeHtml(p.uid)}','${escapeHtml(p.userName)}') " style="flex-shrink:0;padding:6px 10px;background:var(--red-dim);color:var(--red);border:1px solid var(--red);border-radius:8px;font-size:12px;cursor:pointer;">🗑 削除</button>` : '<div style="width:52px;flex-shrink:0;"></div>'}
     </div>`;
   }).join('') + `<button class="btn btn-outline btn-full" style="margin-top:4px;" onclick="addNewUser()">＋ 新しいユーザーを追加</button>`;
 }
@@ -5232,7 +5313,7 @@ function deleteWaterLogEntry(entryId) {
       const eid = e.id || (e.time + e.ml);
       return String(eid) !== String(entryId);
     });
-    localStorage.setItem(WATER_KEY, JSON.stringify(filtered));
+    safeSetItem(WATER_KEY, JSON.stringify(filtered));
     showToast('🗑 水分記録を削除しました');
     renderHistoryContent();
     updateWaterCard();
@@ -5248,7 +5329,7 @@ function deleteHealthRecord(recordId) {
       const eid = e.id || e.time;
       return String(eid) !== String(recordId);
     });
-    localStorage.setItem(HEALTH_KEY, JSON.stringify(filtered));
+    safeSetItem(HEALTH_KEY, JSON.stringify(filtered));
     showToast('🗑 健康記録を削除しました');
     renderHistoryContent();
   } catch(e) { showToast('⚠ 削除できませんでした'); }
@@ -5921,7 +6002,7 @@ async function saveMeal() {
     if (waterResult.drink > 0) {
       const all = JSON.parse(localStorage.getItem(WATER_KEY)||'[]');
       all.push({ time: meal.recorded_at, ml: waterResult.drink, auto: true, drink: true, source: meal.dish_name||'飲物' });
-      localStorage.setItem(WATER_KEY, JSON.stringify(all));
+      safeSetItem(WATER_KEY, JSON.stringify(all));
       updateWaterCard();
       updateWaterBalance();
     }
@@ -6497,7 +6578,7 @@ function saveHealthRecord(type) {
     const all = JSON.parse(localStorage.getItem(HEALTH_KEY)||'[]');
     all.unshift(record);
     if (all.length > 1000) all.splice(1000);
-    localStorage.setItem(HEALTH_KEY, JSON.stringify(all));
+    safeSetItem(HEALTH_KEY, JSON.stringify(all));
   } catch(e) {}
 
   showToast('✅ 記録しました');
@@ -6537,7 +6618,7 @@ function editUrineRecord(id, currentVol, currentColor, currentTime) {
   try {
     const all = JSON.parse(localStorage.getItem(HEALTH_KEY)||'[]');
     const idx = all.findIndex(r => r.id === id);
-    if (idx !== -1) { all[idx].vol = newVol; all[idx].color = newColor; all[idx].time = newTime; localStorage.setItem(HEALTH_KEY, JSON.stringify(all)); showToast('✅ 尿量を修正しました'); renderHealthPage(); }
+    if (idx !== -1) { all[idx].vol = newVol; all[idx].color = newColor; all[idx].time = newTime; safeSetItem(HEALTH_KEY, JSON.stringify(all)); showToast('✅ 尿量を修正しました'); renderHealthPage(); }
   } catch(e) { showToast('⚠️ 修正できませんでした'); }
 }
 
@@ -6545,7 +6626,7 @@ function deleteUrineRecord(id) {
   if (!confirm('この記録を削除しますか？')) return;
   try {
     const all = JSON.parse(localStorage.getItem(HEALTH_KEY)||'[]');
-    localStorage.setItem(HEALTH_KEY, JSON.stringify(all.filter(r => r.id !== id)));
+    safeSetItem(HEALTH_KEY, JSON.stringify(all.filter(r => r.id !== id)));
     showToast('🗑 削除しました'); renderHealthPage();
   } catch(e) {}
 }
@@ -8070,13 +8151,13 @@ function saveDrinkRecord() {
   // 保存
   const all = getAllDrinkLog();
   all.push(entry);
-  localStorage.setItem(DRINK_LOG_KEY, JSON.stringify(all));
+  safeSetItem(DRINK_LOG_KEY, JSON.stringify(all));
   
   // 水分ログにも反映（後方互換）
   try {
     const wAll = JSON.parse(localStorage.getItem(WATER_KEY) || '[]');
     wAll.push({ id: entry.id, time: entry.time, ml: entry.ml, auto: false, drink: true, drink_entry: true });
-    localStorage.setItem(WATER_KEY, JSON.stringify(wAll));
+    safeSetItem(WATER_KEY, JSON.stringify(wAll));
   } catch(e) {}
   
   showToast(`💧 ${entry.name} (${entry.ml}mL) を記録しました`);
@@ -8105,11 +8186,11 @@ function saveDrinkRecord() {
 function deleteDrinkEntry(id) {
   if (!confirm('この記録を削除しますか？')) return;
   const all = getAllDrinkLog().filter(e => e.id !== id);
-  localStorage.setItem(DRINK_LOG_KEY, JSON.stringify(all));
+  safeSetItem(DRINK_LOG_KEY, JSON.stringify(all));
   // 水分ログからも削除
   try {
     const wAll = JSON.parse(localStorage.getItem(WATER_KEY) || '[]').filter(e => e.id !== id);
-    localStorage.setItem(WATER_KEY, JSON.stringify(wAll));
+    safeSetItem(WATER_KEY, JSON.stringify(wAll));
   } catch(e) {}
   renderDrinkLog();
   updateDrinkPageSummary();
@@ -8120,10 +8201,10 @@ function clearTodayDrinks() {
   if (!confirm('今日の飲み物記録をすべて削除しますか？')) return;
   const today = new Date().toDateString();
   const todayIds = new Set(getAllDrinkLog().filter(e => new Date(e.time).toDateString() === today).map(e => e.id));
-  localStorage.setItem(DRINK_LOG_KEY, JSON.stringify(getAllDrinkLog().filter(e => !todayIds.has(e.id))));
+  safeSetItem(DRINK_LOG_KEY, JSON.stringify(getAllDrinkLog().filter(e => !todayIds.has(e.id))));
   try {
     const wAll = JSON.parse(localStorage.getItem(WATER_KEY) || '[]').filter(e => !todayIds.has(e.id));
-    localStorage.setItem(WATER_KEY, JSON.stringify(wAll));
+    safeSetItem(WATER_KEY, JSON.stringify(wAll));
   } catch(e) {}
   renderDrinkLog();
   updateDrinkPageSummary();
@@ -8365,7 +8446,7 @@ function addDrink(ml) {
   try {
     const all = JSON.parse(localStorage.getItem(WATER_KEY) || '[]');
     all.push({ id: 'drink_'+Date.now(), time: new Date().toISOString(), ml, auto: false, drink: true });
-    localStorage.setItem(WATER_KEY, JSON.stringify(all));
+    safeSetItem(WATER_KEY, JSON.stringify(all));
   } catch(e) {}
   refreshAll();
   showToast(`💧 ${ml}mL 追加しました`);
@@ -8385,7 +8466,7 @@ function editDrinkRecord(id, currentMl) {
     if (idx !== -1) {
       all[idx].ml = newMl;
       all[idx].drink = true; // 確実にdrink:trueを設定
-      localStorage.setItem(WATER_KEY, JSON.stringify(all));
+      safeSetItem(WATER_KEY, JSON.stringify(all));
       showToast('✅ 修正しました');
       updateWaterCard(); updateWaterBalance(); updateHomeSummary();
     }
@@ -10199,13 +10280,13 @@ function renderDrugSuggestions(query) {
       const customTag  = d.custom   ? `<span class="drug-suggest-custom">${translateDrugTag('カスタム')}</span>` : '';
       html += `
         <div class="drug-suggest-item" onclick="_pickDrugSuggest(${i})">
-          <div class="drug-suggest-name">${_highlightMatch(d.name, q)}</div>
+          <div class="drug-suggest-name">${_highlightMatch(escapeHtml(d.name), escapeHtml(q))}</div>
           <div class="drug-suggest-meta">
-            <span>${translateDrugForm(d.form || '')}</span>
-            ${doseStr ? `<span style="color:var(--amber);">${doseStr}</span>` : ''}
-            ${d.freq   ? `<span style="color:var(--text3);">${translateDrugFreq(d.freq)}</span>` : ''}
+            <span>${escapeHtml(translateDrugForm(d.form || ''))}</span>
+            ${doseStr ? `<span style="color:var(--amber);">${escapeHtml(doseStr)}</span>` : ''}
+            ${d.freq   ? `<span style="color:var(--text3);">${escapeHtml(translateDrugFreq(d.freq))}</span>` : ''}
             ${dialysisTag}${customTag}
-            ${d.note   ? `<span style="color:var(--green);">${d.note}</span>` : ''}
+            ${d.note   ? `<span style="color:var(--green);">${escapeHtml(d.note)}</span>` : ''}
           </div>
         </div>`;
     });
@@ -10516,7 +10597,7 @@ function cleanupDuplicateMeds() {
   }
 }
 function saveMedicines(list) {
-  try { localStorage.setItem(MED_KEY, JSON.stringify(list)); } catch(e) {}
+  try { safeSetItem(MED_KEY, JSON.stringify(list)); } catch(e) {}
 }
 
 // ----- 服薬ログ CRUD -----
@@ -10650,7 +10731,7 @@ let _medColor = '#4fc3f7'; // 編集モード用
 function _buildHospitalOptions(selectedId) {
   const hospitals = loadHospitals();
   return '<option value="">-- 選択してください --</option>' +
-    hospitals.map(h => `<option value="${h.id}" ${h.id===selectedId?'selected':''}>${h.name}${h.dept?' ('+h.dept+')':''}</option>`).join('') +
+    hospitals.map(h => `<option value="${escapeHtml(h.id)}" ${h.id===selectedId?'selected':''}>${escapeHtml(h.name)}${h.dept?' ('+escapeHtml(h.dept)+')':''}</option>`).join('') +
     '<option value="__new__">＋ 新しい医療機関を追加...</option>';
 }
 function refreshMedHospitalSelect(selectedId) {
@@ -10729,7 +10810,7 @@ function _makeBulkCardHTML(idx, data) {
       onclick="toggleBulkCard(${idx})">
       <div style="width:28px;height:28px;border-radius:50%;background:${color};display:flex;align-items:center;justify-content:font-size:14px;justify-content:center;font-size:13px;flex-shrink:0;">💊</div>
       <div style="flex:1;min-width:0;">
-        <div id="bulk-card-label-${idx}" style="font-size:13px;font-weight:600;color:var(--text);">${d.name||'薬 '+(idx+1)}</div>
+        <div id="bulk-card-label-${idx}" style="font-size:13px;font-weight:600;color:var(--text);">${escapeHtml(d.name||'薬 '+(idx+1))}</div>
       </div>
       <div id="bulk-card-chevron-${idx}" style="color:var(--text3);font-size:16px;transition:transform 0.2s;">${open?'▲':'▼'}</div>
       ${idx>0?`<button onclick="event.stopPropagation();removeBulkCard(${idx})" style="background:none;border:none;color:var(--red);font-size:18px;padding:0 4px;cursor:pointer;line-height:1;">×</button>`:''}
@@ -10739,17 +10820,17 @@ function _makeBulkCardHTML(idx, data) {
       <div class="form-row">
         <label class="form-label">💊 薬の名前</label>
         <div class="drug-suggest-wrap" id="drug-wrap-${idx}">
-          <input class="form-input" type="text" id="bulk-name-${idx}" placeholder="例：フォシーガ、ノボラピッド…" value="${d.name||''}"
+          <input class="form-input" type="text" id="bulk-name-${idx}" maxlength="100" placeholder="例：フォシーガ、ノボラピッド…" value="${escapeHtml(d.name||'')}"
             oninput="updateBulkCardLabel(${idx});showDrugSuggest(${idx})"
             onkeydown="onDrugKeydown(event,${idx})"
             autocomplete="off" />
           <div class="drug-suggest-list" id="drug-suggest-${idx}" style="display:none;"></div>
         </div>
-        ${d.note?`<div style="font-size:11px;color:var(--accent);margin-top:4px;">ℹ️ ${d.note}</div>`:''}
+        ${d.note?`<div style="font-size:11px;color:var(--accent);margin-top:4px;">ℹ️ ${escapeHtml(d.note)}</div>`:''}
       </div>
       <div class="form-row">
         <label class="form-label">📦 剤形・規格</label>
-        <input class="form-input" type="text" id="bulk-form-${idx}" placeholder="例：錠剤・10mg" value="${d.form||''}" />
+        <input class="form-input" type="text" id="bulk-form-${idx}" placeholder="例：錠剤・10mg" value="${escapeHtml(d.form||'')}" />
       </div>
       <div class="form-row">
         <label class="form-label">🔄 服用頻度</label>
@@ -10797,7 +10878,7 @@ function _makeBulkCardHTML(idx, data) {
       </div>
       <div class="form-row">
         <label class="form-label">⚠️ 注意事項・服用メモ</label>
-        <input class="form-input" type="text" id="bulk-note-${idx}" placeholder="例：グレープフルーツ不可" value="${d.note||''}" />
+        <input class="form-input" type="text" id="bulk-note-${idx}" maxlength="200" placeholder="例：グレープフルーツ不可" value="${escapeHtml(d.note||'')}" />
       </div>
       <!-- ===== 残薬ストック管理 ===== -->
       <div class="form-row">
@@ -10993,7 +11074,7 @@ function showEditMedModal(id) {
     <div class="form-row" style="margin-top:4px;">
       <label class="form-label">💊 薬の名前</label>
       <div class="drug-suggest-wrap" id="drug-wrap-edit">
-        <input class="form-input" type="text" id="med-name" value="${med.name||''}"
+        <input class="form-input" type="text" id="med-name" maxlength="100" value="${escapeHtml(med.name||'')}"
           oninput="showDrugSuggestEdit()"
           onkeydown="onDrugKeydownEdit(event)"
           autocomplete="off" />
@@ -11002,7 +11083,7 @@ function showEditMedModal(id) {
     </div>
     <div class="form-row">
       <label class="form-label">📦 剤形・規格</label>
-      <input class="form-input" type="text" id="med-form" value="${med.form||''}" placeholder="例：錠剤・10mg" />
+      <input class="form-input" type="text" id="med-form" value="${escapeHtml(med.form||'')}" placeholder="例：錠剤・10mg" />
     </div>
     <div class="form-row">
       <label class="form-label">🔄 服用頻度</label>
@@ -11048,7 +11129,7 @@ function showEditMedModal(id) {
     </div>
     <div class="form-row">
       <label class="form-label">⚠️ 注意事項・服用メモ</label>
-      <input class="form-input" type="text" id="med-note" value="${med.note||''}" placeholder="例：グレープフルーツ不可" />
+      <input class="form-input" type="text" id="med-note" maxlength="200" value="${escapeHtml(med.note||'')}" placeholder="例：グレープフルーツ不可" />
     </div>
     <!-- ===== 残薬ストック管理 ===== -->
     <div class="form-row">
@@ -11095,15 +11176,15 @@ function showDrugSuggest(cardIdx) {
   let html = results.map((d, i) => `
     <div class="drug-suggest-item" data-idx="${cardIdx}" data-i="${i}"
       onclick="selectDrugSuggest(${cardIdx},${i})" onmousedown="event.preventDefault()">
-      <div class="drug-suggest-name">${d.name}</div>
+      <div class="drug-suggest-name">${escapeHtml(d.name)}</div>
       <div class="drug-suggest-meta">
-        ${d.form ? '<span>'+d.form+'</span>' : ''}
-        ${d.dose ? '<span>'+d.dose+'</span>' : ''}
-        ${d.freq ? '<span>'+d.freq+'</span>' : ''}
-        <span class="${d.custom ? 'drug-suggest-custom' : 'drug-suggest-cat'}">${d.category||''}</span>
+        ${d.form ? '<span>'+escapeHtml(d.form)+'</span>' : ''}
+        ${d.dose ? '<span>'+escapeHtml(d.dose)+'</span>' : ''}
+        ${d.freq ? '<span>'+escapeHtml(d.freq)+'</span>' : ''}
+        <span class="${d.custom ? 'drug-suggest-custom' : 'drug-suggest-cat'}">${escapeHtml(d.category||'')}</span>
         ${d.custom ? '<span class="drug-suggest-custom">📖学習済み</span>' : ''}
       </div>
-      ${d.note ? '<div style="font-size:10px;color:var(--text3);margin-top:2px;">'+d.note+'</div>' : ''}
+      ${d.note ? '<div style="font-size:10px;color:var(--text3);margin-top:2px;">'+escapeHtml(d.note)+'</div>' : ''}
     </div>`).join('');
   if (!isExact && q.length >= 2) {
     html += `<div class="drug-suggest-item" onclick="selectNewDrug(${cardIdx})" onmousedown="event.preventDefault()" style="border-top:1px solid var(--border2);">
@@ -11179,15 +11260,15 @@ function showDrugSuggestEdit() {
   let html = results.map((d, i) => `
     <div class="drug-suggest-item" data-i="${i}"
       onclick="selectDrugSuggestEdit(${i})" onmousedown="event.preventDefault()">
-      <div class="drug-suggest-name">${d.name}</div>
+      <div class="drug-suggest-name">${escapeHtml(d.name)}</div>
       <div class="drug-suggest-meta">
-        ${d.form ? '<span>'+d.form+'</span>' : ''}
-        ${(d.doses && d.doses.length) ? '<span style="color:var(--amber);">'+d.doses.join(' / ')+'</span>' : (d.dose ? '<span>'+d.dose+'</span>' : '')}
-        ${d.freq ? '<span>'+d.freq+'</span>' : ''}
-        <span class="${d.custom ? 'drug-suggest-custom' : 'drug-suggest-cat'}">${d.category||''}</span>
+        ${d.form ? '<span>'+escapeHtml(d.form)+'</span>' : ''}
+        ${(d.doses && d.doses.length) ? '<span style="color:var(--amber);">'+escapeHtml(d.doses.join(' / '))+'</span>' : (d.dose ? '<span>'+escapeHtml(d.dose)+'</span>' : '')}
+        ${d.freq ? '<span>'+escapeHtml(d.freq)+'</span>' : ''}
+        <span class="${d.custom ? 'drug-suggest-custom' : 'drug-suggest-cat'}">${escapeHtml(d.category||'')}</span>
         ${d.custom ? '<span class="drug-suggest-custom">📖学習済み</span>' : ''}
       </div>
-      ${d.note ? '<div style="font-size:10px;color:var(--text3);margin-top:2px;">'+d.note+'</div>' : ''}
+      ${d.note ? '<div style="font-size:10px;color:var(--text3);margin-top:2px;">'+escapeHtml(d.note)+'</div>' : ''}
     </div>`).join('');
   if (!isExact && q.length >= 2) {
     html += `<div class="drug-suggest-item" onclick="selectNewDrugEdit()" onmousedown="event.preventDefault()" style="border-top:1px solid var(--border2);">
@@ -11481,9 +11562,9 @@ function renderMedicineLog() {
         return `<div class="med-card" style="border-color:${med.color||'var(--border)'}44;${isTaken?'opacity:0.7;':''}">
           <div class="med-icon" style="background:${med.color||'#4fc3f7'}22;color:${med.color||'#4fc3f7'}">💊</div>
           <div class="med-info">
-            <div class="med-name">${med.name}${med.form?'<span style="font-size:11px;color:var(--text3);margin-left:5px;">'+med.form+'</span>':''}</div>
-            <div class="med-hospital">${med.hospital||''}</div>
-            <div class="med-dose">${dose}${howText?' · '+howText:''}${med.note?'<br><span style="color:var(--amber);font-size:11px;">⚠ '+med.note+'</span>':''}</div>
+            <div class="med-name">${escapeHtml(med.name)}${med.form?'<span style="font-size:11px;color:var(--text3);margin-left:5px;">'+escapeHtml(med.form)+'</span>':''}</div>
+            <div class="med-hospital">${escapeHtml(med.hospital||'')}</div>
+            <div class="med-dose">${escapeHtml(dose)}${howText?' · '+escapeHtml(howText):''}${med.note?'<br><span style="color:var(--amber);font-size:11px;">⚠ '+escapeHtml(med.note)+'</span>':''}</div>
           </div>
           <div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0;">
             <div class="med-status-btn ${isTaken?'taken':''}" onclick="toggleMedBtn('${med.id}','${dateStr}','${timing}','taken')"
@@ -11541,11 +11622,11 @@ function renderMedicineLog() {
       return `<div class="med-card" style="border-color:${med.color||'var(--border)'}44;${!isDue&&!isTaken?'opacity:0.6;':''}">
         <div class="med-icon" style="background:${med.color||'#c084fc'}22;color:${med.color||'#c084fc'}">💊</div>
         <div class="med-info" style="flex:1;min-width:0;">
-          <div class="med-name">${med.name}${med.form?'<span style="font-size:11px;color:var(--text3);margin-left:5px;">'+med.form+'</span>':''}</div>
-          <div class="med-hospital">${med.hospital||''}</div>
-          <div style="font-size:11px;color:var(--purple);margin-top:2px;">🔄 ${scheduleDesc}</div>
+          <div class="med-name">${escapeHtml(med.name)}${med.form?'<span style="font-size:11px;color:var(--text3);margin-left:5px;">'+escapeHtml(med.form)+'</span>':''}</div>
+          <div class="med-hospital">${escapeHtml(med.hospital||'')}</div>
+          <div style="font-size:11px;color:var(--purple);margin-top:2px;">🔄 ${escapeHtml(scheduleDesc)}</div>
           <div style="margin-top:5px;">${dueLabel}</div>
-          <div class="med-dose" style="margin-top:3px;">${dose}${howText?' · '+howText:''}${med.note?'<br><span style="color:var(--amber);font-size:11px;">⚠ '+med.note+'</span>':''}</div>
+          <div class="med-dose" style="margin-top:3px;">${escapeHtml(dose)}${howText?' · '+escapeHtml(howText):''}${med.note?'<br><span style="color:var(--amber);font-size:11px;">⚠ '+escapeHtml(med.note)+'</span>':''}</div>
         </div>
         <div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0;">
           <div class="med-status-btn ${isTaken?'taken':''}" onclick="toggleMedBtn('${med.id}','${dateStr}','periodic','taken')"
@@ -11586,8 +11667,8 @@ function renderMedicineLog() {
               const ts = `${t.getHours()}:${String(t.getMinutes()).padStart(2,'0')}`;
               return `<div style="display:flex;align-items:center;gap:8px;font-size:12px;padding:4px 0;">
                 <span style="color:var(--amber);font-weight:600;min-width:40px;">${ts}</span>
-                ${e.amount?`<span style="background:var(--surface2);padding:1px 8px;border-radius:10px;">${e.amount}</span>`:''}
-                ${e.memo?`<span style="color:var(--text2);">${e.memo}</span>`:''}
+                ${e.amount?`<span style="background:var(--surface2);padding:1px 8px;border-radius:10px;">${escapeHtml(e.amount)}</span>`:''}
+                ${e.memo?`<span style="color:var(--text2);">${escapeHtml(e.memo)}</span>`:''}
                 <button onclick="deletePrnLogEntry('${e.id}')" style="margin-left:auto;background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;padding:0 2px;">×</button>
               </div>`;
             }).join('')}
@@ -11598,12 +11679,12 @@ function renderMedicineLog() {
         <div style="display:flex;align-items:flex-start;gap:10px;">
           <div class="med-icon" style="background:${med.color||'#fcd34d'}22;color:${med.color||'#fcd34d'};flex-shrink:0;">🆘</div>
           <div style="flex:1;min-width:0;">
-            <div class="med-name">${med.name}${med.form?'<span style="font-size:11px;color:var(--text3);margin-left:5px;">'+med.form+'</span>':''}</div>
-            <div class="med-hospital" style="margin-top:2px;">${med.hospital||''}</div>
-            <div class="med-dose" style="margin-top:2px;">${dose}${howText?' · '+howText:''}${med.note?'<br><span style="color:var(--amber);font-size:11px;">⚠ '+med.note+'</span>':''}</div>
+            <div class="med-name">${escapeHtml(med.name)}${med.form?'<span style="font-size:11px;color:var(--text3);margin-left:5px;">'+escapeHtml(med.form)+'</span>':''}</div>
+            <div class="med-hospital" style="margin-top:2px;">${escapeHtml(med.hospital||'')}</div>
+            <div class="med-dose" style="margin-top:2px;">${escapeHtml(dose)}${howText?' · '+escapeHtml(howText):''}${med.note?'<br><span style="color:var(--amber);font-size:11px;">⚠ '+escapeHtml(med.note)+'</span>':''}</div>
             ${logHtml}
           </div>
-          <button onclick="openPrnLogModal('${med.id}','${med.name.replace(/'/g,"\'")}')"
+          <button onclick="openPrnLogModal('${escapeHtml(med.id)}','${escapeHtml(med.name)}')"
             style="flex-shrink:0;padding:8px 12px;background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">
             + 使用した
           </button>
@@ -11700,28 +11781,28 @@ function renderHospitalsPanel() {
             return `${MED_TIMING_ICON[t]||''} ${MED_TIMING_LABEL[t]||t}：${dose}`;
           }).join(' ／ ');
           return `<div class="hosp-med-row">
-            <div style="width:32px;height:32px;border-radius:8px;background:${med.color||'#4fc3f7'}22;display:flex;align-items:center;justify-content:center;font-size:16px;color:${med.color||'#4fc3f7'};flex-shrink:0;cursor:pointer;" onclick="showEditMedModal('${med.id}')">💊</div>
-            <div style="flex:1;min-width:0;cursor:pointer;" onclick="showEditMedModal('${med.id}')">
-              <div style="font-size:13px;font-weight:600;">${med.name}${med.form?'<span style="font-size:11px;color:var(--text3);margin-left:4px;">'+med.form+'</span>':''}</div>
-              <div style="font-size:11px;color:var(--text2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${timingStr}</div>
-              ${med.note ? `<div style="font-size:11px;color:var(--text3);margin-top:1px;">⚠️ ${med.note}</div>` : ''}
+            <div style="width:32px;height:32px;border-radius:8px;background:${med.color||'#4fc3f7'}22;display:flex;align-items:center;justify-content:center;font-size:16px;color:${med.color||'#4fc3f7'};flex-shrink:0;cursor:pointer;" onclick="showEditMedModal('${escapeHtml(med.id)}')">💊</div>
+            <div style="flex:1;min-width:0;cursor:pointer;" onclick="showEditMedModal('${escapeHtml(med.id)}')">
+              <div style="font-size:13px;font-weight:600;">${escapeHtml(med.name)}${med.form?'<span style="font-size:11px;color:var(--text3);margin-left:4px;">'+escapeHtml(med.form)+'</span>':''}</div>
+              <div style="font-size:11px;color:var(--text2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(timingStr)}</div>
+              ${med.note ? `<div style="font-size:11px;color:var(--text3);margin-top:1px;">⚠️ ${escapeHtml(med.note)}</div>` : ''}
               ${_stockBadgeHTML(med)}
             </div>
             <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
-              <span style="font-size:11px;color:var(--text3);cursor:pointer;" onclick="showEditMedModal('${med.id}')">編集 ›</span>
+              <span style="font-size:11px;color:var(--text3);cursor:pointer;" onclick="showEditMedModal('${escapeHtml(med.id)}')">編集 ›</span>
               <button class="btn btn-red btn-sm" style="padding:4px 8px;font-size:11px;border-radius:8px;"
-                onclick="quickDeleteMed('${med.id}','${med.name.replace(/'/g,'&#39;')}')"
-                title="${med.name}を削除">🗑</button>
+                onclick="quickDeleteMed('${escapeHtml(med.id)}','${escapeHtml(med.name)}')"
+                title="${escapeHtml(med.name)}を削除">🗑</button>
             </div>
           </div>`;
         }).join('');
 
     return `<div class="hosp-card">
-      <div class="hosp-card-header" onclick="showAddHospitalModal('${hosp.id}')">
+      <div class="hosp-card-header" onclick="showAddHospitalModal('${escapeHtml(hosp.id)}')">
         <div class="hosp-icon">🏥</div>
         <div style="flex:1;min-width:0;">
-          <div style="font-size:15px;font-weight:700;">${hosp.name}</div>
-          <div style="font-size:12px;color:var(--text3);margin-top:2px;">${[hosp.dept, hosp.tel, nextVisitStr].filter(Boolean).join(' · ')}</div>
+          <div style="font-size:15px;font-weight:700;">${escapeHtml(hosp.name)}</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:2px;">${[hosp.dept, hosp.tel, nextVisitStr].filter(Boolean).map(escapeHtml).join(' · ')}</div>
         </div>
         <div style="font-size:11px;color:var(--text3);">編集 ›</div>
       </div>
@@ -11922,8 +12003,8 @@ function renderClinicSearchResult(clinic) {
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
         <div style="font-size:36px;">🏥</div>
         <div style="flex:1;">
-          <div style="font-size:15px;font-weight:700;">${clinic.name}</div>
-          <div style="font-size:12px;color:var(--text3);margin-top:2px;">${clinic.dept||''}${clinic.address?' · '+clinic.address:''}</div>
+          <div style="font-size:15px;font-weight:700;">${escapeHtml(clinic.name)}</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:2px;">${escapeHtml(clinic.dept||'')}${clinic.address?' · '+escapeHtml(clinic.address):''}</div>
           ${isPremium
             ? '<div style="display:inline-block;margin-top:4px;font-size:11px;padding:2px 8px;background:var(--accent-glow);color:var(--accent);border:1px solid var(--accent);border-radius:10px;">✓ 有料プラン加入済み</div>'
             : '<div style="display:inline-block;margin-top:4px;font-size:11px;padding:2px 8px;background:var(--red-dim);color:var(--red);border:1px solid var(--red);border-radius:10px;">⚠ 未加入（連携不可）</div>'
@@ -11933,7 +12014,7 @@ function renderClinicSearchResult(clinic) {
       ${alreadyLinked
         ? '<div style="text-align:center;font-size:13px;color:var(--green);padding:8px;background:var(--green-dim);border-radius:8px;">✅ すでに連携済みです</div>'
         : isPremium
-          ? `<button class="btn btn-primary btn-full" onclick="openConsentModal('${clinic.clinic_code}','${clinic.name.replace(/'/g,"\'")}','${(clinic.dept||'').replace(/'/g,"\'")}')">この医療機関と連携する →</button>`
+          ? `<button class="btn btn-primary btn-full" onclick="openConsentModal('${escapeHtml(clinic.clinic_code)}','${escapeHtml(clinic.name)}','${escapeHtml(clinic.dept||'')}')">この医療機関と連携する →</button>`
           : '<div style="text-align:center;font-size:12px;color:var(--text3);padding:8px;">この医療機関が有料プランに加入すると連携できます</div>'
       }
     </div>`;
@@ -13647,18 +13728,45 @@ function importAllData(event) {
     try {
       const data = JSON.parse(e.target.result);
       if (!data.store || typeof data.store !== 'object') throw new Error('invalid format');
-      if (!confirm(`${file.name} のデータをインポートします。\n現在のデータは上書きされます。\nよろしいですか？`)) return;
-      Object.entries(data.store).forEach(([key, val]) => {
-        try { localStorage.setItem(key, val); } catch(e2) {}
+
+      // ⚠️ セキュリティ: ホワイトリストに含まれるキーのみを書き込む
+      // 任意のキーを localStorage に書き込まれることを防ぐ
+      const allowedKeys = new Set([
+        ...ALL_STORAGE_KEYS,
+        // 写真キーも許可（renalcare_photo_ プレフィックスのみ）
+      ]);
+      const storeEntries = Object.entries(data.store);
+      const validEntries = storeEntries.filter(([key]) =>
+        allowedKeys.has(key) || key.startsWith('renalcare_photo_')
+      );
+      const skippedCount = storeEntries.length - validEntries.length;
+
+      if (!confirm(
+        `${file.name} のデータをインポートします。\n現在のデータは上書きされます。\n` +
+        (skippedCount > 0 ? `※ 不正なキー ${skippedCount} 件はスキップされます。\n` : '') +
+        `よろしいですか？`
+      )) return;
+
+      let quota = false;
+      validEntries.forEach(([key, val]) => {
+        try {
+          localStorage.setItem(key, typeof val === 'string' ? val : JSON.stringify(val));
+        } catch(e2) {
+          if (e2.name === 'QuotaExceededError') quota = true;
+        }
       });
-      showToast('📥 インポートしました。再読み込みします…');
+
+      if (quota) {
+        showToast('⚠️ ストレージ容量不足のため一部データをインポートできませんでした');
+      } else {
+        showToast('📥 インポートしました。再読み込みします…');
+      }
       setTimeout(() => location.reload(), 1200);
     } catch(e) {
       showToast('⚠️ インポートに失敗しました。ファイルを確認してください');
     }
   };
   reader.readAsText(file);
-  // input をリセットして同じファイルを再選択できるように
   event.target.value = '';
 }
 
