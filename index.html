@@ -1503,7 +1503,7 @@ body.is-premium .premium-banner { display: none !important; }
                 <span style="width:8px;height:8px;border-radius:50%;background:var(--accent);display:inline-block;flex-shrink:0;"></span>
                 <span>水分摂取量</span>
               </div>
-              <span id="wb-intake" style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--accent);flex-shrink:0;white-space:nowrap;">0 mL</span>
+              <span id="wb-intake" style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--accent);flex-shrink:0;white-space:nowrap;min-width:72px;text-align:right;">0 mL</span>
             </div>
             <!-- 食事重量（透析患者のみ） -->
             <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;" id="wb-food-weight-row">
@@ -1511,7 +1511,7 @@ body.is-premium .premium-banner { display: none !important; }
                 <span style="width:8px;height:8px;border-radius:50%;background:var(--amber);display:inline-block;flex-shrink:0;"></span>
                 <span>＋ 食事重量</span>
               </div>
-              <span id="wb-food-weight" style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--amber);flex-shrink:0;white-space:nowrap;">0 g</span>
+              <span id="wb-food-weight" style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--amber);flex-shrink:0;white-space:nowrap;min-width:72px;text-align:right;">0 g</span>
             </div>
             <!-- 代謝水 -->
             <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
@@ -1519,7 +1519,7 @@ body.is-premium .premium-banner { display: none !important; }
                 <span style="width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;flex-shrink:0;"></span>
                 <span>＋ 代謝水</span>
               </div>
-              <span id="wb-metabolic" style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--green);flex-shrink:0;white-space:nowrap;">0 mL</span>
+              <span id="wb-metabolic" style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--green);flex-shrink:0;white-space:nowrap;min-width:72px;text-align:right;">0 mL</span>
             </div>
             <!-- 尿量 -->
             <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
@@ -1527,7 +1527,7 @@ body.is-premium .premium-banner { display: none !important; }
                 <span style="width:8px;height:8px;border-radius:50%;background:var(--red);display:inline-block;flex-shrink:0;"></span>
                 <span>― 尿量</span>
               </div>
-              <span id="wb-urine" style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--red);flex-shrink:0;white-space:nowrap;">0 mL</span>
+              <span id="wb-urine" style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--red);flex-shrink:0;white-space:nowrap;min-width:72px;text-align:right;">0 mL</span>
             </div>
             <!-- 不感蒸泄 -->
             <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
@@ -1535,7 +1535,7 @@ body.is-premium .premium-banner { display: none !important; }
                 <span style="width:8px;height:8px;border-radius:50%;background:var(--purple);display:inline-block;flex-shrink:0;"></span>
                 <span>― 不感蒸泄</span>
               </div>
-              <div style="text-align:right;flex-shrink:0;white-space:nowrap;">
+              <div style="text-align:right;flex-shrink:0;white-space:nowrap;min-width:72px;">
                 <div id="wb-insensible" style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--purple);">0 mL</div>
                 <div id="insensible-detail" style="font-size:10px;color:var(--text3);white-space:normal;max-width:140px;text-align:right;">体重を設定で入力すると計算されます</div>
               </div>
@@ -6733,7 +6733,7 @@ function updateWaterBalance() {
   // 食事重量（全ユーザー表示）
   const fwRowEl = document.getElementById('wb-food-weight-row');
   const fwEl    = document.getElementById('wb-food-weight');
-  if (fwRowEl) fwRowEl.style.display = '';
+  if (fwRowEl) fwRowEl.style.display = 'flex';
   if (fwEl)    fwEl.textContent = foodWeightG.toLocaleString() + ' g';
   // 計算式ラベル更新
   const formulaEl = document.getElementById('wb-formula-label');
