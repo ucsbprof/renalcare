@@ -1498,46 +1498,46 @@ body.is-premium .premium-banner { display: none !important; }
           <div style="font-size:11px;color:var(--text3);margin-bottom:10px;letter-spacing:0.5px;">内訳</div>
           <div style="font-size:13px;color:var(--text2);display:flex;flex-direction:column;gap:8px;">
             <!-- 摂取水分 -->
-            <div style="display:flex;justify-content:space-between;align-items:center;">
-              <div style="display:flex;align-items:center;gap:6px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+              <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;white-space:nowrap;">
                 <span style="width:8px;height:8px;border-radius:50%;background:var(--accent);display:inline-block;flex-shrink:0;"></span>
                 <span>水分摂取量</span>
               </div>
-              <span id="wb-intake" style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--accent);">0 mL</span>
+              <span id="wb-intake" style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--accent);flex-shrink:0;white-space:nowrap;">0 mL</span>
             </div>
             <!-- 食事重量（透析患者のみ） -->
-            <div style="display:flex;justify-content:space-between;align-items:center;" id="wb-food-weight-row">
-              <div style="display:flex;align-items:center;gap:6px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;" id="wb-food-weight-row">
+              <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;white-space:nowrap;">
                 <span style="width:8px;height:8px;border-radius:50%;background:var(--amber);display:inline-block;flex-shrink:0;"></span>
                 <span>＋ 食事重量</span>
               </div>
-              <span id="wb-food-weight" style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--amber);">0 g</span>
+              <span id="wb-food-weight" style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--amber);flex-shrink:0;white-space:nowrap;">0 g</span>
             </div>
             <!-- 代謝水 -->
-            <div style="display:flex;justify-content:space-between;align-items:center;">
-              <div style="display:flex;align-items:center;gap:6px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+              <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;white-space:nowrap;">
                 <span style="width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;flex-shrink:0;"></span>
                 <span>＋ 代謝水</span>
               </div>
-              <span id="wb-metabolic" style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--green);">0 mL</span>
+              <span id="wb-metabolic" style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--green);flex-shrink:0;white-space:nowrap;">0 mL</span>
             </div>
             <!-- 尿量 -->
-            <div style="display:flex;justify-content:space-between;align-items:center;">
-              <div style="display:flex;align-items:center;gap:6px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+              <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;white-space:nowrap;">
                 <span style="width:8px;height:8px;border-radius:50%;background:var(--red);display:inline-block;flex-shrink:0;"></span>
                 <span>― 尿量</span>
               </div>
-              <span id="wb-urine" style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--red);">0 mL</span>
+              <span id="wb-urine" style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--red);flex-shrink:0;white-space:nowrap;">0 mL</span>
             </div>
             <!-- 不感蒸泄 -->
-            <div style="display:flex;justify-content:space-between;align-items:center;">
-              <div style="display:flex;align-items:center;gap:6px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+              <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;white-space:nowrap;">
                 <span style="width:8px;height:8px;border-radius:50%;background:var(--purple);display:inline-block;flex-shrink:0;"></span>
                 <span>― 不感蒸泄</span>
               </div>
-              <div style="text-align:right;">
+              <div style="text-align:right;flex-shrink:0;white-space:nowrap;">
                 <div id="wb-insensible" style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--purple);">0 mL</div>
-                <div id="insensible-detail" style="font-size:10px;color:var(--text3);">体重を設定で入力すると計算されます</div>
+                <div id="insensible-detail" style="font-size:10px;color:var(--text3);white-space:normal;max-width:140px;text-align:right;">体重を設定で入力すると計算されます</div>
               </div>
             </div>
           </div>
