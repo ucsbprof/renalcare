@@ -6,6 +6,18 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0d1420">
+<!-- Content-Security-Policy: inline スクリプト・スタイルはアプリの性質上許可、外部接続は必要なドメインのみに制限 -->
+<meta http-equiv="Content-Security-Policy" content="
+  default-src 'self' data: blob:;
+  script-src 'self' 'unsafe-inline' https://pagead2.googlesyndication.com https://cdn.jsdelivr.net https://unpkg.com https://cdnjs.cloudflare.com;
+  style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+  font-src 'self' data: https://fonts.gstatic.com;
+  img-src 'self' data: blob: https:;
+  connect-src 'self' https://jndutodslomhfoterrbb.supabase.co https://pagead2.googlesyndication.com;
+  frame-src 'none';
+  object-src 'none';
+  base-uri 'self';
+">
 <title>RenalCare — 健康管理・腎臓病食事管理</title>
 <link rel="manifest" href="data:application/json,{"name":"RenalCare","short_name":"RenalCare","display":"standalone","theme_color":"#0a1220","background_color":"#0a1220","icons":[{"src":"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>","sizes":"any","type":"image/svg+xml"}]}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1114,12 +1126,12 @@ body.is-premium .premium-banner { display: none !important; }
     <!-- 手動入力欄 -->
     <div id="ob-manual-inputs" style="display:none;">
       <div class="form-grid" style="margin-bottom:10px;">
-        <div class="form-row"><label class="form-label" data-i18n="label_calories_kcal">カロリー (kcal)</label><input class="form-input" id="ob-calories" type="number" value="1800" /></div>
-        <div class="form-row"><label class="form-label" data-i18n="label_protein_g">タンパク質 (g)</label><input class="form-input" id="ob-protein" type="number" value="40" /></div>
-        <div class="form-row"><label class="form-label" data-i18n="label_potassium_mg">カリウム (mg)</label><input class="form-input" id="ob-potassium" type="number" value="2000" /></div>
-        <div class="form-row"><label class="form-label" data-i18n="label_phosphorus_mg">リン (mg)</label><input class="form-input" id="ob-phosphorus" type="number" value="700" /></div>
-        <div class="form-row"><label class="form-label" data-i18n="label_water_ml">水分 (mL)</label><input class="form-input" id="ob-water" type="number" value="1500" /></div>
-        <div class="form-row"><label class="form-label" data-i18n="label_salt_g">塩分 (g)</label><input class="form-input" id="ob-salt" type="number" value="6" /></div>
+        <div class="form-row"><label class="form-label" data-i18n="label_calories_kcal">カロリー (kcal)</label><input class="form-input" id="ob-calories" type="number" min="500" max="4000" value="1800" /></div>
+        <div class="form-row"><label class="form-label" data-i18n="label_protein_g">タンパク質 (g)</label><input class="form-input" id="ob-protein" type="number" min="10" max="200" value="40" /></div>
+        <div class="form-row"><label class="form-label" data-i18n="label_potassium_mg">カリウム (mg)</label><input class="form-input" id="ob-potassium" type="number" min="500" max="5000" value="2000" /></div>
+        <div class="form-row"><label class="form-label" data-i18n="label_phosphorus_mg">リン (mg)</label><input class="form-input" id="ob-phosphorus" type="number" min="200" max="2000" value="700" /></div>
+        <div class="form-row"><label class="form-label" data-i18n="label_water_ml">水分 (mL)</label><input class="form-input" id="ob-water" type="number" min="300" max="5000" value="1500" /></div>
+        <div class="form-row"><label class="form-label" data-i18n="label_salt_g">塩分 (g)</label><input class="form-input" id="ob-salt" type="number" min="1" max="20" step="0.5" value="6" /></div>
       </div>
     </div>
     <button class="btn btn-primary btn-full" id="ob-btn4" disabled onclick="goObStep(5)" data-i18n="btn_next">次へ →</button>
@@ -1235,7 +1247,7 @@ body.is-premium .premium-banner { display: none !important; }
           <div class="metric-glow" style="background:var(--accent-glow)"></div>
           <div class="card-title" data-i18n="nutrient_protein">タンパク質</div>
           <div class="metric-val" id="m-protein">0<span class="metric-unit">g</span></div>
-          <div class="metric-name" id="label-protein">目標 <span id="limit-protein">40</span>g以下</div>
+          <div class="metric-name" id="label-protein">目標 <span id="limit-protein-static">40</span>g以下</div>
           <div class="prog-wrap"><div class="prog-fill pg-blue" id="prog-protein" style="width:0%"></div></div>
         </div>
         <!-- CKDモード専用 -->
@@ -1751,13 +1763,13 @@ body.is-premium .premium-banner { display: none !important; }
           </div>
         </div>
         <div class="form-grid">
-          <div class="form-row"><label class="form-label">カロリー (kcal)</label><input class="form-input" type="number" id="record-calories" placeholder="0" oninput="this.dataset.manualEdit='1';updateRecordNutrSummary()" /></div>
-          <div class="form-row"><label class="form-label">タンパク質 (g)</label><input class="form-input" type="number" id="record-protein" placeholder="0" oninput="this.dataset.manualEdit='1';updateRecordNutrSummary()" /></div>
+          <div class="form-row"><label class="form-label">カロリー (kcal)</label><input class="form-input" type="number" id="record-calories" placeholder="0" min="0" max="5000" oninput="this.dataset.manualEdit='1';updateRecordNutrSummary()" /></div>
+          <div class="form-row"><label class="form-label">タンパク質 (g)</label><input class="form-input" type="number" id="record-protein" placeholder="0" min="0" max="300" step="0.1" oninput="this.dataset.manualEdit='1';updateRecordNutrSummary()" /></div>
           <div class="form-row"><label class="form-label">炭水化物 (g)</label><input class="form-input" type="number" id="record-carb" placeholder="0" oninput="this.dataset.manualEdit='1';recalcGlucose();updateRecordNutrSummary()" /></div>
-          <div class="form-row"><label class="form-label">食物繊維 (g)</label><input class="form-input" type="number" id="record-fiber" placeholder="0" oninput="this.dataset.manualEdit='1';recalcGlucose();updateRecordNutrSummary()" /></div>
-          <div class="form-row"><label class="form-label">カリウム (mg)</label><input class="form-input" type="number" id="record-potassium" placeholder="0" oninput="this.dataset.manualEdit='1';updateRecordNutrSummary()" /></div>
-          <div class="form-row"><label class="form-label">リン (mg)</label><input class="form-input" type="number" id="record-phosphorus" placeholder="0" oninput="this.dataset.manualEdit='1';updateRecordNutrSummary()" /></div>
-          <div class="form-row"><label class="form-label">🧂 塩分 (g)</label><input class="form-input" type="number" id="record-salt" placeholder="0" step="0.1" oninput="this.dataset.manualEdit='1';updateRecordNutrSummary()" /></div>
+          <div class="form-row"><label class="form-label">食物繊維 (g)</label><input class="form-input" type="number" id="record-fiber" placeholder="0" min="0" max="100" step="0.1" oninput="this.dataset.manualEdit='1';recalcGlucose();updateRecordNutrSummary()" /></div>
+          <div class="form-row"><label class="form-label">カリウム (mg)</label><input class="form-input" type="number" id="record-potassium" placeholder="0" min="0" max="10000" oninput="this.dataset.manualEdit='1';updateRecordNutrSummary()" /></div>
+          <div class="form-row"><label class="form-label">リン (mg)</label><input class="form-input" type="number" id="record-phosphorus" placeholder="0" min="0" max="5000" oninput="this.dataset.manualEdit='1';updateRecordNutrSummary()" /></div>
+          <div class="form-row"><label class="form-label">🧂 塩分 (g)</label><input class="form-input" type="number" id="record-salt" placeholder="0" min="0" max="50" step="0.1" oninput="this.dataset.manualEdit='1';updateRecordNutrSummary()" /></div>
           <!-- 食事の重量（自動計算・読み取り専用） -->
           <div class="form-row" style="grid-column:1/-1;" id="record-food-weight-row">
             <label class="form-label" style="display:flex;align-items:center;gap:5px;">
@@ -6251,9 +6263,12 @@ function updateHomeSummary() {
   const labelProteinEl = document.getElementById('label-protein');
   if (labelProteinEl) {
     labelProteinEl.innerHTML = isHealthy
-      ? `目標 <span id="limit-protein">${state.targets.protein}</span>g以上`
-      : `目標 <span id="limit-protein">${state.targets.protein}</span>g以下`;
+      ? `目標 <span id="limit-protein-dyn">${state.targets.protein}</span>g以上`
+      : `目標 <span id="limit-protein-dyn">${state.targets.protein}</span>g以下`;
   }
+  // static スパンも同期（ホーム画面の初期表示用）
+  const limitStaticEl = document.getElementById('limit-protein-static');
+  if (limitStaticEl) limitStaticEl.textContent = state.targets.protein;
 
   if (isHealthy) {
     // 食物繊維（健常者モード）
@@ -6521,6 +6536,8 @@ function saveHealthRecord(type) {
     const timing = document.getElementById('h-glucose-timing')?.value||'';
     const glucoseTimeVal = document.getElementById('h-glucose-time')?.value;
     if (!before && !after) { showToast('血糖値を入力してください'); return; }
+    if (before && (before < 20 || before > 700)) { showToast('食前血糖値は 20〜700 mg/dL の範囲で入力してください'); return; }
+    if (after  && (after  < 20 || after  > 700)) { showToast('食後血糖値は 20〜700 mg/dL の範囲で入力してください'); return; }
     // 時刻入力があれば今日の日付＋指定時刻、なければ現在時刻
     let glucoseTime = now;
     if (glucoseTimeVal) {
@@ -6543,6 +6560,10 @@ function saveHealthRecord(type) {
     const pulse = parseInt(document.getElementById('h-bp-pulse')?.value)||null;
     const timing= document.getElementById('h-bp-timing')?.value||'';
     if (!sys || !dia) { showToast('収縮期・拡張期を入力してください'); return; }
+    if (sys < 60 || sys > 280)  { showToast('収縮期血圧は 60〜280 mmHg の範囲で入力してください'); return; }
+    if (dia < 30 || dia > 150)  { showToast('拡張期血圧は 30〜150 mmHg の範囲で入力してください'); return; }
+    if (sys <= dia)              { showToast('収縮期血圧は拡張期より大きい値を入力してください'); return; }
+    if (pulse && (pulse < 20 || pulse > 250)) { showToast('脈拍は 20〜250 bpm の範囲で入力してください'); return; }
     record = { ...record, sys, dia, pulse, timing };
     document.getElementById('h-bp-sys').value = '';
     document.getElementById('h-bp-dia').value = '';
@@ -6552,6 +6573,7 @@ function saveHealthRecord(type) {
     const color = document.getElementById('h-urine-color')?.value||'';
     const timeVal = document.getElementById('h-urine-time')?.value;
     if (!vol) { showToast('尿量を入力してください'); return; }
+    if (vol < 0 || vol > 2000) { showToast('尿量は 0〜2000 mL の範囲で入力してください'); return; }
     // 時刻入力があれば今日の日付＋指定時刻、なければ現在時刻
     let recordTime = now;
     if (timeVal) {
@@ -6570,6 +6592,7 @@ function saveHealthRecord(type) {
     const min    = parseInt(document.getElementById('h-exercise-min')?.value)||null;
     const intensity = document.getElementById('h-exercise-intensity')?.value||'moderate';
     if (!min) { showToast('時間を入力してください'); return; }
+    if (min < 1 || min > 600) { showToast('運動時間は 1〜600 分の範囲で入力してください'); return; }
     record = { ...record, exType, min, intensity };
     document.getElementById('h-exercise-min').value = '';
   }
@@ -6592,6 +6615,15 @@ function getTodayHealthRecords(type) {
     const today = new Date().toDateString();
     return all.filter(r => new Date(r.time).toDateString()===today && r.type===type);
   } catch(e) { return []; }
+}
+
+/** 尿量編集ボタン(data属性経由)→ editUrineRecord に安全に渡す */
+function editUrineRecordEl(el) {
+  const id    = el.dataset.uid   || '';
+  const vol   = parseFloat(el.dataset.uvol)   || 0;
+  const color = el.dataset.ucolor || '';
+  const time  = el.dataset.utime  || '';
+  editUrineRecord(id, vol, color, time);
 }
 
 function editUrineRecord(id, currentVol, currentColor, currentTime) {
@@ -6699,8 +6731,12 @@ function renderHealthPage() {
               <span id="urine-vol-display-${r.id||idx}" style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--accent);">${r.vol}mL</span>
               <span style="font-size:11px;color:var(--text3);margin-left:6px;">${colorIcon[r.color]||'🟡'} ${colorLabel[r.color]||''}</span>
             </div>
-            <button onclick="editUrineRecord('${r.id||idx}', ${r.vol}, '${r.color}', '${r.time}')" style="background:none;border:1px solid var(--border2);border-radius:6px;padding:3px 8px;font-size:11px;color:var(--text2);cursor:pointer;">編集</button>
-            <button onclick="deleteUrineRecord('${r.id||idx}')" style="background:none;border:1px solid rgba(248,113,113,0.3);border-radius:6px;padding:3px 8px;font-size:11px;color:var(--red);cursor:pointer;">削除</button>
+            <button
+              data-uid="${escapeHtml(String(r.id||idx))}" data-uvol="${r.vol}" data-ucolor="${escapeHtml(r.color||'')}" data-utime="${escapeHtml(r.time||'')}"
+              onclick="editUrineRecordEl(this)"
+              style="background:none;border:1px solid var(--border2);border-radius:6px;padding:3px 8px;font-size:11px;color:var(--text2);cursor:pointer;" aria-label="尿量記録を編集">編集</button>
+            <button onclick="deleteUrineRecord('${escapeHtml(String(r.id||idx))}')"
+              style="background:none;border:1px solid rgba(248,113,113,0.3);border-radius:6px;padding:3px 8px;font-size:11px;color:var(--red);cursor:pointer;" aria-label="尿量記録を削除">削除</button>
           </div>`;
         }).join('');
     }
@@ -8304,15 +8340,27 @@ function renderDrinkNutritionTable() {
     const highCarb = d.carb > 10;
     const highK    = d.k > 300;
     return `<div style="display:grid;grid-template-columns:2fr 0.8fr 0.8fr 0.8fr 0.8fr;gap:4px;padding:9px 8px;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.15s;"
-      onclick="prefillDrinkFromTable('${d.name.replace(/'/g,"\\'")}',${d.ml},${d.cal},${d.carb},${d.protein},${d.k})"
+      data-dname="${escapeHtml(d.name)}" data-dml="${d.ml}" data-dcal="${d.cal}" data-dcarb="${d.carb}" data-dprotein="${d.protein}" data-dk="${d.k}"
+      onclick="prefillDrinkFromTableEl(this)"
       onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='transparent'">
-      <div style="font-size:12px;color:var(--text);">${d.name}</div>
+      <div style="font-size:12px;color:var(--text);">${escapeHtml(d.name)}</div>
       <div style="font-size:12px;color:var(--accent);text-align:center;font-family:'JetBrains Mono',monospace;">${d.ml}</div>
       <div style="font-size:12px;color:var(--green);text-align:center;font-family:'JetBrains Mono',monospace;">${d.cal}</div>
       <div style="font-size:12px;color:${highCarb?'var(--red)':'var(--amber)'};text-align:center;font-family:'JetBrains Mono',monospace;font-weight:${highCarb?700:400};">${d.carb}</div>
       <div style="font-size:12px;color:${highK?'var(--red)':'var(--text2)'};text-align:center;font-family:'JetBrains Mono',monospace;font-weight:${highK?700:400};">${d.k}</div>
     </div>`;
   }).join('');
+}
+
+/** 飲料テーブル行クリック → data 属性から安全に値を取り出す */
+function prefillDrinkFromTableEl(el) {
+  const name    = el.dataset.dname    || '';
+  const ml      = parseFloat(el.dataset.dml)      || 0;
+  const cal     = parseFloat(el.dataset.dcal)     || 0;
+  const carb    = parseFloat(el.dataset.dcarb)    || 0;
+  const protein = parseFloat(el.dataset.dprotein) || 0;
+  const k       = parseFloat(el.dataset.dk)       || 0;
+  prefillDrinkFromTable(name, ml, cal, carb, protein, k);
 }
 
 function prefillDrinkFromTable(name, ml, cal, carb, protein, k) {
@@ -8418,7 +8466,7 @@ function updateMealWeightEstimate() {
   } else {
     estEl.textContent = total;
     if (detailEl) {
-      detailEl.innerHTML = detail.map(d => `${d.name}: <strong>${d.g}g</strong>`).join('  ／  ');
+      detailEl.innerHTML = detail.map(d => `${escapeHtml(d.name)}: <strong>${escapeHtml(String(d.g))}g</strong>`).join('  ／  ');
     }
     if (badgeEl) {
       badgeEl.textContent = total < 300 ? '（軽め）' : total < 600 ? '（普通）' : '（多め）';
@@ -9733,7 +9781,8 @@ let _toastTimer = null;
 function showToast(msg) {
   const t = document.getElementById('toast');
   if (!t) return;
-  t.innerHTML = (msg || '').replace(/\n/g, '<br>');
+  // escapeHtml でエスケープ後、改行のみ <br> に変換して安全に表示
+  t.innerHTML = escapeHtml(msg || '').replace(/\n/g, '<br>');
   t.classList.add('show');
   if (_toastTimer) clearTimeout(_toastTimer);
   _toastTimer = setTimeout(() => {
