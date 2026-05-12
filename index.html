@@ -133,6 +133,39 @@
   letter-spacing: 1px;
 }
 
+/* ===== ポーション（量）ボタン ===== */
+.portion-btn {
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1.5px solid var(--border2);
+  background: var(--surface2);
+  color: var(--text3);
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+  font-family: 'Noto Sans JP', sans-serif;
+  min-height: 28px;
+  line-height: 1;
+  -webkit-tap-highlight-color: rgba(96,206,255,0.2);
+}
+.portion-btn:active { transform: scale(0.95); }
+.portion-btn.active { border-color: var(--accent); background: var(--accent-glow); color: var(--accent); }
+
+/* ===== 週次レポート ===== */
+.weekly-stat-row { display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid var(--border); }
+.weekly-stat-row:last-child { border-bottom:none; }
+.weekly-stat-name { font-size:12px; color:var(--text2); width:80px; flex-shrink:0; }
+.weekly-stat-bar { flex:1; height:6px; background:var(--surface2); border-radius:3px; overflow:hidden; }
+.weekly-stat-fill { height:100%; border-radius:3px; transition:width 0.6s; }
+.weekly-stat-val { font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:600; width:52px; text-align:right; flex-shrink:0; }
+.weekly-day-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin:10px 0; }
+.weekly-day-cell { text-align:center; padding:6px 2px; border-radius:8px; background:var(--surface2); border:1px solid var(--border); font-size:10px; }
+.weekly-day-cell.has-data { border-color:rgba(96,206,255,0.4); }
+.weekly-day-cell .day-label { color:var(--text3); margin-bottom:3px; }
+.weekly-day-cell .day-kcal { font-weight:700; font-size:11px; color:var(--green); font-family:'JetBrains Mono',monospace; }
+
 /* ===== 薬名オートコンプリート ===== */
 .drug-suggest-wrap { position: relative; }
 .drug-suggest-list {
@@ -1314,6 +1347,17 @@ body.is-premium .premium-banner { display: none !important; }
         <div style="display:flex;gap:12px;font-size:11px;color:var(--text3);margin-bottom:10px;padding:6px 8px;background:var(--surface2);border-radius:8px;">
           <span>🥤 飲料: <b id="home-water-from-drink" style="color:var(--accent);">0</b>mL</span>
         </div>
+        <!-- ⚡ ホームクイック水分追加ボタン -->
+        <div style="margin-top:2px;">
+          <div style="font-size:10px;color:var(--text3);margin-bottom:6px;letter-spacing:0.5px;">💧 クイック追加</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <button onclick="addWater(100)" style="flex:1;min-width:60px;padding:8px 4px;background:var(--surface2);border:1px solid rgba(79,195,247,0.4);border-radius:10px;color:var(--accent);font-size:13px;font-weight:700;cursor:pointer;transition:all 0.15s;" ontouchstart="this.style.background='var(--accent-glow)'" ontouchend="this.style.background='var(--surface2)'">+100<span style="font-size:10px;font-weight:400;">mL</span></button>
+            <button onclick="addWater(200)" style="flex:1;min-width:60px;padding:8px 4px;background:var(--surface2);border:1px solid rgba(79,195,247,0.4);border-radius:10px;color:var(--accent);font-size:13px;font-weight:700;cursor:pointer;transition:all 0.15s;" ontouchstart="this.style.background='var(--accent-glow)'" ontouchend="this.style.background='var(--surface2)'">+200<span style="font-size:10px;font-weight:400;">mL</span></button>
+            <button onclick="addWater(350)" style="flex:1;min-width:60px;padding:8px 4px;background:var(--surface2);border:1px solid rgba(79,195,247,0.4);border-radius:10px;color:var(--accent);font-size:13px;font-weight:700;cursor:pointer;transition:all 0.15s;" ontouchstart="this.style.background='var(--accent-glow)'" ontouchend="this.style.background='var(--surface2)'">+350<span style="font-size:10px;font-weight:400;">mL</span></button>
+            <button onclick="addWater(500)" style="flex:1;min-width:60px;padding:8px 4px;background:var(--surface2);border:1px solid rgba(79,195,247,0.4);border-radius:10px;color:var(--accent);font-size:13px;font-weight:700;cursor:pointer;transition:all 0.15s;" ontouchstart="this.style.background='var(--accent-glow)'" ontouchend="this.style.background='var(--surface2)'">+500<span style="font-size:10px;font-weight:400;">mL</span></button>
+            <button onclick="addDrinkCustom()" style="flex:1;min-width:60px;padding:8px 4px;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;color:var(--text3);font-size:12px;font-weight:600;cursor:pointer;transition:all 0.15s;">その他</button>
+          </div>
+        </div>
         <!-- 体重増加（DW比）インジケーター -->
         <div id="home-dw-block" style="border-top:1px solid var(--border);padding-top:10px;display:none;">
           <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
@@ -1620,6 +1664,8 @@ body.is-premium .premium-banner { display: none !important; }
         </div>
         <div class="form-row"><label class="form-label" data-i18n="label_meal_name">料理名・メモ</label><input class="form-input" type="text" id="record-name" data-i18n-placeholder="placeholder_meal_name" placeholder="例：鮭定食、豆腐ハンバーグ" /></div>
         <button class="btn btn-outline btn-full" onclick="showFoodSearchModalForRecord()" style="margin-bottom:8px;" data-i18n="btn_food_search">🔍 献立・食品から栄養成分を追加</button>
+        <!-- 昨日の食事コピーボタン -->
+        <button class="btn btn-ghost btn-full" onclick="showCopyYesterdayModal()" style="margin-bottom:8px;border:1.5px dashed var(--border2);font-size:13px;">📋 昨日の食事からコピー</button>
 
         <!-- ⚡ よく使う食品ショートカット -->
         <div id="quick-foods-section">
@@ -1634,10 +1680,13 @@ body.is-premium .premium-banner { display: none !important; }
           <div class="food-cat-section">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;">
               <div class="food-cat-label lbl-main" style="margin-bottom:0;">🍚 主食</div>
-              <div style="display:flex;align-items:center;gap:4px;">
-                <span style="font-size:11px;color:var(--text3);">量:</span>
-                <input type="number" class="portion-gram-input" id="gram-main" data-group="main" value="1.0" min="0" max="5" step="0.5" oninput="updateGroupGram('main')" style="width:58px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:3px 6px;color:var(--text);font-size:13px;text-align:center;" />
-                <span style="font-size:11px;color:var(--text3);">倍 <span id="gram-main-hint" style="color:var(--text3);font-size:10px;">（1.0=標準量）</span></span>
+              <div style="display:flex;align-items:center;gap:3px;">
+                <button class="portion-btn active" data-group="main" data-val="0.7" onclick="setPortion('main',0.7,this)">少なめ</button>
+                <button class="portion-btn" data-group="main" data-val="1.0" onclick="setPortion('main',1.0,this)">普通</button>
+                <button class="portion-btn" data-group="main" data-val="1.5" onclick="setPortion('main',1.5,this)">多め</button>
+                <button class="portion-btn" data-group="main" data-val="2.0" onclick="setPortion('main',2.0,this)">大盛</button>
+                <input type="number" class="portion-gram-input" id="gram-main" data-group="main" value="1.0" min="0" max="5" step="0.1" oninput="updateGroupGram('main');clearPortionBtns('main')" style="width:46px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:2px 4px;color:var(--text);font-size:12px;text-align:center;" title="倍率を直接入力" />
+                <span style="font-size:10px;color:var(--text3);">倍</span>
               </div>
             </div>
             <div class="chips" style="margin-bottom:0;">
@@ -1659,10 +1708,12 @@ body.is-premium .premium-banner { display: none !important; }
           <div class="food-cat-section">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;">
               <div class="food-cat-label lbl-protein" style="margin-bottom:0;">🥩 メイン食材</div>
-              <div style="display:flex;align-items:center;gap:4px;">
-                <span style="font-size:11px;color:var(--text3);">量:</span>
-                <input type="number" class="portion-gram-input" id="gram-protein" data-group="protein" value="1.0" min="0" max="5" step="0.5" oninput="updateGroupGram('protein')" style="width:58px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:3px 6px;color:var(--text);font-size:13px;text-align:center;" />
-                <span style="font-size:11px;color:var(--text3);">倍</span>
+              <div style="display:flex;align-items:center;gap:3px;">
+                <button class="portion-btn active" data-group="protein" data-val="0.7" onclick="setPortion('protein',0.7,this)">少なめ</button>
+                <button class="portion-btn" data-group="protein" data-val="1.0" onclick="setPortion('protein',1.0,this)">1個/1切れ</button>
+                <button class="portion-btn" data-group="protein" data-val="2.0" onclick="setPortion('protein',2.0,this)">2個/2切れ</button>
+                <input type="number" class="portion-gram-input" id="gram-protein" data-group="protein" value="1.0" min="0" max="5" step="0.1" oninput="updateGroupGram('protein');clearPortionBtns('protein')" style="width:46px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:2px 4px;color:var(--text);font-size:12px;text-align:center;" title="倍率を直接入力" />
+                <span style="font-size:10px;color:var(--text3);">倍</span>
               </div>
             </div>
             <div class="chips" style="margin-bottom:0;">
@@ -1689,10 +1740,12 @@ body.is-premium .premium-banner { display: none !important; }
           <div class="food-cat-section">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;">
               <div class="food-cat-label lbl-sub" style="margin-bottom:0;">🥦 サブ食材</div>
-              <div style="display:flex;align-items:center;gap:4px;">
-                <span style="font-size:11px;color:var(--text3);">量:</span>
-                <input type="number" class="portion-gram-input" id="gram-sub" data-group="sub" value="1.0" min="0" max="5" step="0.5" oninput="updateGroupGram('sub')" style="width:58px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:3px 6px;color:var(--text);font-size:13px;text-align:center;" />
-                <span style="font-size:11px;color:var(--text3);">倍</span>
+              <div style="display:flex;align-items:center;gap:3px;">
+                <button class="portion-btn active" data-group="sub" data-val="0.5" onclick="setPortion('sub',0.5,this)">少し</button>
+                <button class="portion-btn" data-group="sub" data-val="1.0" onclick="setPortion('sub',1.0,this)">1品</button>
+                <button class="portion-btn" data-group="sub" data-val="2.0" onclick="setPortion('sub',2.0,this)">2品分</button>
+                <input type="number" class="portion-gram-input" id="gram-sub" data-group="sub" value="1.0" min="0" max="5" step="0.1" oninput="updateGroupGram('sub');clearPortionBtns('sub')" style="width:46px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:2px 4px;color:var(--text);font-size:12px;text-align:center;" title="倍率を直接入力" />
+                <span style="font-size:10px;color:var(--text3);">倍</span>
               </div>
             </div>
             <div class="chips" style="margin-bottom:0;">
@@ -1720,10 +1773,12 @@ body.is-premium .premium-banner { display: none !important; }
           <div class="food-cat-section">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;">
               <div class="food-cat-label lbl-soup" style="margin-bottom:0;">🍵 汁物・デザート</div>
-              <div style="display:flex;align-items:center;gap:4px;">
-                <span style="font-size:11px;color:var(--text3);">量:</span>
-                <input type="number" class="portion-gram-input" id="gram-soup" data-group="soup" value="1.0" min="0" max="5" step="0.5" oninput="updateGroupGram('soup')" style="width:58px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:3px 6px;color:var(--text);font-size:13px;text-align:center;" />
-                <span style="font-size:11px;color:var(--text3);">倍</span>
+              <div style="display:flex;align-items:center;gap:3px;">
+                <button class="portion-btn active" data-group="soup" data-val="1.0" onclick="setPortion('soup',1.0,this)">1杯/1個</button>
+                <button class="portion-btn" data-group="soup" data-val="0.5" onclick="setPortion('soup',0.5,this)">半分</button>
+                <button class="portion-btn" data-group="soup" data-val="2.0" onclick="setPortion('soup',2.0,this)">2つ</button>
+                <input type="number" class="portion-gram-input" id="gram-soup" data-group="soup" value="1.0" min="0" max="5" step="0.1" oninput="updateGroupGram('soup');clearPortionBtns('soup')" style="width:46px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:2px 4px;color:var(--text);font-size:12px;text-align:center;" title="倍率を直接入力" />
+                <span style="font-size:10px;color:var(--text3);">倍</span>
               </div>
             </div>
             <div class="chips" style="margin-bottom:0;">
@@ -2357,7 +2412,69 @@ body.is-premium .premium-banner { display: none !important; }
         <div class="setting-row" onclick="showUserSwitchModal()" style="cursor:pointer;"><div class="setting-icon">🔄</div><div class="setting-text"><div class="setting-name">ユーザーを切り替える</div><div class="setting-desc">複数人で使う場合はこちら</div></div><div class="setting-arrow">›</div></div>
       </div>
       <div class="settings-section">
-        <div class="settings-title">1日の目標値（担当医の指示）</div>
+        <div class="settings-title">📊 レポート・分析</div>
+        <div class="setting-row" onclick="showWeeklyReport()" style="cursor:pointer;">
+          <div class="setting-icon">📈</div>
+          <div class="setting-text">
+            <div class="setting-name">週次レポートを見る</div>
+            <div class="setting-desc">先週の栄養摂取・水分・服薬の達成率</div>
+          </div>
+          <div class="setting-arrow">›</div>
+        </div>
+      </div>
+      <div class="settings-section">
+        <div class="settings-title">🔔 リマインダー通知</div>
+        <div style="font-size:12px;color:var(--text3);padding:2px 0 10px;line-height:1.7;">毎日の服薬・水分補給・食事記録のリマインダーを設定できます。<br>※ホーム画面に追加（PWA）後に通知が有効になります。</div>
+        <div class="setting-row" style="cursor:default;">
+          <div class="setting-icon">💊</div>
+          <div class="setting-text">
+            <div class="setting-name">服薬リマインダー</div>
+            <div class="setting-desc" id="notif-med-desc">設定なし</div>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <input type="time" id="notif-med-time" class="form-input" style="width:90px;padding:5px 8px;font-size:13px;" onchange="saveNotifSettings()" />
+            <label style="display:flex;align-items:center;gap:4px;cursor:pointer;">
+              <input type="checkbox" id="notif-med-on" onchange="saveNotifSettings()" style="width:16px;height:16px;accent-color:var(--accent);" />
+              <span style="font-size:12px;color:var(--text2);">ON</span>
+            </label>
+          </div>
+        </div>
+        <div class="setting-row" style="cursor:default;">
+          <div class="setting-icon">💧</div>
+          <div class="setting-text">
+            <div class="setting-name">水分補給リマインダー</div>
+            <div class="setting-desc" id="notif-water-desc">設定なし</div>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <select id="notif-water-interval" class="form-input" style="width:90px;padding:5px 8px;font-size:12px;" onchange="saveNotifSettings()">
+              <option value="0">なし</option>
+              <option value="60">1時間ごと</option>
+              <option value="90">90分ごと</option>
+              <option value="120">2時間ごと</option>
+            </select>
+            <label style="display:flex;align-items:center;gap:4px;cursor:pointer;">
+              <input type="checkbox" id="notif-water-on" onchange="saveNotifSettings()" style="width:16px;height:16px;accent-color:var(--accent);" />
+              <span style="font-size:12px;color:var(--text2);">ON</span>
+            </label>
+          </div>
+        </div>
+        <div class="setting-row" style="cursor:default;">
+          <div class="setting-icon">✏️</div>
+          <div class="setting-text">
+            <div class="setting-name">食事記録リマインダー</div>
+            <div class="setting-desc" id="notif-meal-desc">設定なし</div>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <input type="time" id="notif-meal-time" class="form-input" style="width:90px;padding:5px 8px;font-size:13px;" onchange="saveNotifSettings()" />
+            <label style="display:flex;align-items:center;gap:4px;cursor:pointer;">
+              <input type="checkbox" id="notif-meal-on" onchange="saveNotifSettings()" style="width:16px;height:16px;accent-color:var(--accent);" />
+              <span style="font-size:12px;color:var(--text2);">ON</span>
+            </label>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-full btn-sm" style="margin-top:8px;" onclick="requestNotifPermission()">🔔 通知を有効にする</button>
+        <div id="notif-status" style="font-size:11px;color:var(--text3);text-align:center;margin-top:6px;"></div>
+      </div>
         <div class="setting-row" onclick="showTargetModal()"><div class="setting-icon">🎯</div><div class="setting-text"><div class="setting-name">目標値を変更する</div><div class="setting-desc" id="s-targets">タンパク質 40g / カリウム 2,000mg / リン 700mg</div></div><div class="setting-arrow">›</div></div>
       </div>
       <!-- ===== CKD ステージ変更セクション ===== -->
@@ -6627,6 +6744,7 @@ function navTo(page) {
   if (page==='settings') {
     try{_updateBodyDisplay();}catch(e){}
     try{renderSettingsCkdPanel();}catch(e){}
+    try{initNotifSettings();}catch(e){}
     // 透析設定セクションの表示制御
     const dialSec = document.getElementById('settings-dialysis-section');
     if (dialSec) {
@@ -14055,6 +14173,394 @@ function _updateBodyDisplay() {
   if (state.weight) parts.push(`体重 ${state.weight}kg`);
   el.textContent = parts.length > 0 ? parts.join(' · ') : '設定を開いて確認・修正できます';
 }
+
+// ============================================================
+// ===== ポーション（量）ボタン =====
+// ============================================================
+function setPortion(group, val, btn) {
+  // グラム入力に反映
+  const inp = document.getElementById('gram-' + group);
+  if (inp) { inp.value = val; }
+  // updateGroupGram で栄養を再計算
+  if (typeof updateGroupGram === 'function') updateGroupGram(group);
+  // ボタンのアクティブ状態を更新
+  document.querySelectorAll(`.portion-btn[data-group="${group}"]`).forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+}
+
+function clearPortionBtns(group) {
+  document.querySelectorAll(`.portion-btn[data-group="${group}"]`).forEach(b => b.classList.remove('active'));
+}
+
+// ============================================================
+// ===== 昨日の食事コピー =====
+// ============================================================
+function showCopyYesterdayModal() {
+  const list = document.getElementById('copy-yesterday-list');
+  if (!list) return;
+
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const dateKey = yesterday.toDateString();
+
+  let meals = [];
+  try {
+    const raw = JSON.parse(localStorage.getItem('renalcare_meals') || '[]');
+    const uid = state.uid || '';
+    meals = (Array.isArray(raw) ? raw : [])
+      .filter(m => m && new Date(m.recorded_at||0).toDateString() === dateKey && (!uid || m.user_id === uid || !m.user_id))
+      .sort((a,b) => new Date(a.recorded_at) - new Date(b.recorded_at));
+  } catch(e) {}
+
+  if (meals.length === 0) {
+    list.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text3);">昨日の食事記録がありません</div>';
+  } else {
+    const mealTypeLabel = { breakfast:'🌅 朝食', lunch:'☀️ 昼食', dinner:'🌙 夕食', snack:'🍬 間食' };
+    list.innerHTML = meals.map(m => `
+      <div onclick="copyMealToRecord(${JSON.stringify(m).replace(/"/g,'&quot;')})" style="display:flex;align-items:center;gap:12px;padding:13px 14px;background:var(--surface2);border-radius:var(--rs);margin-bottom:8px;border:1px solid var(--border);cursor:pointer;transition:all 0.15s;" ontouchstart="this.style.borderColor='var(--accent)'" ontouchend="this.style.borderColor='var(--border)'">
+        <div style="width:44px;height:44px;border-radius:10px;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">🍱</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:14px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(m.dish_name||'食事')}</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px;">${mealTypeLabel[m.meal_type]||''} · ${m.calories||0}kcal · タンパク質${m.protein||0}g</div>
+        </div>
+        <div style="color:var(--accent);font-size:18px;flex-shrink:0;">コピー</div>
+      </div>`).join('');
+  }
+
+  document.getElementById('copyYesterdayModal').classList.add('open');
+}
+
+function copyMealToRecord(meal) {
+  if (typeof meal === 'string') { try { meal = JSON.parse(meal); } catch(e) { return; } }
+
+  // フォームに値をセット
+  const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val != null ? val : ''; };
+  setVal('record-name', meal.dish_name || '');
+  setVal('record-calories', meal.calories || 0);
+  setVal('record-protein', meal.protein || 0);
+  setVal('record-carb', meal.carb || 0);
+  setVal('record-fiber', meal.fiber || 0);
+  setVal('record-potassium', meal.potassium || 0);
+  setVal('record-phosphorus', meal.phosphorus || 0);
+  setVal('record-salt', meal.salt || 0);
+
+  // 食事タイプ
+  const mealTypeEl = document.querySelector(`.meal-type-btn[data-type="${meal.meal_type}"]`);
+  if (mealTypeEl && typeof selectMealType === 'function') selectMealType(mealTypeEl);
+
+  // 栄養サマリー更新
+  if (typeof updateRecordNutrSummary === 'function') updateRecordNutrSummary();
+  if (typeof recalcGlucose === 'function') recalcGlucose();
+
+  closeModal('copyYesterdayModal');
+  showToast('📋 昨日の食事データをコピーしました');
+
+  // 記録ページへ移動
+  navTo('record');
+}
+
+// ============================================================
+// ===== 週次レポート =====
+// ============================================================
+let _weeklyOffset = 0; // 0=今週, -1=先週, ...
+
+function showWeeklyReport() {
+  _weeklyOffset = 0;
+  renderWeeklyReport();
+  document.getElementById('weeklyReportModal').classList.add('open');
+}
+
+function shiftWeeklyReport(delta) {
+  _weeklyOffset += delta;
+  if (_weeklyOffset > 0) _weeklyOffset = 0;
+  renderWeeklyReport();
+}
+
+function renderWeeklyReport() {
+  const content = document.getElementById('weekly-report-content');
+  const periodEl = document.getElementById('weekly-report-period');
+  const nextBtn = document.getElementById('weekly-next-btn');
+  if (!content) return;
+
+  // 対象週の月曜〜日曜を算出
+  const now = new Date();
+  const dow = now.getDay(); // 0=日
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - ((dow === 0 ? 7 : dow) - 1) + _weeklyOffset * 7);
+  monday.setHours(0,0,0,0);
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  sunday.setHours(23,59,59,999);
+
+  const fmt = d => `${d.getMonth()+1}/${d.getDate()}`;
+  periodEl.textContent = `${fmt(monday)}（月）〜 ${fmt(sunday)}（日）`;
+  if (nextBtn) nextBtn.style.opacity = _weeklyOffset >= 0 ? '0.3' : '1';
+
+  const days = ['月','火','水','木','金','土','日'];
+
+  // データ集計
+  let meals = [];
+  try { meals = JSON.parse(localStorage.getItem('renalcare_meals') || '[]'); } catch(e) {}
+  let waters = [];
+  try { waters = JSON.parse(localStorage.getItem('renalcare_water') || '[]'); } catch(e) {}
+  let medCheckLog = [];
+  try { medCheckLog = JSON.parse(localStorage.getItem('renalcare_medcheck_log') || '[]'); } catch(e) {}
+
+  const targets = state.targets || {};
+  const calTarget = targets.calories || 1800;
+  const proteinTarget = targets.protein || 40;
+  const waterTarget = targets.water || 1500;
+  const saltTarget = targets.salt || 6;
+  const potassiumTarget = targets.potassium || 2000;
+
+  // 7日分の集計
+  const dayStats = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    const dk = d.toDateString();
+    const dayMeals = meals.filter(m => m && new Date(m.recorded_at||0).toDateString() === dk);
+    const cal = dayMeals.reduce((s,m) => s+(m.calories||0), 0);
+    const protein = dayMeals.reduce((s,m) => s+(m.protein||0), 0);
+    const potassium = dayMeals.reduce((s,m) => s+(m.potassium||0), 0);
+    const salt = dayMeals.reduce((s,m) => s+(m.salt||0), 0);
+    const water = waters.filter(w => w && new Date(w.time||0).toDateString() === dk).reduce((s,w) => s+(w.ml||0), 0);
+    // 服薬チェック
+    const dateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const medDay = medCheckLog.find(e => e && e.date === dateStr);
+    const medEntries = medDay?.entries || [];
+    const medTotal = medEntries.length;
+    const medDone = medEntries.filter(e => e && e.taken).length;
+    dayStats.push({ d, dk, cal, protein, potassium, salt, water, mealCount: dayMeals.length, medDone, medTotal });
+  }
+
+  // 週平均
+  const avgCal = Math.round(dayStats.reduce((s,d) => s+d.cal, 0) / 7);
+  const avgProtein = Math.round(dayStats.reduce((s,d) => s+d.protein, 0) / 7 * 10) / 10;
+  const avgWater = Math.round(dayStats.reduce((s,d) => s+d.water, 0) / 7);
+  const avgSalt = Math.round(dayStats.reduce((s,d) => s+d.salt, 0) / 7 * 10) / 10;
+  const avgPotassium = Math.round(dayStats.reduce((s,d) => s+d.potassium, 0) / 7);
+  const recordedDays = dayStats.filter(d => d.mealCount > 0).length;
+  const totalMedDone = dayStats.reduce((s,d) => s+d.medDone, 0);
+  const totalMedTotal = dayStats.reduce((s,d) => s+d.medTotal, 0);
+  const medPct = totalMedTotal > 0 ? Math.round(totalMedDone / totalMedTotal * 100) : null;
+
+  const statBar = (val, target, color, isMin=false) => {
+    const pct = target > 0 ? Math.min(100, Math.round(val/target*100)) : 0;
+    const over = !isMin && pct > 100;
+    const under = isMin && pct < 100;
+    const fillColor = over || under ? 'var(--red)' : pct >= 80 ? 'var(--green)' : 'var(--amber)';
+    return `<div class="weekly-stat-fill" style="width:${Math.min(100,pct)}%;background:${fillColor};"></div>`;
+  };
+
+  const isHealthy = state.userType === 'healthy';
+
+  content.innerHTML = `
+    <!-- 記録達成日数 -->
+    <div style="background:var(--surface2);border-radius:var(--r);padding:12px 14px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <div style="font-size:11px;color:var(--text3);letter-spacing:1px;">📅 記録達成日数</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:28px;font-weight:800;color:var(--accent);margin-top:2px;">${recordedDays}<span style="font-size:14px;font-weight:400;color:var(--text2);"> / 7日</span></div>
+      </div>
+      ${medPct !== null ? `<div style="text-align:right;">
+        <div style="font-size:11px;color:var(--text3);letter-spacing:1px;">💊 服薬達成率</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:28px;font-weight:800;color:${medPct>=80?'var(--green)':'var(--amber)'};margin-top:2px;">${medPct}<span style="font-size:14px;font-weight:400;color:var(--text2);">%</span></div>
+      </div>` : ''}
+    </div>
+
+    <!-- 曜日別カロリー -->
+    <div class="card" style="margin-bottom:10px;padding:14px;">
+      <div class="card-title">📊 曜日別カロリー</div>
+      <div class="weekly-day-grid">
+        ${dayStats.map((d,i) => {
+          const pct = calTarget > 0 ? Math.min(100, Math.round(d.cal/calTarget*100)) : 0;
+          const color = d.cal===0 ? 'var(--border2)' : pct > 110 ? 'var(--red)' : pct >= 80 ? 'var(--green)' : 'var(--amber)';
+          return `<div class="weekly-day-cell ${d.mealCount>0?'has-data':''}">
+            <div class="day-label">${days[i]}</div>
+            <div class="day-kcal" style="color:${color};">${d.cal>0?d.cal:'-'}</div>
+            ${d.cal>0?`<div style="height:3px;background:var(--border);border-radius:2px;margin-top:3px;"><div style="height:100%;width:${pct}%;background:${color};border-radius:2px;max-width:100%;"></div></div>`:''}
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+
+    <!-- 栄養平均 -->
+    <div class="card" style="margin-bottom:10px;padding:14px;">
+      <div class="card-title">🥗 週平均栄養摂取</div>
+      <div class="weekly-stat-row">
+        <div class="weekly-stat-name">カロリー</div>
+        <div class="weekly-stat-bar">${statBar(avgCal, calTarget, 'green')}</div>
+        <div class="weekly-stat-val" style="color:var(--green);">${avgCal}<span style="font-size:9px;color:var(--text3);">kcal</span></div>
+      </div>
+      <div class="weekly-stat-row">
+        <div class="weekly-stat-name">タンパク質</div>
+        <div class="weekly-stat-bar">${statBar(avgProtein, proteinTarget, 'accent')}</div>
+        <div class="weekly-stat-val" style="color:var(--accent);">${avgProtein}<span style="font-size:9px;color:var(--text3);">g</span></div>
+      </div>
+      <div class="weekly-stat-row">
+        <div class="weekly-stat-name">💧 水分</div>
+        <div class="weekly-stat-bar">${statBar(avgWater, waterTarget, 'blue', true)}</div>
+        <div class="weekly-stat-val" style="color:var(--accent);">${avgWater}<span style="font-size:9px;color:var(--text3);">mL</span></div>
+      </div>
+      <div class="weekly-stat-row">
+        <div class="weekly-stat-name">🧂 塩分</div>
+        <div class="weekly-stat-bar">${statBar(avgSalt, saltTarget, 'red')}</div>
+        <div class="weekly-stat-val" style="color:${avgSalt > saltTarget ? 'var(--red)' : 'var(--text2)'};">${avgSalt}<span style="font-size:9px;color:var(--text3);">g</span></div>
+      </div>
+      ${!isHealthy ? `<div class="weekly-stat-row">
+        <div class="weekly-stat-name">🍌 カリウム</div>
+        <div class="weekly-stat-bar">${statBar(avgPotassium, potassiumTarget, 'amber')}</div>
+        <div class="weekly-stat-val" style="color:${avgPotassium > potassiumTarget ? 'var(--red)' : 'var(--amber)'};">${avgPotassium}<span style="font-size:9px;color:var(--text3);">mg</span></div>
+      </div>` : ''}
+    </div>
+
+    <!-- 改善コメント -->
+    <div style="background:var(--surface2);border-radius:var(--r);padding:12px 14px;font-size:12px;color:var(--text2);line-height:1.8;">
+      <div style="font-size:11px;color:var(--accent);font-weight:700;letter-spacing:1px;margin-bottom:6px;">💡 今週のポイント</div>
+      ${recordedDays >= 5 ? '<div>✅ 食事記録 '+ recordedDays +'日達成！継続できています</div>' : '<div>📝 食事記録を毎日つけると栄養管理が精度アップします（今週 '+ recordedDays +'日）</div>'}
+      ${avgSalt > saltTarget ? `<div>⚠️ 塩分が目標(${saltTarget}g)を超えています（平均 ${avgSalt}g）</div>` : '<div>✅ 塩分摂取量は目標範囲内です</div>'}
+      ${avgWater < waterTarget * 0.8 ? `<div>💧 水分が少ない日が多いです（平均 ${avgWater}mL / 目標 ${waterTarget}mL）</div>` : ''}
+      ${medPct !== null && medPct < 80 ? `<div>💊 服薬を忘れている日があります（達成率 ${medPct}%）</div>` : medPct !== null ? '<div>✅ 服薬達成率 '+ medPct +'% — よく飲めています</div>' : ''}
+    </div>
+  `;
+}
+
+// ============================================================
+// ===== 通知リマインダー =====
+// ============================================================
+const NOTIF_KEY = 'renalcare_notif_settings';
+
+function loadNotifSettings() {
+  try { return JSON.parse(localStorage.getItem(NOTIF_KEY) || '{}'); } catch(e) { return {}; }
+}
+
+function saveNotifSettings() {
+  const settings = {
+    medOn: document.getElementById('notif-med-on')?.checked || false,
+    medTime: document.getElementById('notif-med-time')?.value || '08:00',
+    waterOn: document.getElementById('notif-water-on')?.checked || false,
+    waterInterval: parseInt(document.getElementById('notif-water-interval')?.value) || 0,
+    mealOn: document.getElementById('notif-meal-on')?.checked || false,
+    mealTime: document.getElementById('notif-meal-time')?.value || '19:00',
+  };
+  localStorage.setItem(NOTIF_KEY, JSON.stringify(settings));
+  updateNotifDescriptions(settings);
+  // 通知スケジュール再設定
+  if (settings.medOn || settings.waterOn || settings.mealOn) {
+    scheduleNotifications(settings);
+  }
+}
+
+function updateNotifDescriptions(s) {
+  const medDesc = document.getElementById('notif-med-desc');
+  const waterDesc = document.getElementById('notif-water-desc');
+  const mealDesc = document.getElementById('notif-meal-desc');
+  if (medDesc) medDesc.textContent = s.medOn ? `毎日 ${s.medTime} に通知` : '設定なし';
+  if (waterDesc) waterDesc.textContent = s.waterOn && s.waterInterval > 0 ? `${s.waterInterval}分ごとに通知` : '設定なし';
+  if (mealDesc) mealDesc.textContent = s.mealOn ? `毎日 ${s.mealTime} に通知` : '設定なし';
+}
+
+function initNotifSettings() {
+  const s = loadNotifSettings();
+  const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+  const setChk = (id, val) => { const el = document.getElementById(id); if (el) el.checked = val; };
+  setChk('notif-med-on', s.medOn || false);
+  setEl('notif-med-time', s.medTime || '08:00');
+  setChk('notif-water-on', s.waterOn || false);
+  setEl('notif-water-interval', s.waterInterval || 0);
+  setChk('notif-meal-on', s.mealOn || false);
+  setEl('notif-meal-time', s.mealTime || '19:00');
+  updateNotifDescriptions(s);
+  updateNotifStatus();
+}
+
+function updateNotifStatus() {
+  const statusEl = document.getElementById('notif-status');
+  if (!statusEl) return;
+  if (!('Notification' in window)) {
+    statusEl.textContent = '⚠ このブラウザは通知に対応していません';
+    statusEl.style.color = 'var(--amber)';
+  } else if (Notification.permission === 'granted') {
+    statusEl.textContent = '✅ 通知が有効です';
+    statusEl.style.color = 'var(--green)';
+  } else if (Notification.permission === 'denied') {
+    statusEl.textContent = '❌ 通知がブロックされています。ブラウザの設定から許可してください';
+    statusEl.style.color = 'var(--red)';
+  } else {
+    statusEl.textContent = '「通知を有効にする」ボタンを押して許可してください';
+    statusEl.style.color = 'var(--text3)';
+  }
+}
+
+async function requestNotifPermission() {
+  if (!('Notification' in window)) {
+    showToast('⚠ このブラウザは通知に対応していません');
+    return;
+  }
+  const perm = await Notification.requestPermission();
+  updateNotifStatus();
+  if (perm === 'granted') {
+    showToast('✅ 通知を有効にしました');
+    const s = loadNotifSettings();
+    scheduleNotifications(s);
+  } else {
+    showToast('⚠ 通知が許可されませんでした');
+  }
+}
+
+function scheduleNotifications(settings) {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  // 既存タイマーをクリア
+  if (window._notifTimers) window._notifTimers.forEach(t => clearTimeout(t));
+  window._notifTimers = [];
+
+  const now = new Date();
+
+  function scheduleAt(timeStr, title, body, icon) {
+    const [h, m] = timeStr.split(':').map(Number);
+    const target = new Date(now);
+    target.setHours(h, m, 0, 0);
+    if (target <= now) target.setDate(target.getDate() + 1);
+    const ms = target - now;
+    const t = setTimeout(() => {
+      if (Notification.permission === 'granted') {
+        new Notification(title, { body, icon: icon || 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🌿</text></svg>' });
+      }
+    }, ms);
+    window._notifTimers.push(t);
+  }
+
+  if (settings.medOn && settings.medTime) {
+    scheduleAt(settings.medTime, '💊 服薬リマインダー', '今日の薬を飲みましたか？ RenalCareで確認しましょう');
+  }
+  if (settings.mealOn && settings.mealTime) {
+    scheduleAt(settings.mealTime, '✏️ 食事記録リマインダー', '今日の食事を記録しましょう');
+  }
+  if (settings.waterOn && settings.waterInterval > 0) {
+    const intervalMs = settings.waterInterval * 60 * 1000;
+    function schedWater() {
+      const t = setTimeout(() => {
+        if (Notification.permission === 'granted') {
+          new Notification('💧 水分補給リマインダー', { body: '水を飲みましょう！目標達成まで頑張って。' });
+        }
+        schedWater();
+      }, intervalMs);
+      if (!window._notifTimers) window._notifTimers = [];
+      window._notifTimers.push(t);
+    }
+    schedWater();
+  }
+}
+
+// 設定ページ表示時に初期化
+document.addEventListener('DOMContentLoaded', function() {
+  setTimeout(initNotifSettings, 600);
+  // 保存済み通知設定があれば起動時にスケジュール
+  const s = loadNotifSettings();
+  if ((s.medOn || s.waterOn || s.mealOn) && typeof scheduleNotifications === 'function') {
+    setTimeout(() => scheduleNotifications(s), 1000);
+  }
+});
 </script>
 
 <!-- ===== 身長・体重・年齢・性別 編集モーダル ===== -->
@@ -15268,6 +15774,32 @@ function _updateBodyDisplay() {
 })();
 </script>
 
+
+<!-- ===== 週次レポートモーダル ===== -->
+<div class="modal-bg" id="weeklyReportModal" onclick="closeModal('weeklyReportModal')">
+  <div class="modal" onclick="event.stopPropagation()" style="max-height:92vh;overflow-y:auto;">
+    <div class="modal-handle"></div>
+    <div class="modal-title">📊 週次レポート</div>
+    <div id="weekly-report-period" style="font-size:12px;color:var(--text3);text-align:center;margin:-8px 0 16px;"></div>
+    <div id="weekly-report-content"></div>
+    <div style="display:flex;gap:8px;margin-top:16px;">
+      <button class="btn btn-ghost btn-full" onclick="shiftWeeklyReport(-1)">← 前の週</button>
+      <button class="btn btn-ghost btn-full" id="weekly-next-btn" onclick="shiftWeeklyReport(1)">次の週 →</button>
+    </div>
+    <button class="btn btn-primary btn-full" style="margin-top:8px;" onclick="closeModal('weeklyReportModal')">閉じる</button>
+  </div>
+</div>
+
+<!-- ===== 昨日の食事コピーモーダル ===== -->
+<div class="modal-bg" id="copyYesterdayModal" onclick="closeModal('copyYesterdayModal')">
+  <div class="modal" onclick="event.stopPropagation()" style="max-height:85vh;overflow-y:auto;">
+    <div class="modal-handle"></div>
+    <div class="modal-title">📋 昨日の食事からコピー</div>
+    <div style="font-size:12px;color:var(--text2);margin:4px 0 16px;">コピーしたい食事をタップしてください</div>
+    <div id="copy-yesterday-list"></div>
+    <button class="btn btn-ghost btn-full" style="margin-top:12px;" onclick="closeModal('copyYesterdayModal')">キャンセル</button>
+  </div>
+</div>
 
 <!-- ===== 利用規約オーバーレイ（body末尾に配置でブロック防止）===== -->
 <div id="terms-overlay" style="display:none!important;pointer-events:none!important;visibility:hidden!important;position:fixed;inset:0;z-index:99999;">
