@@ -202,7 +202,7 @@ html, body {
   background: var(--bg);
   color: var(--text);
   font-family: 'Noto Sans JP', sans-serif;
-  font-size: 15px;
+  font-size: 16px;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -253,7 +253,7 @@ html, body {
 .ob-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border2); transition: all 0.3s; }
 .ob-dot.active { background: var(--accent); width: 18px; border-radius: 3px; }
 
-.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 13px 24px; border-radius: var(--rs); font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; border: none; font-family: 'Noto Sans JP', sans-serif; letter-spacing: 0.3px; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 13px 24px; border-radius: var(--rs); font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; border: none; font-family: 'Noto Sans JP', sans-serif; letter-spacing: 0.3px; min-height: 48px; }
 .btn-full { width: 100%; }
 .btn-primary { background: var(--accent); color: #0d1420; font-weight: 700; }
 .btn-primary:hover { background: #7dd3fc; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(79,195,247,0.3); }
@@ -276,10 +276,10 @@ html, body {
 .app-content { flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; padding-bottom: 80px; }
 
 .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg2); border-top: 1px solid var(--border2); display: flex; padding: 6px 0 max(6px, env(safe-area-inset-bottom)); z-index: 100; box-shadow: 0 -2px 16px rgba(0,0,0,0.3); }
-.nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 0; cursor: pointer; transition: all 0.2s; color: var(--text3); position: relative; }
+.nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 0; cursor: pointer; transition: all 0.2s; color: var(--text3); position: relative; min-height: 52px; justify-content: center; }
 .nav-btn.active { color: var(--accent); }
-.nav-btn .nav-icon { font-size: 19px; line-height: 1; }
-.nav-btn .nav-label { font-size: 9px; font-weight: 600; letter-spacing: 0.2px; }
+.nav-btn .nav-icon { font-size: 22px; line-height: 1; }
+.nav-btn .nav-label { font-size: 10px; font-weight: 600; letter-spacing: 0.2px; }
 .nav-btn.active::before { content: ''; position: absolute; top: -6px; left: 50%; transform: translateX(-50%); width: 28px; height: 3px; background: var(--accent); border-radius: 0 0 3px 3px; }
 
 .page { display: none; padding: 16px; }
@@ -289,7 +289,7 @@ html, body {
 .page-sub { font-size: 12px; color: var(--text2); margin-top: 3px; }
 
 .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 18px; margin-bottom: 14px; position: relative; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.25); }
-.card-title { font-size: 11px; color: var(--text2); letter-spacing: 1.8px; text-transform: uppercase; margin-bottom: 12px; font-weight: 600; }
+.card-title { font-size: 12px; color: var(--text2); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 12px; font-weight: 600; }
 
 .metrics-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
 .metric-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 16px 14px; position: relative; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
@@ -325,7 +325,7 @@ html, body {
 .meal-item:active { transform: scale(0.98); }
 .meal-emoji { width: 48px; height: 48px; border-radius: 10px; background: var(--surface); display: flex; align-items: center; justify-content: center; font-size: 26px; flex-shrink: 0; }
 .meal-info { flex: 1; min-width: 0; }
-.meal-name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text); }
+.meal-name { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text); }
 .meal-time { font-size: 11px; color: var(--text2); margin-top: 3px; }
 .meal-tags { display: flex; gap: 4px; margin-top: 4px; flex-wrap: wrap; }
 .tag { font-size: 10px; padding: 2px 7px; border-radius: 20px; border: 1px solid; white-space: nowrap; }
@@ -511,7 +511,7 @@ html, body {
 .alert-info .alert-title { color: var(--accent); }
 
 .form-row { margin-bottom: 12px; }
-.form-label { font-size: 12px; color: var(--text2); margin-bottom: 7px; display: block; font-weight: 500; letter-spacing: 0.2px; }
+.form-label { font-size: 14px; color: var(--text2); margin-bottom: 7px; display: block; font-weight: 500; letter-spacing: 0.2px; }
 .form-input { width: 100%; background: var(--surface2); border: 1.5px solid var(--border2); border-radius: var(--rs); padding: 12px 14px; color: var(--text); font-size: 15px; font-family: 'Noto Sans JP', sans-serif; outline: none; transition: border-color 0.2s; }
 .form-input:focus { border-color: var(--accent); }
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -1025,7 +1025,7 @@ body.is-premium .premium-banner { display: none !important; }
     <div class="ob-sub" data-i18n="ob_sub">腎臓と、ずっと仲よく。</div>
   </div>
   <div class="ob-card fade-in" id="ob-step1">
-    <div class="ob-step" data-i18n="ob_step1">ステップ 1 / 4</div>
+    <div class="ob-step">ステップ 1 / 2</div>
     <div class="ob-question" data-i18n="ob_q1">あなたの状態を教えてください</div>
     <div class="ob-choices">
       <!-- ===== 健常者モード（新規追加） ===== -->
@@ -1051,13 +1051,13 @@ body.is-premium .premium-banner { display: none !important; }
       </div>
     </div>
     <button class="btn btn-primary btn-full" id="ob-btn1" disabled onclick="goObStep(2)" data-i18n="btn_next">次へ →</button>
-    <div class="ob-dots"><div class="ob-dot active"></div><div class="ob-dot"></div><div class="ob-dot"></div><div class="ob-dot"></div></div>
+    <div class="ob-dots"><div class="ob-dot active"></div><div class="ob-dot"></div></div>
     <div style="text-align:center;margin-top:16px;">
       <span style="font-size:12px;color:var(--text3);cursor:pointer;" onclick="showScreen('s-doctor-login')" data-i18n="ob_doctor_link">🏥 医療機関の方はこちら</span>
     </div>
   </div>
   <div class="ob-card fade-in" id="ob-step2" style="display:none;">
-    <div class="ob-step" data-i18n="ob_step2">ステップ 2 / 4</div>
+    <div class="ob-step">ステップ 2 / 2</div>
     <div class="ob-question" data-i18n="ob_q2">基本情報を教えてください</div>
     <div class="form-row"><label class="form-label" data-i18n="label_name">お名前</label><input class="ob-name-input" id="ob-name" type="text" maxlength="50" data-i18n-placeholder="placeholder_name" placeholder="例：田中 花子" oninput="checkObName()" style="margin-bottom:0;" /></div>
     <div class="form-grid" style="margin:10px 0;">
@@ -1071,9 +1071,10 @@ body.is-premium .premium-banner { display: none !important; }
       <div class="form-row"><label class="form-label" data-i18n="label_height">身長 (cm)</label><input class="form-input" id="ob-height" type="number" data-i18n-placeholder="placeholder_height" placeholder="例：165" min="100" max="220" /></div>
       <div class="form-row"><label class="form-label" data-i18n="label_weight">体重 (kg)</label><input class="form-input" id="ob-weight" type="number" data-i18n-placeholder="placeholder_weight" placeholder="例：60" min="20" max="200" /></div>
     </div>
-    <button class="btn btn-primary btn-full" id="ob-btn2" disabled onclick="goObStep(3)" data-i18n="btn_next">次へ →</button>
+    <button class="btn btn-primary btn-full" id="ob-btn2" disabled onclick="finishOnboardingSimple()" style="font-size:15px;padding:14px;" data-i18n="btn_next">✓ アプリを始める</button>
+    <div style="text-align:center;margin-top:12px;"><a href="#" onclick="goObStep(3);return false;" style="font-size:12px;color:var(--text3);text-decoration:none;">詳細設定（CKDステージ・目標値）を入力する →</a></div>
     <div style="margin-top:12px;"><button class="btn btn-ghost btn-full" onclick="goObStep(1)" data-i18n="btn_back">← 戻る</button></div>
-    <div class="ob-dots"><div class="ob-dot"></div><div class="ob-dot active"></div><div class="ob-dot"></div><div class="ob-dot"></div></div>
+    <div class="ob-dots"><div class="ob-dot"></div><div class="ob-dot active"></div></div>
   </div>
   <div class="ob-card fade-in" id="ob-step3" style="display:none;">
     <div class="ob-step" data-i18n="ob_step3">ステップ 3 / 5</div>
@@ -1199,7 +1200,7 @@ body.is-premium .premium-banner { display: none !important; }
           <div class="page-title" id="home-greeting" data-i18n="home_today" style="font-size:22px;">今日の記録</div>
           <div class="page-sub" id="home-date" style="font-size:13px;color:var(--text2);margin-top:3px;">読み込み中...</div>
         </div>
-        <button class="btn btn-primary btn-sm" onclick="navTo('record')" style="padding:10px 16px;font-size:13px;" data-i18n="btn_record">✏️ 記録する</button>
+        <button class="btn btn-primary btn-sm" onclick="navTo('record')" style="padding:12px 20px;font-size:14px;min-height:44px;" data-i18n="btn_record">✏️ 記録する</button>
       </div>
 
       <!-- 🔥 連続記録ストリークバナー -->
@@ -1210,6 +1211,15 @@ body.is-premium .premium-banner { display: none !important; }
           <div class="streak-label" id="streak-label">素晴らしい継続力です</div>
         </div>
         <div class="streak-badge" id="streak-badge">🏆</div>
+      </div>
+
+      <!-- ⚡ よく使う食品ショートカット（ホーム常時表示） -->
+      <div id="home-quick-foods" style="display:none;margin-bottom:12px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <div style="font-size:11px;color:var(--text3);letter-spacing:1.5px;font-weight:600;">⚡ よく使う食品</div>
+          <button onclick="navTo('record')" style="font-size:11px;color:var(--accent);background:none;border:none;cursor:pointer;padding:2px 6px;">すべて記録 →</button>
+        </div>
+        <div id="home-quick-chips" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
       </div>
 
       <!-- 💉 透析カウントダウンカード -->
@@ -4436,6 +4446,48 @@ function goObStep(n) {
   } // end if(n===5)
 }
 
+// 簡易オンボーディング完了（2ステップ版）
+function finishOnboardingSimple() {
+  try {
+    const uid = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2,5);
+    state.uid = uid;
+    state.userType = state.obType || 'normal';
+    const nameEl = document.getElementById('ob-name');
+    state.userName = (nameEl ? nameEl.value : '').trim() || 'ユーザー';
+    state.age    = (document.getElementById('ob-age')    || {}).value || '';
+    state.gender = (document.getElementById('ob-gender') || {}).value || 'male';
+    state.height = (document.getElementById('ob-height') || {}).value || '';
+    state.weight = (document.getElementById('ob-weight') || {}).value || '';
+    state.ckdStage = 'ckdx'; // 後で設定
+    state.targetMode = 'auto';
+    if (!state.targets) state.targets = {};
+    const calc = calcAutoTargets();
+    state.targets.calories   = calc.calories   || 2000;
+    state.targets.protein    = calc.protein    || 40;
+    state.targets.potassium  = calc.potassium  || 2000;
+    state.targets.phosphorus = calc.phosphorus || 700;
+    state.targets.water      = calc.water      || 1500;
+    state.targets.salt       = calc.salt       || 6;
+    if (calc.fiber != null) state.targets.fiber = calc.fiber;
+    if (calc.fat   != null) state.targets.fat   = calc.fat;
+    state.diabetesMode = state.userType !== 'normal' && state.userType !== 'healthy';
+    if (state.userType === 'healthy') state.ckdStage = null;
+    try {
+      saveActiveProfile({ ...state });
+      setActiveUid(uid);
+      localStorage.setItem('renalcare_uid', uid);
+    } catch(e2) { console.warn('保存エラー:', e2); }
+    applyStateToUI();
+    showScreen('s-app');
+    navTo('home');
+    showToast('ようこそ、' + state.userName + 'さん！\n設定からCKDステージや目標値を変更できます');
+  } catch(e) {
+    console.error('finishOnboardingSimple エラー:', e);
+    showScreen('s-app');
+    navTo('home');
+  }
+}
+
 function finishOnboarding() {
   try {
     const uid = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2,5);
@@ -4780,6 +4832,67 @@ function buildQuickFoods() {
 
   section.classList.add('show');
 }
+// ホーム画面用クイック食品（常時表示版）
+function buildHomeQuickFoods() {
+  const wrap  = document.getElementById('home-quick-foods');
+  const chips = document.getElementById('home-quick-chips');
+  if (!wrap || !chips) return;
+
+  let meals = [];
+  try { meals = JSON.parse(localStorage.getItem('renalcare_meals') || '[]') || []; } catch(e) {}
+
+  const freq = {};
+  meals.forEach(m => {
+    if (!m) return;
+    if (Array.isArray(m.fqItems)) {
+      m.fqItems.forEach(item => {
+        if (item && item.name) freq[item.name] = (freq[item.name] || 0) + 1;
+      });
+    }
+    if (m.name && m.name.length > 1) {
+      const key = '__meal__' + m.name;
+      freq[key] = (freq[key] || 0) + 1;
+    }
+  });
+
+  const top = Object.entries(freq)
+    .filter(([, c]) => c >= 1)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 6);
+
+  if (!top.length) { wrap.style.display = 'none'; return; }
+
+  chips.innerHTML = '';
+  top.forEach(([key, count]) => {
+    const isMealName = key.startsWith('__meal__');
+    const label = isMealName ? key.replace('__meal__', '') : key;
+    const chip = document.createElement('button');
+    chip.style.cssText = 'display:inline-flex;align-items:center;gap:5px;padding:8px 13px;background:var(--surface2);border:1.5px solid var(--border2);border-radius:20px;cursor:pointer;font-size:13px;color:var(--text);font-family:inherit;transition:all 0.15s;min-height:38px;';
+    chip.innerHTML = (isMealName ? '🍽 ' : '🔍 ') + label + '<span style="font-size:10px;color:var(--accent);margin-left:2px;">' + count + '回</span>';
+    chip.addEventListener('click', () => {
+      navTo('record');
+      setTimeout(() => {
+        if (isMealName) {
+          const nameEl = document.getElementById('record-name');
+          if (nameEl) { nameEl.value = label; nameEl.focus(); }
+          showToast('📝「' + label + '」を入力しました');
+        } else {
+          showFoodSearchModalForRecord();
+          setTimeout(() => {
+            const s = document.getElementById('fq-search-input') || document.querySelector('#foodSearchModal input');
+            if (s) { s.value = label; s.dispatchEvent(new Event('input')); }
+          }, 350);
+        }
+      }, 150);
+    });
+    chip.addEventListener('mouseover', () => { chip.style.borderColor = 'var(--accent)'; chip.style.color = 'var(--accent)'; });
+    chip.addEventListener('mouseout',  () => { chip.style.borderColor = 'var(--border2)'; chip.style.color = 'var(--text)'; });
+    chips.appendChild(chip);
+  });
+
+  wrap.style.display = 'block';
+}
+
 
 function localDateStr(d) {
   const dt = d || new Date();
@@ -6506,6 +6619,7 @@ function navTo(page) {
     const fwRow = document.getElementById('record-food-weight-row');
     if (fwRow) fwRow.style.display = '';
     try { buildQuickFoods(); } catch(e){}
+    try { buildHomeQuickFoods(); } catch(e){}
   }
   if (page==='medicine') { setMedDateToday(); renderMedicineLog(); try{renderMedRegistered();}catch(e){} }
   if (page==='water')    { updateWaterCard(); updateWaterBalance(); }
@@ -14248,16 +14362,9 @@ function _updateBodyDisplay() {
 
   // ── 初期化 ───────────────────────────────────────────
   function init() {
-    // 起動時は必ず広告を表示（セッションごとに1回は必須視聴）
-    const slot = getCurrentSlot();
-    if (slot) {
-      setTimeout(() => showAdModal(slot), 1500);
-    } else {
-      // スロット外の時間帯でもフォールバック広告を表示
-      const fallback = { emoji: '🌿', label: 'RenalCare', sub: '健康管理を続けましょう 💪', key: 'fallback' };
-      setTimeout(() => showAdModal(fallback), 1500);
-    }
-    scheduleNextSlotCheck();     // 次のスロット開始を自動待機
+    // 改善: 起動時の強制モーダル廃止。バナー広告のみ表示。
+    // 時間帯スロットチェックは維持（1日3回のバナー更新に使用）
+    scheduleNextSlotCheck();
   }
 
   if (document.readyState === 'loading') {
@@ -14266,19 +14373,8 @@ function _updateBodyDisplay() {
     init();
   }
 
-  // ── フォアグラウンド復帰時（スマホのアプリ切り替え対応）──
-  document.addEventListener('visibilitychange', function() {
-    if (document.visibilityState === 'visible') {
-      checkAndShowAd(800);       // バックグラウンドから復帰した時
-    }
-  });
-
-  // ── pageshow（iOS Safari の BFCache 対応）────────────
-  window.addEventListener('pageshow', function(e) {
-    if (e.persisted) {
-      checkAndShowAd(800);
-    }
-  });
+  // バックグラウンド復帰時の強制広告は廃止（UX改善）
+  // 代わりにバナー広告で収益化
 
 })();
 </script>
