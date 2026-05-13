@@ -32,6 +32,16 @@
      crossorigin="anonymous"></script>
 
 <style>
+/* ===== ダークモード切り替え ===== */
+html.force-light body, html.force-light .screen { color-scheme: light; }
+html.force-light body {
+  --bg:#f0f4f8;--bg2:#ffffff;--surface:#ffffff;--surface2:#f0f4f8;
+  --text:#0d1420;--text2:#4a5568;--text3:#718096;
+  --border:rgba(0,0,0,0.1);--border2:rgba(0,0,0,0.18);
+}
+html.force-light .card { background:#ffffff!important;color:#0d1420!important; }
+html.force-light .bottom-nav { background:#ffffff!important; }
+
 /* ===== 広告表示中アプリブロック ===== */
 body.ad-blocking {
   overflow: hidden !important;
@@ -1257,6 +1267,18 @@ body.is-premium .premium-banner { display: none !important; }
         <div class="streak-badge" id="streak-badge">🏆</div>
       </div>
 
+      <!-- ストリークバッジ（新） -->
+      <div id="streak-badge-home" style="margin-bottom:10px;"></div>
+
+      <!-- おすすめ献立ボタン -->
+      <div style="margin-bottom:12px;">
+        <button onclick="showRecommendedMeals()" style="width:100%;padding:12px 16px;border-radius:12px;border:1px solid rgba(74,222,128,0.3);background:rgba(74,222,128,0.07);color:var(--green);font-size:13px;font-weight:600;cursor:pointer;text-align:left;display:flex;align-items:center;gap:8px;">
+          <span style="font-size:18px;">🍱</span>
+          <span>今日まだ食べられるものを見る</span>
+          <span style="margin-left:auto;font-size:16px;">›</span>
+        </button>
+      </div>
+
       <!-- ⚡ よく使う食品ショートカット（ホーム常時表示） -->
       <div id="home-quick-foods" style="display:none;margin-bottom:12px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
@@ -2245,6 +2267,66 @@ body.is-premium .premium-banner { display: none !important; }
           記録するとここに表示されます
         </div>
       </div>
+
+      <!-- ===== 検査値（eGFR・HbA1c・体重）トレンド ===== -->
+      <div class="card" style="border-color:rgba(192,132,252,0.3);" id="lab-card">
+        <div class="card-title" style="display:flex;align-items:center;justify-content:space-between;">
+          <span>🔬 検査値トレンド（eGFR・HbA1c・体重）</span>
+          <button onclick="document.getElementById('lab-input-area').style.display=document.getElementById('lab-input-area').style.display==='none'?'block':'none'" style="font-size:11px;padding:3px 10px;border-radius:8px;border:1px solid var(--border2);background:none;color:var(--accent);cursor:pointer;">＋ 入力</button>
+        </div>
+        <!-- 入力フォーム（折りたたみ） -->
+        <div id="lab-input-area" style="display:none;margin-bottom:14px;">
+          <div style="font-size:12px;color:var(--text3);margin-bottom:8px;">受診・検査後に記録してください</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+            <div>
+              <label class="form-label">eGFR (mL/min/1.73m²)</label>
+              <input class="form-input" type="number" id="lab-egfr" placeholder="例：45.2" min="1" max="150" step="0.1" />
+            </div>
+            <div>
+              <label class="form-label">クレアチニン (mg/dL)</label>
+              <input class="form-input" type="number" id="lab-cr" placeholder="例：1.20" min="0.1" max="20" step="0.01" />
+            </div>
+            <div>
+              <label class="form-label">HbA1c (%)</label>
+              <input class="form-input" type="number" id="lab-hba1c" placeholder="例：6.8" min="3" max="20" step="0.1" />
+            </div>
+            <div>
+              <label class="form-label">体重 (kg)</label>
+              <input class="form-input" type="number" id="lab-weight-val" placeholder="例：60.5" min="20" max="200" step="0.1" />
+            </div>
+            <div>
+              <label class="form-label">カリウム (mEq/L)</label>
+              <input class="form-input" type="number" id="lab-k" placeholder="例：4.5" min="1" max="9" step="0.1" />
+            </div>
+            <div>
+              <label class="form-label">リン (mg/dL)</label>
+              <input class="form-input" type="number" id="lab-p" placeholder="例：3.8" min="0.5" max="15" step="0.1" />
+            </div>
+          </div>
+          <div style="margin-bottom:10px;">
+            <label class="form-label">検査日</label>
+            <input class="form-input" type="date" id="lab-date" />
+          </div>
+          <div style="margin-bottom:10px;">
+            <label class="form-label">メモ（病院名など）</label>
+            <input class="form-input" type="text" id="lab-memo" placeholder="例：△△クリニック受診" maxlength="50" />
+          </div>
+          <button class="btn btn-primary btn-full" onclick="saveLabRecord()">✓ 検査値を記録</button>
+        </div>
+        <!-- グラフ選択タブ -->
+        <div style="display:flex;gap:4px;margin-bottom:10px;flex-wrap:wrap;">
+          <button class="food-tab active" id="lab-tab-egfr"   onclick="setLabTab('egfr'  ,this)">eGFR</button>
+          <button class="food-tab"        id="lab-tab-cr"     onclick="setLabTab('cr'    ,this)">Cr</button>
+          <button class="food-tab"        id="lab-tab-hba1c"  onclick="setLabTab('hba1c' ,this)">HbA1c</button>
+          <button class="food-tab"        id="lab-tab-weight" onclick="setLabTab('weight',this)">体重</button>
+          <button class="food-tab"        id="lab-tab-k"      onclick="setLabTab('k'     ,this)">K</button>
+          <button class="food-tab"        id="lab-tab-p"      onclick="setLabTab('p'     ,this)">P</button>
+        </div>
+        <canvas id="lab-chart" style="width:100%;max-height:200px;"></canvas>
+        <div id="lab-no-data" style="text-align:center;padding:30px;color:var(--text3);font-size:13px;">検査値を記録するとグラフが表示されます</div>
+        <!-- 直近の記録一覧 -->
+        <div id="lab-recent-list" style="margin-top:10px;"></div>
+      </div>
     </div>
 
 
@@ -2406,6 +2488,42 @@ body.is-premium .premium-banner { display: none !important; }
             <button onclick="setLang('ko')" id="lang-btn-ko"
               style="padding:5px 10px;border-radius:8px;font-size:12px;font-weight:700;border:1.5px solid var(--border2);background:var(--surface2);color:var(--text2);cursor:pointer;transition:all 0.2s;">🇰🇷 한국어</button>
           </div>
+        </div>
+        <!-- ダークモード切り替え -->
+        <div class="setting-row" style="cursor:default;">
+          <div class="setting-icon">🌙</div>
+          <div class="setting-text">
+            <div class="setting-name">画面モード</div>
+            <div class="setting-desc">ライト・ダーク・システム設定に従う</div>
+          </div>
+          <div style="display:flex;gap:4px;flex-shrink:0;background:var(--surface2);border-radius:10px;padding:3px;">
+            <button id="dm-btn-dark"   onclick="setDarkMode('dark')"   style="padding:5px 10px;border-radius:8px;font-size:12px;font-weight:600;border:none;cursor:pointer;transition:all 0.2s;background:transparent;color:var(--text3);">🌙 ダーク</button>
+            <button id="dm-btn-light"  onclick="setDarkMode('light')"  style="padding:5px 10px;border-radius:8px;font-size:12px;font-weight:600;border:none;cursor:pointer;transition:all 0.2s;background:transparent;color:var(--text3);">☀️ ライト</button>
+            <button id="dm-btn-system" onclick="setDarkMode('system')" style="padding:5px 10px;border-radius:8px;font-size:12px;font-weight:600;border:none;cursor:pointer;transition:all 0.2s;background:var(--accent);color:#0d1420;">自動</button>
+          </div>
+        </div>
+      </div>
+      <!-- クラウドバックアップ -->
+      <div class="settings-section">
+        <div class="settings-title">☁️ クラウドバックアップ</div>
+        <div class="setting-row" style="cursor:pointer;" onclick="syncAllToSupabase().then(()=>showToast('✅ バックアップが完了しました'))">
+          <div class="setting-icon">☁️</div>
+          <div class="setting-text">
+            <div class="setting-name">今すぐバックアップ</div>
+            <div class="setting-desc" id="last-backup-desc">食事・健康・検査値データをクラウドに保存</div>
+          </div>
+          <div class="setting-arrow">›</div>
+        </div>
+        <div class="setting-row" style="cursor:pointer;" onclick="restoreFromSupabase().then(ok=>showToast(ok?'✅ クラウドから復元しました':'⚠ クラウドにデータがありません'))">
+          <div class="setting-icon">🔄</div>
+          <div class="setting-text">
+            <div class="setting-name">クラウドから復元</div>
+            <div class="setting-desc">機種変更後などにデータを復元</div>
+          </div>
+          <div class="setting-arrow">›</div>
+        </div>
+        <div style="padding:8px 14px;font-size:11px;color:var(--text3);">
+          💡 バックアップはWi-Fi接続時に自動で5分ごとに実行されます
         </div>
       </div>
       <div class="settings-section">
@@ -6559,6 +6677,18 @@ function updateHomeSummary() {
   // 新機能: ストリーク・透析カウントダウン
   try { updateStreakBanner(); } catch(e){}
   try { updateDialysisCountdown(); } catch(e){}
+  // 追加機能: 新ストリークバッジ
+  try { if (typeof renderStreakBadge === 'function') renderStreakBadge(); } catch(e){}
+  // ダークモードボタンUI初期化
+  try {
+    const pref = localStorage.getItem('renalcare_dark_mode') || 'system';
+    ['dark','light','system'].forEach(m => {
+      const b = document.getElementById('dm-btn-' + m);
+      if (!b) return;
+      b.style.background = (m === pref) ? 'var(--accent)' : 'transparent';
+      b.style.color      = (m === pref) ? '#0d1420'       : 'var(--text3)';
+    });
+  } catch(e){}
 }
 
 /**
@@ -14673,40 +14803,61 @@ async function requestNotifPermission() {
   }
 }
 
+// ===== Service Worker 登録 =====
+let _swReg = null;
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').then(reg => {
+    _swReg = reg;
+    console.log('[SW] registered:', reg.scope);
+  }).catch(e => console.warn('[SW] registration failed:', e));
+}
+
 function scheduleNotifications(settings) {
   if (!('Notification' in window) || Notification.permission !== 'granted') return;
-  // 既存タイマーをクリア
+  // ブラウザ内タイマーも併用（SW fallback）
   if (window._notifTimers) window._notifTimers.forEach(t => clearTimeout(t));
   window._notifTimers = [];
 
   const now = new Date();
 
-  function scheduleAt(timeStr, title, body, icon) {
+  function msUntil(timeStr) {
     const [h, m] = timeStr.split(':').map(Number);
-    const target = new Date(now);
-    target.setHours(h, m, 0, 0);
-    if (target <= now) target.setDate(target.getDate() + 1);
-    const ms = target - now;
+    const t = new Date(now);
+    t.setHours(h, m, 0, 0);
+    if (t <= now) t.setDate(t.getDate() + 1);
+    return t - now;
+  }
+
+  function sendToSW(msg) {
+    if (_swReg && _swReg.active) { _swReg.active.postMessage(msg); }
+  }
+
+  function scheduleAt(timeStr, title, body, tag) {
+    const ms = msUntil(timeStr);
+    // SW経由で通知をスケジュール（バックグラウンドでも届く）
+    sendToSW({ type: 'SCHEDULE_NOTIFICATION', title, body, delay: ms, tag });
+    // ブラウザ内タイマーも保険として残す
     const t = setTimeout(() => {
       if (Notification.permission === 'granted') {
-        new Notification(title, { body, icon: icon || 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🌿</text></svg>' });
+        new Notification(title, { body, icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🌿</text></svg>', tag });
       }
     }, ms);
     window._notifTimers.push(t);
   }
 
   if (settings.medOn && settings.medTime) {
-    scheduleAt(settings.medTime, '💊 服薬リマインダー', '今日の薬を飲みましたか？ RenalCareで確認しましょう');
+    scheduleAt(settings.medTime, '💊 服薬リマインダー', '今日の薬を飲みましたか？ RenalCareで確認しましょう', 'med');
   }
   if (settings.mealOn && settings.mealTime) {
-    scheduleAt(settings.mealTime, '✏️ 食事記録リマインダー', '今日の食事を記録しましょう');
+    scheduleAt(settings.mealTime, '✏️ 食事記録リマインダー', '今日の食事を記録しましょう', 'meal');
   }
   if (settings.waterOn && settings.waterInterval > 0) {
     const intervalMs = settings.waterInterval * 60 * 1000;
     function schedWater() {
+      sendToSW({ type: 'SCHEDULE_NOTIFICATION', title: '💧 水分補給リマインダー', body: '水を飲みましょう！目標達成まで頑張って。', delay: intervalMs, tag: 'water' });
       const t = setTimeout(() => {
         if (Notification.permission === 'granted') {
-          new Notification('💧 水分補給リマインダー', { body: '水を飲みましょう！目標達成まで頑張って。' });
+          new Notification('💧 水分補給リマインダー', { body: '水を飲みましょう！目標達成まで頑張って。', tag: 'water' });
         }
         schedWater();
       }, intervalMs);
@@ -14720,10 +14871,9 @@ function scheduleNotifications(settings) {
 // 設定ページ表示時に初期化
 document.addEventListener('DOMContentLoaded', function() {
   setTimeout(initNotifSettings, 600);
-  // 保存済み通知設定があれば起動時にスケジュール
   const s = loadNotifSettings();
   if ((s.medOn || s.waterOn || s.mealOn) && typeof scheduleNotifications === 'function') {
-    setTimeout(() => scheduleNotifications(s), 1000);
+    setTimeout(() => scheduleNotifications(s), 1500);
   }
 });
 </script>
@@ -16088,6 +16238,587 @@ document.addEventListener('DOMContentLoaded', function() {
 </div><!-- /#terms-overlay -->
 <!-- ===================================================================== -->
 
+
+<!-- ===================================================================== -->
+<!-- ① Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<script>
+// ===== ② 検査値トレンド =====
+const LAB_KEY = 'renalcare_lab_records';
+let _labChart = null;
+let _labCurrentField = 'egfr';
+
+const LAB_META = {
+  egfr:   { label:'eGFR',          unit:'mL/min/1.73m²', color:'#7c3aed', refMin:null, refMax:60,  warnLow:15, note:'60未満でCKD' },
+  cr:     { label:'クレアチニン',  unit:'mg/dL',          color:'#db2777', refMin:null, refMax:1.1, warnHigh:1.5, note:'男性0.65-1.07, 女性0.46-0.79' },
+  hba1c:  { label:'HbA1c',         unit:'%',              color:'#ea580c', refMin:null, refMax:5.9, warnHigh:7.0, note:'5.9%以下が正常' },
+  weight: { label:'体重',           unit:'kg',             color:'#0ea5e9', note:'' },
+  k:      { label:'カリウム',      unit:'mEq/L',          color:'#16a34a', refMin:3.5, refMax:5.0, note:'3.5-5.0 mEq/L' },
+  p:      { label:'リン',           unit:'mg/dL',          color:'#ca8a04', refMin:2.5, refMax:4.5, note:'2.5-4.5 mg/dL' },
+};
+
+function loadLabRecords() {
+  try { return JSON.parse(localStorage.getItem(LAB_KEY) || '[]'); } catch(e) { return []; }
+}
+function saveLabRecords(arr) {
+  safeSetItem(LAB_KEY, JSON.stringify(arr));
+}
+
+function saveLabRecord() {
+  const egfr   = parseFloat(document.getElementById('lab-egfr')?.value)  || null;
+  const cr     = parseFloat(document.getElementById('lab-cr')?.value)    || null;
+  const hba1c  = parseFloat(document.getElementById('lab-hba1c')?.value) || null;
+  const weight = parseFloat(document.getElementById('lab-weight-val')?.value) || null;
+  const k      = parseFloat(document.getElementById('lab-k')?.value)     || null;
+  const p      = parseFloat(document.getElementById('lab-p')?.value)     || null;
+  const memo   = document.getElementById('lab-memo')?.value || '';
+  const dateEl = document.getElementById('lab-date');
+  const date   = dateEl?.value || new Date().toISOString().slice(0,10);
+
+  if (!egfr && !cr && !hba1c && !weight && !k && !p) {
+    showToast('⚠ 少なくとも1項目入力してください'); return;
+  }
+  const rec = { id: Date.now(), date, egfr, cr, hba1c, weight, k, p, memo };
+  const all = loadLabRecords();
+  all.push(rec);
+  all.sort((a,b) => a.date.localeCompare(b.date));
+  saveLabRecords(all);
+
+  // Supabase同期
+  syncLabToSupabase(rec);
+
+  // フォームリセット
+  ['lab-egfr','lab-cr','lab-hba1c','lab-weight-val','lab-k','lab-p','lab-memo'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  document.getElementById('lab-input-area').style.display = 'none';
+  showToast('✅ 検査値を記録しました');
+  renderLabChart(_labCurrentField);
+  renderLabRecentList();
+
+  // Supabase cloud backup
+  syncAllToSupabase();
+}
+
+function setLabTab(field, btn) {
+  _labCurrentField = field;
+  document.querySelectorAll('#lab-card .food-tab').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderLabChart(field);
+}
+
+function renderLabChart(field) {
+  const all = loadLabRecords().filter(r => r[field] != null);
+  const noDataEl = document.getElementById('lab-no-data');
+  const canvas   = document.getElementById('lab-chart');
+  if (!canvas) return;
+
+  if (all.length === 0) {
+    canvas.style.display = 'none';
+    if (noDataEl) noDataEl.style.display = '';
+    return;
+  }
+  canvas.style.display = 'block';
+  if (noDataEl) noDataEl.style.display = 'none';
+
+  const meta   = LAB_META[field];
+  const labels = all.map(r => r.date.slice(5)); // MM-DD
+  const values = all.map(r => r[field]);
+
+  if (_labChart) { _labChart.destroy(); _labChart = null; }
+
+  const isDark = document.documentElement.classList.contains('dark') ||
+                 window.matchMedia('(prefers-color-scheme:dark)').matches;
+  const gridColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)';
+  const textColor = isDark ? '#94a3b8' : '#64748b';
+
+  _labChart = new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: meta.label + ' (' + meta.unit + ')',
+        data: values,
+        borderColor: meta.color,
+        backgroundColor: meta.color + '22',
+        fill: true,
+        tension: 0.3,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => `${meta.label}: ${ctx.parsed.y} ${meta.unit}${meta.note ? ' — ' + meta.note : ''}`
+          }
+        }
+      },
+      scales: {
+        x: { ticks: { color: textColor, font:{ size:10 } }, grid:{ color: gridColor } },
+        y: { ticks: { color: textColor, font:{ size:10 } }, grid:{ color: gridColor },
+             suggestedMin: values.length ? Math.min(...values)*0.9 : 0,
+             suggestedMax: values.length ? Math.max(...values)*1.1 : 10 }
+      }
+    }
+  });
+  renderLabRecentList();
+}
+
+function renderLabRecentList() {
+  const listEl = document.getElementById('lab-recent-list');
+  if (!listEl) return;
+  const all = loadLabRecords().slice().reverse().slice(0, 5);
+  if (all.length === 0) { listEl.innerHTML = ''; return; }
+  listEl.innerHTML = '<div style="font-size:11px;color:var(--text3);margin-bottom:6px;">直近の検査記録</div>' +
+    all.map(r => `
+      <div style="display:flex;flex-wrap:wrap;gap:6px;padding:6px 0;border-bottom:1px solid var(--border);font-size:11px;align-items:center;">
+        <span style="color:var(--text3);min-width:70px;">${r.date}</span>
+        ${r.egfr   != null ? `<span style="color:#7c3aed;">eGFR <b>${r.egfr}</b></span>` : ''}
+        ${r.cr     != null ? `<span style="color:#db2777;">Cr <b>${r.cr}</b></span>` : ''}
+        ${r.hba1c  != null ? `<span style="color:#ea580c;">HbA1c <b>${r.hba1c}%</b></span>` : ''}
+        ${r.weight != null ? `<span style="color:#0ea5e9;">体重 <b>${r.weight}kg</b></span>` : ''}
+        ${r.k      != null ? `<span style="color:#16a34a;">K <b>${r.k}</b></span>` : ''}
+        ${r.p      != null ? `<span style="color:#ca8a04;">P <b>${r.p}</b></span>` : ''}
+        ${r.memo   ? `<span style="color:var(--text3);">${r.memo}</span>` : ''}
+        <button onclick="deleteLabRecord(${r.id})" style="margin-left:auto;font-size:10px;padding:2px 6px;border:1px solid rgba(248,113,113,0.3);border-radius:6px;color:var(--red);background:none;cursor:pointer;">削除</button>
+      </div>
+    `).join('');
+}
+
+function deleteLabRecord(id) {
+  if (!confirm('この検査値記録を削除しますか？')) return;
+  const all = loadLabRecords().filter(r => r.id !== id);
+  saveLabRecords(all);
+  renderLabChart(_labCurrentField);
+  renderLabRecentList();
+  showToast('🗑 削除しました');
+}
+
+// 健康ページを開くたびにグラフ初期化
+const _origRenderHealthPage = typeof renderHealthPage === 'function' ? renderHealthPage : null;
+function _labInitOnHealthPage() {
+  const dateEl = document.getElementById('lab-date');
+  if (dateEl && !dateEl.value) dateEl.value = new Date().toISOString().slice(0,10);
+  renderLabChart(_labCurrentField);
+  renderLabRecentList();
+}
+
+// ===== ③ ホーム画面バナー広告（AdSense 常設） =====
+// ホームページのad-homeダミーバナーをAdSense実広告に差し替え
+document.addEventListener('DOMContentLoaded', () => {
+  const dummyBanner = document.getElementById('ad-home');
+  if (dummyBanner) {
+    dummyBanner.innerHTML = `
+      <ins class="adsbygoogle"
+           style="display:block;width:100%;min-height:100px;"
+           data-ad-client="ca-pub-3542746381307251"
+           data-ad-slot="auto"
+           data-ad-format="auto"
+           data-full-width-responsive="true"></ins>`;
+    try { (window.adsbygoogle = window.adsbygoogle || []).push({}); } catch(e) {}
+    dummyBanner.onclick = null;
+    const xBtn = dummyBanner.querySelector('.ad-x');
+    if (xBtn) xBtn.remove();
+    dummyBanner.style.padding = '4px 0';
+  }
+
+  // 食事記録ページ下部にもバナーを追加
+  const pageRecord = document.getElementById('page-record');
+  if (pageRecord) {
+    const adDiv = document.createElement('div');
+    adDiv.className = 'ad-banner';
+    adDiv.style.cssText = 'padding:4px 0;margin-top:16px;background:none;border:none;';
+    adDiv.innerHTML = `
+      <ins class="adsbygoogle"
+           style="display:block;width:100%;min-height:100px;"
+           data-ad-client="ca-pub-3542746381307251"
+           data-ad-slot="auto"
+           data-ad-format="auto"
+           data-full-width-responsive="true"></ins>`;
+    pageRecord.appendChild(adDiv);
+    try { (window.adsbygoogle = window.adsbygoogle || []).push({}); } catch(e) {}
+  }
+});
+
+// ===== ④ インタースティシャル広告（画面遷移時、1日2回まで） =====
+const INTERSTITIAL_KEY = 'renalcare_interstitial';
+let _interstitialShownCount = 0;
+
+function _getInterstitialToday() {
+  try {
+    const d = JSON.parse(localStorage.getItem(INTERSTITIAL_KEY) || '{}');
+    const today = new Date().toISOString().slice(0,10);
+    return d.date === today ? (d.count || 0) : 0;
+  } catch(e) { return 0; }
+}
+function _incInterstitialToday() {
+  const today = new Date().toISOString().slice(0,10);
+  const count = _getInterstitialToday() + 1;
+  localStorage.setItem(INTERSTITIAL_KEY, JSON.stringify({ date: today, count }));
+}
+
+function maybeShowInterstitial(callback) {
+  const count = _getInterstitialToday();
+  const isPremium = document.body.classList.contains('is-premium');
+  if (isPremium || count >= 2) { if (callback) callback(); return; }
+
+  _incInterstitialToday();
+
+  // オーバーレイ生成
+  const overlay = document.createElement('div');
+  overlay.id = 'interstitial-overlay';
+  overlay.style.cssText = `
+    position:fixed;inset:0;z-index:199999;background:rgba(13,20,32,0.97);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;
+  `;
+  let countdown = 5;
+  overlay.innerHTML = `
+    <div style="font-size:11px;color:#64748b;margin-bottom:8px;letter-spacing:0.1em;">広告</div>
+    <div style="width:100%;max-width:360px;background:#1a2332;border-radius:12px;overflow:hidden;min-height:250px;display:flex;align-items:center;justify-content:center;">
+      <ins class="adsbygoogle"
+           style="display:block;width:100%;min-height:250px;"
+           data-ad-client="ca-pub-3542746381307251"
+           data-ad-slot="auto"
+           data-ad-format="auto"
+           data-full-width-responsive="true"></ins>
+    </div>
+    <button id="interstitial-close-btn" disabled
+      style="margin-top:20px;padding:12px 32px;border-radius:10px;font-size:14px;font-weight:600;
+             background:#334155;color:#94a3b8;border:none;cursor:not-allowed;transition:all 0.3s;">
+      <span id="interstitial-countdown">${countdown}</span>秒後に閉じる
+    </button>
+    <div style="margin-top:12px;font-size:11px;color:#475569;">✨ 広告非表示はプレミアムで</div>
+  `;
+  document.body.appendChild(overlay);
+  try { (window.adsbygoogle = window.adsbygoogle || []).push({}); } catch(e) {}
+
+  const timer = setInterval(() => {
+    countdown--;
+    const cdEl = document.getElementById('interstitial-countdown');
+    const btn   = document.getElementById('interstitial-close-btn');
+    if (cdEl) cdEl.textContent = countdown;
+    if (countdown <= 0) {
+      clearInterval(timer);
+      if (btn) {
+        btn.disabled = false;
+        btn.style.background = '#3b82f6';
+        btn.style.color = '#fff';
+        btn.style.cursor = 'pointer';
+        btn.textContent = '✕ 閉じる';
+        btn.onclick = () => {
+          overlay.remove();
+          if (callback) callback();
+        };
+      }
+    }
+  }, 1000);
+}
+
+// navToにインタースティシャルを挿入（一部のタブ遷移のみ）
+const _navToOriginal = window.navTo || navTo;
+window._navToWithAd = function(page) {
+  const triggerPages = ['history', 'health'];
+  if (triggerPages.includes(page)) {
+    maybeShowInterstitial(() => _navToOriginal(page));
+  } else {
+    _navToOriginal(page);
+  }
+};
+// ボタンのonclickを差し替え
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.nav-btn[onclick]').forEach(btn => {
+    const m = btn.getAttribute('onclick').match(/navTo\('(\w+)'\)/);
+    if (m) {
+      btn.setAttribute('onclick', `_navToWithAd('${m[1]}')`);
+    }
+  });
+});
+
+// ===== ⑤ Supabaseクラウドバックアップ =====
+const BACKUP_KEY   = 'renalcare_last_backup';
+const BACKUP_TABLE = 'user_backups';
+
+async function syncAllToSupabase() {
+  if (typeof SUPABASE_URL === 'undefined') return;
+  const uid = getUserId ? getUserId() : (state && state.uid);
+  if (!uid) return;
+
+  const payload = {
+    user_id:    uid,
+    updated_at: new Date().toISOString(),
+    meals:      localStorage.getItem('renalcare_meals_v2') || '[]',
+    health:     localStorage.getItem('renalcare_health')   || '[]',
+    water:      localStorage.getItem('renalcare_water')    || '[]',
+    lab:        localStorage.getItem(LAB_KEY)              || '[]',
+    state:      localStorage.getItem('renalcare_state')    || '{}',
+  };
+
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/${BACKUP_TABLE}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Prefer': 'resolution=merge-duplicates',
+      },
+      body: JSON.stringify(payload),
+    });
+    localStorage.setItem(BACKUP_KEY, new Date().toISOString());
+    console.log('[Backup] synced to Supabase');
+  } catch(e) {
+    console.warn('[Backup] sync failed (offline?):', e);
+  }
+}
+
+async function restoreFromSupabase() {
+  if (typeof SUPABASE_URL === 'undefined') return false;
+  const uid = getUserId ? getUserId() : (state && state.uid);
+  if (!uid) return false;
+
+  try {
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/${BACKUP_TABLE}?user_id=eq.${uid}&limit=1&order=updated_at.desc`,
+      { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
+    );
+    if (!res.ok) return false;
+    const data = await res.json();
+    if (!data || data.length === 0) return false;
+    const backup = data[0];
+
+    if (backup.meals)  localStorage.setItem('renalcare_meals_v2', backup.meals);
+    if (backup.health) localStorage.setItem('renalcare_health',   backup.health);
+    if (backup.water)  localStorage.setItem('renalcare_water',    backup.water);
+    if (backup.lab)    localStorage.setItem(LAB_KEY,              backup.lab);
+    // stateは慎重に（上書きするとユーザー設定が壊れるため確認付き）
+    if (backup.state) {
+      const local  = JSON.parse(localStorage.getItem('renalcare_state') || '{}');
+      const remote = JSON.parse(backup.state);
+      // 更新日が新しい方を使う
+      if (!local.updatedAt || (remote.updatedAt && remote.updatedAt > local.updatedAt)) {
+        localStorage.setItem('renalcare_state', backup.state);
+      }
+    }
+    return true;
+  } catch(e) {
+    console.warn('[Backup] restore failed:', e);
+    return false;
+  }
+}
+
+async function syncLabToSupabase(rec) {
+  if (typeof SUPABASE_URL === 'undefined') return;
+  const uid = getUserId ? getUserId() : (state && state.uid);
+  if (!uid) return;
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/lab_records`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Prefer': 'return=minimal',
+      },
+      body: JSON.stringify({ ...rec, user_id: uid }),
+    });
+  } catch(e) { /* offline, skip */ }
+}
+
+// 起動時にクラウドから復元（前回バックアップより新しければ適用）
+document.addEventListener('DOMContentLoaded', async () => {
+  const lastBackup = localStorage.getItem(BACKUP_KEY);
+  if (lastBackup) {
+    // バックグラウンドで同期（UXを止めない）
+    restoreFromSupabase();
+  }
+  // 5分ごとに自動バックアップ
+  setInterval(syncAllToSupabase, 5 * 60 * 1000);
+  // 食事保存時にもバックアップ（既存のsaveMealにhookを追加）
+  const _origSaveMeal = window.saveMeal;
+  if (typeof _origSaveMeal === 'function') {
+    window.saveMeal = function(...args) {
+      const result = _origSaveMeal.apply(this, args);
+      setTimeout(syncAllToSupabase, 2000);
+      return result;
+    };
+  }
+});
+
+// ===== ⑥ おすすめ献立（残り栄養枠に合わせた提案） =====
+function showRecommendedMeals() {
+  const modal = document.getElementById('recommendedMealsModal');
+  if (modal) { modal.classList.add('open'); renderRecommendedMeals(); return; }
+
+  // モーダルを動的生成
+  const div = document.createElement('div');
+  div.className = 'modal-bg';
+  div.id = 'recommendedMealsModal';
+  div.onclick = function(e) { if (e.target === div) div.classList.remove('open'); };
+  div.innerHTML = `
+    <div class="modal" onclick="event.stopPropagation()" style="max-height:85vh;overflow-y:auto;">
+      <div class="modal-handle"></div>
+      <div class="modal-title">🍱 今日食べられるもの</div>
+      <div id="rec-meals-body" style="margin-top:10px;"></div>
+      <button class="btn btn-ghost btn-full" style="margin-top:12px;" onclick="document.getElementById('recommendedMealsModal').classList.remove('open')">閉じる</button>
+    </div>`;
+  document.body.appendChild(div);
+  div.classList.add('open');
+  renderRecommendedMeals();
+}
+
+function renderRecommendedMeals() {
+  const el = document.getElementById('rec-meals-body');
+  if (!el) return;
+
+  // 本日の摂取量を取得
+  const today = new Date().toISOString().slice(0,10);
+  const allMeals = JSON.parse(localStorage.getItem('renalcare_meals_v2') || '[]')
+    .filter(m => (m.date || (m.recordedAt||'').slice(0,10)) === today);
+
+  const todayTotals = allMeals.reduce((acc, m) => {
+    acc.protein    += (m.protein    || 0);
+    acc.potassium  += (m.potassium  || 0);
+    acc.phosphorus += (m.phosphorus || 0);
+    acc.calories   += (m.calories   || 0);
+    acc.salt       += (m.salt       || 0);
+    return acc;
+  }, { protein:0, potassium:0, phosphorus:0, calories:0, salt:0 });
+
+  const targets = (typeof state !== 'undefined' && state.targets) || {};
+  const remProtein    = Math.max(0, (targets.protein    || 50)    - todayTotals.protein);
+  const remPotassium  = Math.max(0, (targets.potassium  || 2000)  - todayTotals.potassium);
+  const remPhosphorus = Math.max(0, (targets.phosphorus || 800)   - todayTotals.phosphorus);
+  const remCalories   = Math.max(0, (targets.calories   || 1800)  - todayTotals.calories);
+
+  // FOOD_DB から条件に合う食品をフィルタ
+  const db = typeof FOOD_DB !== 'undefined' ? FOOD_DB : (typeof window.FOOD_DB !== 'undefined' ? window.FOOD_DB : []);
+  if (!db || db.length === 0) {
+    el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text3);">食品データベースを読み込み中...</div>';
+    return;
+  }
+
+  const candidates = db.filter(f => {
+    if (!f || !f.name) return false;
+    const p100  = f.protein    || 0;
+    const k100  = f.potassium  || 0;
+    const ph100 = f.phosphorus || 0;
+    const c100  = f.calories   || 0;
+    const serving = f.amount || 100;
+    // 1食分（serving g）でタンパク・K・P・カロリーが残量を超えない
+    return (p100  * serving / 100) <= remProtein + 3  &&
+           (k100  * serving / 100) <= remPotassium     &&
+           (ph100 * serving / 100) <= remPhosphorus     &&
+           (c100  * serving / 100) <= remCalories  + 50 &&
+           c100 > 0; // 0kcalのものは除外
+  }).sort((a,b) => (b.calories||0) - (a.calories||0)).slice(0, 15);
+
+  el.innerHTML = `
+    <div style="background:var(--surface2);border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:var(--text2);line-height:1.8;">
+      今日の残り枠<br>
+      🥩 タンパク質 <b>${remProtein.toFixed(1)}g</b> ／
+      🧂 カロリー <b>${Math.round(remCalories)}kcal</b> ／
+      🫘 K <b>${Math.round(remPotassium)}mg</b>
+    </div>` +
+    (candidates.length === 0
+      ? '<div style="text-align:center;padding:20px;color:var(--text3);">今日の残り枠に合う食品が見つかりませんでした</div>'
+      : candidates.map(f => `
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);align-items:center;gap:8px;">
+          <div>
+            <div style="font-size:13px;font-weight:600;">${f.name}</div>
+            <div style="font-size:11px;color:var(--text3);">${f.amount||100}g ／ ${f.calories||0}kcal ／ タンパク${(f.protein||0).toFixed(1)}g</div>
+          </div>
+          <button onclick="navTo('record')" style="font-size:11px;padding:4px 10px;border-radius:8px;border:1px solid var(--accent);color:var(--accent);background:none;cursor:pointer;white-space:nowrap;">記録 ›</button>
+        </div>`).join(''));
+}
+
+// ===== ⑦ ストリーク表示をホーム画面に追加 =====
+function getStreakCount() {
+  const allMeals = JSON.parse(localStorage.getItem('renalcare_meals_v2') || '[]');
+  if (allMeals.length === 0) return 0;
+  const days = [...new Set(allMeals.map(m => (m.date || (m.recordedAt||'').slice(0,10))))].sort().reverse();
+  const today = new Date().toISOString().slice(0,10);
+  let streak = 0, check = today;
+  for (const d of days) {
+    if (d === check) {
+      streak++;
+      const dt = new Date(check);
+      dt.setDate(dt.getDate() - 1);
+      check = dt.toISOString().slice(0,10);
+    } else if (d < check) break;
+  }
+  return streak;
+}
+
+function renderStreakBadge() {
+  const container = document.getElementById('streak-badge-home');
+  if (!container) return;
+  const count = getStreakCount();
+  if (count === 0) { container.innerHTML = ''; return; }
+  let emoji = '🌱', color = '#16a34a', label = '継続中';
+  if (count >= 30) { emoji = '🏆'; color = '#f59e0b'; label = '30日達成！'; }
+  else if (count >= 7) { emoji = '🔥'; color = '#ea580c'; label = '1週間継続！'; }
+  else if (count >= 3) { emoji = '⭐'; color = '#7c3aed'; }
+  container.innerHTML = `
+    <div onclick="showToast('${count}日連続で記録しています！このまま続けましょう 💪')" style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:${color}22;border:1px solid ${color}44;border-radius:20px;cursor:pointer;">
+      <span style="font-size:16px;">${emoji}</span>
+      <span style="font-size:13px;font-weight:700;color:${color};">${count}日連続</span>
+      <span style="font-size:11px;color:var(--text3);">${label}</span>
+    </div>`;
+}
+
+// ===== ⑧ ダークモード切り替え =====
+const DARK_MODE_KEY = 'renalcare_dark_mode';
+
+function applyDarkModePreference() {
+  const pref = localStorage.getItem(DARK_MODE_KEY);
+  if (pref === 'light') {
+    document.documentElement.classList.add('force-light');
+    document.documentElement.classList.remove('force-dark');
+  } else if (pref === 'dark') {
+    document.documentElement.classList.add('force-dark');
+    document.documentElement.classList.remove('force-light');
+  }
+}
+
+function setDarkMode(mode) {
+  // mode: 'dark' | 'light' | 'system'
+  if (mode === 'system') {
+    localStorage.removeItem(DARK_MODE_KEY);
+    document.documentElement.classList.remove('force-light','force-dark');
+  } else {
+    localStorage.setItem(DARK_MODE_KEY, mode);
+    applyDarkModePreference();
+  }
+  // トグルボタンのUI更新
+  ['dm-btn-dark','dm-btn-light','dm-btn-system'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.style.background = el.id.includes(mode) ? 'var(--accent)' : 'transparent';
+    el.style.color      = el.id.includes(mode) ? '#0d1420'       : 'var(--text3)';
+  });
+  if (_labChart) renderLabChart(_labCurrentField); // グラフも再描画
+}
+
+// 起動時に適用
+document.addEventListener('DOMContentLoaded', applyDarkModePreference);
+
+// ===== 健康ページ表示時にeGFRグラフ初期化をhook =====
+const _navToForLab = typeof window._navToWithAd === 'function' ? window._navToWithAd : navTo;
+const _navToForLabOriginal = _navToOriginal || navTo;
+// renderHealthPageをoverrideしてグラフも描画
+const _realRenderHealthPage = renderHealthPage;
+window.renderHealthPage = function() {
+  _realRenderHealthPage();
+  _labInitOnHealthPage();
+};
+
+</script>
 
 </body>
 </html>
