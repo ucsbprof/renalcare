@@ -3174,7 +3174,7 @@ body.is-premium .premium-banner { display: none !important; }
       <div class="food-tab" data-cat="大豆類"            onclick="setFoodTab(this,'大豆類')">🫘 大豆類</div>
       <div class="food-tab" data-cat="野菜類"            onclick="setFoodTab(this,'野菜類')">🥦 野菜類</div>
       <div class="food-tab" data-cat="根菜・いも類"      onclick="setFoodTab(this,'根菜・いも類')">🥕 根菜・いも類</div>
-      <div class="food-tab" data-cat="飲み物"            onclick="setFoodTab(this,'飲み物')">🥤 飲み物</div>
+
       <div class="food-tab" data-cat="汁物"              onclick="setFoodTab(this,'汁物')">🍵 汁物</div>
       <div class="food-tab" data-cat="果物"              onclick="setFoodTab(this,'果物')">🍊 果物</div>
       <div class="food-tab" data-cat="菓子・デザート"    onclick="setFoodTab(this,'菓子・デザート')">🍮 デザート</div>
@@ -3320,7 +3320,6 @@ body.is-premium .premium-banner { display: none !important; }
         <option value="野菜類">野菜類</option>
         <option value="乳製品">乳製品</option>
         <option value="菓子・デザート">菓子・デザート</option>
-        <option value="飲み物">飲み物</option>
         <option value="調味料">調味料</option>
         <option value="その他">その他</option>
       </select>
@@ -8138,17 +8137,6 @@ const foodDatabase = [
   {name:'コンソメスープ（1杯・150ml）', cat:'汁物', cal:10, protein:0.5,carb:1.2,fiber:0,  k:80, p:12 },
 
   // ===== 飲み物 =====
-  {name:'水・白湯（200ml）',            cat:'飲み物', cal:0,  protein:0,  carb:0,  fiber:0,k:0,  p:0  },
-  {name:'緑茶・ほうじ茶（200ml）',      cat:'飲み物', cal:4,  protein:0.2,carb:0.6,fiber:0,k:27, p:4  },
-  {name:'麦茶（200ml）',                cat:'飲み物', cal:2,  protein:0.1,carb:0.4,fiber:0,k:14, p:4  },
-  {name:'コーヒー・ブラック（200ml）',  cat:'飲み物', cal:8,  protein:0.4,carb:1.4,fiber:0,k:130,p:6  },
-  {name:'コーヒー・砂糖ミルク（200ml）',cat:'飲み物', cal:56, protein:0.9,carb:9.4,fiber:0,k:145,p:26 },
-  {name:'牛乳（200ml）',                cat:'飲み物', cal:134,protein:6.6,carb:9.6,fiber:0,k:300,p:190},
-  {name:'豆乳・無調整（200ml）',        cat:'飲み物', cal:92, protein:7.2,carb:3.0,fiber:0.4,k:230,p:98},
-  {name:'オレンジジュース（200ml）',    cat:'飲み物', cal:84, protein:1.4,carb:19.2,fiber:0.4,k:360,p:28},
-  {name:'りんごジュース（200ml）',      cat:'飲み物', cal:90, protein:0.2,carb:22.6,fiber:0.2,k:180,p:10},
-  {name:'スポーツドリンク（500ml）',    cat:'飲み物', cal:115,protein:0,  carb:28.5,fiber:0,k:195,p:15},
-  {name:'缶コーヒー・微糖（185ml）',    cat:'飲み物', cal:28, protein:0.7,carb:5.4,fiber:0,k:92, p:9  },
 
   // ===== 果物 =====
   {name:'りんご（中1/2個・120g）',      cat:'果物', cal:69, protein:0.2,carb:17.8,fiber:1.4,k:144,p:14},
@@ -8341,16 +8329,6 @@ const foodDatabase = [
   {name:'マッシュルーム（50g）',         cat:'野菜類', cal:10, protein:1.5,carb:0.6,fiber:1.3,k:145,p:60 },
 
   // ===== 飲み物（追加） =====
-  {name:'ビール（350ml缶）',             cat:'飲み物', cal:140,protein:1.0,carb:10.9,fiber:0,k:105,p:42 },
-  {name:'日本酒（1合・180ml）',          cat:'飲み物', cal:196,protein:0.7,carb:8.1,fiber:0,k:5,  p:11 },
-  {name:'焼酎・水割り（200ml）',         cat:'飲み物', cal:106,protein:0,  carb:0,  fiber:0,k:0,  p:0  },
-  {name:'ワイン・赤（120ml）',           cat:'飲み物', cal:88, protein:0.2,carb:2.0,fiber:0,k:108,p:14 },
-  {name:'ノンアルコールビール（350ml）', cat:'飲み物', cal:35, protein:0.4,carb:7.0,fiber:0,k:42, p:14 },
-  {name:'野菜ジュース（200ml）',         cat:'飲み物', cal:34, protein:1.0,carb:7.2,fiber:1.4,k:440,p:28 },
-  {name:'トマトジュース（200ml）',       cat:'飲み物', cal:38, protein:1.6,carb:7.6,fiber:1.0,k:520,p:28 },
-  {name:'コーラ（350ml）',               cat:'飲み物', cal:147,protein:0,  carb:38.5,fiber:0,k:4,  p:35 },
-  {name:'炭酸水（350ml）',               cat:'飲み物', cal:0,  protein:0,  carb:0,  fiber:0,k:0,  p:0  },
-  {name:'アミノ酸飲料（500ml）',         cat:'飲み物', cal:90, protein:5.0,carb:15.0,fiber:0,k:100,p:40 },
 
   // ===== 調味料（追加） =====
   {name:'片栗粉（大さじ1・9g）',         cat:'調味料', cal:32, protein:0.1,carb:7.8,fiber:0,k:1,  p:3  },
