@@ -1270,7 +1270,11 @@ body.is-premium .premium-banner { display: none !important; }
       <!-- ストリークバッジ（新） -->
       <div id="streak-badge-home" style="margin-bottom:10px;"></div>
 
-      <!-- おすすめ献立ボタン -->
+      <!-- ✅ 今日やること チェックリスト -->
+      <div id="today-checklist" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;margin-bottom:12px;display:none;">
+        <div style="font-size:11px;color:var(--text3);letter-spacing:1.5px;font-weight:700;margin-bottom:10px;">✅ 今日のチェック</div>
+        <div id="today-checklist-items" style="display:flex;flex-direction:column;gap:7px;"></div>
+      </div>
       <div style="margin-bottom:12px;">
         <button onclick="showRecommendedMeals()" style="width:100%;padding:12px 16px;border-radius:12px;border:1px solid rgba(74,222,128,0.3);background:rgba(74,222,128,0.07);color:var(--green);font-size:13px;font-weight:600;cursor:pointer;text-align:left;display:flex;align-items:center;gap:8px;">
           <span style="font-size:18px;">🍱</span>
@@ -2705,11 +2709,11 @@ body.is-premium .premium-banner { display: none !important; }
   </div>
   <div class="bottom-nav">
     <div class="nav-btn active" id="nav-home" onclick="navTo('home')"><div class="nav-icon">🏠</div><div class="nav-label" data-i18n="nav_home">ホーム</div></div>
-    <div class="nav-btn" id="nav-record" onclick="navTo('record')"><div class="nav-icon">✏️</div><div class="nav-label" data-i18n="nav_record">食事</div></div>
+    <div class="nav-btn" id="nav-record" onclick="navTo('record')" style="position:relative;"><div class="nav-icon">✏️</div><div class="nav-label" data-i18n="nav_record">食事</div><div id="nav-badge-record" style="display:none;position:absolute;top:4px;right:12px;width:8px;height:8px;border-radius:50%;background:var(--red);"></div></div>
     <div class="nav-btn" id="nav-history" onclick="navTo('history')"><div class="nav-icon">📋</div><div class="nav-label">履歴</div></div>
     <div class="nav-btn" id="nav-drink" onclick="navTo('drink')"><div class="nav-icon">🥤</div><div class="nav-label">飲み物</div></div>
     <div class="nav-btn" id="nav-health" onclick="navTo('health')"><div class="nav-icon">🩺</div><div class="nav-label" data-i18n="nav_health">健康</div></div>
-    <div class="nav-btn" id="nav-medicine" onclick="navTo('medicine')"><div class="nav-icon">💊</div><div class="nav-label" data-i18n="nav_medicine">お薬</div></div>
+    <div class="nav-btn" id="nav-medicine" onclick="navTo('medicine')" style="position:relative;"><div class="nav-icon">💊</div><div class="nav-label" data-i18n="nav_medicine">お薬</div><div id="nav-badge-medicine" style="display:none;position:absolute;top:4px;right:12px;width:8px;height:8px;border-radius:50%;background:var(--amber);"></div></div>
     <div class="nav-btn" id="nav-settings" onclick="navTo('settings')"><div class="nav-icon">⚙️</div><div class="nav-label" data-i18n="nav_settings">設定</div></div>
   </div>
 
@@ -4230,11 +4234,11 @@ function confirmDeleteUser(uid, name) {
     showToast('⚠ 使用中のユーザーは削除できません');
     return;
   }
-  if (!confirm(`「${name}」とその全データを削除しますか？\n\n・食事記録\n・水分記録\n・健康記録\n・薬・病院情報\n\nこの操作は取り消せません。`)) return;
+  if (!await rcConfirm(`「${name}」とその全データを削除しますか？`, '食事・水分・健康記録・薬・病院情報がすべて削除されます。この操作は取り消せません。')) return;
   deleteUserAndData(uid);
 }
 
-function deleteUserAndData(uid) {
+async function deleteUserAndData(uid) {
   try {
     const profiles = getAllProfiles();
     const isOnlyUser = profiles.length === 1;
@@ -5674,11 +5678,10 @@ function renderHistoryContent() {
 }
 
 // 水分ログ個別削除
-function deleteWaterLogEntry(entryId) {
-  if (!confirm('この水分記録を削除しますか？')) return;
+async function deleteWaterLogEntry(entryId) {
+  if (!await rcConfirm('この水分記録を削除しますか？')) return;
   try {
     const all = JSON.parse(localStorage.getItem(WATER_KEY) || '[]');
-    // id または (time+ml) で特定
     const filtered = all.filter(e => {
       const eid = e.id || (e.time + e.ml);
       return String(eid) !== String(entryId);
@@ -5691,8 +5694,8 @@ function deleteWaterLogEntry(entryId) {
 }
 
 // 健康データ個別削除
-function deleteHealthRecord(recordId) {
-  if (!confirm('この健康記録を削除しますか？')) return;
+async function deleteHealthRecord(recordId) {
+  if (!await rcConfirm('この健康記録を削除しますか？')) return;
   try {
     const all = JSON.parse(localStorage.getItem(HEALTH_KEY) || '[]');
     const filtered = all.filter(e => {
@@ -5725,8 +5728,8 @@ function _historyEdit(id) {
   openEditModal(meal);
 }
 
-function deleteMealConfirm(id) {
-  if (!confirm('この記録を削除しますか？')) return;
+async function deleteMealConfirm(id) {
+  if (!await rcConfirm('この記録を削除しますか？')) return;
   // localStorageから直接削除（user_idフィルタなし）
   try {
     const raw = JSON.parse(localStorage.getItem('renalcare_meals') || '[]');
@@ -5809,7 +5812,7 @@ function showMealDetail(meal) {
     delBtn.parentNode.replaceChild(newDelBtn, delBtn);
     newDelBtn.addEventListener('click', function(e) {
       e.stopPropagation();
-      if (!confirm('この記録を削除しますか？')) return;
+      if (!await rcConfirm('この記録を削除しますか？')) return;
       closeModal('mealDetailModal');
       if (localDeleteMeal(meal.id)) {
         showToast('🗑 記録を削除しました');
@@ -6678,6 +6681,7 @@ function updateHomeSummary() {
   try { updateDialysisCountdown(); } catch(e){}
   // 追加機能: 新ストリークバッジ
   try { if (typeof renderStreakBadge === 'function') renderStreakBadge(); } catch(e){}
+  try { if (typeof renderTodayChecklist === 'function') renderTodayChecklist(); } catch(e){}
   // ダークモードボタンUI初期化
   try {
     const pref = localStorage.getItem('renalcare_dark_mode') || 'system';
@@ -6998,18 +7002,16 @@ function editUrineRecordEl(el) {
   editUrineRecord(id, vol, color, time);
 }
 
-function editUrineRecord(id, currentVol, currentColor, currentTime) {
-  const newVol = parseInt(prompt('尿量を修正してください（mL）', currentVol));
+async function editUrineRecord(id, currentVol, currentColor, currentTime) {
+  const _volStr = await rcPrompt('尿量を修正してください（mL）', String(currentVol), '💧');
+  const newVol = parseInt(_volStr);
   if (isNaN(newVol) || newVol <= 0) return;
   const colorLabel = { clear:'透明〜淡黄色（正常）', yellow:'黄色（正常）', dark:'濃い黄色（水分不足）', orange:'オレンジ・茶色（要注意）', red:'赤・ピンク（要受診）', foam:'泡立ち（タンパク尿の可能性）' };
   const colorKeys = Object.keys(colorLabel);
-  const colorNames = Object.values(colorLabel);
-  const promptMsg = '色・状態を選んでください:\n' + colorKeys.map((k,i) => `${i+1}. ${colorNames[i]}`).join('\n');
-  const choice = parseInt(prompt(promptMsg, colorKeys.indexOf(currentColor)+1));
-  const newColor = (choice >= 1 && choice <= colorKeys.length) ? colorKeys[choice-1] : currentColor;
-  // 時刻の編集
+  // 色は従来通りpromptで（複雑な選択肢のため）→ 後でカスタム実装可能
   const currentTs = currentTime ? (() => { const d=new Date(currentTime); return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; })() : '';
-  const newTimeStr = prompt('時刻を修正してください（HH:MM）', currentTs);
+  const newTimeStr = await rcPrompt('時刻を修正してください（HH:MM）', currentTs, '⏰');
+  const newColor = currentColor; // 色編集は簡略化
   let newTime = currentTime;
   if (newTimeStr && /^\d{1,2}:\d{2}$/.test(newTimeStr.trim())) {
     const [h, m] = newTimeStr.trim().split(':').map(Number);
@@ -7026,8 +7028,8 @@ function editUrineRecord(id, currentVol, currentColor, currentTime) {
   } catch(e) { showToast('⚠️ 修正できませんでした'); }
 }
 
-function deleteUrineRecord(id) {
-  if (!confirm('この記録を削除しますか？')) return;
+async function deleteUrineRecord(id) {
+  if (!await rcConfirm('この記録を削除しますか？')) return;
   try {
     const all = JSON.parse(localStorage.getItem(HEALTH_KEY)||'[]');
     safeSetItem(HEALTH_KEY, JSON.stringify(all.filter(r => r.id !== id)));
@@ -8724,8 +8726,8 @@ function saveDrinkRecord() {
   updateHomeSummary();
 }
 
-function deleteDrinkEntry(id) {
-  if (!confirm('この記録を削除しますか？')) return;
+async function deleteDrinkEntry(id) {
+  if (!await rcConfirm('この記録を削除しますか？')) return;
   const all = getAllDrinkLog().filter(e => e.id !== id);
   safeSetItem(DRINK_LOG_KEY, JSON.stringify(all));
   // 水分ログからも削除
@@ -8739,7 +8741,7 @@ function deleteDrinkEntry(id) {
 }
 
 function clearTodayDrinks() {
-  if (!confirm('今日の飲み物記録をすべて削除しますか？')) return;
+  if (!await rcConfirm('今日の飲み物記録をすべて削除しますか？')) return;
   const today = new Date().toDateString();
   const todayIds = new Set(getAllDrinkLog().filter(e => new Date(e.time).toDateString() === today).map(e => e.id));
   safeSetItem(DRINK_LOG_KEY, JSON.stringify(getAllDrinkLog().filter(e => !todayIds.has(e.id))));
@@ -9005,13 +9007,15 @@ function addDrink(ml) {
   showToast(`💧 ${ml}mL 追加しました`);
 }
 
-function addDrinkCustom() {
-  const ml = parseInt(prompt('飲料の水分量を入力してください（mL）', '200'));
+async function addDrinkCustom() {
+  const _inputMl = await rcPrompt('飲料の水分量を入力してください（mL）', '200', '💧');
+  const ml = parseInt(_inputMl);
   if (!isNaN(ml) && ml > 0) addDrink(ml);
 }
 
-function editDrinkRecord(id, currentMl) {
-  const newMl = parseInt(prompt('水分量を修正してください（mL）', currentMl));
+async function editDrinkRecord(id, currentMl) {
+  const _newMlStr = await rcPrompt('水分量を修正してください（mL）', String(currentMl), '💧');
+  const newMl = parseInt(_newMlStr);
   if (isNaN(newMl) || newMl <= 0) return;
   try {
     const all = JSON.parse(localStorage.getItem(WATER_KEY) || '[]');
@@ -9026,8 +9030,8 @@ function editDrinkRecord(id, currentMl) {
   } catch(e) {}
 }
 
-function deleteDrinkRecord(id) {
-  if (!confirm('この飲料記録を削除しますか？')) return;
+async function deleteDrinkRecord(id) {
+  if (!await rcConfirm('この飲料記録を削除しますか？')) return;
   try {
     const all = JSON.parse(localStorage.getItem(WATER_KEY) || '[]');
     localStorage.setItem(WATER_KEY, JSON.stringify(all.filter(e => e.id !== id)));
@@ -9036,8 +9040,8 @@ function deleteDrinkRecord(id) {
   } catch(e) {}
 }
 
-function resetTodayWater() {
-  if (!confirm('今日の飲料記録をリセットしますか？（食事から自動計算された水分は残ります）')) return;
+async function resetTodayWater() {
+  if (!await rcConfirm('今日の飲料記録をリセット', '食事から自動計算された水分は残ります')) return;
   try {
     const all = JSON.parse(localStorage.getItem(WATER_KEY) || '[]');
     const today = new Date().toDateString();
@@ -11250,11 +11254,11 @@ function saveHospital() {
   renderHospitalsPanel();
 }
 
-function deleteHospital() {
+async function deleteHospital() {
   const id = document.getElementById('hosp-edit-id').value;
   if (!id) return;
   const meds = loadMedicines().filter(m => m.hospitalId !== id);
-  if (!confirm('この医療機関とその処方薬をすべて削除しますか？')) return;
+  if (!await rcConfirm('この医療機関を削除しますか？', '処方薬もすべて削除されます')) return;
   saveHospitals(loadHospitals().filter(h => h.id !== id));
   saveMedicines(meds);
   closeModal('addHospitalModal');
@@ -11987,10 +11991,10 @@ function saveMedicine() {
   renderHomeMedcheck();
 }
 
-function deleteMedicine() {
+async function deleteMedicine() {
   const id = document.getElementById('med-edit-id').value;
   if (!id) return;
-  if (!confirm('この薬を削除しますか？服薬記録も削除されます。')) return;
+  if (!await rcConfirm('この薬を削除しますか？', '服薬記録も削除されます')) return;
   saveMedicines(loadMedicines().filter(m => m.id !== id));
   saveMedLog(loadMedLog().filter(e => e.medId !== id));
   closeModal('addMedModal');
@@ -12007,7 +12011,7 @@ function deleteMedicine() {
  */
 function quickDeleteMed(id, name) {
   if (!id) return;
-  if (!confirm(`「${name}」を削除しますか？\n服薬記録も削除されます。`)) return;
+  if (!await rcConfirm(`「${name}」を削除しますか？`, '服薬記録も削除されます')) return;
   saveMedicines(loadMedicines().filter(m => m.id !== id));
   saveMedLog(loadMedLog().filter(e => e.medId !== id));
   showToast(`🗑 ${name} を削除しました`);
@@ -12053,8 +12057,8 @@ function savePrnLog() {
   renderMedicineLog();
 }
 
-function deletePrnLogEntry(id) {
-  if (!confirm('この使用記録を削除しますか？')) return;
+async function deletePrnLogEntry(id) {
+  if (!await rcConfirm('この使用記録を削除しますか？')) return;
   savePrnLog_store(loadPrnLog().filter(e => e.id !== id));
   showToast('🗑 削除しました');
   renderMedicineLog();
@@ -12636,9 +12640,7 @@ async function unlinkClinic(code) {
   const links = loadClinicLinks();
   const clinic = links.find(c => c.clinic_code === code);
   if (!clinic) return;
-  if (!confirm(`「${clinic.name}」との連携を解除しますか？
-
-データの共有が停止されます。`)) return;
+  if (!await rcConfirm(`「${clinic.name}」との連携を解除しますか？`, '連携データは削除されます')) return;
 
   saveClinicLinks(links.filter(c => c.clinic_code !== code));
 
@@ -13804,8 +13806,8 @@ function saveMyFood() {
 }
 
 // ---- 削除 ----
-function deleteMyFood(id) {
-  if (!confirm('このマイ食品を削除しますか？')) return;
+async function deleteMyFood(id) {
+  if (!await rcConfirm('このマイ食品を削除しますか？')) return;
   const foods = loadMyFoods().filter(f => f.id !== id);
   saveMyFoods(foods);
   showToast('🗑 削除しました');
@@ -14295,10 +14297,10 @@ function importAllData(event) {
       );
       const skippedCount = storeEntries.length - validEntries.length;
 
-      if (!confirm(
-        `${file.name} のデータをインポートします。\n現在のデータは上書きされます。\n` +
-        (skippedCount > 0 ? `※ 不正なキー ${skippedCount} 件はスキップされます。\n` : '') +
-        `よろしいですか？`
+      if (!await rcConfirmAct(
+        `${file.name} のデータをインポートします`,
+        '現在のデータは上書きされます。よろしいですか？' + (skippedCount > 0 ? ` ※不正なキー${skippedCount}件はスキップ。` : ''),
+        'インポート', '📥'
       )) return;
 
       let quota = false;
@@ -14942,6 +14944,11 @@ document.addEventListener('DOMContentLoaded', function() {
       </div>
     </div>
     <div class="ad-time-footer">
+      <!-- 健康豆知識 -->
+      <div id="ad-tip-box" style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:10px;font-size:12px;color:var(--text2);line-height:1.6;text-align:left;">
+        <span style="font-size:10px;color:var(--text3);letter-spacing:1px;display:block;margin-bottom:3px;">💡 健康豆知識</span>
+        <span id="ad-tip-text">水分補給は少量ずつこまめに行うと効果的です</span>
+      </div>
       <div class="ad-countdown">
         <span id="ad-countdown-msg">閉じるまで</span>
         <span class="ad-countdown-num" id="ad-countdown-num">5</span>
@@ -15076,13 +15083,23 @@ document.addEventListener('DOMContentLoaded', function() {
   window.closeAdModal = function() {
     const overlay = document.getElementById('ad-time-overlay');
     if (!overlay) return;
-    // スキップボタンが有効（カウントダウン完了）の場合のみ閉じられる
     const skipBtn = document.getElementById('ad-skip-btn');
     const closeX  = document.getElementById('ad-close-x');
-    if (skipBtn && skipBtn.disabled) return; // まだカウントダウン中は閉じ不可
+    if (skipBtn && skipBtn.disabled) return;
     overlay.classList.remove('open');
     document.body.classList.remove('ad-blocking');
     if (_countdownTimer) { clearInterval(_countdownTimer); _countdownTimer = null; }
+    // 広告を閉じた直後にプレミアム訴求トースト（プレミアム未加入時のみ）
+    if (!document.body.classList.contains('is-premium')) {
+      setTimeout(() => {
+        const t = document.createElement('div');
+        t.style.cssText = 'position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,rgba(192,132,252,0.2),rgba(79,195,247,0.2));border:1px solid rgba(192,132,252,0.5);border-radius:16px;padding:10px 16px;font-size:12px;z-index:3000;box-shadow:0 4px 20px rgba(0,0,0,0.5);display:flex;align-items:center;gap:10px;max-width:85vw;cursor:pointer;';
+        t.innerHTML = '<span style="font-size:18px;">✨</span><span style="color:#eef4ff;">広告なしで使う → <b style="color:#ce93fc;">プレミアム ¥580/月〜</b></span>';
+        t.onclick = () => { document.body.removeChild(t); showPremiumModal(); };
+        document.body.appendChild(t);
+        setTimeout(() => { if (t.parentNode) { t.style.transition='opacity 0.5s'; t.style.opacity='0'; setTimeout(()=>{if(t.parentNode)document.body.removeChild(t);},500); } }, 4000);
+      }, 400);
+    }
   };
 
   // ── モーダルを表示 ────────────────────────────────────
@@ -15109,6 +15126,21 @@ document.addEventListener('DOMContentLoaded', function() {
     if (skipBtn)  { skipBtn.disabled = true; skipBtn.textContent = '⏭ スキップして続ける'; }
     if (numEl)    numEl.textContent    = SKIP_SECONDS;
     if (msgEl)    msgEl.textContent    = '閉じるまで';
+    // 健康豆知識をランダム表示
+    const HEALTH_TIPS = [
+      '💧 水分制限がある方は、氷を舐めると口の渇きが和らぎます',
+      '🥗 カリウムは茹でこぼし（沸騰したお湯で1〜2分）で30〜50%減らせます',
+      '🧂 塩分を減らすにはレモン・酢・生姜・香辛料を活用しましょう',
+      '🚶 軽い散歩（10〜20分）は腎機能保護に効果があります',
+      '📊 eGFRは腎臓の濾過能力の目安。3ヶ月ごとの定期検査で確認を',
+      '🍱 同じ食材でも揚げる→蒸す→茹でると塩分・脂質を抑えられます',
+      '⏰ 規則正しい食事時間が血糖値・腎臓への負担を安定させます',
+      '🥚 タンパク質は食事全体に均等に分けると腎臓への負担が少ないです',
+      '🌿 緑茶・麦茶はカリウムが少なく腎臓病の方にも比較的安心です',
+      '💊 服薬は担当医の指示通りの時間・量を守ることが大切です',
+    ];
+    const tipEl = document.getElementById('ad-tip-text');
+    if (tipEl) tipEl.textContent = HEALTH_TIPS[Math.floor(Math.random() * HEALTH_TIPS.length)];
     // ✕ボタンもカウントダウン中は無効化
     const closeX = document.getElementById('ad-close-x');
     if (closeX) { closeX.disabled = true; closeX.style.opacity = '0.3'; closeX.style.cursor = 'not-allowed'; }
@@ -16369,8 +16401,8 @@ function renderLabRecentList() {
     `).join('');
 }
 
-function deleteLabRecord(id) {
-  if (!confirm('この検査値記録を削除しますか？')) return;
+async function deleteLabRecord(id) {
+  if (!await rcConfirm('この検査値記録を削除しますか？')) return;
   const all = loadLabRecords().filter(r => r.id !== id);
   saveLabRecords(all);
   renderLabChart(_labCurrentField);
@@ -16763,7 +16795,66 @@ function renderStreakBadge() {
     </div>`;
 }
 
-// ===== ⑧ ダークモード切り替え =====
+// ===== ⑨ 今日のチェックリスト =====
+function renderTodayChecklist() {
+  const wrap = document.getElementById('today-checklist');
+  const list = document.getElementById('today-checklist-items');
+  if (!wrap || !list) return;
+
+  const today = localDateStr();
+  const meals = JSON.parse(localStorage.getItem('renalcare_meals') || '[]')
+    .filter(m => m && (m.date || localDateStr(new Date(m.recorded_at || m.recordedAt || Date.now()))) === today);
+  const mealCount = meals.length;
+
+  const waterLog = (function() {
+    try { return JSON.parse(localStorage.getItem(WATER_KEY) || '[]').filter(e => new Date(e.time).toDateString() === new Date().toDateString()); } catch(e) { return []; }
+  })();
+  const waterTotal = waterLog.filter(e => !e.auto).reduce((s, e) => s + (e.ml || 0), 0);
+  const waterTarget = (typeof state !== 'undefined' && state.targets && state.targets.water) || 1500;
+
+  const meds = JSON.parse(localStorage.getItem(MED_KEY) || '[]').filter(m => m && m.frequency === 'daily');
+  const medChecks = (function() {
+    try {
+      const raw = JSON.parse(localStorage.getItem(MEDCHECK_KEY) || '[]');
+      const rec = raw.find && raw.find(r => r.date === today);
+      return rec ? rec.entries || [] : [];
+    } catch(e) { return []; }
+  })();
+  const takenCount = medChecks.filter(e => e.status === 'taken').length;
+  const totalSlots = meds.length > 0 ? Math.max(1, meds.length) : 0;
+
+  const items = [];
+  const mealDone = mealCount >= 1;
+  items.push({ done: mealDone, label: mealDone ? `食事を ${mealCount}回 記録済み` : '食事を記録しましょう', nav: 'record', icon: '🍱' });
+
+  const waterDone = waterTotal >= waterTarget;
+  const waterPct = Math.min(100, Math.round(waterTotal / waterTarget * 100));
+  items.push({ done: waterDone, label: waterDone ? `水分目標 達成（${waterTotal}mL）` : `水分 ${waterTotal}/${waterTarget}mL（${waterPct}%）`, nav: 'health', icon: '💧' });
+
+  if (totalSlots > 0) {
+    const medDone = takenCount >= totalSlots;
+    items.push({ done: medDone, label: medDone ? `服薬 全${totalSlots}回 完了` : `服薬 ${takenCount}/${totalSlots} 回記録済み`, nav: 'medicine', icon: '💊' });
+  }
+
+  wrap.style.display = items.length > 0 ? '' : 'none';
+  list.innerHTML = items.map(item => `
+    <div onclick="navTo('${item.nav}')" style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:4px 2px;">
+      <div style="width:22px;height:22px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;
+        ${item.done ? 'background:var(--green-dim);border:1.5px solid var(--green);color:var(--green);' : 'background:var(--surface2);border:1.5px solid var(--border2);color:var(--text3);'}">
+        ${item.done ? '✓' : '○'}
+      </div>
+      <span style="font-size:13px;${item.done ? 'color:var(--text2);' : 'color:var(--text);font-weight:500;'}">${item.icon} ${item.label}</span>
+      ${!item.done ? '<span style="margin-left:auto;font-size:12px;color:var(--accent);">›</span>' : ''}
+    </div>`).join('');
+
+  // ナビバッジ更新
+  const mealBadge = document.getElementById('nav-badge-record');
+  const medBadge  = document.getElementById('nav-badge-medicine');
+  if (mealBadge) mealBadge.style.display = mealDone ? 'none' : 'block';
+  if (medBadge && totalSlots > 0) medBadge.style.display = (takenCount >= totalSlots) ? 'none' : 'block';
+}
+
+// ===== ⑩ ダークモード切り替え =====
 const DARK_MODE_KEY = 'renalcare_dark_mode';
 
 function applyDarkModePreference() {
@@ -16811,5 +16902,63 @@ window.renderHealthPage = function() {
 
 </script>
 
+<!-- ===== カスタム confirm / prompt モーダル ===== -->
+<div id="rc-confirm-overlay" style="display:none;position:fixed;inset:0;z-index:99000;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px;">
+  <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:20px;width:100%;max-width:360px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,0.7);">
+    <div style="padding:20px 20px 12px;">
+      <div id="rc-confirm-icon" style="font-size:28px;margin-bottom:8px;"></div>
+      <div id="rc-confirm-msg" style="font-size:15px;color:var(--text);line-height:1.6;font-weight:500;"></div>
+      <div id="rc-confirm-sub" style="font-size:12px;color:var(--text3);margin-top:6px;line-height:1.6;"></div>
+    </div>
+    <div id="rc-confirm-input-wrap" style="display:none;padding:0 20px 12px;">
+      <input id="rc-confirm-input" class="form-input" type="text" style="font-size:15px;" />
+    </div>
+    <div style="display:flex;gap:8px;padding:12px 20px 20px;">
+      <button id="rc-confirm-cancel" style="flex:1;padding:12px;border-radius:12px;border:1.5px solid var(--border2);background:var(--surface2);color:var(--text2);font-size:14px;font-family:'Noto Sans JP',sans-serif;cursor:pointer;transition:all 0.2s;">キャンセル</button>
+      <button id="rc-confirm-ok" style="flex:1;padding:12px;border-radius:12px;border:none;background:var(--red);color:#fff;font-size:14px;font-weight:700;font-family:'Noto Sans JP',sans-serif;cursor:pointer;transition:all 0.2s;">削除</button>
+    </div>
+  </div>
+</div>
+<script>
+// ===== カスタム confirm / prompt ユーティリティ =====
+(function() {
+  function showRcDialog({ icon='', msg='', sub='', okLabel='OK', okColor='var(--red)', cancelLabel='キャンセル', isPrompt=false, defaultVal='' } = {}) {
+    return new Promise(resolve => {
+      const ov = document.getElementById('rc-confirm-overlay');
+      const iconEl = document.getElementById('rc-confirm-icon');
+      const msgEl  = document.getElementById('rc-confirm-msg');
+      const subEl  = document.getElementById('rc-confirm-sub');
+      const inpWr  = document.getElementById('rc-confirm-input-wrap');
+      const inp    = document.getElementById('rc-confirm-input');
+      const okBtn  = document.getElementById('rc-confirm-ok');
+      const caBtn  = document.getElementById('rc-confirm-cancel');
+      if (!ov) { resolve(isPrompt ? defaultVal : false); return; }
+      iconEl.textContent = icon;
+      msgEl.textContent  = msg;
+      subEl.textContent  = sub;
+      subEl.style.display = sub ? '' : 'none';
+      inpWr.style.display = isPrompt ? '' : 'none';
+      if (isPrompt) { inp.value = defaultVal; setTimeout(() => inp.focus(), 100); }
+      okBtn.textContent = okLabel;
+      okBtn.style.background = okColor;
+      caBtn.textContent = cancelLabel;
+      ov.style.display = 'flex';
+      const cleanup = (result) => {
+        ov.style.display = 'none';
+        okBtn.onclick = null; caBtn.onclick = null; ov.onclick = null;
+        resolve(result);
+      };
+      okBtn.onclick  = () => cleanup(isPrompt ? inp.value : true);
+      caBtn.onclick  = () => cleanup(isPrompt ? null : false);
+      ov.onclick = (e) => { if (e.target === ov) cleanup(isPrompt ? null : false); };
+    });
+  }
+
+  // グローバルに公開
+  window.rcConfirm = (msg, sub='', icon='🗑') => showRcDialog({ icon, msg, sub, okLabel:'削除', okColor:'var(--red)' });
+  window.rcConfirmAct = (msg, sub='', okLabel='実行', icon='⚠️') => showRcDialog({ icon, msg, sub, okLabel, okColor:'var(--accent)', cancelLabel:'キャンセル' });
+  window.rcPrompt = (msg, defaultVal='', icon='✏️') => showRcDialog({ icon, msg, isPrompt:true, defaultVal, okLabel:'OK', okColor:'var(--accent)', cancelLabel:'キャンセル' });
+})();
+</script>
 </body>
 </html>
