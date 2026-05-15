@@ -36,7 +36,7 @@
 html.force-light body, html.force-light .screen { color-scheme: light; }
 html.force-light body {
   --bg:#f0f4f8;--bg2:#ffffff;--surface:#ffffff;--surface2:#f0f4f8;
-  --text:#0d1420;--text2:#4a5568;--text3:#718096;
+  --text:#0d1420;--text2:#4a5568;--text3:#5a6a7e;
   --border:rgba(0,0,0,0.1);--border2:rgba(0,0,0,0.18);
 }
 html.force-light .card { background:#ffffff!important;color:#0d1420!important; }
@@ -16252,7 +16252,7 @@ function saveLabRecord() {
   const p      = parseFloat(document.getElementById('lab-p')?.value)     || null;
   const memo   = document.getElementById('lab-memo')?.value || '';
   const dateEl = document.getElementById('lab-date');
-  const date   = dateEl?.value || new Date().toISOString().slice(0,10);
+  const date   = dateEl?.value || localDateStr();
 
   if (!egfr && !cr && !hba1c && !weight && !k && !p) {
     showToast('⚠ 少なくとも1項目入力してください'); return;
@@ -16382,7 +16382,7 @@ function deleteLabRecord(id) {
 const _origRenderHealthPage = typeof renderHealthPage === 'function' ? renderHealthPage : null;
 function _labInitOnHealthPage() {
   const dateEl = document.getElementById('lab-date');
-  if (dateEl && !dateEl.value) dateEl.value = new Date().toISOString().slice(0,10);
+  if (dateEl && !dateEl.value) dateEl.value = localDateStr();
   renderLabChart(_labCurrentField);
   renderLabRecentList();
 }
@@ -16431,12 +16431,12 @@ let _interstitialShownCount = 0;
 function _getInterstitialToday() {
   try {
     const d = JSON.parse(localStorage.getItem(INTERSTITIAL_KEY) || '{}');
-    const today = new Date().toISOString().slice(0,10);
+    const today = localDateStr();
     return d.date === today ? (d.count || 0) : 0;
   } catch(e) { return 0; }
 }
 function _incInterstitialToday() {
-  const today = new Date().toISOString().slice(0,10);
+  const today = localDateStr();
   const count = _getInterstitialToday() + 1;
   localStorage.setItem(INTERSTITIAL_KEY, JSON.stringify({ date: today, count }));
 }
@@ -16499,7 +16499,12 @@ function maybeShowInterstitial(callback) {
 }
 
 // navToにインタースティシャルを挿入（一部のタブ遷移のみ）
-const _navToOriginal = window.navTo || navTo;
+// window.navTo が未定義の場合に備えて安全に取得（定義順序に依存しない）
+const _navToOriginal = (function() {
+  if (typeof window.navTo === 'function') return window.navTo;
+  try { if (typeof navTo === 'function') return navTo; } catch(e) {}
+  return function(page) { console.warn('[navTo] 関数が見つかりません:', page); };
+})();
 window._navToWithAd = function(page) {
   const triggerPages = ['history', 'health'];
   if (triggerPages.includes(page)) {
@@ -16530,7 +16535,7 @@ async function syncAllToSupabase() {
   const payload = {
     user_id:    uid,
     updated_at: new Date().toISOString(),
-    meals:      localStorage.getItem('renalcare_meals_v2') || '[]',
+    meals:      localStorage.getItem('renalcare_meals') || '[]',
     health:     localStorage.getItem('renalcare_health')   || '[]',
     water:      localStorage.getItem('renalcare_water')    || '[]',
     lab:        localStorage.getItem(LAB_KEY)              || '[]',
@@ -16570,7 +16575,7 @@ async function restoreFromSupabase() {
     if (!data || data.length === 0) return false;
     const backup = data[0];
 
-    if (backup.meals)  localStorage.setItem('renalcare_meals_v2', backup.meals);
+    if (backup.meals)  localStorage.setItem('renalcare_meals', backup.meals);
     if (backup.health) localStorage.setItem('renalcare_health',   backup.health);
     if (backup.water)  localStorage.setItem('renalcare_water',    backup.water);
     if (backup.lab)    localStorage.setItem(LAB_KEY,              backup.lab);
@@ -16654,10 +16659,10 @@ function renderRecommendedMeals() {
   const el = document.getElementById('rec-meals-body');
   if (!el) return;
 
-  // 本日の摂取量を取得
-  const today = new Date().toISOString().slice(0,10);
-  const allMeals = JSON.parse(localStorage.getItem('renalcare_meals_v2') || '[]')
-    .filter(m => (m.date || (m.recordedAt||'').slice(0,10)) === today);
+  // 本日の摂取量を取得（ローカル日付で比較）
+  const today = localDateStr();
+  const allMeals = JSON.parse(localStorage.getItem('renalcare_meals') || '[]')
+    .filter(m => m && (m.date || localDateStr(new Date(m.recorded_at || m.recordedAt || Date.now()))) === today);
 
   const todayTotals = allMeals.reduce((acc, m) => {
     acc.protein    += (m.protein    || 0);
@@ -16700,8 +16705,8 @@ function renderRecommendedMeals() {
     <div style="background:var(--surface2);border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:var(--text2);line-height:1.8;">
       今日の残り枠<br>
       🥩 タンパク質 <b>${remProtein.toFixed(1)}g</b> ／
-      🧂 カロリー <b>${Math.round(remCalories)}kcal</b> ／
-      🫘 K <b>${Math.round(remPotassium)}mg</b>
+      🔥 カロリー <b>${Math.round(remCalories)}kcal</b> ／
+      🫘 カリウム <b>${Math.round(remPotassium)}mg</b>
     </div>` +
     (candidates.length === 0
       ? '<div style="text-align:center;padding:20px;color:var(--text3);">今日の残り枠に合う食品が見つかりませんでした</div>'
@@ -16711,23 +16716,31 @@ function renderRecommendedMeals() {
             <div style="font-size:13px;font-weight:600;">${f.name}</div>
             <div style="font-size:11px;color:var(--text3);">${f.amount||100}g ／ ${f.calories||0}kcal ／ タンパク${(f.protein||0).toFixed(1)}g</div>
           </div>
-          <button onclick="navTo('record')" style="font-size:11px;padding:4px 10px;border-radius:8px;border:1px solid var(--accent);color:var(--accent);background:none;cursor:pointer;white-space:nowrap;">記録 ›</button>
+          <button onclick="(function(name){
+            document.getElementById('recommendedMealsModal').classList.remove('open');
+            navTo('record');
+            setTimeout(function(){
+              var nameEl = document.getElementById('record-name');
+              if(nameEl){ nameEl.value = name; nameEl.dispatchEvent(new Event('input')); }
+              showToast('🍱 「' + name + '」を記録フォームに入力しました');
+            }, 200);
+          })('${f.name.replace(/'/g,"\\'")}');" style="font-size:11px;padding:4px 10px;border-radius:8px;border:1px solid var(--accent);color:var(--accent);background:none;cursor:pointer;white-space:nowrap;">記録 ›</button>
         </div>`).join(''));
 }
 
 // ===== ⑦ ストリーク表示をホーム画面に追加 =====
 function getStreakCount() {
-  const allMeals = JSON.parse(localStorage.getItem('renalcare_meals_v2') || '[]');
+  const allMeals = JSON.parse(localStorage.getItem('renalcare_meals') || '[]');
   if (allMeals.length === 0) return 0;
-  const days = [...new Set(allMeals.map(m => (m.date || (m.recordedAt||'').slice(0,10))))].sort().reverse();
-  const today = new Date().toISOString().slice(0,10);
+  const days = [...new Set(allMeals.filter(Boolean).map(m => (m.date || localDateStr(new Date(m.recorded_at || m.recordedAt || Date.now())))))].sort().reverse();
+  const today = localDateStr();
   let streak = 0, check = today;
   for (const d of days) {
     if (d === check) {
       streak++;
-      const dt = new Date(check);
+      const dt = new Date(check + 'T00:00:00');
       dt.setDate(dt.getDate() - 1);
-      check = dt.toISOString().slice(0,10);
+      check = localDateStr(dt);
     } else if (d < check) break;
   }
   return streak;
