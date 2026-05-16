@@ -103,7 +103,8 @@ body.ad-blocking #ad-time-overlay {
   cursor: pointer; padding: 4px; line-height: 1;
   border-radius: 50%; border: none; background: none;
   transition: color 0.2s, background 0.2s;
-  width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+  /* モバイル推奨タッチターゲット: 44×44px */
+  width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
 }
 .ad-time-close-btn:hover { color: var(--text); background: var(--surface2); }
 
@@ -156,7 +157,7 @@ body.ad-blocking #ad-time-overlay {
 
 /* ===== ポーション（量）ボタン ===== */
 .portion-btn {
-  padding: 4px 8px;
+  padding: 0 12px;
   border-radius: 8px;
   font-size: 11px;
   font-weight: 600;
@@ -167,7 +168,9 @@ body.ad-blocking #ad-time-overlay {
   transition: all 0.15s;
   white-space: nowrap;
   font-family: 'Noto Sans JP', sans-serif;
-  min-height: 28px;
+  /* モバイル推奨タッチターゲット: 44×44px */
+  min-height: 44px;
+  min-width: 44px;
   line-height: 1;
   -webkit-tap-highlight-color: rgba(96,206,255,0.2);
 }
@@ -1181,8 +1184,22 @@ body.is-premium .premium-banner { display: none !important; }
       <div class="form-row"><label class="form-label" data-i18n="label_height">身長 (cm)</label><input class="form-input" id="ob-height" type="number" data-i18n-placeholder="placeholder_height" placeholder="例：165" min="100" max="220" /></div>
       <div class="form-row"><label class="form-label" data-i18n="label_weight">体重 (kg)</label><input class="form-input" id="ob-weight" type="number" data-i18n-placeholder="placeholder_weight" placeholder="例：60" min="20" max="200" /></div>
     </div>
+    <!-- ⚠️ 目標値の自動計算を事前に説明 -->
+    <div id="ob-quick-targets-preview" style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);padding:12px 14px;margin:10px 0;font-size:12px;color:var(--text2);line-height:1.8;display:none;">
+      <div style="font-size:11px;color:var(--accent);font-weight:700;letter-spacing:1px;margin-bottom:6px;">📊 自動計算される目標値（目安）</div>
+      <div id="ob-quick-targets-values"></div>
+      <div style="font-size:10px;color:var(--amber);margin-top:8px;line-height:1.6;">
+        ⚠️ これは日本腎臓学会ガイドラインに基づく推定値です。<br>
+        <strong>必ず担当医・管理栄養士の指示を優先してください。</strong><br>
+        医師から具体的な数値を指定されている場合は「詳細設定」から変更できます。
+      </div>
+    </div>
     <button class="btn btn-primary btn-full" id="ob-btn2" disabled onclick="finishOnboardingSimple()" style="font-size:15px;padding:14px;" data-i18n="btn_next">✓ アプリを始める</button>
-    <div style="text-align:center;margin-top:12px;"><a href="#" onclick="goObStep(3);return false;" style="font-size:12px;color:var(--text3);text-decoration:none;">詳細設定（CKDステージ・目標値）を入力する →</a></div>
+    <div style="text-align:center;margin-top:12px;">
+      <a href="#" onclick="goObStep(3);return false;" style="font-size:12px;color:var(--accent);text-decoration:none;font-weight:600;">
+        ✏️ 詳細設定（CKDステージ・医師指示の目標値）を入力する →
+      </a>
+    </div>
     <div style="margin-top:12px;"><button class="btn btn-ghost btn-full" onclick="goObStep(1)" data-i18n="btn_back">← 戻る</button></div>
     <div class="ob-dots"><div class="ob-dot"></div><div class="ob-dot active"></div></div>
   </div>
@@ -4082,6 +4099,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const obName = document.getElementById('ob-name');
     if (obName) obName.addEventListener('input', checkObName);
   } catch(e) {}
+
+  // 基本情報入力時に目標値プレビューを更新
+  try {
+    ['ob-age','ob-gender','ob-height','ob-weight'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('change', updateObTargetPreview);
+      if (el) el.addEventListener('input', updateObTargetPreview);
+    });
+  } catch(e) {}
 });
 
 /**
@@ -4394,6 +4420,8 @@ function checkObName() {
   const btn = document.getElementById('ob-btn2');
   const inp = document.getElementById('ob-name');
   if (btn && inp) btn.disabled = inp.value.trim().length < 2;
+  // 名前入力後も目標値プレビューを更新
+  if (typeof updateObTargetPreview === 'function') updateObTargetPreview();
 }
 
 function selectCkdStage(stage) {
@@ -4751,6 +4779,43 @@ function goObStep(n) {
   } // end if(n===5)
 }
 
+// オンボーディング簡易フロー用: 目標値プレビューを更新する
+function updateObTargetPreview() {
+  const previewEl = document.getElementById('ob-quick-targets-preview');
+  const valuesEl  = document.getElementById('ob-quick-targets-values');
+  if (!previewEl || !valuesEl) return;
+
+  const age    = parseInt(document.getElementById('ob-age')?.value)    || 0;
+  const weight = parseFloat(document.getElementById('ob-weight')?.value) || 0;
+  const height = parseFloat(document.getElementById('ob-height')?.value) || 0;
+  const gender = document.getElementById('ob-gender')?.value || 'male';
+
+  // 体重か年齢が入力されていない場合は非表示
+  if (!weight || !age) { previewEl.style.display = 'none'; return; }
+
+  // 一時的にstateを仮設定して計算
+  const prevAge = state.age, prevWeight = state.weight, prevHeight = state.height, prevGender = state.gender;
+  state.age = age; state.weight = weight; state.height = height; state.gender = gender;
+  const calc = calcAutoTargets();
+  state.age = prevAge; state.weight = prevWeight; state.height = prevHeight; state.gender = prevGender;
+
+  const isHealthy = (state.obType === 'healthy');
+  if (isHealthy) {
+    valuesEl.innerHTML =
+      `🔥 カロリー <strong>${calc.calories}kcal</strong> ／ ` +
+      `🥩 タンパク質 <strong>${calc.protein}g</strong> ／ ` +
+      `🧂 塩分 <strong>${calc.salt}g以下</strong> ／ ` +
+      `💧 水分 <strong>${calc.water}mL</strong>`;
+  } else {
+    valuesEl.innerHTML =
+      `🔥 カロリー <strong>${calc.calories}kcal</strong> ／ ` +
+      `🥩 タンパク質 <strong>${calc.protein}g</strong> ／ ` +
+      `🍌 カリウム <strong>${calc.potassium}mg</strong> ／ ` +
+      `💧 水分 <strong>${calc.water}mL</strong>`;
+  }
+  previewEl.style.display = '';
+}
+
 // 簡易オンボーディング完了（2ステップ版）
 function finishOnboardingSimple() {
   try {
@@ -4785,7 +4850,7 @@ function finishOnboardingSimple() {
     applyStateToUI();
     showScreen('s-app');
     navTo('home');
-    showToast('ようこそ、' + state.userName + 'さん！\n設定からCKDステージや目標値を変更できます');
+    showToast('ようこそ、' + state.userName + 'さん！\n目標値は自動計算値です。設定から医師の指示値に変更できます。');
   } catch(e) {
     console.error('finishOnboardingSimple エラー:', e);
     showScreen('s-app');
@@ -7034,7 +7099,11 @@ function saveHealthRecord(type) {
     all.unshift(record);
     if (all.length > 1000) all.splice(1000);
     safeSetItem(HEALTH_KEY, JSON.stringify(all));
-  } catch(e) {}
+  } catch(e) {
+    showToast('⚠️ データの保存に失敗しました。ストレージを確認してください。');
+    console.warn('[saveHealthRecord] error:', e);
+    return;
+  }
 
   showToast('✅ 記録しました');
   renderHealthPage();
@@ -7090,7 +7159,7 @@ async function deleteUrineRecord(id) {
     const all = JSON.parse(localStorage.getItem(HEALTH_KEY)||'[]');
     safeSetItem(HEALTH_KEY, JSON.stringify(all.filter(r => r.id !== id)));
     showToast('🗑 削除しました'); renderHealthPage();
-  } catch(e) {}
+  } catch(e) { showToast('⚠️ 削除に失敗しました。再度お試しください。'); }
 }
 
 function renderHealthPage() {
@@ -14631,9 +14700,9 @@ function renderWeeklyReport() {
 
   // データ集計
   let meals = [];
-  try { meals = JSON.parse(localStorage.getItem('renalcare_meals') || '[]'); } catch(e) {}
+  try { meals = JSON.parse(localStorage.getItem('renalcare_meals') || '[]'); } catch(e) { showToast('⚠️ 食事データの読み込みに問題が発生しました'); }
   let waters = [];
-  try { waters = JSON.parse(localStorage.getItem('renalcare_water') || '[]'); } catch(e) {}
+  try { waters = JSON.parse(localStorage.getItem('renalcare_water') || '[]'); } catch(e) { showToast('⚠️ 水分データの読み込みに問題が発生しました'); }
   let medCheckLog = [];
   try { medCheckLog = JSON.parse(localStorage.getItem('renalcare_medcheck_log') || '[]'); } catch(e) {}
 
