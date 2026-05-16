@@ -1019,7 +1019,63 @@ body.is-premium .premium-banner { display: none !important; }
   font-size: 10px; color: var(--text3);
 }
 </style>
+<script>
+// ===== カスタム confirm / prompt ユーティリティ =====
+(function() {
+  function showRcDialog({ icon='', msg='', sub='', okLabel='OK', okColor='var(--red)', cancelLabel='キャンセル', isPrompt=false, defaultVal='' } = {}) {
+    return new Promise(resolve => {
+      const ov = document.getElementById('rc-confirm-overlay');
+      const iconEl = document.getElementById('rc-confirm-icon');
+      const msgEl  = document.getElementById('rc-confirm-msg');
+      const subEl  = document.getElementById('rc-confirm-sub');
+      const inpWr  = document.getElementById('rc-confirm-input-wrap');
+      const inp    = document.getElementById('rc-confirm-input');
+      const okBtn  = document.getElementById('rc-confirm-ok');
+      const caBtn  = document.getElementById('rc-confirm-cancel');
+      if (!ov) { resolve(isPrompt ? defaultVal : false); return; }
+      iconEl.textContent = icon;
+      msgEl.textContent  = msg;
+      subEl.textContent  = sub;
+      subEl.style.display = sub ? '' : 'none';
+      inpWr.style.display = isPrompt ? '' : 'none';
+      if (isPrompt) { inp.value = defaultVal; setTimeout(() => inp.focus(), 100); }
+      okBtn.textContent = okLabel;
+      okBtn.style.background = okColor;
+      caBtn.textContent = cancelLabel;
+      ov.style.display = 'flex';
+      const cleanup = (result) => {
+        ov.style.display = 'none';
+        okBtn.onclick = null; caBtn.onclick = null; ov.onclick = null;
+        resolve(result);
+      };
+      okBtn.onclick  = () => cleanup(isPrompt ? inp.value : true);
+      caBtn.onclick  = () => cleanup(isPrompt ? null : false);
+      ov.onclick = (e) => { if (e.target === ov) cleanup(isPrompt ? null : false); };
+    });
+  }
+  window.rcConfirm    = (msg, sub='', icon='🗑')          => showRcDialog({ icon, msg, sub, okLabel:'削除', okColor:'var(--red)' });
+  window.rcConfirmAct = (msg, sub='', okLabel='実行', icon='⚠️') => showRcDialog({ icon, msg, sub, okLabel, okColor:'var(--accent)', cancelLabel:'キャンセル' });
+  window.rcPrompt     = (msg, defaultVal='', icon='✏️')   => showRcDialog({ icon, msg, isPrompt:true, defaultVal, okLabel:'OK', okColor:'var(--accent)', cancelLabel:'キャンセル' });
+})();
+</script>
 </head>
+<!-- ===== カスタム confirm / prompt モーダル ===== -->
+<div id="rc-confirm-overlay" style="display:none;position:fixed;inset:0;z-index:99000;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px;">
+  <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:20px;width:100%;max-width:360px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,0.7);">
+    <div style="padding:20px 20px 12px;">
+      <div id="rc-confirm-icon" style="font-size:28px;margin-bottom:8px;"></div>
+      <div id="rc-confirm-msg" style="font-size:15px;color:var(--text);line-height:1.6;font-weight:500;"></div>
+      <div id="rc-confirm-sub" style="font-size:12px;color:var(--text3);margin-top:6px;line-height:1.6;"></div>
+    </div>
+    <div id="rc-confirm-input-wrap" style="display:none;padding:0 20px 12px;">
+      <input id="rc-confirm-input" class="form-input" type="text" style="font-size:15px;" />
+    </div>
+    <div style="display:flex;gap:8px;padding:12px 20px 20px;">
+      <button id="rc-confirm-cancel" style="flex:1;padding:12px;border-radius:12px;border:1.5px solid var(--border2);background:var(--surface2);color:var(--text2);font-size:14px;font-family:'Noto Sans JP',sans-serif;cursor:pointer;transition:all 0.2s;">キャンセル</button>
+      <button id="rc-confirm-ok" style="flex:1;padding:12px;border-radius:12px;border:none;background:var(--red);color:#fff;font-size:14px;font-weight:700;font-family:'Noto Sans JP',sans-serif;cursor:pointer;transition:all 0.2s;">削除</button>
+    </div>
+  </div>
+</div>
 <body>
 
 <!-- ===================================================================== -->
@@ -4223,7 +4279,7 @@ function renderUserSwitcher() {
   }).join('') + `<button class="btn btn-outline btn-full" style="margin-top:4px;" onclick="addNewUser()">＋ 新しいユーザーを追加</button>`;
 }
 
-function confirmDeleteUser(uid, name) {
+async function confirmDeleteUser(uid, name) {
   // 確認ダイアログ
   const profiles = getAllProfiles();
   if (profiles.length <= 1) {
@@ -5810,7 +5866,7 @@ function showMealDetail(meal) {
     // 古いイベントリスナーをクリア
     const newDelBtn = delBtn.cloneNode(true);
     delBtn.parentNode.replaceChild(newDelBtn, delBtn);
-    newDelBtn.addEventListener('click', function(e) {
+    newDelBtn.addEventListener('click', async function(e) {
       e.stopPropagation();
       if (!await rcConfirm('この記録を削除しますか？')) return;
       closeModal('mealDetailModal');
@@ -8740,7 +8796,7 @@ async function deleteDrinkEntry(id) {
   updateWaterCard(); updateWaterBalance(); updateHomeSummary();
 }
 
-function clearTodayDrinks() {
+async function clearTodayDrinks() {
   if (!await rcConfirm('今日の飲み物記録をすべて削除しますか？')) return;
   const today = new Date().toDateString();
   const todayIds = new Set(getAllDrinkLog().filter(e => new Date(e.time).toDateString() === today).map(e => e.id));
@@ -12009,7 +12065,7 @@ async function deleteMedicine() {
  * @param {string} id   - 薬ID
  * @param {string} name - 確認ダイアログ表示用の薬名
  */
-function quickDeleteMed(id, name) {
+async function quickDeleteMed(id, name) {
   if (!id) return;
   if (!await rcConfirm(`「${name}」を削除しますか？`, '服薬記録も削除されます')) return;
   saveMedicines(loadMedicines().filter(m => m.id !== id));
@@ -14276,7 +14332,7 @@ function exportAllData() {
   }
 }
 
-function importAllData(event) {
+async function importAllData(event) {
   const file = event.target.files[0];
   if (!file) return;
   const reader = new FileReader();
@@ -16900,65 +16956,6 @@ window.renderHealthPage = function() {
   _labInitOnHealthPage();
 };
 
-</script>
-
-<!-- ===== カスタム confirm / prompt モーダル ===== -->
-<div id="rc-confirm-overlay" style="display:none;position:fixed;inset:0;z-index:99000;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px;">
-  <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:20px;width:100%;max-width:360px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,0.7);">
-    <div style="padding:20px 20px 12px;">
-      <div id="rc-confirm-icon" style="font-size:28px;margin-bottom:8px;"></div>
-      <div id="rc-confirm-msg" style="font-size:15px;color:var(--text);line-height:1.6;font-weight:500;"></div>
-      <div id="rc-confirm-sub" style="font-size:12px;color:var(--text3);margin-top:6px;line-height:1.6;"></div>
-    </div>
-    <div id="rc-confirm-input-wrap" style="display:none;padding:0 20px 12px;">
-      <input id="rc-confirm-input" class="form-input" type="text" style="font-size:15px;" />
-    </div>
-    <div style="display:flex;gap:8px;padding:12px 20px 20px;">
-      <button id="rc-confirm-cancel" style="flex:1;padding:12px;border-radius:12px;border:1.5px solid var(--border2);background:var(--surface2);color:var(--text2);font-size:14px;font-family:'Noto Sans JP',sans-serif;cursor:pointer;transition:all 0.2s;">キャンセル</button>
-      <button id="rc-confirm-ok" style="flex:1;padding:12px;border-radius:12px;border:none;background:var(--red);color:#fff;font-size:14px;font-weight:700;font-family:'Noto Sans JP',sans-serif;cursor:pointer;transition:all 0.2s;">削除</button>
-    </div>
-  </div>
-</div>
-<script>
-// ===== カスタム confirm / prompt ユーティリティ =====
-(function() {
-  function showRcDialog({ icon='', msg='', sub='', okLabel='OK', okColor='var(--red)', cancelLabel='キャンセル', isPrompt=false, defaultVal='' } = {}) {
-    return new Promise(resolve => {
-      const ov = document.getElementById('rc-confirm-overlay');
-      const iconEl = document.getElementById('rc-confirm-icon');
-      const msgEl  = document.getElementById('rc-confirm-msg');
-      const subEl  = document.getElementById('rc-confirm-sub');
-      const inpWr  = document.getElementById('rc-confirm-input-wrap');
-      const inp    = document.getElementById('rc-confirm-input');
-      const okBtn  = document.getElementById('rc-confirm-ok');
-      const caBtn  = document.getElementById('rc-confirm-cancel');
-      if (!ov) { resolve(isPrompt ? defaultVal : false); return; }
-      iconEl.textContent = icon;
-      msgEl.textContent  = msg;
-      subEl.textContent  = sub;
-      subEl.style.display = sub ? '' : 'none';
-      inpWr.style.display = isPrompt ? '' : 'none';
-      if (isPrompt) { inp.value = defaultVal; setTimeout(() => inp.focus(), 100); }
-      okBtn.textContent = okLabel;
-      okBtn.style.background = okColor;
-      caBtn.textContent = cancelLabel;
-      ov.style.display = 'flex';
-      const cleanup = (result) => {
-        ov.style.display = 'none';
-        okBtn.onclick = null; caBtn.onclick = null; ov.onclick = null;
-        resolve(result);
-      };
-      okBtn.onclick  = () => cleanup(isPrompt ? inp.value : true);
-      caBtn.onclick  = () => cleanup(isPrompt ? null : false);
-      ov.onclick = (e) => { if (e.target === ov) cleanup(isPrompt ? null : false); };
-    });
-  }
-
-  // グローバルに公開
-  window.rcConfirm = (msg, sub='', icon='🗑') => showRcDialog({ icon, msg, sub, okLabel:'削除', okColor:'var(--red)' });
-  window.rcConfirmAct = (msg, sub='', okLabel='実行', icon='⚠️') => showRcDialog({ icon, msg, sub, okLabel, okColor:'var(--accent)', cancelLabel:'キャンセル' });
-  window.rcPrompt = (msg, defaultVal='', icon='✏️') => showRcDialog({ icon, msg, isPrompt:true, defaultVal, okLabel:'OK', okColor:'var(--accent)', cancelLabel:'キャンセル' });
-})();
 </script>
 </body>
 </html>
