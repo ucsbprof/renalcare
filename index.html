@@ -14336,7 +14336,7 @@ async function importAllData(event) {
   const file = event.target.files[0];
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = (e) => {
+  reader.onload = async (e) => {
     try {
       const data = JSON.parse(e.target.result);
       if (!data.store || typeof data.store !== 'object') throw new Error('invalid format');
@@ -14842,10 +14842,12 @@ async function requestNotifPermission() {
 // ===== Service Worker 登録 =====
 let _swReg = null;
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./sw.js').then(reg => {
-    _swReg = reg;
-    console.log('[SW] registered:', reg.scope);
-  }).catch(e => console.warn('[SW] registration failed:', e));
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').then(reg => {
+      _swReg = reg;
+      console.log('[SW] registered:', reg.scope);
+    }).catch(e => console.warn('[SW] registration failed:', e));
+  });
 }
 
 function scheduleNotifications(settings) {
@@ -16947,14 +16949,15 @@ function setDarkMode(mode) {
 document.addEventListener('DOMContentLoaded', applyDarkModePreference);
 
 // ===== 健康ページ表示時にeGFRグラフ初期化をhook =====
-const _navToForLab = typeof window._navToWithAd === 'function' ? window._navToWithAd : navTo;
-const _navToForLabOriginal = _navToOriginal || navTo;
-// renderHealthPageをoverrideしてグラフも描画
-const _realRenderHealthPage = renderHealthPage;
-window.renderHealthPage = function() {
-  _realRenderHealthPage();
-  _labInitOnHealthPage();
-};
+document.addEventListener('DOMContentLoaded', function() {
+  const _realRenderHealthPage = typeof renderHealthPage === 'function' ? renderHealthPage : null;
+  if (_realRenderHealthPage) {
+    window.renderHealthPage = function() {
+      _realRenderHealthPage();
+      _labInitOnHealthPage();
+    };
+  }
+});
 
 </script>
 </body>
